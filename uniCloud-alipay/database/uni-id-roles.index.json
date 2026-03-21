@@ -1,0 +1,14 @@
+[
+	{
+		"IndexName": "idx_role_id_unique",
+		"MgoKeySchema": {
+			"MgoIsUnique": true,
+			"MgoIndexKeys": [
+				{
+					"Name": "role_id",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

@@ -1,0 +1,43 @@
+{
+	"bsonType": "object",
+	"required": [
+		"permission_id",
+		"permission_name",
+		"created_at",
+		"updated_at"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "权限ID，系统自动生成"
+		},
+		"permission_id": {
+			"bsonType": "string",
+			"title": "权限标识",
+			"description": "权限唯一标识"
+		},
+		"permission_name": {
+			"bsonType": "string",
+			"title": "权限名称",
+			"description": "权限展示名称"
+		},
+		"comment": {
+			"bsonType": "string",
+			"title": "备注",
+			"description": "权限说明"
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"updated_at": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

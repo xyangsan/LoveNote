@@ -1,0 +1,6 @@
+{
+	"name": "auth-center",
+	"version": "1.0.0",
+	"description": "LoveNote auth center cloud object",
+	"main": "index.obj.js"
+}

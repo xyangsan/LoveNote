@@ -1,0 +1,43 @@
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "设备记录ID，系统自动生成"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"title": "用户ID"
+		},
+		"device_id": {
+			"bsonType": "string",
+			"title": "设备ID"
+		},
+		"token_expired": {
+			"bsonType": "long",
+			"title": "token 失效时间"
+		},
+		"push_clientid": {
+			"bsonType": "string",
+			"title": "个推 clientId"
+		},
+		"appid": {
+			"bsonType": "string",
+			"title": "应用ID"
+		},
+		"platform": {
+			"bsonType": "string",
+			"title": "平台标识"
+		},
+		"create_date": {
+			"bsonType": "long",
+			"title": "创建时间"
+		}
+	}
+}

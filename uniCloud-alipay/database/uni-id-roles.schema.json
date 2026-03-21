@@ -1,0 +1,52 @@
+{
+	"bsonType": "object",
+	"required": [
+		"role_id",
+		"role_name",
+		"permission",
+		"created_at",
+		"updated_at"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "角色ID，系统自动生成"
+		},
+		"role_id": {
+			"bsonType": "string",
+			"title": "角色标识",
+			"description": "角色唯一标识，如 member、admin"
+		},
+		"role_name": {
+			"bsonType": "string",
+			"title": "角色名称",
+			"description": "角色展示名称"
+		},
+		"comment": {
+			"bsonType": "string",
+			"title": "备注",
+			"description": "角色说明"
+		},
+		"permission": {
+			"bsonType": "array",
+			"title": "权限列表",
+			"description": "角色绑定的权限标识集合",
+			"items": {
+				"bsonType": "string"
+			}
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"updated_at": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

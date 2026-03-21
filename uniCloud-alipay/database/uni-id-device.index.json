@@ -1,0 +1,30 @@
+[
+	{
+		"IndexName": "idx_user_device_unique",
+		"MgoKeySchema": {
+			"MgoIsUnique": true,
+			"MgoIndexKeys": [
+				{
+					"Name": "user_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "device_id",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_device_id",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "device_id",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

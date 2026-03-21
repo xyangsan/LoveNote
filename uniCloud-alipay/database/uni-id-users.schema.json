@@ -1,0 +1,201 @@
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "用户ID，系统自动生成"
+		},
+		"username": {
+			"bsonType": "string",
+			"title": "用户名",
+			"description": "uni-id 用户名"
+		},
+		"password": {
+			"bsonType": "string",
+			"title": "密码哈希"
+		},
+		"password_secret_version": {
+			"bsonType": "int",
+			"title": "密码密钥版本"
+		},
+		"nickname": {
+			"bsonType": "string",
+			"title": "昵称",
+			"description": "用户昵称"
+		},
+		"avatar": {
+			"bsonType": "string",
+			"title": "头像地址",
+			"description": "外链头像或云文件 fileID"
+		},
+		"avatar_file_id": {
+			"bsonType": "string",
+			"title": "头像文件ID"
+		},
+		"avatar_file": {
+			"bsonType": "object",
+			"title": "头像文件对象",
+			"properties": {
+				"name": {
+					"bsonType": "string"
+				},
+				"extname": {
+					"bsonType": "string"
+				},
+				"url": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"gender": {
+			"bsonType": "int",
+			"title": "性别",
+			"description": "0 未知 1 男 2 女"
+		},
+		"mobile": {
+			"bsonType": "string",
+			"title": "手机号"
+		},
+		"mobile_confirmed": {
+			"bsonType": "int",
+			"title": "手机号是否已验证"
+		},
+		"email": {
+			"bsonType": "string",
+			"title": "邮箱"
+		},
+		"email_confirmed": {
+			"bsonType": "int",
+			"title": "邮箱是否已验证"
+		},
+		"wx_openid": {
+			"bsonType": "object",
+			"title": "微信 openid 集合",
+			"description": "如 wx_openid.mp、wx_openid.mp_APPID"
+		},
+		"wx_unionid": {
+			"bsonType": "string",
+			"title": "微信 unionid"
+		},
+		"role": {
+			"bsonType": "array",
+			"title": "角色列表",
+			"items": {
+				"bsonType": "string"
+			}
+		},
+		"token": {
+			"bsonType": "array",
+			"title": "登录 token 列表",
+			"items": {
+				"bsonType": "string"
+			}
+		},
+		"status": {
+			"bsonType": "int",
+			"title": "账户状态",
+			"description": "0 正常 1 封禁 2 审核中 3 审核失败 4 已注销"
+		},
+		"register_date": {
+			"bsonType": "long",
+			"title": "注册时间"
+		},
+		"register_env": {
+			"bsonType": "object",
+			"title": "注册环境",
+			"properties": {
+				"appid": {
+					"bsonType": "string"
+				},
+				"uni_platform": {
+					"bsonType": "string"
+				},
+				"os_name": {
+					"bsonType": "string"
+				},
+				"app_name": {
+					"bsonType": "string"
+				},
+				"app_version": {
+					"bsonType": "string"
+				},
+				"app_version_code": {
+					"bsonType": "string"
+				},
+				"channel": {
+					"bsonType": "string"
+				},
+				"client_ip": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"dcloud_appid": {
+			"bsonType": "array",
+			"title": "允许登录的应用列表",
+			"items": {
+				"bsonType": "string"
+			}
+		},
+		"my_invite_code": {
+			"bsonType": "string",
+			"title": "我的邀请码"
+		},
+		"inviter_uid": {
+			"bsonType": "string",
+			"title": "邀请人用户ID"
+		},
+		"invite_time": {
+			"bsonType": "long",
+			"title": "接受邀请时间"
+		},
+		"last_login_date": {
+			"bsonType": "long",
+			"title": "最近登录时间"
+		},
+		"last_login_ip": {
+			"bsonType": "string",
+			"title": "最近登录 IP"
+		},
+		"third_party": {
+			"bsonType": "object",
+			"title": "第三方平台缓存"
+		},
+		"valid_token_date": {
+			"bsonType": "long",
+			"title": "token 生效时间阈值"
+		},
+		"login_ip_limit": {
+			"bsonType": "array",
+			"title": "密码登录错误限制",
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"ip": {
+						"bsonType": "string"
+					},
+					"error_times": {
+						"bsonType": "int"
+					},
+					"last_error_time": {
+						"bsonType": "long"
+					}
+				}
+			}
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"updated_at": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

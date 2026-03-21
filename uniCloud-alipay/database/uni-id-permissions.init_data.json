@@ -1,0 +1,51 @@
+[
+	{
+		"permission_id": "profile.read",
+		"permission_name": "读取个人资料",
+		"comment": "允许读取当前登录用户资料",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"permission_id": "profile.write",
+		"permission_name": "更新个人资料",
+		"comment": "允许更新昵称、头像等信息",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"permission_id": "couple.bind",
+		"permission_name": "情侣绑定",
+		"comment": "允许创建或加入情侣关系",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"permission_id": "anniversary.read",
+		"permission_name": "读取纪念日",
+		"comment": "允许查看纪念日列表和详情",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"permission_id": "anniversary.write",
+		"permission_name": "编辑纪念日",
+		"comment": "允许新增和更新纪念日",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"permission_id": "moment.read",
+		"permission_name": "读取双人动态",
+		"comment": "允许查看双人动态内容",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"permission_id": "moment.write",
+		"permission_name": "发布双人动态",
+		"comment": "允许发布和编辑双人动态",
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	}
+]

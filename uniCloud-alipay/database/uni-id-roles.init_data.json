@@ -1,0 +1,26 @@
+[
+	{
+		"role_id": "member",
+		"role_name": "普通用户",
+		"comment": "LoveNote 默认登录用户角色",
+		"permission": [
+			"profile.read",
+			"profile.write",
+			"couple.bind",
+			"anniversary.read",
+			"anniversary.write",
+			"moment.read",
+			"moment.write"
+		],
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	},
+	{
+		"role_id": "admin",
+		"role_name": "管理员",
+		"comment": "LoveNote 管理角色，uni-id-common 会自动识别 admin",
+		"permission": [],
+		"created_at": 1741680000000,
+		"updated_at": 1741680000000
+	}
+]

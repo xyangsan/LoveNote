@@ -1,0 +1,59 @@
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "日志ID，系统自动生成"
+		},
+		"appid": {
+			"bsonType": "string",
+			"title": "应用ID"
+		},
+		"device_id": {
+			"bsonType": "string",
+			"title": "设备ID"
+		},
+		"ip": {
+			"bsonType": "string",
+			"title": "IP 地址"
+		},
+		"type": {
+			"bsonType": "string",
+			"title": "日志类型"
+		},
+		"ua": {
+			"bsonType": "string",
+			"title": "用户代理"
+		},
+		"create_date": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"state": {
+			"bsonType": "int",
+			"title": "处理状态"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"title": "用户ID"
+		},
+		"username": {
+			"bsonType": "string",
+			"title": "用户名"
+		},
+		"email": {
+			"bsonType": "string",
+			"title": "邮箱"
+		},
+		"mobile": {
+			"bsonType": "string",
+			"title": "手机号"
+		}
+	}
+}
