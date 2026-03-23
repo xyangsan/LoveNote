@@ -58,6 +58,11 @@
 			"title": "性别",
 			"description": "0 未知 1 男 2 女"
 		},
+		"age": {
+			"bsonType": "int",
+			"title": "年龄",
+			"description": "用户年龄"
+		},
 		"mobile": {
 			"bsonType": "string",
 			"title": "手机号"

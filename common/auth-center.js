@@ -1,4 +1,5 @@
-export const DEFAULT_AVATAR = '/static/logo.png'
+export const DEFAULT_AVATAR = '/static/user-empty.png'
+export const AUTH_CHANGE_EVENT = 'love-note-auth-change'
 
 let authCenterObject = null
 
@@ -20,6 +21,25 @@ export function clearUniIdTokenStorage() {
 
 export function getCurrentUniIdUser() {
 	return uniCloud.getCurrentUserInfo ? uniCloud.getCurrentUserInfo() : null
+}
+
+export function hasValidLogin(userInfo = getCurrentUniIdUser()) {
+	return Boolean(userInfo && userInfo.uid && (!userInfo.tokenExpired || userInfo.tokenExpired > Date.now()))
+}
+
+export function emitAuthChanged(detail = {}) {
+	uni.$emit(AUTH_CHANGE_EVENT, detail)
+}
+
+export function subscribeAuthChanged(handler) {
+	if (typeof handler !== 'function') {
+		return () => {}
+	}
+
+	uni.$on(AUTH_CHANGE_EVENT, handler)
+	return () => {
+		uni.$off(AUTH_CHANGE_EVENT, handler)
+	}
 }
 
 export function getFileExtname(filePath = '') {
@@ -78,4 +98,3 @@ export async function uploadAvatarIfNeeded(currentAvatar = '') {
 		}
 	}
 }
-

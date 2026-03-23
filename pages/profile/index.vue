@@ -1,125 +1,80 @@
 <template>
-	<view class="page">
-		<view class="page__glow page__glow--left"></view>
-		<view class="page__glow page__glow--right"></view>
+	<view class="love-page love-page--compact profile-page">
+		<view class="love-page__glow love-page__glow--left"></view>
+		<view class="love-page__glow love-page__glow--right"></view>
 
-		<view class="hero-card">
-			<text class="eyebrow">LoveNote 我的资料</text>
-			<text class="hero-card__title">管理你的基础信息</text>
-			<text class="hero-card__desc">
-				{{ isLoggedIn ? '保持昵称、头像和性别信息最新，方便后续情侣空间、纪念日和双人动态统一展示。' : '先完成微信登录，再开始管理你的个人资料。' }}
-			</text>
-		</view>
+		<view class="love-layer">
+			<fui-status-bar background="transparent"></fui-status-bar>
 
-		<view v-if="!isLoggedIn" class="panel-card">
-			<view class="panel-card__header">
-				<text class="panel-card__title">登录你的账号</text>
-				<text class="panel-card__tag">未登录</text>
-			</view>
-
-			<!-- #ifdef MP-WEIXIN -->
-			<view class="editor-card">
-				<button class="avatar-button" open-type="chooseAvatar" @chooseavatar="onChooseLoginAvatar">
-					<image class="avatar-button__image" :src="displayLoginAvatar"></image>
-					<text class="avatar-button__hint">选择头像</text>
-				</button>
-				<view class="editor-card__body">
-					<text class="field-label">微信昵称</text>
-					<input
-						class="text-input"
-						type="nickname"
-						placeholder="请输入你的昵称"
-						:value="loginForm.nickname"
-						@input="onLoginNicknameInput"
-						@blur="onLoginNicknameBlur"
-					/>
-					<text class="field-tip">登录后会同步保存头像与昵称，后续可以继续修改。</text>
+			<view class="page-head">
+				<view class="page-head__bar">
+					<text class="page-head__title">个人中心</text>
 				</view>
-			</view>
 
-			<button class="primary-button" hover-class="button-hover" :loading="isLoggingIn" @click="handleWechatLogin">
-				微信一键登录
-			</button>
-			<!-- #endif -->
-
-			<!-- #ifndef MP-WEIXIN -->
-			<view class="notice-card">
-				<text class="notice-card__text">当前登录能力面向微信小程序环境开发，请在微信开发者工具或真机小程序中体验。</text>
-			</view>
-			<!-- #endif -->
-		</view>
-
-		<view v-else class="content-stack">
-			<view class="profile-card">
-				<view class="profile-card__top">
-					<button class="profile-avatar" open-type="chooseAvatar" @chooseavatar="onChooseProfileAvatar">
-						<image class="profile-avatar__image" :src="displayProfileAvatar"></image>
-						<text class="profile-avatar__hint">更换头像</text>
-					</button>
-					<view class="profile-card__meta">
-						<text class="profile-card__name">{{ profileForm.nickname || currentUserName }}</text>
-						<text class="profile-card__subtitle">{{ roleText }}</text>
-						<text class="profile-card__summary">已加入 LoveNote，资料可随时更新。</text>
+				<love-glass-card :margin="['0', '0', '0', '0']" :padding="['0', '0']" :header-line="false" @click="handleProfileTap">
+					<view class="user-card">
+						<fui-avatar
+							class="user-card__avatar"
+							:src="displayAvatar"
+							error-src="/static/user-empty.png"
+							width="120"
+							height="120"
+							background="#fff1eb"
+						></fui-avatar>
+						<view class="user-card__body">
+							<text class="user-card__name">{{ displayNickname }}</text>
+							<text class="user-card__meta">{{ profileMetaText }}</text>
+							<text class="user-card__desc">{{ profileDescText }}</text>
+						</view>
+						<text class="user-card__action">{{ isLoggedIn ? '编辑' : '登录' }}</text>
 					</view>
-				</view>
+				</love-glass-card>
 			</view>
 
-			<view class="panel-card">
-				<view class="panel-card__header">
-					<text class="panel-card__title">编辑资料</text>
-					<text class="panel-card__tag">可保存</text>
+			<love-glass-card class="menu-card" :margin="['24rpx', '0', '0', '0']" :padding="['0', '0']" :header-line="false">
+				<view class="menu-card__body">
+					<fui-list-cell
+						v-for="(item, index) in centerCards"
+						:key="item.key"
+						:padding="['26rpx', '28rpx']"
+						background="transparent"
+						:bottom-border="index !== centerCards.length - 1"
+						border-color="rgba(231, 204, 194, 0.6)"
+						arrow
+						arrow-color="#d2a394"
+						@click="handleCardClick(item)"
+					>
+						<view class="menu-item">
+							<view class="menu-item__icon" :style="{ background: item.iconBg }">
+								<text class="menu-item__icon-text">{{ item.iconText }}</text>
+							</view>
+							<view class="menu-item__body">
+								<text class="menu-item__title">{{ item.title }}</text>
+								<text class="menu-item__desc">{{ item.desc }}</text>
+							</view>
+							<view class="menu-item__right">
+								<text class="menu-item__value">{{ item.value }}</text>
+							</view>
+						</view>
+					</fui-list-cell>
 				</view>
+			</love-glass-card>
 
-				<view class="form-item">
-					<text class="field-label">昵称</text>
-					<input
-						class="text-input"
-						type="text"
-						placeholder="请输入昵称"
-						:value="profileForm.nickname"
-						@input="onProfileNicknameInput"
-					/>
-				</view>
-
-				<view class="form-item">
-					<text class="field-label">性别</text>
-					<picker class="picker-field" mode="selector" :range="genderOptions" :value="profileForm.gender" @change="onGenderChange">
-						<view class="picker-field__value">{{ currentGenderText }}</view>
-					</picker>
-				</view>
-
-				<button class="primary-button" hover-class="button-hover" :loading="isSaving" @click="handleSaveProfile">
-					保存资料
-				</button>
-			</view>
-
-			<view class="panel-card">
-				<view class="panel-card__header">
-					<text class="panel-card__title">账户信息</text>
-					<text class="panel-card__tag">只读</text>
-				</view>
-
-				<view class="info-list">
-					<view class="info-row">
-						<text class="info-row__label">用户ID</text>
-						<text class="info-row__value info-row__value--mono">{{ userInfo._id || '-' }}</text>
-					</view>
-					<view class="info-row">
-						<text class="info-row__label">角色</text>
-						<text class="info-row__value">{{ roleText }}</text>
-					</view>
-					<view class="info-row">
-						<text class="info-row__label">注册时间</text>
-						<text class="info-row__value">{{ registerDateText }}</text>
-					</view>
-					<view class="info-row">
-						<text class="info-row__label">最近登录</text>
-						<text class="info-row__value">{{ lastLoginDateText }}</text>
-					</view>
-				</view>
-			</view>
-
-			<button class="secondary-button" hover-class="button-hover" @click="handleLogout">退出登录</button>
+			<fui-button
+				:margin="['80rpx']"
+				text="退出登录"
+				background="linear-gradient(135deg, #fff0ec 0%, #ffd4c8 100%)"
+				color="#c74d33"
+				border-color="rgba(219, 117, 90, 0.22)"
+				disabled-background="rgba(255, 240, 236, 0.92)"
+				disabled-color="#d5aaa1"
+				radius="999rpx"
+				height="90rpx"
+				:size="28"
+				:bold="true"
+				:disabled="!isLoggedIn"
+				@click="handleLogout"
+			></fui-button>
 		</view>
 	</view>
 </template>
@@ -128,45 +83,33 @@
 	import {
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
+		emitAuthChanged,
 		getAuthCenterObject,
 		getCurrentUniIdUser,
-		uploadAvatarIfNeeded
+		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 
 	const genderOptions = ['保密', '男', '女']
+	const PROFILE_DEFAULT_AVATAR = '/static/user-empty.png'
+	const VERSION_TEXT = 'v1.0.0'
 
-	function formatDateTime(timestamp) {
+	function formatDate(timestamp) {
 		if (!timestamp) {
-			return '暂未记录'
+			return '暂未设置'
 		}
 
 		const date = new Date(timestamp)
 		const year = date.getFullYear()
 		const month = `${date.getMonth() + 1}`.padStart(2, '0')
 		const day = `${date.getDate()}`.padStart(2, '0')
-		const hour = `${date.getHours()}`.padStart(2, '0')
-		const minute = `${date.getMinutes()}`.padStart(2, '0')
-		return `${year}-${month}-${day} ${hour}:${minute}`
+		return `${year}.${month}.${day}`
 	}
 
 	export default {
 		data() {
 			return {
-				isLoggingIn: false,
-				isSaving: false,
 				userInfo: null,
-				genderOptions,
-				loginForm: {
-					nickname: '',
-					avatarUrl: '',
-					avatarFileId: ''
-				},
-				profileForm: {
-					nickname: '',
-					avatarUrl: '',
-					avatarFileId: '',
-					gender: 0
-				}
+				removeAuthListener: null
 			}
 		},
 		computed: {
@@ -176,70 +119,139 @@
 			currentUserName() {
 				return this.userInfo && this.userInfo.nickname ? this.userInfo.nickname : '微信用户'
 			},
-			displayLoginAvatar() {
-				return this.loginForm.avatarUrl || DEFAULT_AVATAR
+			displayNickname() {
+				return this.isLoggedIn ? this.currentUserName : '未登录'
 			},
-			displayProfileAvatar() {
-				return this.profileForm.avatarUrl || (this.userInfo && this.userInfo.avatarUrl) || DEFAULT_AVATAR
+			displayAvatar() {
+				return (this.userInfo && this.userInfo.avatarUrl) || PROFILE_DEFAULT_AVATAR || DEFAULT_AVATAR
 			},
 			currentGenderText() {
-				return this.genderOptions[this.profileForm.gender] || this.genderOptions[0]
+				return genderOptions[Number(this.userInfo && this.userInfo.gender || 0)] || genderOptions[0]
 			},
-			roleText() {
-				const roleList = this.userInfo && Array.isArray(this.userInfo.role) ? this.userInfo.role : []
-				return roleList.length ? roleList.join('、') : 'member'
+			currentAgeText() {
+				const age = Number(this.userInfo && this.userInfo.age || 0)
+				return age > 0 ? `${age} 岁` : '未填写'
 			},
 			registerDateText() {
-				return this.userInfo ? formatDateTime(this.userInfo.registerDate) : '暂未记录'
+				return this.userInfo ? formatDate(this.userInfo.registerDate) : '暂未设置'
 			},
-			lastLoginDateText() {
-				return this.userInfo ? formatDateTime(this.userInfo.lastLoginDate) : '暂未记录'
+			currentCouple() {
+				return this.userInfo && this.userInfo.coupleInfo ? this.userInfo.coupleInfo : null
+			},
+			coupleStatusText() {
+				if (!this.currentCouple) {
+					return '未绑定'
+				}
+
+				return this.currentCouple.statusText || (this.currentCouple.isBound ? '已绑定' : '待确认')
+			},
+			anniversaryText() {
+				return this.currentCouple && this.currentCouple.anniversaryDate
+					? formatDate(this.currentCouple.anniversaryDate)
+					: '未设置'
+			},
+			profileMetaText() {
+				if (!this.isLoggedIn) {
+					return '默认头像已展示，点击进入登录'
+				}
+
+				const meta = []
+				if (this.currentGenderText !== '保密') {
+					meta.push(this.currentGenderText)
+				}
+				if (this.currentAgeText !== '未填写') {
+					meta.push(this.currentAgeText)
+				}
+				meta.push(`注册于 ${this.registerDateText}`)
+				return meta.join(' · ')
+			},
+			profileDescText() {
+				return this.isLoggedIn
+					? '查看并管理你的头像、昵称与基础资料'
+					: '登录后同步微信头像、昵称与情侣空间信息'
+			},
+			centerCards() {
+				return [
+					{
+						key: 'couple',
+						title: '情侣信息',
+						desc: this.currentCouple
+							? (this.currentCouple.isBound
+								? `当前伴侣：${this.currentCouple.partnerNickname || '另一半'}`
+								: '当前绑定邀请还在等待确认')
+							: '还没有绑定情侣关系',
+						value: this.coupleStatusText,
+						iconText: '伴',
+						iconBg: 'linear-gradient(135deg, #ffd3c2 0%, #ffb199 100%)'
+					},
+					{
+						key: 'anniversary',
+						title: '纪念日',
+						desc: '记录相恋、生日与重要时刻',
+						value: this.anniversaryText,
+						iconText: '纪',
+						iconBg: 'linear-gradient(135deg, #ffe29f 0%, #ffa99f 100%)'
+					},
+					{
+						key: 'album',
+						title: '相册',
+						desc: '保存你们的照片和回忆片段',
+						value: this.isLoggedIn ? '待开启' : '登录后开启',
+						iconText: '册',
+						iconBg: 'linear-gradient(135deg, #ffd8f1 0%, #f6b7d2 100%)'
+					},
+					{
+						key: 'plan',
+						title: '计划',
+						desc: '同步愿望清单和约会安排',
+						value: this.isLoggedIn ? '待完善' : '登录后开启',
+						iconText: '计',
+						iconBg: 'linear-gradient(135deg, #d7f5c6 0%, #98d8aa 100%)'
+					},
+					{
+						key: 'feedback',
+						title: '反馈与帮助',
+						desc: '遇到问题或有建议都可以告诉我们',
+						value: '联系我们',
+						iconText: '助',
+						iconBg: 'linear-gradient(135deg, #d7e8ff 0%, #afcfff 100%)'
+					},
+					{
+						key: 'version',
+						title: '版本信息',
+						desc: '查看当前应用版本和更新状态',
+						value: VERSION_TEXT,
+						iconText: '版',
+						iconBg: 'linear-gradient(135deg, #f6ddc3 0%, #eac6a3 100%)'
+					}
+				]
 			}
+		},
+		onLoad() {
+			this.removeAuthListener = subscribeAuthChanged(() => {
+				this.restoreLoginState()
+			})
 		},
 		onShow() {
 			this.restoreLoginState()
 		},
+		onUnload() {
+			if (this.removeAuthListener) {
+				this.removeAuthListener()
+				this.removeAuthListener = null
+			}
+		},
 		methods: {
-			resetLoginForm() {
-				this.loginForm = {
-					nickname: '',
-					avatarUrl: '',
-					avatarFileId: ''
-				}
-			},
-			resetProfileForm() {
-				this.profileForm = {
-					nickname: '',
-					avatarUrl: '',
-					avatarFileId: '',
-					gender: 0
-				}
-			},
-			fillProfileForm(userInfo) {
-				if (!userInfo) {
-					this.resetProfileForm()
-					return
-				}
-
-				this.profileForm = {
-					nickname: userInfo.nickname || '',
-					avatarUrl: userInfo.avatarUrl || '',
-					avatarFileId: userInfo.avatarFileId || '',
-					gender: Number(userInfo.gender || 0)
-				}
-			},
 			async restoreLoginState() {
 				const currentUserInfo = getCurrentUniIdUser()
 				if (!currentUserInfo || !currentUserInfo.uid) {
 					this.userInfo = null
-					this.resetProfileForm()
 					return
 				}
 
 				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
 					clearUniIdTokenStorage()
 					this.userInfo = null
-					this.resetProfileForm()
 					return
 				}
 
@@ -255,12 +267,10 @@
 					}
 
 					this.userInfo = result.userInfo || null
-					this.fillProfileForm(this.userInfo)
 				} catch (error) {
 					console.warn('profile fetchCurrentUser failed', error)
 					clearUniIdTokenStorage()
 					this.userInfo = null
-					this.resetProfileForm()
 
 					if (!silent) {
 						uni.showToast({
@@ -270,169 +280,87 @@
 					}
 				}
 			},
-			onChooseLoginAvatar(event) {
-				this.loginForm.avatarUrl = event.detail && event.detail.avatarUrl ? event.detail.avatarUrl : ''
-				this.loginForm.avatarFileId = ''
+			goToLoginPage() {
+				uni.navigateTo({
+					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/profile/index')
+				})
 			},
-			onChooseProfileAvatar(event) {
-				this.profileForm.avatarUrl = event.detail && event.detail.avatarUrl ? event.detail.avatarUrl : ''
-				this.profileForm.avatarFileId = ''
+			goToEdit() {
+				uni.navigateTo({
+					url: '/pages/profile/edit'
+				})
 			},
-			onLoginNicknameInput(event) {
-				this.loginForm.nickname = event.detail.value || ''
+			handleProfileTap() {
+				if (!this.isLoggedIn) {
+					this.goToLoginPage()
+					return
+				}
+
+				this.goToEdit()
 			},
-			onLoginNicknameBlur(event) {
-				this.loginForm.nickname = event.detail.value || this.loginForm.nickname
-			},
-			onProfileNicknameInput(event) {
-				this.profileForm.nickname = event.detail.value || ''
-			},
-			onGenderChange(event) {
-				this.profileForm.gender = Number(event.detail.value || 0)
-			},
-			async handleWechatLogin() {
-				// #ifndef MP-WEIXIN
+			handleBindAction() {
 				uni.showToast({
-					title: '请在微信小程序环境中登录',
+					title: this.currentCouple ? '绑定确认功能开发中' : '情侣绑定功能开发中',
 					icon: 'none'
 				})
-				return
-				// #endif
-
-				if (this.isLoggingIn) {
-					return
-				}
-
-				this.isLoggingIn = true
-				uni.showLoading({
-					title: '登录中',
-					mask: true
-				})
-
-				try {
-					const loginRes = await uni.login()
-					const code = loginRes.code
-					if (!code) {
-						throw new Error('未获取到微信登录 code')
-					}
-
-					const loginPayload = {
-						code
-					}
-					const nickname = (this.loginForm.nickname || '').trim()
-					if (nickname) {
-						loginPayload.nickname = nickname
-					}
-					if (this.loginForm.avatarUrl) {
-						const avatarResult = await uploadAvatarIfNeeded(this.loginForm.avatarUrl)
-						if (avatarResult.avatarFileId) {
-							loginPayload.avatarFileId = avatarResult.avatarFileId
-							loginPayload.avatarFile = avatarResult.avatarFile
-							this.loginForm.avatarFileId = avatarResult.avatarFileId
-						} else if (avatarResult.avatarUrl) {
-							loginPayload.avatarUrl = avatarResult.avatarUrl
-						}
-					}
-
-					const result = await getAuthCenterObject().loginByWeixin(loginPayload)
-					if (result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '登录失败')
-					}
-
-					await this.fetchCurrentUser({
-						silent: true
-					})
-					this.resetLoginForm()
-
-					uni.showToast({
-						title: '登录成功',
-						icon: 'success'
-					})
-				} catch (error) {
-					console.error('profile handleWechatLogin failed', error)
-					uni.showToast({
-						title: error.message || '登录失败，请稍后重试',
-						icon: 'none'
-					})
-				} finally {
-					this.isLoggingIn = false
-					uni.hideLoading()
-				}
 			},
-			async handleSaveProfile() {
-				if (!this.isLoggedIn || this.isSaving) {
+			handleCardClick(item) {
+				if (!item) {
 					return
 				}
 
-				const nickname = (this.profileForm.nickname || '').trim()
-				if (!nickname) {
-					uni.showToast({
-						title: '昵称不能为空',
-						icon: 'none'
-					})
+				if (!this.isLoggedIn && ['couple', 'anniversary', 'album', 'plan'].includes(item.key)) {
+					this.goToLoginPage()
 					return
 				}
 
-				const payload = {}
-				if (nickname !== (this.userInfo.nickname || '')) {
-					payload.nickname = nickname
-				}
-
-				const gender = Number(this.profileForm.gender || 0)
-				if (gender !== Number(this.userInfo.gender || 0)) {
-					payload.gender = gender
-				}
-
-				try {
-					if (this.profileForm.avatarUrl && this.profileForm.avatarUrl !== (this.userInfo.avatarUrl || '')) {
-						const avatarResult = await uploadAvatarIfNeeded(this.profileForm.avatarUrl)
-						if (avatarResult.avatarFileId) {
-							payload.avatarFileId = avatarResult.avatarFileId
-							payload.avatarFile = avatarResult.avatarFile
-							this.profileForm.avatarFileId = avatarResult.avatarFileId
-						} else if (avatarResult.avatarUrl) {
-							payload.avatarUrl = avatarResult.avatarUrl
-						}
-					}
-
-					if (!Object.keys(payload).length) {
+				switch (item.key) {
+					case 'couple':
+						this.handleBindAction()
+						break
+					case 'anniversary':
 						uni.showToast({
-							title: '暂无需要保存的修改',
+							title: '纪念日功能开发中',
 							icon: 'none'
 						})
-						return
-					}
-
-					this.isSaving = true
-					uni.showLoading({
-						title: '保存中',
-						mask: true
-					})
-
-					const result = await getAuthCenterObject().updateProfile(payload)
-					if (result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '保存失败')
-					}
-
-					this.userInfo = result.userInfo || this.userInfo
-					this.fillProfileForm(this.userInfo)
-
-					uni.showToast({
-						title: '保存成功',
-						icon: 'success'
-					})
-				} catch (error) {
-					console.error('handleSaveProfile failed', error)
-					uni.showToast({
-						title: error.message || '保存失败，请稍后重试',
-						icon: 'none'
-					})
-				} finally {
-					this.isSaving = false
-					uni.hideLoading()
+						break
+					case 'album':
+						uni.showToast({
+							title: '相册功能开发中',
+							icon: 'none'
+						})
+						break
+					case 'plan':
+						uni.showToast({
+							title: '计划功能开发中',
+							icon: 'none'
+						})
+						break
+					case 'feedback':
+						uni.showToast({
+							title: '反馈与帮助功能开发中',
+							icon: 'none'
+						})
+						break
+					case 'version':
+						uni.showToast({
+							title: `当前版本 ${VERSION_TEXT}`,
+							icon: 'none'
+						})
+						break
+					default:
+						break
 				}
 			},
 			async handleLogout() {
+				if (!this.isLoggedIn) {
+					uni.showToast({
+						title: '当前未登录',
+						icon: 'none'
+					})
+					return
+				}
+
 				try {
 					const currentUserInfo = getCurrentUniIdUser()
 					if (currentUserInfo && currentUserInfo.uid) {
@@ -443,8 +371,9 @@
 				} finally {
 					clearUniIdTokenStorage()
 					this.userInfo = null
-					this.resetLoginForm()
-					this.resetProfileForm()
+					emitAuthChanged({
+						action: 'logout'
+					})
 					uni.showToast({
 						title: '已退出登录',
 						icon: 'none'
@@ -456,303 +385,128 @@
 </script>
 
 <style>
-	page {
-		background: radial-gradient(circle at top, #fff7f1 0%, #fff7f1 26%, #fff3ea 26%, #fef6f0 100%);
-		min-height: 100%;
-	}
-
-	.page {
-		position: relative;
+	.profile-page {
 		padding: 28rpx 24rpx 52rpx;
-		overflow: hidden;
 	}
 
-	.page__glow {
-		position: absolute;
-		width: 320rpx;
-		height: 320rpx;
-		border-radius: 50%;
-		filter: blur(26rpx);
-		opacity: 0.42;
-		z-index: 0;
+	.page-head {
+		padding-bottom: 20rpx;
 	}
 
-	.page__glow--left {
-		top: -90rpx;
-		left: -120rpx;
-		background: rgba(255, 180, 160, 0.48);
-	}
-
-	.page__glow--right {
-		top: 220rpx;
-		right: -120rpx;
-		background: rgba(255, 220, 174, 0.48);
-	}
-
-	.hero-card,
-	.panel-card,
-	.profile-card,
-	.secondary-button {
-		position: relative;
-		z-index: 1;
-	}
-
-	.hero-card,
-	.panel-card,
-	.profile-card {
-		padding: 34rpx;
-		border-radius: 36rpx;
-		background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 246, 239, 0.96));
-		box-shadow: 0 20rpx 50rpx rgba(177, 114, 83, 0.1);
-	}
-
-	.hero-card {
-		margin-bottom: 22rpx;
-	}
-
-	.eyebrow {
-		display: block;
-		font-size: 22rpx;
-		letter-spacing: 4rpx;
-		color: #b98069;
-		margin-bottom: 14rpx;
-	}
-
-	.hero-card__title {
-		display: block;
-		font-size: 46rpx;
-		font-weight: 700;
-		line-height: 1.3;
-		color: #5a3427;
-	}
-
-	.hero-card__desc {
-		display: block;
-		margin-top: 16rpx;
-		font-size: 26rpx;
-		line-height: 1.7;
-		color: #8b6659;
-	}
-
-	.content-stack,
-	.panel-card + .panel-card,
-	.profile-card + .panel-card {
-		margin-top: 22rpx;
-	}
-
-	.panel-card__header {
+	.page-head__bar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 18rpx;
-		margin-bottom: 22rpx;
+		padding: 18rpx 4rpx 24rpx;
 	}
 
-	.panel-card__title {
-		font-size: 32rpx;
+	.page-head__title {
+		font-size: 40rpx;
+		font-weight: 700;
+		color: #5a3427;
+	}
+
+	.user-card {
+		display: flex;
+		align-items: center;
+		padding: 28rpx;
+	}
+
+	.user-card__avatar {
+		flex-shrink: 0;
+	}
+
+	.user-card__body {
+		flex: 1;
+		min-width: 0;
+		margin-left: 22rpx;
+	}
+
+	.user-card__name {
+		display: block;
+		font-size: 36rpx;
+		font-weight: 700;
+		color: #5a3427;
+	}
+
+	.user-card__meta,
+	.user-card__desc {
+		display: block;
+		margin-top: 10rpx;
+		font-size: 22rpx;
+		line-height: 1.7;
+		color: #8d6a60;
+		word-break: break-all;
+	}
+
+	.user-card__action {
+		flex-shrink: 0;
+		margin-left: 18rpx;
+		font-size: 24rpx;
+		color: #bf826f;
+	}
+
+	.menu-card__body {
+		padding: 6rpx 0;
+	}
+
+	.menu-item {
+		display: flex;
+		align-items: center;
+		width: 100%;
+	}
+
+	.menu-item__icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 74rpx;
+		height: 74rpx;
+		border-radius: 24rpx;
+		flex-shrink: 0;
+	}
+
+	.menu-item__icon-text {
+		font-size: 28rpx;
+		font-weight: 700;
+		color: #ffffff;
+	}
+
+	.menu-item__body {
+		flex: 1;
+		min-width: 0;
+		margin-left: 18rpx;
+	}
+
+	.menu-item__title {
+		display: block;
+		font-size: 30rpx;
 		font-weight: 700;
 		color: #5d372b;
 	}
 
-	.panel-card__tag {
-		padding: 10rpx 18rpx;
-		border-radius: 999rpx;
-		font-size: 22rpx;
-		color: #b8604c;
-		background: #fff1eb;
-	}
-
-	.editor-card,
-	.profile-card__top {
-		display: flex;
-		align-items: center;
-		gap: 24rpx;
-	}
-
-	.avatar-button,
-	.profile-avatar {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: 0;
-		background: transparent;
-		border: 0;
-	}
-
-	.avatar-button::after,
-	.profile-avatar::after {
-		border: 0;
-	}
-
-	.avatar-button__image,
-	.profile-avatar__image {
-		width: 132rpx;
-		height: 132rpx;
-		border-radius: 50%;
-		background: #fff1eb;
-		box-shadow: 0 14rpx 26rpx rgba(177, 114, 83, 0.14);
-	}
-
-	.avatar-button__hint,
-	.profile-avatar__hint {
-		margin-top: 16rpx;
-		font-size: 22rpx;
-		color: #a17567;
-	}
-
-	.editor-card__body,
-	.profile-card__meta {
-		flex: 1;
-	}
-
-	.profile-card__name {
+	.menu-item__desc {
 		display: block;
-		font-size: 38rpx;
-		font-weight: 700;
-		color: #5a3427;
-	}
-
-	.profile-card__subtitle {
-		display: inline-flex;
-		margin-top: 14rpx;
-		padding: 10rpx 18rpx;
-		border-radius: 999rpx;
-		font-size: 22rpx;
-		color: #c0674d;
-		background: #fff3ec;
-	}
-
-	.profile-card__summary {
-		display: block;
-		margin-top: 16rpx;
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: #906b61;
-	}
-
-	.form-item + .form-item {
-		margin-top: 20rpx;
-	}
-
-	.field-label {
-		display: block;
-		font-size: 24rpx;
-		color: #936d62;
-		margin-bottom: 12rpx;
-	}
-
-	.field-tip {
-		display: block;
-		margin-top: 12rpx;
+		margin-top: 8rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: #a07b70;
-	}
-
-	.text-input,
-	.picker-field {
-		height: 88rpx;
-		padding: 0 24rpx;
-		border-radius: 24rpx;
-		background: #fffaf7;
-		font-size: 28rpx;
-		color: #5a3427;
-	}
-
-	.picker-field {
-		display: flex;
-		align-items: center;
-	}
-
-	.picker-field__value {
-		font-size: 28rpx;
-		color: #5a3427;
-	}
-
-	.primary-button,
-	.secondary-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 90rpx;
-		border: 0;
-		border-radius: 999rpx;
-		font-size: 28rpx;
-		font-weight: 600;
-		line-height: 90rpx;
-	}
-
-	.primary-button::after,
-	.secondary-button::after {
-		border: 0;
-	}
-
-	.primary-button {
-		margin-top: 26rpx;
-		color: #ffffff;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-		box-shadow: 0 16rpx 28rpx rgba(231, 111, 81, 0.28);
-	}
-
-	.secondary-button {
-		width: 100%;
-		margin-top: 22rpx;
-		color: #b05b48;
-		background: rgba(255, 241, 235, 0.96);
-	}
-
-	.notice-card {
-		padding: 22rpx 24rpx;
-		border-radius: 24rpx;
-		background: rgba(255, 246, 241, 0.96);
-	}
-
-	.notice-card__text {
-		font-size: 22rpx;
-		line-height: 1.7;
-		color: #a07b70;
-	}
-
-	.info-list {
-		display: flex;
-		flex-direction: column;
-		gap: 18rpx;
-	}
-
-	.info-row {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 20rpx;
-		padding: 20rpx 0;
-	}
-
-	.info-row + .info-row {
-		border-top: 1rpx solid rgba(231, 204, 194, 0.6);
-	}
-
-	.info-row__label {
-		flex-shrink: 0;
-		font-size: 24rpx;
 		color: #9b786d;
 	}
 
-	.info-row__value {
+	.menu-item__right {
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+		margin-left: 10rpx;
+	}
+
+	.menu-item__value {
+		max-width: 200rpx;
 		text-align: right;
-		font-size: 24rpx;
-		line-height: 1.6;
-		color: #604036;
+		font-size: 22rpx;
+		line-height: 1.5;
+		color: #bf826f;
 		word-break: break-all;
 	}
 
-	.info-row__value--mono {
-		font-family: 'Courier New', monospace;
-		font-size: 22rpx;
-	}
-
-	.button-hover {
-		opacity: 0.92;
-		transform: translateY(2rpx);
-	}
 </style>

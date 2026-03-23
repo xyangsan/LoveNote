@@ -1,0 +1,38 @@
+[
+	{
+		"IndexName": "idx_user_a_uid",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "user_a_uid",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_user_b_uid",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "user_b_uid",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_status",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "status",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

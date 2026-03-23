@@ -519,12 +519,6 @@
 </script>
 
 <style>
-	page {
-		background:
-			radial-gradient(circle at top, #fff7f1 0%, #fff7f1 28%, #fff3ea 28%, #fef6f0 100%);
-		min-height: 100%;
-	}
-
 	.page {
 		position: relative;
 		padding: 32rpx 24rpx 48rpx;

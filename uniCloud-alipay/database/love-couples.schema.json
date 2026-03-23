@@ -1,0 +1,60 @@
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "情侣关系 ID，系统自动生成"
+		},
+		"user_a_uid": {
+			"bsonType": "string",
+			"title": "成员 A 用户ID"
+		},
+		"user_b_uid": {
+			"bsonType": "string",
+			"title": "成员 B 用户ID"
+		},
+		"partner_nickname": {
+			"bsonType": "string",
+			"title": "待绑定对象昵称缓存"
+		},
+		"status": {
+			"bsonType": "int",
+			"title": "关系状态",
+			"description": "0 待确认 1 已绑定 2 已解除"
+		},
+		"invite_code": {
+			"bsonType": "string",
+			"title": "绑定邀请码"
+		},
+		"anniversary_date": {
+			"bsonType": "long",
+			"title": "纪念日时间戳"
+		},
+		"bind_date": {
+			"bsonType": "long",
+			"title": "绑定时间"
+		},
+		"created_by": {
+			"bsonType": "string",
+			"title": "创建人用户ID"
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "备注"
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"updated_at": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

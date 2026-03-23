@@ -15,33 +15,45 @@
 		{
 			"path": "pages/profile/index",
 			"style": {
-				"navigationBarTitleText": "我的资料"
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/index",
+			"style": {
+				"navigationBarTitleText": "微信登录"
+			}
+		},
+		{
+			"path": "pages/profile/edit",
+			"style": {
+				"navigationBarTitleText": "编辑资料"
 			}
 		}
 	],
 	"tabBar": {
-		"color": "#B08A7E",
-		"selectedColor": "#E76F51",
+		"color": "#707070",
+		"selectedColor": "#EC7558",
 		"backgroundColor": "#FFF7F1",
 		"borderStyle": "black",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
-				"text": "空间",
-				"iconPath": "static/logo.png",
-				"selectedIconPath": "static/logo.png"
+				"text": "首页",
+				"iconPath": "/static/tabber/home.png",
+				"selectedIconPath": "/static/tabber/home-filling.png"
 			},
 			{
 				"pagePath": "pages/profile/index",
 				"text": "我的",
-				"iconPath": "static/logo.png",
-				"selectedIconPath": "static/logo.png"
+				"iconPath": "/static/tabber/me.png",
+				"selectedIconPath": "/static/tabber/me_fill.png"
 			}
 		]
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "LoveNote",
+		"navigationBarTitleText": "",
 		"navigationBarBackgroundColor": "#FFF7F1",
 		"backgroundColor": "#FFF7F1"
 	},

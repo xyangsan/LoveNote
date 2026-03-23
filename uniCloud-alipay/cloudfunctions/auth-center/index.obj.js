@@ -3,6 +3,7 @@
 const db = uniCloud.database()
 const dbCmd = db.command
 const userCollection = db.collection('uni-id-users')
+const coupleCollection = db.collection('love-couples')
 const uniIdCommon = require('uni-id-common')
 const { callAdapter } = require('x-uni-id-co')
 
@@ -27,6 +28,30 @@ function getFileName(value = '') {
 async function getUserById(uid) {
 	const getUserRes = await userCollection.doc(uid).get()
 	return getUserRes && getUserRes.data && getUserRes.data[0] ? getUserRes.data[0] : null
+}
+
+async function getCoupleByUid(uid) {
+	if (!uid) {
+		return null
+	}
+
+	try {
+		const coupleRes = await coupleCollection.where(
+			dbCmd.or([
+				{
+					user_a_uid: uid
+				},
+				{
+					user_b_uid: uid
+				}
+			])
+		).limit(1).get()
+
+		return coupleRes && coupleRes.data && coupleRes.data[0] ? coupleRes.data[0] : null
+	} catch (error) {
+		console.warn('getCoupleByUid failed', error)
+		return null
+	}
 }
 
 async function resolveAvatar(record = {}) {
@@ -74,8 +99,40 @@ async function resolveAvatar(record = {}) {
 	}
 }
 
+async function formatCoupleInfo(uid, coupleRecord = null) {
+	const relationRecord = coupleRecord || await getCoupleByUid(uid)
+	if (!relationRecord) {
+		return null
+	}
+
+	const isUserA = relationRecord.user_a_uid === uid
+	const partnerUid = isUserA ? relationRecord.user_b_uid || '' : relationRecord.user_a_uid || ''
+	const partnerRecord = partnerUid ? await getUserById(partnerUid) : null
+	const partnerAvatar = partnerRecord ? await resolveAvatar(partnerRecord) : {
+		avatarFileId: '',
+		avatarUrl: ''
+	}
+	const status = Number(relationRecord.status || 0)
+
+	return {
+		coupleId: relationRecord._id || '',
+		status,
+		statusText: status === 1 ? '已绑定' : '待确认',
+		isBound: status === 1,
+		partnerUid,
+		partnerNickname: partnerRecord
+			? partnerRecord.nickname || partnerRecord.username || DEFAULT_NICKNAME
+			: relationRecord.partner_nickname || '',
+		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
+		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		bindDate: relationRecord.bind_date || relationRecord.created_at || 0,
+		anniversaryDate: relationRecord.anniversary_date || 0
+	}
+}
+
 async function formatUserInfo(record = {}) {
 	const { avatarFileId, avatarUrl } = await resolveAvatar(record)
+	const coupleInfo = record._id ? await formatCoupleInfo(record._id) : null
 
 	return {
 		_id: record._id || '',
@@ -83,11 +140,13 @@ async function formatUserInfo(record = {}) {
 		avatarUrl,
 		avatarFileId,
 		gender: Number(record.gender || 0),
+		age: Number(record.age || 0),
 		role: Array.isArray(record.role) ? record.role : [],
 		status: typeof record.status === 'number' ? record.status : 0,
 		wxUnionid: record.wx_unionid || '',
 		registerDate: record.register_date || 0,
-		lastLoginDate: record.last_login_date || 0
+		lastLoginDate: record.last_login_date || 0,
+		coupleInfo
 	}
 }
 
@@ -177,6 +236,21 @@ function buildProfileUpdateData(params = {}) {
 		updateData.gender = gender
 	}
 
+	if (params.age !== undefined) {
+		if (params.age === '' || params.age === null) {
+			updateData.age = dbCmd.remove()
+		} else {
+			const age = Number(params.age)
+			if (!Number.isInteger(age) || age < 1 || age > 120) {
+				throw {
+					errCode: 'love-note-invalid-age',
+					errMsg: '年龄范围需在 1 到 120 岁之间'
+				}
+			}
+			updateData.age = age
+		}
+	}
+
 	const avatarFileId = typeof params.avatarFileId === 'string' ? params.avatarFileId.trim() : ''
 	const avatarUrl = typeof params.avatarUrl === 'string' ? params.avatarUrl.trim() : ''
 	const avatarFile = params.avatarFile && typeof params.avatarFile === 'object' ? params.avatarFile : null
@@ -242,7 +316,13 @@ module.exports = {
 
 			let userRecord = await ensureDefaultRole(loginResult.uid)
 
-			if (params.nickname !== undefined || params.gender !== undefined || params.avatarFileId || params.avatarUrl) {
+			if (
+				params.nickname !== undefined ||
+				params.gender !== undefined ||
+				params.age !== undefined ||
+				params.avatarFileId ||
+				params.avatarUrl
+			) {
 				userRecord = await updateUserProfile(loginResult.uid, params)
 			}
 
