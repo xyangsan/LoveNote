@@ -134,79 +134,79 @@
 						id: 'meteor-1',
 						top: '8%',
 						left: '86%',
-						length: '320rpx',
+						length: '250rpx',
 						duration: '6.6s',
 						delay: '0s',
 						travelX: '-560rpx',
 						travelY: '560rpx',
 						glintDuration: '8.2s',
 						glintDelay: '0.4s',
-						headSize: '24rpx'
+						headSize: '19rpx'
 					},
 					{
 						id: 'meteor-2',
 						top: '16%',
 						left: '72%',
-						length: '268rpx',
+						length: '208rpx',
 						duration: '7.2s',
 						delay: '1.6s',
 						travelX: '-520rpx',
 						travelY: '520rpx',
 						glintDuration: '9.4s',
 						glintDelay: '1.3s',
-						headSize: '20rpx'
+						headSize: '17rpx'
 					},
 					{
 						id: 'meteor-3',
 						top: '4%',
 						left: '64%',
-						length: '290rpx',
+						length: '226rpx',
 						duration: '5.8s',
 						delay: '3.2s',
 						travelX: '-500rpx',
 						travelY: '500rpx',
 						glintDuration: '7.8s',
 						glintDelay: '2.7s',
-						headSize: '22rpx'
+						headSize: '18rpx'
 					},
 					{
 						id: 'meteor-4',
 						top: '22%',
 						left: '92%',
-						length: '340rpx',
+						length: '272rpx',
 						duration: '7.8s',
 						delay: '2.4s',
 						travelX: '-620rpx',
 						travelY: '620rpx',
 						glintDuration: '10.2s',
 						glintDelay: '0.9s',
-						headSize: '26rpx'
+						headSize: '21rpx'
 					},
 					{
 						id: 'meteor-5',
 						top: '12%',
 						left: '56%',
-						length: '246rpx',
+						length: '194rpx',
 						duration: '6.9s',
 						delay: '4.1s',
 						travelX: '-480rpx',
 						travelY: '480rpx',
 						glintDuration: '8.8s',
 						glintDelay: '3.1s',
-						headSize: '18rpx'
+						headSize: '16rpx'
 					},
 					{
 						id: 'meteor-6',
 						top: '28%',
 						left: '78%',
-						length: '284rpx',
+						length: '220rpx',
 						duration: '7.5s',
 						delay: '5.2s',
 						travelX: '-540rpx',
 						travelY: '540rpx',
 						glintDuration: '9.8s',
 						glintDelay: '2.2s',
-						headSize: '22rpx'
+						headSize: '18rpx'
 					}
 				],
 				loginForm: {
@@ -223,6 +223,7 @@
 		},
 		onLoad(options = {}) {
 			this.redirectUrl = options.redirect ? decodeURIComponent(options.redirect) : ''
+			console.log(this.redirectUrl);
 		},
 		onShow() {
 			if (hasValidLogin()) {
@@ -364,13 +365,13 @@
 	.login-page__meteor .meteor {
 		position: absolute;
 		width: var(--meteor-length);
-		height: 7rpx;
+		height: 3rpx;
 		border-radius: 999rpx;
 		opacity: 0;
 		transform: translate3d(120rpx, -120rpx, 0) rotate(135deg);
 		transform-origin: right center;
-		background: linear-gradient(90deg, rgba(250, 133, 106, 0) 0%, rgba(250, 133, 106, 0.14) 28%, rgba(250, 133, 106, 0.48) 70%, rgba(250, 133, 106, 0.98) 100%);
-		box-shadow: 0 0 16rpx rgba(250, 133, 106, 0.46);
+		background: linear-gradient(90deg, rgba(236, 117, 88, 0) 0%, rgba(238, 126, 98, 0.08) 28%, rgba(244, 160, 138, 0.26) 62%, rgba(255, 226, 216, 0.82) 100%);
+		box-shadow: 0 0 10rpx rgba(244, 170, 151, 0.24);
 		animation: meteorFall var(--meteor-duration) cubic-bezier(0.2, 0.08, 0.18, 1) var(--meteor-delay) infinite;
 	}
 
@@ -381,10 +382,11 @@
 		top: 50%;
 		width: var(--meteor-head-size);
 		height: var(--meteor-head-size);
-		border-radius: 50%;
-		transform: translateY(-50%) scale(0.88);
-		background: radial-gradient(circle, rgba(255, 246, 243, 0.98) 0%, rgba(255, 223, 214, 0.92) 26%, rgba(250, 133, 106, 0.98) 62%, rgba(250, 133, 106, 0.12) 100%);
-		box-shadow: 0 0 12rpx rgba(255, 239, 233, 0.9), 0 0 30rpx rgba(250, 133, 106, 0.42);
+		border-radius: 28% 62% 24% 58%;
+		border: 1rpx solid rgba(255, 255, 255, 0.7);
+		transform: translateY(-50%) rotate(45deg) scale(0.9);
+		background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.98) 32%, rgba(255, 248, 244, 0.92) 56%, rgba(255, 234, 226, 0.46) 82%, rgba(236, 117, 88, 0.06) 100%);
+		box-shadow: 0 0 14rpx rgba(255, 255, 255, 1), 0 0 26rpx rgba(255, 247, 243, 0.84), 0 0 34rpx rgba(255, 236, 228, 0.3);
 		animation: meteorGlint var(--meteor-glint-duration) ease-in-out var(--meteor-glint-delay) infinite;
 	}
 
@@ -394,11 +396,11 @@
 		top: 50%;
 		left: 18%;
 		width: 72%;
-		height: 16rpx;
+		height: 8rpx;
 		transform: translateY(-50%);
 		border-radius: 999rpx;
-		background: linear-gradient(90deg, rgba(250, 133, 106, 0) 0%, rgba(250, 133, 106, 0.18) 42%, rgba(250, 133, 106, 0.42) 60%, rgba(250, 133, 106, 0) 100%);
-		filter: blur(4rpx);
+		background: linear-gradient(90deg, rgba(236, 117, 88, 0) 0%, rgba(239, 132, 104, 0.06) 28%, rgba(246, 174, 155, 0.2) 54%, rgba(255, 230, 222, 0.28) 70%, rgba(255, 255, 255, 0) 100%);
+		filter: blur(2rpx);
 	}
 
 	@keyframes meteorFall {
@@ -422,34 +424,39 @@
 	}
 
 	@keyframes meteorGlint {
-		0%, 12%, 28%, 100% {
-			opacity: 0.58;
-			transform: translateY(-50%) scale(0.86);
+		0%, 10%, 26%, 100% {
+			opacity: 0.48;
+			transform: translateY(-50%) rotate(45deg) scale(0.82);
 		}
 
-		14% {
+		13% {
 			opacity: 1;
-			transform: translateY(-50%) scale(1.3);
+			transform: translateY(-50%) rotate(45deg) scale(1.46);
 		}
 
 		16% {
-			opacity: 0.72;
-			transform: translateY(-50%) scale(0.96);
+			opacity: 0.7;
+			transform: translateY(-50%) rotate(45deg) scale(0.94);
 		}
 
-		58% {
-			opacity: 0.54;
-			transform: translateY(-50%) scale(0.9);
+		55% {
+			opacity: 0.46;
+			transform: translateY(-50%) rotate(45deg) scale(0.86);
 		}
 
-		61% {
+		59% {
 			opacity: 1;
-			transform: translateY(-50%) scale(1.36);
+			transform: translateY(-50%) rotate(45deg) scale(1.52);
 		}
 
-		64% {
-			opacity: 0.68;
-			transform: translateY(-50%) scale(0.94);
+		63% {
+			opacity: 0.72;
+			transform: translateY(-50%) rotate(45deg) scale(0.96);
+		}
+
+		81% {
+			opacity: 0.88;
+			transform: translateY(-50%) rotate(45deg) scale(1.16);
 		}
 	}
 
@@ -480,7 +487,7 @@
 		position: absolute;
 		left: 40rpx;
 		right: 40rpx;
-		bottom: calc(44rpx + env(safe-area-inset-bottom));
+		bottom: calc(4rpx + env(safe-area-inset-bottom));
 		z-index: 2;
 		text-align: center;
 	}
