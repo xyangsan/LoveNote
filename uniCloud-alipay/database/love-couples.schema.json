@@ -26,7 +26,7 @@
 		"status": {
 			"bsonType": "int",
 			"title": "关系状态",
-			"description": "0 待确认 1 已绑定 2 已解除"
+			"description": "0 待确认 1 已绑定 2 已解绑 3 已关闭 4 已取消"
 		},
 		"invite_code": {
 			"bsonType": "string",
@@ -40,9 +40,17 @@
 			"bsonType": "long",
 			"title": "绑定时间"
 		},
+		"unbind_date": {
+			"bsonType": "long",
+			"title": "解绑时间"
+		},
 		"created_by": {
 			"bsonType": "string",
 			"title": "创建人用户ID"
+		},
+		"last_action_uid": {
+			"bsonType": "string",
+			"title": "最后操作人用户ID"
 		},
 		"remark": {
 			"bsonType": "string",

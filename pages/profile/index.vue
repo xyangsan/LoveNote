@@ -307,9 +307,8 @@
 				this.goToEdit()
 			},
 			handleBindAction() {
-				uni.showToast({
-					title: this.currentCouple ? '绑定确认功能开发中' : '情侣绑定功能开发中',
-					icon: 'none'
+				uni.navigateTo({
+					url: '/pages/couple/index'
 				})
 			},
 			handleCardClick(item) {

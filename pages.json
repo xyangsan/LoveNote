@@ -29,6 +29,12 @@
 			"style": {
 				"navigationBarTitleText": "编辑资料"
 			}
+		},
+		{
+			"path": "pages/couple/index",
+			"style": {
+				"navigationBarTitleText": "情侣信息"
+			}
 		}
 	],
 	"tabBar": {

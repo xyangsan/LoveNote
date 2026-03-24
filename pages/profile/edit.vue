@@ -22,44 +22,13 @@
 				:margin-bottom="28"
 			></fui-section>
 
-			<fui-card
+			<love-auth-required
 				v-if="!isLoggedIn"
-				class="empty-card"
-				:margin="['0', '0', '0', '0']"
-				background="rgba(255, 250, 247, 0.96)"
-				radius="32rpx"
-				shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-				:padding="['0', '0']"
-				:header-line="false"
-			>
-				<view class="empty-card__body">
-					<text class="empty-card__title">当前未登录</text>
-					<text class="empty-card__desc">请先完成登录，再继续修改头像和昵称。</text>
-					<view class="edit-actions">
-						<fui-button
-							text="前往登录页"
-							background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-							color="#ffffff"
-							radius="999rpx"
-							height="88rpx"
-							:size="28"
-							:bold="true"
-							@click="goToLoginPage"
-						></fui-button>
-						<fui-button
-							text="返回个人中心"
-							background="rgba(255, 241, 235, 0.98)"
-							color="#b05b48"
-							border-color="rgba(214, 145, 122, 0.24)"
-							radius="999rpx"
-							height="88rpx"
-							:size="28"
-							:bold="true"
-							@click="backToProfile"
-						></fui-button>
-					</view>
-				</view>
-			</fui-card>
+				desc="请先完成登录，再继续修改头像和昵称。"
+				secondary-text="返回个人中心"
+				@login="goToLoginPage"
+				@secondary="backToProfile"
+			></love-auth-required>
 
 			<form v-else report-submit="true" @submit="handleFormSubmit">
 				<fui-form-field hidden name="nickname" :value="profileForm.nickname"></fui-form-field>
@@ -679,25 +648,6 @@
 <style>
 	.edit-page {
 		padding: 28rpx 24rpx 52rpx;
-	}
-
-	.empty-card__body {
-		padding: 38rpx 34rpx;
-	}
-
-	.empty-card__title {
-		display: block;
-		font-size: 34rpx;
-		font-weight: 700;
-		color: #5a3427;
-	}
-
-	.empty-card__desc {
-		display: block;
-		margin-top: 18rpx;
-		font-size: 24rpx;
-		line-height: 1.8;
-		color: #906b61;
 	}
 
 	.editor-card {

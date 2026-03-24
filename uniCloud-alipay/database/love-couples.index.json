@@ -34,5 +34,53 @@
 				}
 			]
 		}
+	},
+	{
+		"IndexName": "idx_user_b_uid_status",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "user_b_uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "status",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_user_a_uid_status",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "user_a_uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "status",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_created_by_status",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "created_by",
+					"Direction": "1"
+				},
+				{
+					"Name": "status",
+					"Direction": "1"
+				}
+			]
+		}
 	}
 ]
