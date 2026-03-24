@@ -106,6 +106,14 @@
 		return `${year}.${month}.${day}`
 	}
 
+	function formatBirthday(value = '') {
+		if (!value) {
+			return '未设置'
+		}
+
+		return `${value}`.replace(/-/g, '.')
+	}
+
 	export default {
 		data() {
 			return {
@@ -129,9 +137,8 @@
 			currentGenderText() {
 				return genderOptions[Number(this.userInfo && this.userInfo.gender || 0)] || genderOptions[0]
 			},
-			currentAgeText() {
-				const age = Number(this.userInfo && this.userInfo.age || 0)
-				return age > 0 ? `${age} 岁` : '未填写'
+			currentBirthdayText() {
+				return this.userInfo && this.userInfo.birthday ? formatBirthday(this.userInfo.birthday) : '未设置'
 			},
 			registerDateText() {
 				return this.userInfo ? formatDate(this.userInfo.registerDate) : '暂未设置'
@@ -160,10 +167,9 @@
 				if (this.currentGenderText !== '保密') {
 					meta.push(this.currentGenderText)
 				}
-				if (this.currentAgeText !== '未填写') {
-					meta.push(this.currentAgeText)
+				if (this.currentBirthdayText !== '未设置') {
+					meta.push(`生日 ${this.currentBirthdayText}`)
 				}
-				meta.push(`注册于 ${this.registerDateText}`)
 				return meta.join(' · ')
 			},
 			profileDescText() {

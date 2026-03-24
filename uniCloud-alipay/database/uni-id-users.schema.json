@@ -58,6 +58,11 @@
 			"title": "性别",
 			"description": "0 未知 1 男 2 女"
 		},
+		"birthday": {
+			"bsonType": "string",
+			"title": "生日",
+			"description": "用户生日，格式为 YYYY-MM-DD"
+		},
 		"age": {
 			"bsonType": "int",
 			"title": "年龄",

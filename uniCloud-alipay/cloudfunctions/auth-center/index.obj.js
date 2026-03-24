@@ -25,6 +25,30 @@ function getFileName(value = '') {
 	return segments[segments.length - 1] || `avatar.${getFileExtname(cleanValue)}`
 }
 
+function isValidBirthday(value = '') {
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+		return false
+	}
+
+	const date = new Date(`${value}T00:00:00`)
+	if (Number.isNaN(date.getTime())) {
+		return false
+	}
+
+	const year = date.getFullYear()
+	const month = `${date.getMonth() + 1}`.padStart(2, '0')
+	const day = `${date.getDate()}`.padStart(2, '0')
+	return `${year}-${month}-${day}` === value
+}
+
+function getTodayDateString() {
+	const today = new Date()
+	const year = today.getFullYear()
+	const month = `${today.getMonth() + 1}`.padStart(2, '0')
+	const day = `${today.getDate()}`.padStart(2, '0')
+	return `${year}-${month}-${day}`
+}
+
 async function getUserById(uid) {
 	const getUserRes = await userCollection.doc(uid).get()
 	return getUserRes && getUserRes.data && getUserRes.data[0] ? getUserRes.data[0] : null
@@ -140,6 +164,8 @@ async function formatUserInfo(record = {}) {
 		avatarUrl,
 		avatarFileId,
 		gender: Number(record.gender || 0),
+		mobile: record.mobile || '',
+		birthday: record.birthday || '',
 		age: Number(record.age || 0),
 		role: Array.isArray(record.role) ? record.role : [],
 		status: typeof record.status === 'number' ? record.status : 0,
@@ -236,6 +262,47 @@ function buildProfileUpdateData(params = {}) {
 		updateData.gender = gender
 	}
 
+	if (params.mobile !== undefined) {
+		const mobile = String(params.mobile || '').replace(/[^\d]/g, '').slice(0, 11)
+		if (!mobile) {
+			updateData.mobile = dbCmd.remove()
+			updateData.mobile_confirmed = dbCmd.remove()
+		} else {
+			if (!/^1[3-9]\d{9}$/.test(mobile)) {
+				throw {
+					errCode: 'love-note-invalid-mobile',
+					errMsg: '手机号格式不正确'
+				}
+			}
+
+			updateData.mobile = mobile
+			updateData.mobile_confirmed = 0
+		}
+	}
+
+	if (params.birthday !== undefined) {
+		const birthday = String(params.birthday || '').trim()
+		if (!birthday) {
+			updateData.birthday = dbCmd.remove()
+		} else {
+			if (!isValidBirthday(birthday)) {
+				throw {
+					errCode: 'love-note-invalid-birthday',
+					errMsg: '生日格式不正确'
+				}
+			}
+
+			if (birthday < '1900-01-01' || birthday > getTodayDateString()) {
+				throw {
+					errCode: 'love-note-invalid-birthday',
+					errMsg: '生日日期超出可选范围'
+				}
+			}
+
+			updateData.birthday = birthday
+		}
+	}
+
 	if (params.age !== undefined) {
 		if (params.age === '' || params.age === null) {
 			updateData.age = dbCmd.remove()
@@ -319,6 +386,8 @@ module.exports = {
 			if (
 				params.nickname !== undefined ||
 				params.gender !== undefined ||
+				params.mobile !== undefined ||
+				params.birthday !== undefined ||
 				params.age !== undefined ||
 				params.avatarFileId ||
 				params.avatarUrl
