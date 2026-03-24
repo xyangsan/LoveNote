@@ -86,6 +86,7 @@
 		emitAuthChanged,
 		getAuthCenterObject,
 		getCurrentUniIdUser,
+		saveCachedUserProfile,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 
@@ -267,6 +268,7 @@
 					}
 
 					this.userInfo = result.userInfo || null
+					saveCachedUserProfile(this.userInfo)
 				} catch (error) {
 					console.warn('profile fetchCurrentUser failed', error)
 					clearUniIdTokenStorage()

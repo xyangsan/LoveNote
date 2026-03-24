@@ -63,7 +63,7 @@
 							@input="onNicknameInput"
 							@blur="onNicknameBlur"
 						></fui-input>
-						<text class="love-field-tip login-editor__tip">如果暂时不填写，将使用微信用户作为默认昵称。</text>
+						<text class="love-field-tip login-editor__tip">首次填写后会自动记住头像和昵称，后续登录可直接回填。</text>
 					</view>
 
 					<view class="love-action-stack login-actions">
@@ -109,6 +109,7 @@
 	import {
 		DEFAULT_AVATAR,
 		emitAuthChanged,
+		getCachedUserProfile,
 		hasValidLogin
 	} from '../../common/auth-center.js'
 	import { loginByWeixinProfile } from '../../common/auth-login.js'
@@ -223,12 +224,17 @@
 		},
 		onLoad(options = {}) {
 			this.redirectUrl = options.redirect ? decodeURIComponent(options.redirect) : ''
-			console.log(this.redirectUrl);
+			this.applyCachedProfile({
+				force: true
+			})
 		},
 		onShow() {
 			if (hasValidLogin()) {
 				this.navigateAfterLogin()
+				return
 			}
+
+			this.applyCachedProfile()
 		},
 		methods: {
 			resetLoginForm() {
@@ -236,6 +242,29 @@
 					nickname: '',
 					avatarUrl: '',
 					avatarFileId: ''
+				}
+			},
+			applyCachedProfile({ force = false } = {}) {
+				const cachedProfile = getCachedUserProfile()
+				if (!cachedProfile) {
+					return
+				}
+
+				const shouldUseCachedNickname = force || !this.loginForm.nickname
+				const shouldUseCachedAvatar = force || !this.loginForm.avatarUrl
+				const nextNickname = shouldUseCachedNickname ? (cachedProfile.nickname || '') : this.loginForm.nickname
+				const nextAvatar = shouldUseCachedAvatar
+					? (cachedProfile.avatarUrl || cachedProfile.avatarFileId || '')
+					: this.loginForm.avatarUrl
+				const nextAvatarFileId = shouldUseCachedAvatar
+					? (cachedProfile.avatarFileId || '')
+					: this.loginForm.avatarFileId
+
+				this.loginForm = {
+					...this.loginForm,
+					nickname: nextNickname,
+					avatarUrl: nextAvatar,
+					avatarFileId: nextAvatarFileId
 				}
 			},
 			onChooseAvatar(event) {

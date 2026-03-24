@@ -1,5 +1,6 @@
 export const DEFAULT_AVATAR = '/static/user-empty.png'
 export const AUTH_CHANGE_EVENT = 'love-note-auth-change'
+export const USER_PROFILE_CACHE_KEY = 'love_note_user_profile_cache'
 
 let authCenterObject = null
 
@@ -17,6 +18,52 @@ export function clearUniIdTokenStorage() {
 	;['uni_id_token', 'uni_id_token_expired', 'uniIdToken'].forEach((key) => {
 		uni.removeStorageSync(key)
 	})
+}
+
+export function getCachedUserProfile() {
+	const cachedValue = uni.getStorageSync(USER_PROFILE_CACHE_KEY)
+	if (!cachedValue || typeof cachedValue !== 'object') {
+		return null
+	}
+
+	const nickname = cachedValue.nickname ? `${cachedValue.nickname}`.trim() : ''
+	const avatarUrl = cachedValue.avatarUrl ? `${cachedValue.avatarUrl}` : ''
+	const avatarFileId = cachedValue.avatarFileId ? `${cachedValue.avatarFileId}` : ''
+
+	if (!nickname && !avatarUrl && !avatarFileId) {
+		return null
+	}
+
+	return {
+		nickname,
+		avatarUrl,
+		avatarFileId,
+		updatedAt: Number(cachedValue.updatedAt || Date.now())
+	}
+}
+
+export function saveCachedUserProfile(profile = {}) {
+	if (!profile || typeof profile !== 'object') {
+		return null
+	}
+
+	const nickname = profile.nickname ? `${profile.nickname}`.trim() : ''
+	const avatarUrl = profile.avatarUrl ? `${profile.avatarUrl}` : ''
+	const avatarFileId = profile.avatarFileId ? `${profile.avatarFileId}` : ''
+
+	if (!nickname && !avatarUrl && !avatarFileId) {
+		return null
+	}
+
+	const cachedProfile = {
+		nickname,
+		avatarUrl,
+		avatarFileId,
+		updatedAt: Date.now()
+	}
+
+	uni.setStorageSync(USER_PROFILE_CACHE_KEY, cachedProfile)
+	return cachedProfile
 }
 
 export function getCurrentUniIdUser() {

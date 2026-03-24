@@ -166,6 +166,7 @@
 		clearUniIdTokenStorage,
 		getAuthCenterObject,
 		getCurrentUniIdUser,
+		saveCachedUserProfile,
 		subscribeAuthChanged,
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
@@ -287,6 +288,7 @@
 					}
 
 					this.userInfo = result.userInfo || null
+					saveCachedUserProfile(this.userInfo)
 					this.fillProfileForm(this.userInfo)
 				} catch (error) {
 					console.warn('profile edit fetchCurrentUser failed', error)
@@ -389,6 +391,7 @@
 					}
 
 					this.userInfo = result.userInfo || this.userInfo
+					saveCachedUserProfile(this.userInfo)
 					this.fillProfileForm(this.userInfo)
 
 					uni.showToast({

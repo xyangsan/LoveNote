@@ -1,4 +1,4 @@
-import { getAuthCenterObject, uploadAvatarIfNeeded } from './auth-center.js'
+import { getAuthCenterObject, saveCachedUserProfile, uploadAvatarIfNeeded } from './auth-center.js'
 
 export async function loginByWeixinProfile(loginForm = {}) {
 	const loginRes = await uni.login()
@@ -27,6 +27,10 @@ export async function loginByWeixinProfile(loginForm = {}) {
 	const result = await getAuthCenterObject().loginByWeixin(loginPayload)
 	if (result.errCode && result.errCode !== 0) {
 		throw new Error(result.errMsg || '登录失败')
+	}
+
+	if (result.userInfo) {
+		saveCachedUserProfile(result.userInfo)
 	}
 
 	return result
