@@ -1,0 +1,116 @@
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "绑定历史记录 ID，系统自动生成"
+		},
+		"history_no": {
+			"bsonType": "string",
+			"title": "历史编号"
+		},
+		"relation_id": {
+			"bsonType": "string",
+			"title": "关系ID"
+		},
+		"request_id": {
+			"bsonType": "string",
+			"title": "关联请求ID"
+		},
+		"event_type": {
+			"bsonType": "string",
+			"title": "事件类型",
+			"description": "request_created / request_accepted / request_rejected / request_cancelled / relation_bound / relation_unbound / relation_closed"
+		},
+		"event_status": {
+			"bsonType": "int",
+			"title": "事件状态码"
+		},
+		"operator_uid": {
+			"bsonType": "string",
+			"title": "操作人用户ID"
+		},
+		"partner_uid": {
+			"bsonType": "string",
+			"title": "关联对象用户ID"
+		},
+		"operator_snapshot": {
+			"bsonType": "object",
+			"title": "操作人快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"gender": {
+					"bsonType": "int"
+				}
+			}
+		},
+		"partner_snapshot": {
+			"bsonType": "object",
+			"title": "对象快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"gender": {
+					"bsonType": "int"
+				}
+			}
+		},
+		"relation_snapshot": {
+			"bsonType": "object",
+			"title": "关系快照",
+			"properties": {
+				"user_a_uid": {
+					"bsonType": "string"
+				},
+				"user_b_uid": {
+					"bsonType": "string"
+				},
+				"status": {
+					"bsonType": "int"
+				},
+				"bind_date": {
+					"bsonType": "long"
+				},
+				"unbind_date": {
+					"bsonType": "long"
+				},
+				"anniversary_date": {
+					"bsonType": "long"
+				}
+			}
+		},
+		"content": {
+			"bsonType": "string",
+			"title": "事件说明"
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "备注"
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		}
+	}
+}

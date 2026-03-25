@@ -58,18 +58,14 @@
 				<view class="heart-pill">{{ isLoggedIn ? '账号已激活' : '等待登录中' }}</view>
 			</view>
 
-			<view class="couple-card">
-				<view class="avatar-stack">
-					<image class="avatar-stack__image avatar-stack__image--primary" :src="displayUserAvatar"></image>
-					<view class="avatar-stack__item avatar-stack__item--placeholder">
-						<text class="avatar-stack__label">TA</text>
-					</view>
-				</view>
-				<view class="couple-meta">
-					<text class="couple-meta__names">{{ currentUserName }} & 待绑定</text>
-					<text class="couple-meta__desc">{{ currentUserDesc }}</text>
-				</view>
-			</view>
+			<love-relation-bar
+				class="couple-card"
+				:primary-avatar="displayUserAvatar"
+				:primary-gender="Number(currentUser && currentUser.gender || 0)"
+				secondary-placeholder="TA"
+				:title="`${currentUserName} & 待绑定`"
+				:desc="currentUserDesc"
+			></love-relation-bar>
 
 			<view class="hero-stats">
 				<view v-for="item in heroStats" :key="item.label" class="hero-stats__item">
@@ -200,8 +196,12 @@
 		getCurrentUniIdUser,
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
+	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
 
 	export default {
+		components: {
+			LoveRelationBar
+		},
 		data() {
 			const formatDate = (date) => {
 				const year = date.getFullYear()
@@ -742,64 +742,7 @@
 	}
 
 	.couple-card {
-		display: flex;
-		align-items: center;
-		gap: 22rpx;
 		margin-top: 34rpx;
-		padding: 24rpx;
-		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.72);
-	}
-
-	.avatar-stack {
-		display: flex;
-		align-items: center;
-	}
-
-	.avatar-stack__image,
-	.avatar-stack__item {
-		width: 88rpx;
-		height: 88rpx;
-		margin-right: -14rpx;
-		border: 4rpx solid rgba(255, 255, 255, 0.95);
-		border-radius: 50%;
-		box-shadow: 0 12rpx 24rpx rgba(168, 99, 76, 0.14);
-	}
-
-	.avatar-stack__image {
-		background: #fff2ec;
-	}
-
-	.avatar-stack__item {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(135deg, #ffd0c3 0%, #ffc371 100%);
-	}
-
-	.avatar-stack__label {
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #ffffff;
-	}
-
-	.couple-meta {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-	}
-
-	.couple-meta__names {
-		font-size: 34rpx;
-		font-weight: 700;
-		color: #5b3529;
-	}
-
-	.couple-meta__desc {
-		margin-top: 10rpx;
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: #906b61;
 	}
 
 	.hero-stats {

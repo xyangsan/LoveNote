@@ -11,7 +11,13 @@
 					<text class="page-head__title">个人中心</text>
 				</view>
 
-				<love-glass-card :margin="['0', '0', '0', '0']" :padding="['0', '0']" :header-line="false" @click="handleProfileTap">
+				<love-glass-card
+					:margin="['0', '0', '0', '0']"
+					:padding="['0', '0']"
+					:content-padding="['32rpx', '30rpx']"
+					:header-line="false"
+					@click="handleProfileTap"
+				>
 					<view class="user-card">
 						<fui-avatar
 							class="user-card__avatar"
@@ -31,7 +37,13 @@
 				</love-glass-card>
 			</view>
 
-			<love-glass-card class="menu-card" :margin="['24rpx', '0', '0', '0']" :padding="['0', '0']" :header-line="false">
+			<love-glass-card
+				class="menu-card"
+				:margin="['24rpx', '0', '0', '0']"
+				:padding="['0', '0']"
+				:content-padding="['12rpx', '14rpx']"
+				:header-line="false"
+			>
 				<view class="menu-card__body">
 					<fui-list-cell
 						v-for="(item, index) in centerCards"
@@ -415,23 +427,24 @@
 
 	.user-card {
 		display: flex;
-		align-items: center;
-		padding: 28rpx;
+		align-items: flex-start;
+		gap: 24rpx;
 	}
 
 	.user-card__avatar {
 		flex-shrink: 0;
+		box-shadow: 0 18rpx 34rpx rgba(196, 126, 101, 0.18);
 	}
 
 	.user-card__body {
 		flex: 1;
 		min-width: 0;
-		margin-left: 22rpx;
+		padding-top: 8rpx;
 	}
 
 	.user-card__name {
 		display: block;
-		font-size: 36rpx;
+		font-size: 38rpx;
 		font-weight: 700;
 		color: #5a3427;
 	}
@@ -448,13 +461,17 @@
 
 	.user-card__action {
 		flex-shrink: 0;
-		margin-left: 18rpx;
+		align-self: center;
+		padding: 12rpx 22rpx;
+		border-radius: 999rpx;
+		background: rgba(255, 240, 234, 0.92);
 		font-size: 24rpx;
-		color: #bf826f;
+		font-weight: 600;
+		color: #bf6e59;
 	}
 
 	.menu-card__body {
-		padding: 6rpx 0;
+		padding: 0;
 	}
 
 	.menu-item {
@@ -467,10 +484,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 74rpx;
-		height: 74rpx;
-		border-radius: 24rpx;
+		width: 82rpx;
+		height: 82rpx;
+		border-radius: 26rpx;
 		flex-shrink: 0;
+		box-shadow: 0 14rpx 28rpx rgba(183, 120, 94, 0.18);
 	}
 
 	.menu-item__icon-text {

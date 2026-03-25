@@ -1,0 +1,74 @@
+[
+	{
+		"IndexName": "idx_history_no",
+		"MgoKeySchema": {
+			"MgoIsUnique": true,
+			"MgoIndexKeys": [
+				{
+					"Name": "history_no",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_relation_id_created_at",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "relation_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "created_at",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_operator_uid_created_at",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "operator_uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "created_at",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_request_id",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "request_id",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_event_type_created_at",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "event_type",
+					"Direction": "1"
+				},
+				{
+					"Name": "created_at",
+					"Direction": "-1"
+				}
+			]
+		}
+	}
+]

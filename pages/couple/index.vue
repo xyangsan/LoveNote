@@ -4,7 +4,6 @@
 		<view class="love-page__glow love-page__glow--right"></view>
 
 		<view class="love-layer">
-			<fui-status-bar background="transparent"></fui-status-bar>
 
 			<view class="love-title-block couple-title-block">
 				<text class="love-title-block__eyebrow">LOVE NOTE</text>
@@ -34,42 +33,28 @@
 			<view v-else class="couple-page__body">
 				<love-glass-card
 					title="我的信息"
-					tag="可复制 ID"
 					:margin="['0', '0', '0', '0']"
 				>
-					<view class="self-card">
-						<fui-avatar
-							:src="selfInfo.avatarUrl || DEFAULT_AVATAR"
-							error-src="/static/user-empty.png"
-							width="112"
-							height="112"
-							background="#fff1eb"
-						></fui-avatar>
-						<view class="self-card__body">
-							<view class="self-card__head">
-								<text class="self-card__name">{{ selfInfo.nickname || '微信用户' }}</text>
-								<fui-tag
-									:text="selfStatusText"
-									:is-border="false"
-									background="rgba(255, 241, 235, 0.98)"
-									color="#be6f59"
-									radius="999"
-									:padding="['10rpx', '18rpx']"
-								></fui-tag>
-							</view>
-							<text class="self-card__desc">{{ selfStatusSummary }}</text>
-							<view class="self-card__tags">
-								<fui-tag
-									v-for="item in selfSummaryTags"
-									:key="item"
-									:text="item"
-									:is-border="false"
-									background="rgba(255, 246, 241, 0.98)"
-									color="#9d6f61"
-									radius="999"
-									:padding="['10rpx', '18rpx']"
-								></fui-tag>
-							</view>
+					<love-relation-bar
+						class="self-card"
+						:primary-avatar="selfInfo.avatarUrl || DEFAULT_AVATAR"
+						:secondary-avatar="activeCouple && activeCouple.partnerAvatarUrl ? activeCouple.partnerAvatarUrl : ''"
+						:primary-gender="Number(selfInfo.gender || 0)"
+						:secondary-gender="Number(activeCouple && activeCouple.partnerGender || 0)"
+						secondary-placeholder="TA"
+						:title="selfRelationTitle"
+						:badge-text="selfStatusBadgeText"
+						:desc="selfStatusBarDesc"
+						:borderless="true"
+						:avatar-size="112"
+						:title-size="36"
+						:desc-size="23"
+					></love-relation-bar>
+
+					<view class="relation-stats">
+						<view v-for="item in relationshipOverviewStats" :key="item.label" class="relation-stats__item">
+							<text class="relation-stats__value">{{ item.value }}</text>
+							<text class="relation-stats__label">{{ item.label }}</text>
 						</view>
 					</view>
 
@@ -77,12 +62,14 @@
 						<fui-list-cell
 							:padding="['20rpx', '0']"
 							background="transparent"
-							:border-color="'rgba(231, 204, 194, 0.62)'"
+							:highlight="false"
+							:bottom-border="false"
 						>
 							<view class="info-row">
 								<view class="info-row__body">
-									<text class="info-row__label">我的 ID</text>
-									<text class="info-row__value">{{ selfInfo.uid || '未获取' }}</text>
+									<text class="info-row__label">用户 ID</text>
+									<text class="info-row__value info-row__value--compact">{{ selfMetaValue }}</text>
+									<text v-if="selfMetaHint" class="info-row__hint">{{ selfMetaHint }}</text>
 								</view>
 								<fui-button
 									text="复制"
@@ -97,18 +84,6 @@
 								></fui-button>
 							</view>
 						</fui-list-cell>
-						<fui-list-cell
-							:padding="['20rpx', '0']"
-							background="transparent"
-							:bottom-border="false"
-						>
-							<view class="info-row">
-								<view class="info-row__body">
-									<text class="info-row__label">关系状态</text>
-									<text class="info-row__value info-row__value--accent">{{ relationStatusText }}</text>
-								</view>
-							</view>
-						</fui-list-cell>
 					</view>
 				</love-glass-card>
 
@@ -118,29 +93,20 @@
 					tag="已绑定"
 					:margin="['24rpx', '0', '0', '0']"
 				>
-					<view class="relation-card">
-						<fui-avatar
-							:src="activeCouple.partnerAvatarUrl || DEFAULT_AVATAR"
-							error-src="/static/user-empty.png"
-							width="108"
-							height="108"
-							background="#fff1eb"
-						></fui-avatar>
-						<view class="relation-card__body">
-							<view class="relation-card__head">
-								<text class="relation-card__name">{{ activeCouple.partnerNickname || '另一半' }}</text>
-								<fui-tag
-									text="关系进行中"
-									:is-border="false"
-									background="rgba(255, 241, 235, 0.98)"
-									color="#c4684f"
-									radius="999"
-									:padding="['10rpx', '18rpx']"
-								></fui-tag>
-							</view>
-							<text class="relation-card__desc">当前已完成绑定，解绑后才可以与其他人重新建立关系。</text>
-						</view>
-					</view>
+					<love-relation-bar
+						class="relation-card"
+						:primary-avatar="selfInfo.avatarUrl || DEFAULT_AVATAR"
+						:secondary-avatar="activeCouple.partnerAvatarUrl || DEFAULT_AVATAR"
+						:primary-gender="Number(selfInfo.gender || 0)"
+						:secondary-gender="Number(activeCouple && activeCouple.partnerGender || 0)"
+						:title="activeRelationTitle"
+						badge-text="关系进行中"
+						:desc="activeRelationDesc"
+						:borderless="true"
+						:avatar-size="108"
+						:title-size="36"
+						:desc-size="23"
+					></love-relation-bar>
 
 					<view class="info-panel info-panel--relation">
 						<fui-list-cell
@@ -191,21 +157,10 @@
 				<love-glass-card
 					v-else
 					title="发起绑定"
-					tag="未绑定"
 					:margin="['24rpx', '0', '0', '0']"
 				>
 					<view class="request-form">
-						<view class="request-form__intro">
-							<fui-tag
-								text="一次只能绑定一人"
-								:is-border="false"
-								background="rgba(255, 241, 235, 0.98)"
-								color="#c4684f"
-								radius="999"
-								:padding="['10rpx', '18rpx']"
-							></fui-tag>
-							<text class="request-form__desc">把上方“我的 ID”发给另一半，或直接在这里输入对方的 ID 发起绑定请求。</text>
-						</view>
+						<text class="request-form__desc">把上方“我的 ID”发给另一半，或直接在这里输入对方的 ID 发起绑定请求。</text>
 
 						<view class="love-form-item">
 							<text class="love-field-label">对方用户 ID</text>
@@ -475,8 +430,8 @@
 		getCurrentUniIdUser,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
+	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
 
-	const genderOptions = ['保密', '男', '女']
 	const TAB_KEYS = ['incoming', 'outgoing', 'history']
 
 	function getDefaultCenterData() {
@@ -504,24 +459,10 @@
 		return `${year}-${month}-${day} ${hour}:${minute}`
 	}
 
-	function formatBirthday(value = '') {
-		if (!value) {
-			return '生日未设置'
-		}
-
-		return `生日 ${String(value).replace(/-/g, '.')}`
-	}
-
-	function formatMobile(value = '') {
-		const mobile = String(value || '').trim()
-		if (!mobile) {
-			return '手机号未填写'
-		}
-
-		return `手机号 ${mobile}`
-	}
-
 	export default {
+		components: {
+			LoveRelationBar
+		},
 		data() {
 			return {
 				DEFAULT_AVATAR,
@@ -555,15 +496,6 @@
 			},
 			canSendRequest() {
 				return Boolean(this.centerData.canSendRequest)
-			},
-			genderText() {
-				return genderOptions[Number(this.selfInfo.gender || 0)] || genderOptions[0]
-			},
-			selfBirthdayText() {
-				return formatBirthday(this.selfInfo.birthday || '')
-			},
-			selfMobileText() {
-				return formatMobile(this.selfInfo.mobile || '')
 			},
 			relationStatusText() {
 				if (!this.isLoggedIn) {
@@ -625,6 +557,13 @@
 
 				return '可发起绑定'
 			},
+			selfStatusBadgeText() {
+				if (!this.activeCouple && !this.incomingRequests.length && !this.outgoingRequests.length) {
+					return ''
+				}
+
+				return this.selfStatusText
+			},
 			selfStatusSummary() {
 				if (this.activeCouple) {
 					return `已与 ${this.activeCouple.partnerNickname || '另一半'} 建立情侣关系`
@@ -640,8 +579,91 @@
 
 				return '当前还没有绑定关系，可以复制自己的 ID 或主动发起邀请'
 			},
-			selfSummaryTags() {
-				return [this.genderText, this.selfBirthdayText, this.selfMobileText]
+			selfStatusBarDesc() {
+				if (this.activeCouple && this.activeCouple.bindDate) {
+					return `绑定日期：${formatDateTime(this.activeCouple.bindDate)}`
+				}
+
+				return '绑定日期：--'
+			},
+			selfMetaValue() {
+				return `ID：${this.selfInfo.uid || '未获取'}`
+			},
+			selfMetaHint() {
+				return !this.activeCouple && !this.incomingRequests.length && !this.outgoingRequests.length
+					? this.selfStatusSummary
+					: ''
+			},
+			selfRelationTitle() {
+				const selfName = this.selfInfo.nickname || '微信用户'
+				const partnerName = this.activeCouple && this.activeCouple.partnerNickname
+					? this.activeCouple.partnerNickname
+					: '待绑定'
+				return `${selfName} & ${partnerName}`
+			},
+			activeRelationTitle() {
+				if (!this.activeCouple) {
+					return this.selfRelationTitle
+				}
+
+				const selfName = this.selfInfo.nickname || '微信用户'
+				const partnerName = this.activeCouple.partnerNickname || '待绑定'
+				return `${selfName} & ${partnerName}`
+			},
+			activeRelationDesc() {
+				if (!this.activeCouple || !this.activeCouple.bindDate) {
+					return '已完成绑定'
+				}
+
+				return `已绑定于 ${formatDateTime(this.activeCouple.bindDate)}`
+			},
+			relationshipOverviewStats() {
+				const metrics = this.activeCouple && this.activeCouple.metrics ? this.activeCouple.metrics : {}
+				const anniversaryCount = Number(
+					this.activeCouple
+						? (this.activeCouple.anniversaryCount !== undefined
+							? this.activeCouple.anniversaryCount
+							: (metrics.anniversaryCount || (this.activeCouple.anniversaryDate ? 1 : 0)))
+						: 0
+				)
+				const momentCount = Number(
+					this.activeCouple
+						? (this.activeCouple.momentCount !== undefined
+							? this.activeCouple.momentCount
+							: (metrics.momentCount || 0))
+						: 0
+				)
+				const wishCount = Number(
+					this.activeCouple
+						? (this.activeCouple.wishCount !== undefined
+							? this.activeCouple.wishCount
+							: (metrics.wishCount || 0))
+						: 0
+				)
+
+				if (this.activeCouple) {
+					return [{
+						label: '共同纪念日',
+						value: `${anniversaryCount}`
+					}, {
+						label: '双人动态',
+						value: `${momentCount}`
+					}, {
+						label: '愿望',
+						value: `${wishCount}`
+					}]
+				}
+
+				return [{
+					label: '共同纪念日',
+					value: '--'
+				}, {
+					label: '双人动态',
+					value: '0'
+				}, {
+					label: '愿望',
+					value: '0'
+				}]
 			},
 			requestFormTipText() {
 				if (this.canSendRequest) {
@@ -690,7 +712,7 @@
 			},
 			activeTabCountText() {
 				const count = this.getRecordsByKey(this.activeTabKey).length
-				return count ? `${count} 条` : '暂无'
+				return count ? `${count} 条` : ''
 			}
 		},
 		onLoad() {
@@ -875,7 +897,7 @@
 					data: this.selfInfo.uid,
 					success: () => {
 						uni.showToast({
-							title: 'ID 已复制',
+							title: '复制成功',
 							icon: 'success'
 						})
 					}
@@ -1066,62 +1088,51 @@
 	}
 
 	.couple-page__body {
-		padding-top: 8rpx;
+		padding-top: 12rpx;
 	}
 
 	.self-card,
 	.relation-card {
+		background: linear-gradient(180deg, rgba(255, 250, 247, 0.98), rgba(255, 244, 239, 0.72));
+	}
+
+	.relation-stats {
 		display: flex;
-		align-items: flex-start;
-		gap: 22rpx;
+		gap: 18rpx;
+		margin-top: 28rpx;
 	}
 
-	.self-card__body,
-	.relation-card__body {
+	.relation-stats__item {
 		flex: 1;
-		min-width: 0;
+		padding: 24rpx 18rpx;
+		border-radius: 26rpx;
+		background: rgba(255, 255, 255, 0.8);
+		text-align: center;
 	}
 
-	.self-card__head,
-	.relation-card__head {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 16rpx;
-	}
-
-	.self-card__name,
-	.relation-card__name {
-		flex: 1;
-		min-width: 0;
-		font-size: 36rpx;
+	.relation-stats__value {
+		display: block;
+		font-size: 40rpx;
 		font-weight: 700;
-		line-height: 1.4;
-		color: #5a3427;
+		line-height: 1.3;
+		color: #8f4f3e;
 		word-break: break-all;
 	}
 
-	.self-card__desc,
-	.relation-card__desc {
+	.relation-stats__label {
 		display: block;
-		font-size: 23rpx;
-		line-height: 1.8;
-		color: #8f6a61;
-		margin-top: 14rpx;
-	}
-
-	.self-card__tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12rpx;
-		margin-top: 20rpx;
+		margin-top: 8rpx;
+		font-size: 22rpx;
+		line-height: 1.5;
+		color: #9a776d;
 	}
 
 	.info-panel {
-		margin-top: 24rpx;
-		padding: 0 22rpx;
+		margin-top: 26rpx;
+		padding: 4rpx 22rpx;
 		border-radius: 28rpx;
 		background: rgba(255, 247, 243, 0.92);
+		box-shadow: inset 0 0 0 1rpx rgba(236, 207, 198, 0.7);
 		overflow: hidden;
 	}
 
@@ -1157,6 +1168,20 @@
 		word-break: break-all;
 	}
 
+	.info-row__value--compact {
+		font-size: 28rpx;
+		font-weight: 700;
+	}
+
+	.info-row__hint {
+		display: block;
+		margin-top: 10rpx;
+		font-size: 22rpx;
+		line-height: 1.7;
+		color: #8f6a61;
+		word-break: break-all;
+	}
+
 	.info-row__value--accent {
 		color: #c4684f;
 	}
@@ -1170,12 +1195,20 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 16rpx;
+		padding: 24rpx;
+		border-radius: 28rpx;
+		background: rgba(255, 248, 244, 0.94);
+		box-shadow: inset 0 0 0 1rpx rgba(238, 209, 199, 0.68);
 	}
 
 	.request-form__desc {
 		font-size: 23rpx;
 		line-height: 1.8;
 		color: #906b61;
+	}
+
+	.request-form .love-form-item {
+		margin-top: 24rpx;
 	}
 
 	.request-form__error {
@@ -1192,26 +1225,29 @@
 
 	.records-card__desc {
 		display: block;
-		margin-top: 12rpx;
+		margin-top: 16rpx;
+		padding: 0 4rpx;
 		font-size: 22rpx;
 		line-height: 1.7;
 		color: #976f64;
 	}
 
 	.records-card__body {
-		margin-top: 18rpx;
+		margin-top: 20rpx;
 	}
 
 	.records-list {
-		padding: 0 4rpx;
+		padding: 4rpx 8rpx;
 		border-radius: 26rpx;
 		background: rgba(255, 247, 243, 0.86);
+		box-shadow: inset 0 0 0 1rpx rgba(236, 209, 199, 0.65);
 		overflow: hidden;
 	}
 
 	.request-item,
 	.history-item {
 		width: 100%;
+		padding: 2rpx 0;
 	}
 
 	.request-item__main,
@@ -1261,7 +1297,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 16rpx;
-		margin-top: 18rpx;
+		margin-top: 22rpx;
 	}
 
 	.request-item__actions--single {
@@ -1269,7 +1305,7 @@
 	}
 
 	.records-empty {
-		padding: 22rpx 0 8rpx;
+		padding: 32rpx 0 12rpx;
 	}
 
 </style>

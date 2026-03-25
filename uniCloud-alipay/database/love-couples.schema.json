@@ -11,6 +11,11 @@
 		"_id": {
 			"description": "情侣关系 ID，系统自动生成"
 		},
+		"relation_no": {
+			"bsonType": "string",
+			"title": "关系编号",
+			"description": "用于后台检索、排查与跨表关联的人类可读编号"
+		},
 		"user_a_uid": {
 			"bsonType": "string",
 			"title": "成员 A 用户ID"
@@ -22,6 +27,65 @@
 		"partner_nickname": {
 			"bsonType": "string",
 			"title": "待绑定对象昵称缓存"
+		},
+		"user_a_snapshot": {
+			"bsonType": "object",
+			"title": "成员 A 快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"avatar_file_id": {
+					"bsonType": "string"
+				},
+				"gender": {
+					"bsonType": "int"
+				},
+				"birthday": {
+					"bsonType": "string"
+				},
+				"mobile": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"user_b_snapshot": {
+			"bsonType": "object",
+			"title": "成员 B 快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"avatar_file_id": {
+					"bsonType": "string"
+				},
+				"gender": {
+					"bsonType": "int"
+				},
+				"birthday": {
+					"bsonType": "string"
+				},
+				"mobile": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"current_request_id": {
+			"bsonType": "string",
+			"title": "当前关联请求ID",
+			"description": "当前待确认请求或最近一次绑定请求的 request_id"
 		},
 		"status": {
 			"bsonType": "int",
@@ -36,6 +100,11 @@
 			"bsonType": "long",
 			"title": "纪念日时间戳"
 		},
+		"anniversary_label": {
+			"bsonType": "string",
+			"title": "纪念日标签",
+			"description": "例如 相识日、恋爱纪念日、结婚纪念日"
+		},
 		"bind_date": {
 			"bsonType": "long",
 			"title": "绑定时间"
@@ -48,9 +117,37 @@
 			"bsonType": "string",
 			"title": "创建人用户ID"
 		},
+		"request_source": {
+			"bsonType": "string",
+			"title": "请求来源",
+			"description": "manual 手动输入 / invite_code 邀请码 / qr 二维码 / share 分享链接"
+		},
 		"last_action_uid": {
 			"bsonType": "string",
 			"title": "最后操作人用户ID"
+		},
+		"last_interaction_at": {
+			"bsonType": "long",
+			"title": "最近互动时间"
+		},
+		"metrics": {
+			"bsonType": "object",
+			"title": "关系统计",
+			"description": "用于页面快速展示的聚合统计",
+			"properties": {
+				"anniversary_count": {
+					"bsonType": "int"
+				},
+				"moment_count": {
+					"bsonType": "int"
+				},
+				"wish_count": {
+					"bsonType": "int"
+				},
+				"album_count": {
+					"bsonType": "int"
+				}
+			}
 		},
 		"remark": {
 			"bsonType": "string",

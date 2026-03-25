@@ -18,7 +18,9 @@
 		:full="full"
 		@click="handleClick"
 	>
-		<slot></slot>
+		<view class="love-glass-card__content" :style="contentStyle">
+			<slot></slot>
+		</view>
 		<template #footer>
 			<slot name="footer"></slot>
 		</template>
@@ -42,6 +44,12 @@
 				type: Array,
 				default() {
 					return ['28rpx', '34rpx', '20rpx', '34rpx']
+				}
+			},
+			contentPadding: {
+				type: Array,
+				default() {
+					return ['28rpx', '34rpx', '32rpx', '34rpx']
 				}
 			},
 			radius: {
@@ -97,6 +105,17 @@
 				default: false
 			}
 		},
+		computed: {
+			contentStyle() {
+				const padding = this.contentPadding || []
+				return {
+					paddingTop: padding[0] || 0,
+					paddingRight: padding[1] || 0,
+					paddingBottom: padding[2] || padding[0] || 0,
+					paddingLeft: padding[3] || padding[1] || 0
+				}
+			}
+		},
 		methods: {
 			handleClick(event) {
 				this.$emit('click', event)
@@ -109,5 +128,20 @@
 	.love-glass-card {
 		position: relative;
 		z-index: 1;
+	}
+
+	.love-glass-card :deep(.fui-card__wrap) {
+		backdrop-filter: blur(18rpx);
+		-webkit-backdrop-filter: blur(18rpx);
+	}
+
+	.love-glass-card :deep(.fui-card__header) {
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 245, 240, 0.2));
+	}
+
+	.love-glass-card__content {
+		position: relative;
+		box-sizing: border-box;
+		min-width: 0;
 	}
 </style>

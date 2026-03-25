@@ -1,0 +1,126 @@
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "绑定请求 ID，系统自动生成"
+		},
+		"request_no": {
+			"bsonType": "string",
+			"title": "请求编号"
+		},
+		"relation_id": {
+			"bsonType": "string",
+			"title": "关联关系ID",
+			"description": "请求处理后可回填主关系表 ID"
+		},
+		"requester_uid": {
+			"bsonType": "string",
+			"title": "发起人用户ID"
+		},
+		"receiver_uid": {
+			"bsonType": "string",
+			"title": "接收人用户ID"
+		},
+		"requester_snapshot": {
+			"bsonType": "object",
+			"title": "发起人快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"gender": {
+					"bsonType": "int"
+				}
+			}
+		},
+		"receiver_snapshot": {
+			"bsonType": "object",
+			"title": "接收人快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"gender": {
+					"bsonType": "int"
+				}
+			}
+		},
+		"status": {
+			"bsonType": "int",
+			"title": "请求状态",
+			"description": "0 待处理 1 已同意 2 已拒绝 3 已撤回 4 已关闭 5 已过期"
+		},
+		"source": {
+			"bsonType": "string",
+			"title": "请求来源",
+			"description": "manual 手动输入 / invite_code 邀请码 / qr 二维码 / share 分享链接"
+		},
+		"invite_code": {
+			"bsonType": "string",
+			"title": "邀请码"
+		},
+		"request_message": {
+			"bsonType": "string",
+			"title": "请求留言"
+		},
+		"reviewed_by": {
+			"bsonType": "string",
+			"title": "审核人用户ID"
+		},
+		"accepted_at": {
+			"bsonType": "long",
+			"title": "同意时间"
+		},
+		"rejected_at": {
+			"bsonType": "long",
+			"title": "拒绝时间"
+		},
+		"cancelled_at": {
+			"bsonType": "long",
+			"title": "撤回时间"
+		},
+		"closed_at": {
+			"bsonType": "long",
+			"title": "关闭时间"
+		},
+		"expire_at": {
+			"bsonType": "long",
+			"title": "过期时间"
+		},
+		"last_action_uid": {
+			"bsonType": "string",
+			"title": "最后操作人用户ID"
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "备注"
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"updated_at": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

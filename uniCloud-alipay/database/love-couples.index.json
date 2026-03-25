@@ -82,5 +82,61 @@
 				}
 			]
 		}
+	},
+	{
+		"IndexName": "idx_relation_no",
+		"MgoKeySchema": {
+			"MgoIsUnique": true,
+			"MgoIndexKeys": [
+				{
+					"Name": "relation_no",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_current_request_id",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "current_request_id",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_status_bind_date",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "status",
+					"Direction": "1"
+				},
+				{
+					"Name": "bind_date",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_status_updated_at",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "status",
+					"Direction": "1"
+				},
+				{
+					"Name": "updated_at",
+					"Direction": "-1"
+				}
+			]
+		}
 	}
 ]

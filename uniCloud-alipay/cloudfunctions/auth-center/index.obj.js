@@ -4,6 +4,8 @@ const db = uniCloud.database()
 const dbCmd = db.command
 const userCollection = db.collection('uni-id-users')
 const coupleCollection = db.collection('love-couples')
+const coupleRequestCollection = db.collection('love-couple-requests')
+const coupleHistoryCollection = db.collection('love-couple-history')
 const uniIdCommon = require('uni-id-common')
 const { callAdapter } = require('x-uni-id-co')
 
@@ -14,6 +16,20 @@ const COUPLE_STATUS_BOUND = 1
 const COUPLE_STATUS_UNBOUND = 2
 const COUPLE_STATUS_CLOSED = 3
 const COUPLE_STATUS_CANCELLED = 4
+const REQUEST_STATUS_PENDING = 0
+const REQUEST_STATUS_ACCEPTED = 1
+const REQUEST_STATUS_REJECTED = 2
+const REQUEST_STATUS_CANCELLED = 3
+const REQUEST_STATUS_CLOSED = 4
+const REQUEST_STATUS_EXPIRED = 5
+const REQUEST_SOURCE_MANUAL = 'manual'
+const COUPLE_HISTORY_EVENT_REQUEST_CREATED = 'request_created'
+const COUPLE_HISTORY_EVENT_REQUEST_ACCEPTED = 'request_accepted'
+const COUPLE_HISTORY_EVENT_REQUEST_REJECTED = 'request_rejected'
+const COUPLE_HISTORY_EVENT_REQUEST_CANCELLED = 'request_cancelled'
+const COUPLE_HISTORY_EVENT_RELATION_BOUND = 'relation_bound'
+const COUPLE_HISTORY_EVENT_RELATION_UNBOUND = 'relation_unbound'
+const COUPLE_HISTORY_EVENT_RELATION_CLOSED = 'relation_closed'
 
 const COUPLE_STATUS_TEXT = {
 	[COUPLE_STATUS_PENDING]: '待确认',
@@ -21,6 +37,15 @@ const COUPLE_STATUS_TEXT = {
 	[COUPLE_STATUS_UNBOUND]: '已解绑',
 	[COUPLE_STATUS_CLOSED]: '已关闭',
 	[COUPLE_STATUS_CANCELLED]: '已取消'
+}
+
+const REQUEST_STATUS_TEXT = {
+	[REQUEST_STATUS_PENDING]: '待处理',
+	[REQUEST_STATUS_ACCEPTED]: '已同意',
+	[REQUEST_STATUS_REJECTED]: '已拒绝',
+	[REQUEST_STATUS_CANCELLED]: '已撤回',
+	[REQUEST_STATUS_CLOSED]: '已关闭',
+	[REQUEST_STATUS_EXPIRED]: '已过期'
 }
 
 function getFileExtname(value = '') {
@@ -107,6 +132,34 @@ function buildCoupleParticipantCondition(uid) {
 	])
 }
 
+function getRequestStatusText(status) {
+	return REQUEST_STATUS_TEXT[Number(status)] || '未知状态'
+}
+
+function buildRequestParticipantCondition(uid) {
+	return dbCmd.or([
+		{
+			requester_uid: uid
+		},
+		{
+			receiver_uid: uid
+		}
+	])
+}
+
+function buildRequestPairCondition(uid, targetUid) {
+	return dbCmd.or([
+		{
+			requester_uid: uid,
+			receiver_uid: targetUid
+		},
+		{
+			requester_uid: targetUid,
+			receiver_uid: uid
+		}
+	])
+}
+
 function getRelationPartnerUid(uid, relation = {}) {
 	if (!uid || !relation) {
 		return ''
@@ -115,8 +168,84 @@ function getRelationPartnerUid(uid, relation = {}) {
 	return relation.user_a_uid === uid ? relation.user_b_uid || '' : relation.user_a_uid || ''
 }
 
-function getRequesterUid(relation = {}) {
-	return relation.created_by || relation.user_a_uid || ''
+function getRequesterUid(record = {}) {
+	return record.requester_uid || record.created_by || record.user_a_uid || ''
+}
+
+function isRelationRecord(record = {}) {
+	return Boolean(record && (record.user_a_uid || record.user_b_uid))
+}
+
+function isRequestRecord(record = {}) {
+	return Boolean(record && (record.requester_uid || record.receiver_uid))
+}
+
+function getSafeNumber(value, fallback = 0) {
+	const numericValue = Number(value)
+	return Number.isFinite(numericValue) ? numericValue : fallback
+}
+
+function normalizeRelationMetrics(metrics = {}, anniversaryDate = 0) {
+	const anniversaryCount = Math.max(
+		getSafeNumber(metrics.anniversary_count, 0),
+		anniversaryDate ? 1 : 0
+	)
+
+	return {
+		anniversaryCount,
+		momentCount: getSafeNumber(metrics.moment_count, 0),
+		wishCount: getSafeNumber(metrics.wish_count, 0),
+		albumCount: getSafeNumber(metrics.album_count, 0)
+	}
+}
+
+function getRelationSnapshot(relation = {}) {
+	return {
+		user_a_uid: relation.user_a_uid || '',
+		user_b_uid: relation.user_b_uid || '',
+		status: Number(relation.status || 0),
+		bind_date: relation.bind_date || 0,
+		unbind_date: relation.unbind_date || 0,
+		anniversary_date: relation.anniversary_date || 0
+	}
+}
+
+function createSerialNo(prefix = 'REL') {
+	return `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+}
+
+function sanitizeRequestSnapshot(snapshot = {}) {
+	return {
+		uid: snapshot.uid || '',
+		nickname: snapshot.nickname || '',
+		avatar_url: snapshot.avatar_url || snapshot.avatarUrl || '',
+		gender: Number(snapshot.gender || 0)
+	}
+}
+
+function sanitizeHistorySnapshot(snapshot = {}) {
+	return {
+		uid: snapshot.uid || '',
+		nickname: snapshot.nickname || '',
+		avatar_url: snapshot.avatar_url || snapshot.avatarUrl || '',
+		gender: Number(snapshot.gender || 0)
+	}
+}
+
+function getSnapshotNickname(snapshot = {}, fallback = '') {
+	return snapshot.nickname || fallback || DEFAULT_NICKNAME
+}
+
+function getSnapshotAvatarUrl(snapshot = {}, fallback = '') {
+	return snapshot.avatar_url || snapshot.avatarUrl || fallback || ''
+}
+
+function getSnapshotAvatarFileId(snapshot = {}, fallback = '') {
+	return snapshot.avatar_file_id || snapshot.avatarFileId || fallback || ''
+}
+
+function getSnapshotGender(snapshot = {}) {
+	return Number(snapshot.gender || 0)
 }
 
 async function getUserById(uid) {
@@ -134,9 +263,39 @@ async function getCoupleById(coupleId = '') {
 	return coupleRes && coupleRes.data && coupleRes.data[0] ? coupleRes.data[0] : null
 }
 
+async function getCoupleRequestById(requestId = '') {
+	const id = String(requestId || '').trim()
+	if (!id) {
+		return null
+	}
+
+	const requestRes = await coupleRequestCollection.doc(id).get()
+	return requestRes && requestRes.data && requestRes.data[0] ? requestRes.data[0] : null
+}
+
 async function getSingleCoupleByCondition(condition, { orderField = 'updated_at', orderDirection = 'desc' } = {}) {
 	const coupleRes = await coupleCollection.where(condition).orderBy(orderField, orderDirection).limit(1).get()
 	return coupleRes && coupleRes.data && coupleRes.data[0] ? coupleRes.data[0] : null
+}
+
+async function getSingleRequestByCondition(condition, { orderField = 'updated_at', orderDirection = 'desc' } = {}) {
+	const requestRes = await coupleRequestCollection.where(condition).orderBy(orderField, orderDirection).limit(1).get()
+	return requestRes && requestRes.data && requestRes.data[0] ? requestRes.data[0] : null
+}
+
+async function listCouplesByCondition(condition, { orderField = 'updated_at', orderDirection = 'desc', limit = 100 } = {}) {
+	const coupleRes = await coupleCollection.where(condition).orderBy(orderField, orderDirection).limit(limit).get()
+	return coupleRes && Array.isArray(coupleRes.data) ? coupleRes.data : []
+}
+
+async function listRequestsByCondition(condition, { orderField = 'updated_at', orderDirection = 'desc', limit = 100 } = {}) {
+	const requestRes = await coupleRequestCollection.where(condition).orderBy(orderField, orderDirection).limit(limit).get()
+	return requestRes && Array.isArray(requestRes.data) ? requestRes.data : []
+}
+
+async function listHistoriesByCondition(condition, { orderField = 'created_at', orderDirection = 'desc', limit = 100 } = {}) {
+	const historyRes = await coupleHistoryCollection.where(condition).orderBy(orderField, orderDirection).limit(limit).get()
+	return historyRes && Array.isArray(historyRes.data) ? historyRes.data : []
 }
 
 async function getActiveCoupleByUid(uid) {
@@ -162,17 +321,17 @@ async function getActiveCoupleByUid(uid) {
 	}
 }
 
-async function getLatestPendingCoupleByUid(uid) {
+async function getLatestPendingRequestByUid(uid) {
 	if (!uid) {
 		return null
 	}
 
 	try {
-		return await getSingleCoupleByCondition(
+		return await getSingleRequestByCondition(
 			dbCmd.and([
-				buildCoupleParticipantCondition(uid),
+				buildRequestParticipantCondition(uid),
 				{
-					status: COUPLE_STATUS_PENDING
+					status: REQUEST_STATUS_PENDING
 				}
 			]),
 			{
@@ -180,78 +339,12 @@ async function getLatestPendingCoupleByUid(uid) {
 			}
 		)
 	} catch (error) {
-		console.warn('getLatestPendingCoupleByUid failed', error)
+		console.warn('getLatestPendingRequestByUid failed', error)
 		return null
 	}
 }
 
-async function getCoupleByUid(uid) {
-	const activeRelation = await getActiveCoupleByUid(uid)
-	if (activeRelation) {
-		return activeRelation
-	}
-
-	return getLatestPendingCoupleByUid(uid)
-}
-
-async function listCouplesByCondition(condition, { orderField = 'updated_at', orderDirection = 'desc', limit = 100 } = {}) {
-	const coupleRes = await coupleCollection.where(condition).orderBy(orderField, orderDirection).limit(limit).get()
-	return coupleRes && Array.isArray(coupleRes.data) ? coupleRes.data : []
-}
-
-async function getIncomingPendingCouples(uid) {
-	if (!uid) {
-		return []
-	}
-
-	try {
-		return await listCouplesByCondition(
-			dbCmd.and([
-				{
-					user_b_uid: uid
-				},
-				{
-					status: COUPLE_STATUS_PENDING
-				}
-			]),
-			{
-				orderField: 'created_at',
-				limit: 50
-			}
-		)
-	} catch (error) {
-		console.warn('getIncomingPendingCouples failed', error)
-		return []
-	}
-}
-
-async function getOutgoingPendingCouples(uid) {
-	if (!uid) {
-		return []
-	}
-
-	try {
-		return await listCouplesByCondition(
-			dbCmd.and([
-				{
-					created_by: uid
-				},
-				{
-					status: COUPLE_STATUS_PENDING
-				}
-			]),
-			{
-				orderField: 'created_at',
-				limit: 20
-			}
-		)
-	} catch (error) {
-		console.warn('getOutgoingPendingCouples failed', error)
-		return []
-	}
-}
-
-async function getCoupleHistoryByUid(uid) {
+async function getRelationHistoryRecordsByUid(uid) {
 	if (!uid) {
 		return []
 	}
@@ -270,7 +363,85 @@ async function getCoupleHistoryByUid(uid) {
 			}
 		)
 	} catch (error) {
+		console.warn('getRelationHistoryRecordsByUid failed', error)
+		return []
+	}
+}
+
+async function getCoupleHistoryByUid(uid) {
+	if (!uid) {
+		return []
+	}
+
+	try {
+		return await listHistoriesByCondition(
+			dbCmd.or([
+				{
+					operator_uid: uid
+				},
+				{
+					partner_uid: uid
+				}
+			]),
+			{
+				orderField: 'created_at',
+				limit: 200
+			}
+		)
+	} catch (error) {
 		console.warn('getCoupleHistoryByUid failed', error)
+		return []
+	}
+}
+
+async function getIncomingPendingRequests(uid) {
+	if (!uid) {
+		return []
+	}
+
+	try {
+		return await listRequestsByCondition(
+			dbCmd.and([
+				{
+					receiver_uid: uid
+				},
+				{
+					status: REQUEST_STATUS_PENDING
+				}
+			]),
+			{
+				orderField: 'created_at',
+				limit: 50
+			}
+		)
+	} catch (error) {
+		console.warn('getIncomingPendingRequests failed', error)
+		return []
+	}
+}
+
+async function getOutgoingPendingRequests(uid) {
+	if (!uid) {
+		return []
+	}
+
+	try {
+		return await listRequestsByCondition(
+			dbCmd.and([
+				{
+					requester_uid: uid
+				},
+				{
+					status: REQUEST_STATUS_PENDING
+				}
+			]),
+			{
+				orderField: 'created_at',
+				limit: 20
+			}
+		)
+	} catch (error) {
+		console.warn('getOutgoingPendingRequests failed', error)
 		return []
 	}
 }
@@ -281,21 +452,12 @@ async function getExistingPendingRelationBetween(uid, targetUid) {
 	}
 
 	try {
-		return await getSingleCoupleByCondition(
+		return await getSingleRequestByCondition(
 			dbCmd.and([
 				{
-					status: COUPLE_STATUS_PENDING
+					status: REQUEST_STATUS_PENDING
 				},
-				dbCmd.or([
-					{
-						user_a_uid: uid,
-						user_b_uid: targetUid
-					},
-					{
-						user_a_uid: targetUid,
-						user_b_uid: uid
-					}
-				])
+				buildRequestPairCondition(uid, targetUid)
 			]),
 			{
 				orderField: 'created_at'
@@ -307,90 +469,13 @@ async function getExistingPendingRelationBetween(uid, targetUid) {
 	}
 }
 
-async function closePendingCouplesForUsers(uidList = [], { excludeId = '', status = COUPLE_STATUS_CLOSED, actionUid = '' } = {}) {
-	const uniqueUidList = Array.from(new Set(uidList.filter(Boolean)))
-	if (!uniqueUidList.length) {
-		return
+async function getCoupleByUid(uid) {
+	const activeRelation = await getActiveCoupleByUid(uid)
+	if (activeRelation) {
+		return activeRelation
 	}
 
-	const participantConditions = []
-	uniqueUidList.forEach((uid) => {
-		participantConditions.push({
-			user_a_uid: uid
-		})
-		participantConditions.push({
-			user_b_uid: uid
-		})
-	})
-
-	const conditions = [
-		{
-			status: COUPLE_STATUS_PENDING
-		},
-		dbCmd.or(participantConditions)
-	]
-
-	if (excludeId) {
-		conditions.push({
-			_id: dbCmd.neq(excludeId)
-		})
-	}
-
-	await coupleCollection.where(dbCmd.and(conditions)).update({
-		status,
-		last_action_uid: actionUid || '',
-		updated_at: Date.now()
-	})
-}
-
-async function getRelationPartnerMeta(uid, relation = {}) {
-	const partnerUid = getRelationPartnerUid(uid, relation)
-	const partnerRecord = partnerUid ? await getUserById(partnerUid) : null
-	const partnerAvatar = partnerRecord ? await resolveAvatar(partnerRecord) : {
-		avatarFileId: '',
-		avatarUrl: ''
-	}
-	const partnerNickname = partnerRecord
-		? partnerRecord.nickname || partnerRecord.username || DEFAULT_NICKNAME
-		: relation.partner_nickname || ''
-
-	return {
-		partnerUid,
-		partnerRecord,
-		partnerAvatar,
-		partnerNickname
-	}
-}
-
-async function formatCoupleInfo(uid, coupleRecord = null) {
-	const relationRecord = coupleRecord || await getCoupleByUid(uid)
-	if (!relationRecord) {
-		return null
-	}
-
-	const { partnerUid, partnerAvatar, partnerNickname } = await getRelationPartnerMeta(uid, relationRecord)
-	const status = Number(relationRecord.status || 0)
-	const requesterUid = getRequesterUid(relationRecord)
-
-	return {
-		coupleId: relationRecord._id || '',
-		status,
-		statusText: getCoupleStatusText(status),
-		isBound: status === COUPLE_STATUS_BOUND,
-		isPending: status === COUPLE_STATUS_PENDING,
-		direction: status === COUPLE_STATUS_PENDING
-			? (requesterUid === uid ? 'outgoing' : 'incoming')
-			: 'bound',
-		partnerUid,
-		partnerUidMasked: maskUid(partnerUid),
-		partnerNickname,
-		partnerNicknameMasked: maskNickname(partnerNickname),
-		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
-		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
-		bindDate: relationRecord.bind_date || relationRecord.created_at || 0,
-		anniversaryDate: relationRecord.anniversary_date || 0,
-		requestDate: relationRecord.created_at || 0
-	}
+	return getLatestPendingRequestByUid(uid)
 }
 
 async function resolveAvatar(record = {}) {
@@ -435,6 +520,206 @@ async function resolveAvatar(record = {}) {
 	return {
 		avatarFileId: '',
 		avatarUrl: record.avatar || ''
+	}
+}
+
+async function buildUserSnapshot(record = {}) {
+	const { avatarFileId, avatarUrl } = await resolveAvatar(record)
+	return {
+		uid: record._id || '',
+		nickname: record.nickname || record.username || DEFAULT_NICKNAME,
+		avatar_url: avatarUrl,
+		avatar_file_id: avatarFileId,
+		gender: Number(record.gender || 0),
+		birthday: record.birthday || '',
+		mobile: record.mobile || ''
+	}
+}
+
+async function getRelationPartnerMeta(uid, relation = {}) {
+	const partnerUid = getRelationPartnerUid(uid, relation)
+	const partnerSnapshot = relation.user_a_uid === uid
+		? relation.user_b_snapshot || {}
+		: relation.user_a_snapshot || {}
+	const partnerRecord = partnerUid ? await getUserById(partnerUid) : null
+	const partnerAvatar = partnerRecord ? await resolveAvatar(partnerRecord) : {
+		avatarFileId: getSnapshotAvatarFileId(partnerSnapshot),
+		avatarUrl: getSnapshotAvatarUrl(partnerSnapshot)
+	}
+	const partnerNickname = partnerRecord
+		? partnerRecord.nickname || partnerRecord.username || DEFAULT_NICKNAME
+		: getSnapshotNickname(partnerSnapshot, relation.partner_nickname || '')
+
+	return {
+		partnerUid,
+		partnerRecord,
+		partnerSnapshot,
+		partnerAvatar,
+		partnerNickname,
+		partnerGender: partnerRecord ? Number(partnerRecord.gender || 0) : getSnapshotGender(partnerSnapshot)
+	}
+}
+
+async function getRequestPartnerMeta(uid, request = {}) {
+	const isRequester = request.requester_uid === uid
+	const partnerUid = isRequester ? request.receiver_uid || '' : request.requester_uid || ''
+	const partnerSnapshot = isRequester
+		? request.receiver_snapshot || {}
+		: request.requester_snapshot || {}
+	const partnerRecord = partnerUid ? await getUserById(partnerUid) : null
+	const partnerAvatar = partnerRecord ? await resolveAvatar(partnerRecord) : {
+		avatarFileId: getSnapshotAvatarFileId(partnerSnapshot),
+		avatarUrl: getSnapshotAvatarUrl(partnerSnapshot)
+	}
+	const partnerNickname = partnerRecord
+		? partnerRecord.nickname || partnerRecord.username || DEFAULT_NICKNAME
+		: getSnapshotNickname(partnerSnapshot)
+
+	return {
+		direction: isRequester ? 'outgoing' : 'incoming',
+		partnerUid,
+		partnerRecord,
+		partnerSnapshot,
+		partnerAvatar,
+		partnerNickname,
+		partnerGender: partnerRecord ? Number(partnerRecord.gender || 0) : getSnapshotGender(partnerSnapshot)
+	}
+}
+
+async function createCoupleHistoryRecord({
+	relation = {},
+	request = {},
+	relationId = '',
+	requestId = '',
+	eventType = '',
+	eventStatus = 0,
+	operatorUid = '',
+	partnerUid = '',
+	operatorSnapshot = {},
+	partnerSnapshot = {},
+	content = '',
+	remark = '',
+	createdAt = Date.now()
+} = {}) {
+	if (!eventType) {
+		return
+	}
+
+	await coupleHistoryCollection.add({
+		history_no: createSerialNo('HIS'),
+		relation_id: relationId || relation._id || request.relation_id || '',
+		request_id: requestId || request._id || relation.current_request_id || '',
+		event_type: eventType,
+		event_status: Number(eventStatus || 0),
+		operator_uid: operatorUid || '',
+		partner_uid: partnerUid || '',
+		operator_snapshot: sanitizeHistorySnapshot(operatorSnapshot),
+		partner_snapshot: sanitizeHistorySnapshot(partnerSnapshot),
+		relation_snapshot: getRelationSnapshot(relation),
+		content,
+		remark,
+		created_at: createdAt
+	})
+}
+
+function buildRequestStatusUpdate(status, { uid = '', reviewedBy = '', now = Date.now() } = {}) {
+	const updateData = {
+		status,
+		last_action_uid: uid || '',
+		updated_at: now
+	}
+
+	if (status === REQUEST_STATUS_ACCEPTED) {
+		updateData.reviewed_by = reviewedBy || uid || ''
+		updateData.accepted_at = now
+	}
+
+	if (status === REQUEST_STATUS_REJECTED) {
+		updateData.reviewed_by = reviewedBy || uid || ''
+		updateData.rejected_at = now
+	}
+
+	if (status === REQUEST_STATUS_CANCELLED) {
+		updateData.cancelled_at = now
+	}
+
+	if (status === REQUEST_STATUS_CLOSED || status === REQUEST_STATUS_EXPIRED) {
+		updateData.closed_at = now
+	}
+
+	return updateData
+}
+
+async function closePendingRequestsForUsers(uidList = [], { excludeId = '', status = REQUEST_STATUS_CLOSED, actionUid = '', now = Date.now() } = {}) {
+	const uniqueUidList = Array.from(new Set(uidList.filter(Boolean)))
+	if (!uniqueUidList.length) {
+		return
+	}
+
+	const participantConditions = []
+	uniqueUidList.forEach((uid) => {
+		participantConditions.push({
+			requester_uid: uid
+		})
+		participantConditions.push({
+			receiver_uid: uid
+		})
+	})
+
+	const conditions = [
+		{
+			status: REQUEST_STATUS_PENDING
+		},
+		dbCmd.or(participantConditions)
+	]
+
+	if (excludeId) {
+		conditions.push({
+			_id: dbCmd.neq(excludeId)
+		})
+	}
+
+	const pendingRequests = await listRequestsByCondition(dbCmd.and(conditions), {
+		orderField: 'created_at',
+		limit: 100
+	})
+
+	for (const request of pendingRequests) {
+		const relation = request.relation_id ? await getCoupleById(request.relation_id) : null
+		await coupleRequestCollection.doc(request._id).update(buildRequestStatusUpdate(status, {
+			uid: actionUid,
+			reviewedBy: actionUid,
+			now
+		}))
+
+		if (relation && relation._id) {
+			await coupleCollection.doc(relation._id).update({
+				status: COUPLE_STATUS_CLOSED,
+				last_action_uid: actionUid || '',
+				updated_at: now
+			})
+		}
+
+		await createCoupleHistoryRecord({
+			relation: Object.assign({}, relation || {}, {
+				status: COUPLE_STATUS_CLOSED
+			}),
+			request: Object.assign({}, request, {
+				status
+			}),
+			eventType: COUPLE_HISTORY_EVENT_RELATION_CLOSED,
+			eventStatus: COUPLE_STATUS_CLOSED,
+			operatorUid: actionUid,
+			partnerUid: request.requester_uid === actionUid ? request.receiver_uid || '' : request.requester_uid || '',
+			operatorSnapshot: request.requester_uid === actionUid
+				? request.requester_snapshot || {}
+				: request.receiver_snapshot || {},
+			partnerSnapshot: request.requester_uid === actionUid
+				? request.receiver_snapshot || {}
+				: request.requester_snapshot || {},
+			createdAt: now,
+			content: '系统已关闭其他待处理绑定请求'
+		})
 	}
 }
 
@@ -538,6 +823,185 @@ async function formatCoupleHistoryItem(uid, relation = {}) {
 		unbindDate: relation.unbind_date || 0,
 		isCurrent: status === COUPLE_STATUS_BOUND
 	}
+}
+
+async function formatCoupleInfo(uid, coupleRecord = null) {
+	const record = coupleRecord || await getCoupleByUid(uid)
+	if (!record) {
+		return null
+	}
+
+	if (isRequestRecord(record)) {
+		const { partnerUid, partnerAvatar, partnerNickname, partnerGender, direction } = await getRequestPartnerMeta(uid, record)
+		const metrics = normalizeRelationMetrics()
+
+		return {
+			coupleId: record.relation_id || '',
+			requestId: record._id || '',
+			status: COUPLE_STATUS_PENDING,
+			statusText: getCoupleStatusText(COUPLE_STATUS_PENDING),
+			isBound: false,
+			isPending: Number(record.status || 0) === REQUEST_STATUS_PENDING,
+			direction,
+			partnerUid,
+			partnerUidMasked: maskUid(partnerUid),
+			partnerNickname,
+			partnerNicknameMasked: maskNickname(partnerNickname),
+			partnerAvatarUrl: partnerAvatar.avatarUrl || '',
+			partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+			partnerGender,
+			bindDate: 0,
+			anniversaryDate: 0,
+			anniversaryLabel: '',
+			requestDate: record.created_at || 0,
+			metrics,
+			anniversaryCount: metrics.anniversaryCount,
+			momentCount: metrics.momentCount,
+			wishCount: metrics.wishCount
+		}
+	}
+
+	const { partnerUid, partnerAvatar, partnerNickname, partnerGender } = await getRelationPartnerMeta(uid, record)
+	const status = Number(record.status || 0)
+	const requesterUid = getRequesterUid(record)
+	const metrics = normalizeRelationMetrics(record.metrics || {}, record.anniversary_date || 0)
+
+	return {
+		coupleId: record._id || '',
+		requestId: record.current_request_id || '',
+		status,
+		statusText: getCoupleStatusText(status),
+		isBound: status === COUPLE_STATUS_BOUND,
+		isPending: status === COUPLE_STATUS_PENDING,
+		direction: status === COUPLE_STATUS_PENDING
+			? (requesterUid === uid ? 'outgoing' : 'incoming')
+			: 'bound',
+		partnerUid,
+		partnerUidMasked: maskUid(partnerUid),
+		partnerNickname,
+		partnerNicknameMasked: maskNickname(partnerNickname),
+		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
+		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		partnerGender,
+		bindDate: record.bind_date || record.created_at || 0,
+		anniversaryDate: record.anniversary_date || 0,
+		anniversaryLabel: record.anniversary_label || '',
+		requestDate: record.created_at || 0,
+		metrics,
+		anniversaryCount: metrics.anniversaryCount,
+		momentCount: metrics.momentCount,
+		wishCount: metrics.wishCount
+	}
+}
+
+async function formatCoupleRequestItem(uid, relation = {}, { type = 'incoming' } = {}) {
+	const { partnerUid, partnerAvatar, partnerNickname, partnerGender, direction } = await getRequestPartnerMeta(uid, relation)
+	return {
+		requestId: relation._id || '',
+		relationId: relation.relation_id || '',
+		type: type || direction,
+		status: Number(relation.status || 0),
+		statusText: getRequestStatusText(relation.status),
+		partnerUid,
+		partnerUidMasked: maskUid(partnerUid),
+		partnerNickname,
+		partnerNicknameMasked: maskNickname(partnerNickname),
+		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
+		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		partnerGender,
+		createdAt: relation.created_at || 0,
+		updatedAt: relation.updated_at || 0
+	}
+}
+
+async function formatCoupleHistoryItem(uid, relation = {}) {
+	if (isRelationRecord(relation)) {
+		const { partnerUid, partnerAvatar, partnerNickname } = await getRelationPartnerMeta(uid, relation)
+		const status = Number(relation.status || 0)
+		return {
+			relationId: relation._id || '',
+			status,
+			statusText: getCoupleStatusText(status),
+			partnerUid,
+			partnerUidMasked: maskUid(partnerUid),
+			partnerNickname,
+			partnerNicknameMasked: maskNickname(partnerNickname),
+			partnerAvatarUrl: partnerAvatar.avatarUrl || '',
+			partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+			bindDate: relation.bind_date || relation.created_at || 0,
+			unbindDate: relation.unbind_date || 0,
+			isCurrent: status === COUPLE_STATUS_BOUND
+		}
+	}
+
+	const relationSnapshot = relation.relation_snapshot || {}
+	const isOperator = relation.operator_uid === uid
+	const partnerUid = isOperator ? relation.partner_uid || '' : relation.operator_uid || ''
+	const partnerSnapshot = isOperator
+		? relation.partner_snapshot || {}
+		: relation.operator_snapshot || {}
+	const partnerRecord = partnerUid ? await getUserById(partnerUid) : null
+	const partnerAvatar = partnerRecord ? await resolveAvatar(partnerRecord) : {
+		avatarFileId: getSnapshotAvatarFileId(partnerSnapshot),
+		avatarUrl: getSnapshotAvatarUrl(partnerSnapshot)
+	}
+	const partnerNickname = partnerRecord
+		? partnerRecord.nickname || partnerRecord.username || DEFAULT_NICKNAME
+		: getSnapshotNickname(partnerSnapshot)
+	const status = Number(
+		relationSnapshot.status
+		|| (relation.event_type === COUPLE_HISTORY_EVENT_RELATION_UNBOUND ? COUPLE_STATUS_UNBOUND : COUPLE_STATUS_BOUND)
+	)
+
+	return {
+		relationId: relation.relation_id || '',
+		status,
+		statusText: getCoupleStatusText(status),
+		partnerUid,
+		partnerUidMasked: maskUid(partnerUid),
+		partnerNickname,
+		partnerNicknameMasked: maskNickname(partnerNickname),
+		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
+		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		bindDate: relationSnapshot.bind_date || relation.created_at || 0,
+		unbindDate: relationSnapshot.unbind_date || 0,
+		isCurrent: status === COUPLE_STATUS_BOUND
+	}
+}
+
+async function buildCoupleHistoryList(uid, { excludeRelationId = '' } = {}) {
+	const historyRecords = await getCoupleHistoryByUid(uid)
+	const relationRecords = await getRelationHistoryRecordsByUid(uid)
+	const seenRelationIds = new Set()
+	const historyList = []
+
+	for (const item of historyRecords) {
+		if (!item || !item.relation_id || seenRelationIds.has(item.relation_id) || item.relation_id === excludeRelationId) {
+			continue
+		}
+
+		if (![COUPLE_HISTORY_EVENT_RELATION_BOUND, COUPLE_HISTORY_EVENT_RELATION_UNBOUND].includes(item.event_type)) {
+			continue
+		}
+
+		seenRelationIds.add(item.relation_id)
+		historyList.push(await formatCoupleHistoryItem(uid, item))
+	}
+
+	for (const item of relationRecords) {
+		if (!item || !item._id || seenRelationIds.has(item._id) || item._id === excludeRelationId) {
+			continue
+		}
+
+		seenRelationIds.add(item._id)
+		historyList.push(await formatCoupleHistoryItem(uid, item))
+	}
+
+	return historyList.sort((a, b) => {
+		const aTimestamp = Math.max(Number(a.unbindDate || 0), Number(a.bindDate || 0))
+		const bTimestamp = Math.max(Number(b.unbindDate || 0), Number(b.bindDate || 0))
+		return bTimestamp - aTimestamp
+	})
 }
 
 function getUniIdInstance(context) {
@@ -734,18 +1198,15 @@ async function buildCoupleCenterPayload(uid) {
 		}
 	}
 
-	const [activeCouple, incomingRequests, outgoingRequests, historyRelations] = await Promise.all([
+	const [activeCouple, incomingRequests, outgoingRequests] = await Promise.all([
 		getActiveCoupleByUid(uid),
-		getIncomingPendingCouples(uid),
-		getOutgoingPendingCouples(uid),
-		getCoupleHistoryByUid(uid)
+		getIncomingPendingRequests(uid),
+		getOutgoingPendingRequests(uid)
 	])
 
-	const historyList = await Promise.all(
-		historyRelations
-			.filter((item) => item && item._id && (!activeCouple || item._id !== activeCouple._id))
-			.map((item) => formatCoupleHistoryItem(uid, item))
-	)
+	const historyList = await buildCoupleHistoryList(uid, {
+		excludeRelationId: activeCouple ? activeCouple._id : ''
+	})
 
 	return {
 		selfInfo: await formatSelfInfo(userRecord),
@@ -872,7 +1333,7 @@ module.exports = {
 				getUserById(targetUid),
 				getActiveCoupleByUid(uid),
 				getActiveCoupleByUid(targetUid),
-				getOutgoingPendingCouples(uid),
+				getOutgoingPendingRequests(uid),
 				getExistingPendingRelationBetween(uid, targetUid)
 			])
 
@@ -921,14 +1382,73 @@ module.exports = {
 			}
 
 			const now = Date.now()
-			await coupleCollection.add({
+			const requesterSnapshot = await buildUserSnapshot(currentUser)
+			const receiverSnapshot = await buildUserSnapshot(targetUser)
+			const relationData = {
+				relation_no: createSerialNo('REL'),
 				user_a_uid: uid,
 				user_b_uid: targetUid,
 				partner_nickname: targetUser.nickname || targetUser.username || DEFAULT_NICKNAME,
+				user_a_snapshot: requesterSnapshot,
+				user_b_snapshot: receiverSnapshot,
 				status: COUPLE_STATUS_PENDING,
+				current_request_id: '',
+				request_source: REQUEST_SOURCE_MANUAL,
 				created_by: uid,
+				last_action_uid: uid,
+				last_interaction_at: now,
+				metrics: {
+					anniversary_count: 0,
+					moment_count: 0,
+					wish_count: 0,
+					album_count: 0
+				},
 				created_at: now,
 				updated_at: now
+			}
+			const relationCreateRes = await coupleCollection.add(relationData)
+			const relationId = relationCreateRes && relationCreateRes.id ? relationCreateRes.id : ''
+			const requestData = {
+				request_no: createSerialNo('REQ'),
+				relation_id: relationId,
+				requester_uid: uid,
+				receiver_uid: targetUid,
+				requester_snapshot: sanitizeRequestSnapshot(requesterSnapshot),
+				receiver_snapshot: sanitizeRequestSnapshot(receiverSnapshot),
+				status: REQUEST_STATUS_PENDING,
+				source: REQUEST_SOURCE_MANUAL,
+				last_action_uid: uid,
+				created_at: now,
+				updated_at: now
+			}
+			const requestCreateRes = await coupleRequestCollection.add(requestData)
+			const requestId = requestCreateRes && requestCreateRes.id ? requestCreateRes.id : ''
+
+			if (relationId && requestId) {
+				await coupleCollection.doc(relationId).update({
+					current_request_id: requestId,
+					updated_at: now
+				})
+			}
+
+			await createCoupleHistoryRecord({
+				relation: Object.assign({}, relationData, {
+					_id: relationId,
+					current_request_id: requestId
+				}),
+				request: Object.assign({}, requestData, {
+					_id: requestId
+				}),
+				relationId,
+				requestId,
+				eventType: COUPLE_HISTORY_EVENT_REQUEST_CREATED,
+				eventStatus: REQUEST_STATUS_PENDING,
+				operatorUid: uid,
+				partnerUid: targetUid,
+				operatorSnapshot: requesterSnapshot,
+				partnerSnapshot: receiverSnapshot,
+				createdAt: now,
+				content: '发起情侣绑定请求'
 			})
 
 			return Object.assign({}, response, {
@@ -954,15 +1474,15 @@ module.exports = {
 				}
 			}
 
-			const relation = await getCoupleById(requestId)
-			if (!relation || Number(relation.status) !== COUPLE_STATUS_PENDING) {
+			const requestRecord = await getCoupleRequestById(requestId)
+			if (!requestRecord || Number(requestRecord.status) !== REQUEST_STATUS_PENDING) {
 				return {
 					errCode: 'love-note-request-not-found',
 					errMsg: '该绑定请求不存在或已处理'
 				}
 			}
 
-			if (relation.user_b_uid !== uid) {
+			if (requestRecord.receiver_uid !== uid) {
 				return {
 					errCode: 'love-note-no-permission',
 					errMsg: '你无权处理这条绑定请求'
@@ -970,11 +1490,42 @@ module.exports = {
 			}
 
 			const now = Date.now()
+			const relation = requestRecord.relation_id ? await getCoupleById(requestRecord.relation_id) : null
+			if (!relation) {
+				return {
+					errCode: 'love-note-couple-not-found',
+					errMsg: '绑定关系不存在，无法处理该请求'
+				}
+			}
+
 			if (action === 'reject') {
-				await coupleCollection.doc(requestId).update({
+				await coupleRequestCollection.doc(requestId).update(buildRequestStatusUpdate(REQUEST_STATUS_REJECTED, {
+					uid,
+					reviewedBy: uid,
+					now
+				}))
+				await coupleCollection.doc(relation._id).update({
 					status: COUPLE_STATUS_CLOSED,
+					current_request_id: requestId,
 					last_action_uid: uid,
 					updated_at: now
+				})
+				await createCoupleHistoryRecord({
+					relation: Object.assign({}, relation, {
+						status: COUPLE_STATUS_CLOSED,
+						current_request_id: requestId
+					}),
+					request: Object.assign({}, requestRecord, {
+						status: REQUEST_STATUS_REJECTED
+					}),
+					eventType: COUPLE_HISTORY_EVENT_REQUEST_REJECTED,
+					eventStatus: REQUEST_STATUS_REJECTED,
+					operatorUid: uid,
+					partnerUid: requestRecord.requester_uid || '',
+					operatorSnapshot: requestRecord.receiver_snapshot || {},
+					partnerSnapshot: requestRecord.requester_snapshot || {},
+					createdAt: now,
+					content: '已拒绝情侣绑定请求'
 				})
 
 				return Object.assign({}, response, {
@@ -991,10 +1542,12 @@ module.exports = {
 				}
 			}
 
-			const requesterUid = getRequesterUid(relation)
-			const [selfActiveCouple, requesterActiveCouple] = await Promise.all([
+			const requesterUid = requestRecord.requester_uid || ''
+			const [selfActiveCouple, requesterActiveCouple, requesterUser, receiverUser] = await Promise.all([
 				getActiveCoupleByUid(uid),
-				getActiveCoupleByUid(requesterUid)
+				getActiveCoupleByUid(requesterUid),
+				getUserById(requesterUid),
+				getUserById(uid)
 			])
 
 			if (selfActiveCouple) {
@@ -1011,16 +1564,64 @@ module.exports = {
 				}
 			}
 
-			await coupleCollection.doc(requestId).update({
+			const requesterSnapshot = requesterUser ? await buildUserSnapshot(requesterUser) : requestRecord.requester_snapshot || {}
+			const receiverSnapshot = receiverUser ? await buildUserSnapshot(receiverUser) : requestRecord.receiver_snapshot || {}
+			await coupleRequestCollection.doc(requestId).update(buildRequestStatusUpdate(REQUEST_STATUS_ACCEPTED, {
+				uid,
+				reviewedBy: uid,
+				now
+			}))
+			await coupleCollection.doc(relation._id).update({
 				status: COUPLE_STATUS_BOUND,
 				bind_date: now,
+				current_request_id: requestId,
+				user_a_snapshot: requesterSnapshot,
+				user_b_snapshot: receiverSnapshot,
 				last_action_uid: uid,
 				updated_at: now
 			})
-			await closePendingCouplesForUsers([uid, requesterUid], {
+			await closePendingRequestsForUsers([uid, requesterUid], {
 				excludeId: requestId,
-				status: COUPLE_STATUS_CLOSED,
-				actionUid: uid
+				status: REQUEST_STATUS_CLOSED,
+				actionUid: uid,
+				now
+			})
+			const boundRelation = Object.assign({}, relation, {
+				status: COUPLE_STATUS_BOUND,
+				bind_date: now,
+				current_request_id: requestId,
+				user_a_snapshot: requesterSnapshot,
+				user_b_snapshot: receiverSnapshot
+			})
+			await createCoupleHistoryRecord({
+				relation: boundRelation,
+				request: Object.assign({}, requestRecord, {
+					status: REQUEST_STATUS_ACCEPTED,
+					accepted_at: now
+				}),
+				eventType: COUPLE_HISTORY_EVENT_REQUEST_ACCEPTED,
+				eventStatus: REQUEST_STATUS_ACCEPTED,
+				operatorUid: uid,
+				partnerUid: requesterUid,
+				operatorSnapshot: receiverSnapshot,
+				partnerSnapshot: requesterSnapshot,
+				createdAt: now,
+				content: '已同意情侣绑定请求'
+			})
+			await createCoupleHistoryRecord({
+				relation: boundRelation,
+				request: Object.assign({}, requestRecord, {
+					status: REQUEST_STATUS_ACCEPTED,
+					accepted_at: now
+				}),
+				eventType: COUPLE_HISTORY_EVENT_RELATION_BOUND,
+				eventStatus: COUPLE_STATUS_BOUND,
+				operatorUid: uid,
+				partnerUid: requesterUid,
+				operatorSnapshot: receiverSnapshot,
+				partnerSnapshot: requesterSnapshot,
+				createdAt: now,
+				content: '情侣关系已完成绑定'
 			})
 
 			return Object.assign({}, response, {
@@ -1045,25 +1646,52 @@ module.exports = {
 				}
 			}
 
-			const relation = await getCoupleById(requestId)
-			if (!relation || Number(relation.status) !== COUPLE_STATUS_PENDING) {
+			const requestRecord = await getCoupleRequestById(requestId)
+			if (!requestRecord || Number(requestRecord.status) !== REQUEST_STATUS_PENDING) {
 				return {
 					errCode: 'love-note-request-not-found',
 					errMsg: '该绑定请求不存在或已处理'
 				}
 			}
 
-			if (getRequesterUid(relation) !== uid) {
+			if (requestRecord.requester_uid !== uid) {
 				return {
 					errCode: 'love-note-no-permission',
 					errMsg: '你只能撤回自己发起的绑定请求'
 				}
 			}
 
-			await coupleCollection.doc(requestId).update({
-				status: COUPLE_STATUS_CANCELLED,
-				last_action_uid: uid,
-				updated_at: Date.now()
+			const now = Date.now()
+			const relation = requestRecord.relation_id ? await getCoupleById(requestRecord.relation_id) : null
+			await coupleRequestCollection.doc(requestId).update(buildRequestStatusUpdate(REQUEST_STATUS_CANCELLED, {
+				uid,
+				now
+			}))
+			if (relation && relation._id) {
+				await coupleCollection.doc(relation._id).update({
+					status: COUPLE_STATUS_CANCELLED,
+					current_request_id: requestId,
+					last_action_uid: uid,
+					updated_at: now
+				})
+			}
+			await createCoupleHistoryRecord({
+				relation: Object.assign({}, relation || {}, {
+					status: COUPLE_STATUS_CANCELLED,
+					current_request_id: requestId
+				}),
+				request: Object.assign({}, requestRecord, {
+					status: REQUEST_STATUS_CANCELLED,
+					cancelled_at: now
+				}),
+				eventType: COUPLE_HISTORY_EVENT_REQUEST_CANCELLED,
+				eventStatus: REQUEST_STATUS_CANCELLED,
+				operatorUid: uid,
+				partnerUid: requestRecord.receiver_uid || '',
+				operatorSnapshot: requestRecord.requester_snapshot || {},
+				partnerSnapshot: requestRecord.receiver_snapshot || {},
+				createdAt: now,
+				content: '已撤回情侣绑定请求'
 			})
 
 			return Object.assign({}, response, {
@@ -1096,11 +1724,37 @@ module.exports = {
 				}
 			}
 
+			const now = Date.now()
+			const [userARecord, userBRecord] = await Promise.all([
+				getUserById(activeRelation.user_a_uid),
+				getUserById(activeRelation.user_b_uid)
+			])
+			const userASnapshot = userARecord ? await buildUserSnapshot(userARecord) : activeRelation.user_a_snapshot || {}
+			const userBSnapshot = userBRecord ? await buildUserSnapshot(userBRecord) : activeRelation.user_b_snapshot || {}
 			await coupleCollection.doc(activeRelation._id).update({
 				status: COUPLE_STATUS_UNBOUND,
-				unbind_date: Date.now(),
+				unbind_date: now,
+				user_a_snapshot: userASnapshot,
+				user_b_snapshot: userBSnapshot,
 				last_action_uid: uid,
-				updated_at: Date.now()
+				updated_at: now
+			})
+			await createCoupleHistoryRecord({
+				relation: Object.assign({}, activeRelation, {
+					status: COUPLE_STATUS_UNBOUND,
+					unbind_date: now,
+					user_a_snapshot: userASnapshot,
+					user_b_snapshot: userBSnapshot
+				}),
+				requestId: activeRelation.current_request_id || '',
+				eventType: COUPLE_HISTORY_EVENT_RELATION_UNBOUND,
+				eventStatus: COUPLE_STATUS_UNBOUND,
+				operatorUid: uid,
+				partnerUid: getRelationPartnerUid(uid, activeRelation),
+				operatorSnapshot: activeRelation.user_a_uid === uid ? userASnapshot : userBSnapshot,
+				partnerSnapshot: activeRelation.user_a_uid === uid ? userBSnapshot : userASnapshot,
+				createdAt: now,
+				content: '已解绑当前情侣关系'
 			})
 
 			return Object.assign({}, response, {

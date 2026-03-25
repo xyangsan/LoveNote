@@ -88,7 +88,8 @@ page {
 
 .love-field-tip {
 	display: block;
-	margin-top: 12rpx;
+	margin-top: 16rpx;
+	margin-bottom: 14rpx;
 	font-size: 22rpx;
 	line-height: 1.6;
 	color: #a07b70;

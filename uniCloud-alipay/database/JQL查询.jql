@@ -8,5 +8,14 @@
 // 数据库查询有最大返回条数限制，详见：https://uniapp.dcloud.net.cn/uniCloud/cf-database.html#limit
 // 详细JQL语法，请参考：https://uniapp.dcloud.net.cn/uniCloud/jql.html
 
-// 下面示例查询uni-id-users表的所有数据
-db.collection('uni-id-users').get();
+// 下面示例查询情侣关系主表
+// db.collection('love-couples').orderBy('updated_at', 'desc').limit(20).get();
+
+// 查询绑定请求表
+// db.collection('love-couple-requests').orderBy('created_at', 'desc').limit(20).get();
+
+// 查询绑定历史表
+// db.collection('love-couple-history').orderBy('created_at', 'desc').limit(20).get();
+
+// 默认保留用户表查询
+db.collection('uni-id-users').limit(20).get();
