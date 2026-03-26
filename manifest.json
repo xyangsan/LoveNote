@@ -1,7 +1,7 @@
 {
-    "name" : "LoveNote",
+    "name" : "恋人手札",
     "appid" : "__UNI__19A522B",
-    "description" : "",
+    "description" : "一款面向情侣关系场景的双人记录与陪伴应用，支持情侣绑定、纪念日、相册、计划与日常互动。",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,

@@ -192,10 +192,11 @@
 	import {
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
-		getAuthCenterObject,
 		getCurrentUniIdUser,
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
+	import { getAuthApi } from '../../common/api/auth.js'
+	import { getUserApi } from '../../common/api/user.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
 
 	export default {
@@ -373,7 +374,7 @@
 			},
 			async fetchCurrentUser({ silent = false } = {}) {
 				try {
-					const result = await getAuthCenterObject().getMine()
+					const result = await getUserApi().getMine()
 					if (result && result.errCode && result.errCode !== 0) {
 						throw new Error(result.errMsg || '获取用户信息失败')
 					}
@@ -453,7 +454,7 @@
 						}
 					}
 
-					const result = await getAuthCenterObject().loginByWeixin(loginPayload)
+					const result = await getAuthApi().loginByWeixin(loginPayload)
 					if (result.errCode && result.errCode !== 0) {
 						throw new Error(result.errMsg || '登录失败')
 					}
@@ -481,7 +482,7 @@
 				try {
 					const currentUserInfo = getCurrentUniIdUser()
 					if (currentUserInfo && currentUserInfo.uid) {
-						await getAuthCenterObject().logout()
+						await getAuthApi().logout()
 					}
 				} catch (error) {
 					console.warn('handleLogout failed', error)

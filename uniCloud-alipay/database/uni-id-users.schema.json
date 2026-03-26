@@ -181,6 +181,14 @@
 			"bsonType": "long",
 			"title": "token 生效时间阈值"
 		},
+		"couple_lock_token": {
+			"bsonType": "string",
+			"title": "情侣关系操作锁令牌"
+		},
+		"couple_lock_expired_at": {
+			"bsonType": "long",
+			"title": "情侣关系操作锁过期时间"
+		},
 		"login_ip_limit": {
 			"bsonType": "array",
 			"title": "密码登录错误限制",

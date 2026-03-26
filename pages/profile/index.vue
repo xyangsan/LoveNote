@@ -96,11 +96,12 @@
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
 		emitAuthChanged,
-		getAuthCenterObject,
 		getCurrentUniIdUser,
 		saveCachedUserProfile,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
+	import { getAuthApi } from '../../common/api/auth.js'
+	import { getUserApi } from '../../common/api/user.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const PROFILE_DEFAULT_AVATAR = '/static/user-empty.png'
@@ -158,13 +159,6 @@
 			currentCouple() {
 				return this.userInfo && this.userInfo.coupleInfo ? this.userInfo.coupleInfo : null
 			},
-			coupleStatusText() {
-				if (!this.currentCouple) {
-					return '未绑定'
-				}
-
-				return this.currentCouple.statusText || (this.currentCouple.isBound ? '已绑定' : '待确认')
-			},
 			anniversaryText() {
 				return this.currentCouple && this.currentCouple.anniversaryDate
 					? formatDate(this.currentCouple.anniversaryDate)
@@ -189,16 +183,62 @@
 					? '查看并管理你的头像、昵称与基础资料'
 					: '登录后同步微信头像、昵称与情侣空间信息'
 			},
+			coupleStatusText() {
+				if (!this.currentCouple) {
+					return '未绑定'
+				}
+
+				if (this.currentCouple.isBound) {
+					return '已绑定'
+				}
+
+				const incomingCount = Number(this.currentCouple.pendingIncomingCount || 0)
+				if (incomingCount > 0) {
+					return incomingCount > 1 ? `待处理 ${incomingCount}` : '待处理'
+				}
+
+				const outgoingCount = Number(this.currentCouple.pendingOutgoingCount || 0)
+				if (outgoingCount > 0) {
+					return '等待回应'
+				}
+
+				return this.currentCouple.statusText || '待确认'
+			},
+			coupleCardDesc() {
+				if (!this.currentCouple) {
+					return '还没有绑定情侣关系'
+				}
+
+				if (this.currentCouple.isBound) {
+					return `当前伴侣：${this.currentCouple.partnerNickname || '另一半'}`
+				}
+
+				const incomingCount = Number(this.currentCouple.pendingIncomingCount || 0)
+				if (incomingCount > 1) {
+					return `已收到 ${incomingCount} 条绑定请求，请先确认其中 1 条`
+				}
+
+				if (incomingCount === 1) {
+					return `收到来自 ${this.currentCouple.partnerNickname || '对方'} 的绑定请求`
+				}
+
+				const outgoingCount = Number(this.currentCouple.pendingOutgoingCount || 0)
+				if (outgoingCount > 1) {
+					return `已发出 ${outgoingCount} 条绑定请求，等待对方回应`
+				}
+
+				if (outgoingCount === 1) {
+					return `已向 ${this.currentCouple.partnerNickname || '对方'} 发起绑定请求`
+				}
+
+				return '当前绑定邀请还在等待确认'
+			},
 			centerCards() {
 				return [
 					{
 						key: 'couple',
 						title: '情侣信息',
-						desc: this.currentCouple
-							? (this.currentCouple.isBound
-								? `当前伴侣：${this.currentCouple.partnerNickname || '另一半'}`
-								: '当前绑定邀请还在等待确认')
-							: '还没有绑定情侣关系',
+						desc: this.coupleCardDesc,
 						value: this.coupleStatusText,
 						iconText: '伴',
 						iconBg: 'linear-gradient(135deg, #ffd3c2 0%, #ffb199 100%)'
@@ -280,7 +320,7 @@
 			},
 			async fetchCurrentUser({ silent = false } = {}) {
 				try {
-					const result = await getAuthCenterObject().getMine()
+					const result = await getUserApi().getMine()
 					if (result && result.errCode && result.errCode !== 0) {
 						throw new Error(result.errMsg || '获取用户信息失败')
 					}
@@ -383,7 +423,7 @@
 				try {
 					const currentUserInfo = getCurrentUniIdUser()
 					if (currentUserInfo && currentUserInfo.uid) {
-						await getAuthCenterObject().logout()
+						await getAuthApi().logout()
 					}
 				} catch (error) {
 					console.warn('profile handleLogout failed', error)

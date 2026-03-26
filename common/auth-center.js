@@ -1,24 +1,10 @@
+import { clearUniIdTokenStorage } from './api/router.js'
+
 export const DEFAULT_AVATAR = '/static/user-empty.png'
 export const AUTH_CHANGE_EVENT = 'love-note-auth-change'
 export const USER_PROFILE_CACHE_KEY = 'love_note_user_profile_cache'
 
-let authCenterObject = null
-
-export function getAuthCenterObject() {
-	if (!authCenterObject) {
-		authCenterObject = uniCloud.importObject('auth-center', {
-			customUI: true
-		})
-	}
-
-	return authCenterObject
-}
-
-export function clearUniIdTokenStorage() {
-	;['uni_id_token', 'uni_id_token_expired', 'uniIdToken'].forEach((key) => {
-		uni.removeStorageSync(key)
-	})
-}
+export { clearUniIdTokenStorage }
 
 export function getCachedUserProfile() {
 	const cachedValue = uni.getStorageSync(USER_PROFILE_CACHE_KEY)

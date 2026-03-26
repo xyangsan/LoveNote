@@ -219,12 +219,12 @@
 	import {
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
-		getAuthCenterObject,
 		getCurrentUniIdUser,
 		saveCachedUserProfile,
 		subscribeAuthChanged,
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
+	import { getUserApi } from '../../common/api/user.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const NICKNAME_MAX_LENGTH = 20
@@ -459,7 +459,7 @@
 			},
 			async fetchCurrentUser({ silent = false } = {}) {
 				try {
-					const result = await getAuthCenterObject().getMine()
+					const result = await getUserApi().getMine()
 					if (result && result.errCode && result.errCode !== 0) {
 						throw new Error(result.errMsg || '获取用户信息失败')
 					}
@@ -608,7 +608,7 @@
 						mask: true
 					})
 
-					const result = await getAuthCenterObject().updateProfile(payload)
+					const result = await getUserApi().updateProfile(payload)
 					if (result.errCode && result.errCode !== 0) {
 						throw new Error(result.errMsg || '保存失败')
 					}

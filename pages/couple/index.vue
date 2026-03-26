@@ -426,10 +426,10 @@
 	import {
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
-		getAuthCenterObject,
 		getCurrentUniIdUser,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
+	import { getCoupleApi } from '../../common/api/couple.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
 
 	const TAB_KEYS = ['incoming', 'outgoing', 'history']
@@ -526,7 +526,7 @@
 				}
 
 				if (this.incomingRequests.length) {
-					return `你有 ${this.incomingRequests.length} 条待处理的绑定请求，只能确认其中一个完成绑定。`
+					return `你有 ${this.incomingRequests.length} 条待处理的绑定请求，只能确认其中一个人完成绑定。`
 				}
 
 				if (this.outgoingRequests.length) {
@@ -574,7 +574,7 @@
 				}
 
 				if (this.outgoingRequests.length) {
-					return `已发送 ${this.outgoingRequests.length} 条请求，等待对方同意`
+					return `已发出 ${this.outgoingRequests.length} 条请求，等待对方同意`
 				}
 
 				return '当前还没有绑定关系，可以复制自己的 ID 或主动发起邀请'
@@ -708,7 +708,7 @@
 					return '已经完成或结束的绑定关系会保留在这里，信息会按规则脱敏展示。'
 				}
 
-				return '收到的绑定邀请会显示在这里，你只能确认其中一个完成绑定。'
+				return '收到的绑定邀请会显示在这里，你只能确认其中一个人完成绑定。'
 			},
 			activeTabCountText() {
 				const count = this.getRecordsByKey(this.activeTabKey).length
@@ -761,7 +761,7 @@
 					}
 				}
 
-				if (text.includes('取消') || text.includes('关闭')) {
+				if (text.includes('撤回') || text.includes('关闭')) {
 					return {
 						background: 'rgba(249, 242, 238, 0.98)',
 						color: '#a88478'
@@ -833,7 +833,7 @@
 			},
 			async fetchCoupleCenter({ silent = false } = {}) {
 				try {
-					const result = await getAuthCenterObject().getCoupleCenter()
+					const result = await getCoupleApi().getCenter()
 					if (result && result.errCode && result.errCode !== 0) {
 						throw new Error(result.errMsg || '获取情侣信息失败')
 					}
@@ -910,7 +910,7 @@
 
 				this.actionLoading = 'send'
 				try {
-					const result = await getAuthCenterObject().sendCoupleRequest({
+					const result = await getCoupleApi().sendRequest({
 						targetUid: this.targetUid
 					})
 					if (result.errCode && result.errCode !== 0) {
@@ -964,7 +964,7 @@
 
 				this.actionLoading = `${action}-${item.requestId}`
 				try {
-					const result = await getAuthCenterObject().reviewCoupleRequest({
+					const result = await getCoupleApi().reviewRequest({
 						requestId: item.requestId,
 						action
 					})
@@ -1001,7 +1001,7 @@
 
 				this.actionLoading = `cancel-${item.requestId}`
 				try {
-					const result = await getAuthCenterObject().cancelCoupleRequest({
+					const result = await getCoupleApi().cancelRequest({
 						requestId: item.requestId
 					})
 					if (result.errCode && result.errCode !== 0) {
@@ -1037,7 +1037,7 @@
 
 				this.actionLoading = 'unbind'
 				try {
-					const result = await getAuthCenterObject().unbindCouple({
+					const result = await getCoupleApi().unbind({
 						relationId: this.activeCouple.coupleId
 					})
 					if (result.errCode && result.errCode !== 0) {
