@@ -33,7 +33,9 @@
 		{
 			"path": "pages/couple/index",
 			"style": {
-				"navigationBarTitleText": "情侣信息"
+				"navigationBarTitleText": "情侣信息",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
 			}
 		}
 	],

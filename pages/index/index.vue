@@ -45,25 +45,25 @@
 			<!-- #endif -->
 		</view>
 
-		<view class="hero-card" v-else>
-			<view class="hero-card__top">
-				<view>
-					<text class="eyebrow">LoveNote 情侣空间</text>
-					<view class="hero-card__title-row">
-						<text class="hero-card__title">已经相爱第 {{ loveDays }} 天</text>
-						<view class="demo-badge">{{ isLoggedIn ? '已登录' : '待登录' }}</view>
+			<view class="hero-card" v-else>
+				<view class="hero-card__top">
+					<view>
+						<text class="eyebrow">LoveNote 情侣空间</text>
+						<view class="hero-card__title-row">
+							<text class="hero-card__title">{{ relationshipHeadline }}</text>
+						</view>
+						<text class="hero-card__subtitle">{{ heroSubtitle }}</text>
 					</view>
-					<text class="hero-card__subtitle">{{ heroSubtitle }}</text>
+				<view class="heart-pill">{{ heroPillText }}</view>
 				</view>
-				<view class="heart-pill">{{ isLoggedIn ? '账号已激活' : '等待登录中' }}</view>
-			</view>
 
 			<love-relation-bar
 				class="couple-card"
 				:primary-avatar="displayUserAvatar"
 				:primary-gender="Number(currentUser && currentUser.gender || 0)"
+				:secondary-avatar="currentPartnerAvatar"
 				secondary-placeholder="TA"
-				:title="`${currentUserName} & 待绑定`"
+				:title="relationBarTitle"
 				:desc="currentUserDesc"
 			></love-relation-bar>
 
@@ -78,9 +78,9 @@
 				<button
 					class="primary-action"
 					hover-class="button-hover"
-					@click="handleAction(isLoggedIn ? '绑定流程' : '登录')"
+					@click="isLoggedIn ? goToCouplePage() : handleAction('登录')"
 				>
-					{{ isLoggedIn ? '创建情侣空间' : '先去登录' }}
+					{{ isLoggedIn ? (activeCouple ? '进入情侣空间' : '创建情侣空间') : '先去登录' }}
 				</button>
 				<button
 					class="secondary-action"
@@ -95,7 +95,7 @@
 		<view class="section">
 			<view class="section__header">
 				<text class="section__title">今天想先做什么</text>
-				<text class="section__hint">首页首屏快捷入口</text>
+				<text class="section__hint">快捷入口</text>
 			</view>
 			<view class="quick-grid">
 				<view
@@ -196,8 +196,41 @@
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
 	import { getAuthApi } from '../../common/api/auth.js'
+	import { getCoupleApi } from '../../common/api/couple.js'
 	import { getUserApi } from '../../common/api/user.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
+
+	function getDefaultCoupleCenterData() {
+		return {
+			selfInfo: null,
+			activeCouple: null,
+			incomingRequests: [],
+			outgoingRequests: [],
+			historyList: [],
+			canSendRequest: true
+		}
+	}
+
+	function formatDateTime(timestamp) {
+		if (!timestamp) {
+			return ''
+		}
+
+		const date = new Date(timestamp)
+		const year = date.getFullYear()
+		const month = `${date.getMonth() + 1}`.padStart(2, '0')
+		const day = `${date.getDate()}`.padStart(2, '0')
+		return `${year}.${month}.${day}`
+	}
+
+	function getDaysSince(timestamp) {
+		if (!timestamp) {
+			return 0
+		}
+
+		const oneDay = 24 * 60 * 60 * 1000
+		return Math.max(1, Math.floor((Date.now() - Number(timestamp)) / oneDay) + 1)
+	}
 
 	export default {
 		components: {
@@ -220,16 +253,12 @@
 				startDateText: formatDate(startDate),
 				isLoggingIn: false,
 				userInfo: null,
+				coupleCenterData: getDefaultCoupleCenterData(),
 				loginForm: {
 					nickname: '',
 					avatarUrl: '',
 					avatarFileId: ''
 				},
-				heroStats: [
-					{ label: '共同纪念日', value: '6' },
-					{ label: '双人动态', value: '28' },
-					{ label: '愿望进行中', value: '3' }
-				],
 				quickActions: [
 					{
 						title: '纪念日',
@@ -323,6 +352,24 @@
 			currentUser() {
 				return this.userInfo || null
 			},
+			activeCouple() {
+				return this.coupleCenterData && this.coupleCenterData.activeCouple ? this.coupleCenterData.activeCouple : null
+			},
+			incomingRequests() {
+				return Array.isArray(this.coupleCenterData && this.coupleCenterData.incomingRequests)
+					? this.coupleCenterData.incomingRequests
+					: []
+			},
+			outgoingRequests() {
+				return Array.isArray(this.coupleCenterData && this.coupleCenterData.outgoingRequests)
+					? this.coupleCenterData.outgoingRequests
+					: []
+			},
+			historyList() {
+				return Array.isArray(this.coupleCenterData && this.coupleCenterData.historyList)
+					? this.coupleCenterData.historyList
+					: []
+			},
 			currentUserName() {
 				return this.currentUser && this.currentUser.nickname ? this.currentUser.nickname : '你'
 			},
@@ -332,15 +379,115 @@
 			displayLoginAvatar() {
 				return this.loginForm.avatarUrl || DEFAULT_AVATAR
 			},
+			currentPartnerName() {
+				if (this.activeCouple && this.activeCouple.partnerNickname) {
+					return this.activeCouple.partnerNickname
+				}
+
+				const pendingRelation = this.incomingRequests[0] || this.outgoingRequests[0] || null
+				if (pendingRelation && pendingRelation.partnerNicknameMasked) {
+					return pendingRelation.partnerNicknameMasked
+				}
+
+				return '待绑定'
+			},
+			currentPartnerAvatar() {
+				if (this.activeCouple && this.activeCouple.partnerAvatarUrl) {
+					return this.activeCouple.partnerAvatarUrl
+				}
+
+				const pendingRelation = this.incomingRequests[0] || this.outgoingRequests[0] || null
+				return pendingRelation && pendingRelation.partnerAvatarUrl ? pendingRelation.partnerAvatarUrl : ''
+			},
+			relationBarTitle() {
+				return `${this.currentUserName} & ${this.currentPartnerName}`
+			},
+			relationshipDays() {
+				return this.activeCouple && this.activeCouple.bindDate ? getDaysSince(this.activeCouple.bindDate) : this.loveDays
+			},
+			relationshipHeadline() {
+				if (this.activeCouple) {
+					return `已经相伴第 ${this.relationshipDays} 天`
+				}
+
+				if (this.incomingRequests.length) {
+					return `收到 ${this.incomingRequests.length} 条绑定请求`
+				}
+
+				if (this.outgoingRequests.length) {
+					return '等待对方确认绑定'
+				}
+
+				return '创建属于你们的情侣空间'
+			},
 			heroSubtitle() {
-				return this.isLoggedIn
-					? '你的账号已经完成登录，下一步可以继续创建情侣空间、邀请另一半加入。'
-					: '先完成微信登录，保存你的昵称和头像，再继续搭建专属双人空间。'
+				if (!this.isLoggedIn) {
+					return '先完成微信登录，保存你的昵称和头像，再继续搭建专属双人空间。'
+				}
+
+				if (this.activeCouple) {
+					return `当前已与 ${this.currentPartnerName} 完成绑定，可以继续前往情侣页管理关系。`
+				}
+
+				if (this.incomingRequests.length) {
+					return '有人向你发来了绑定邀请，点击“创建情侣空间”即可前往处理。'
+				}
+
+				if (this.outgoingRequests.length) {
+					return `你已向 ${this.currentPartnerName} 发起绑定邀请，正在等待对方回应。`
+				}
+
+				return '你的账号已经完成登录，下一步可以继续创建情侣空间、邀请另一半加入。'
+			},
+			heroPillText() {
+				if (this.activeCouple) {
+					return '情侣空间已建立'
+				}
+
+				if (this.incomingRequests.length) {
+					return '有新的邀请'
+				}
+
+				if (this.outgoingRequests.length) {
+					return '邀请已发出'
+				}
+
+				return '等待绑定中'
 			},
 			currentUserDesc() {
-				return this.isLoggedIn
-					? `已完成微信登录，登录昵称为 ${this.currentUserName}，纪念日开始于 ${this.startDateText}。`
-					: '当前还没有登录账号，登录后会自动保存你的头像、昵称和首次登录时间。'
+				if (!this.isLoggedIn) {
+					return '当前还没有登录账号，登录后会自动保存你的头像、昵称和首次登录时间。'
+				}
+
+				if (this.activeCouple) {
+					return `当前伴侣：${this.currentPartnerName}，绑定日期 ${formatDateTime(this.activeCouple.bindDate) || this.startDateText}。`
+				}
+
+				if (this.incomingRequests.length) {
+					return `你有 ${this.incomingRequests.length} 条待处理邀请，确认其中一条后即可建立情侣空间。`
+				}
+
+				if (this.outgoingRequests.length) {
+					return `最近一次邀请对象：${this.currentPartnerName}，等待对方确认后就能正式绑定。`
+				}
+
+				return `已完成微信登录，登录昵称为 ${this.currentUserName}，可以开始填写对方 ID 发起绑定。`
+			},
+			heroStats() {
+				return [
+					{
+						label: '待处理请求',
+						value: `${this.incomingRequests.length}`
+					},
+					{
+						label: '已发邀请',
+						value: `${this.outgoingRequests.length}`
+					},
+					{
+						label: '关系记录',
+						value: `${this.historyList.length + (this.activeCouple ? 1 : 0)}`
+					}
+				]
 			}
 		},
 		onShow() {
@@ -359,18 +506,25 @@
 				const currentUserInfo = getCurrentUniIdUser()
 				if (!currentUserInfo || !currentUserInfo.uid) {
 					this.userInfo = null
+					this.coupleCenterData = getDefaultCoupleCenterData()
 					return
 				}
 
 				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
 					clearUniIdTokenStorage()
 					this.userInfo = null
+					this.coupleCenterData = getDefaultCoupleCenterData()
 					return
 				}
 
-				await this.fetchCurrentUser({
-					silent: true
-				})
+				await Promise.all([
+					this.fetchCurrentUser({
+						silent: true
+					}),
+					this.fetchCoupleCenter({
+						silent: true
+					})
+				])
 			},
 			async fetchCurrentUser({ silent = false } = {}) {
 				try {
@@ -389,10 +543,37 @@
 					console.warn('fetchCurrentUser failed', error)
 					clearUniIdTokenStorage()
 					this.userInfo = null
+					this.coupleCenterData = getDefaultCoupleCenterData()
 
 					if (!silent) {
 						uni.showToast({
 							title: '登录状态已失效，请重新登录',
+							icon: 'none'
+						})
+					}
+				}
+			},
+			async fetchCoupleCenter({ silent = false } = {}) {
+				try {
+					const result = await getCoupleApi().getCenter()
+					if (result && result.errCode && result.errCode !== 0) {
+						throw new Error(result.errMsg || '获取情侣信息失败')
+					}
+
+					this.coupleCenterData = {
+						selfInfo: result.selfInfo || null,
+						activeCouple: result.activeCouple || null,
+						incomingRequests: Array.isArray(result.incomingRequests) ? result.incomingRequests : [],
+						outgoingRequests: Array.isArray(result.outgoingRequests) ? result.outgoingRequests : [],
+						historyList: Array.isArray(result.historyList) ? result.historyList : [],
+						canSendRequest: Boolean(result.canSendRequest)
+					}
+				} catch (error) {
+					console.warn('fetchCoupleCenter failed', error)
+					this.coupleCenterData = getDefaultCoupleCenterData()
+					if (!silent) {
+						uni.showToast({
+							title: error.message || '获取情侣信息失败',
 							icon: 'none'
 						})
 					}
@@ -459,9 +640,14 @@
 						throw new Error(result.errMsg || '登录失败')
 					}
 
-					await this.fetchCurrentUser({
-						silent: true
-					})
+					await Promise.all([
+						this.fetchCurrentUser({
+							silent: true
+						}),
+						this.fetchCoupleCenter({
+							silent: true
+						})
+					])
 
 					uni.showToast({
 						title: '登录成功',
@@ -489,12 +675,18 @@
 				} finally {
 					clearUniIdTokenStorage()
 					this.userInfo = null
+					this.coupleCenterData = getDefaultCoupleCenterData()
 					this.resetLoginForm()
 					uni.showToast({
 						title: '已退出登录',
 						icon: 'none'
 					})
 				}
+			},
+			goToCouplePage() {
+				uni.navigateTo({
+					url: '/pages/couple/index'
+				})
 			},
 			handleAction(name) {
 				if (!this.isLoggedIn && name !== '登录') {
@@ -507,6 +699,11 @@
 
 				if (name === '登录') {
 					this.handleWechatLogin()
+					return
+				}
+
+				if (name === '绑定流程' || name === '创建情侣空间') {
+					this.goToCouplePage()
 					return
 				}
 

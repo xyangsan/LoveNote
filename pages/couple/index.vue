@@ -42,9 +42,8 @@
 						:primary-gender="Number(selfInfo.gender || 0)"
 						:secondary-gender="Number(activeCouple && activeCouple.partnerGender || 0)"
 						secondary-placeholder="TA"
-						:title="selfRelationTitle"
-						:badge-text="selfStatusBadgeText"
-						:desc="selfStatusBarDesc"
+						:title="primaryCardTitle"
+						:desc="primaryCardDesc"
 						:borderless="true"
 						:avatar-size="112"
 						:title-size="36"
@@ -58,7 +57,7 @@
 						</view>
 					</view>
 
-					<view class="info-panel">
+					<view v-if="!activeCouple" class="info-panel">
 						<fui-list-cell
 							:padding="['20rpx', '0']"
 							background="transparent"
@@ -85,61 +84,9 @@
 							</view>
 						</fui-list-cell>
 					</view>
-				</love-glass-card>
-
-				<love-glass-card
-					v-if="activeCouple"
-					title="绑定信息"
-					tag="已绑定"
-					:margin="['24rpx', '0', '0', '0']"
-				>
-					<love-relation-bar
-						class="relation-card"
-						:primary-avatar="selfInfo.avatarUrl || DEFAULT_AVATAR"
-						:secondary-avatar="activeCouple.partnerAvatarUrl || DEFAULT_AVATAR"
-						:primary-gender="Number(selfInfo.gender || 0)"
-						:secondary-gender="Number(activeCouple && activeCouple.partnerGender || 0)"
-						:title="activeRelationTitle"
-						badge-text="关系进行中"
-						:desc="activeRelationDesc"
-						:borderless="true"
-						:avatar-size="108"
-						:title-size="36"
-						:desc-size="23"
-					></love-relation-bar>
-
-					<view class="info-panel info-panel--relation">
-						<fui-list-cell
-							:padding="['20rpx', '0']"
-							background="transparent"
-							:border-color="'rgba(231, 204, 194, 0.62)'"
-						>
-							<view class="info-row">
-								<view class="info-row__body">
-									<text class="info-row__label">对方 ID</text>
-									<text class="info-row__value">{{ activeCouple.partnerUidMasked }}</text>
-								</view>
-							</view>
-						</fui-list-cell>
-						<fui-list-cell
-							:padding="['20rpx', '0']"
-							background="transparent"
-							:bottom-border="false"
-						>
-							<view class="info-row">
-								<view class="info-row__body">
-									<text class="info-row__label">绑定时间</text>
-									<text class="info-row__value">{{ formatDateTime(activeCouple.bindDate) }}</text>
-								</view>
-							</view>
-						</fui-list-cell>
-					</view>
-
-					<view class="love-soft-notice relation-card__notice">
-						<text class="love-muted-text">一次只能维持一个绑定关系。如果要与其他人重新绑定，请先解除当前关系。</text>
-					</view>
 
 					<fui-button
+						v-if="activeCouple"
 						text="解绑当前关系"
 						background="rgba(255, 239, 233, 0.98)"
 						color="#ca5d43"
@@ -155,7 +102,7 @@
 				</love-glass-card>
 
 				<love-glass-card
-					v-else
+					v-if="!activeCouple"
 					title="发起绑定"
 					:margin="['24rpx', '0', '0', '0']"
 				>
@@ -542,27 +489,11 @@
 
 				return `待处理 ${this.incomingRequests.length} · 已发出 ${this.outgoingRequests.length} · 历史 ${this.historyList.length}`
 			},
-			selfStatusText() {
-				if (this.activeCouple) {
-					return '已完成绑定'
-				}
-
-				if (this.incomingRequests.length) {
-					return '收到新请求'
-				}
-
-				if (this.outgoingRequests.length) {
-					return '等待对方确认'
-				}
-
-				return '可发起绑定'
+			primaryCardTitle() {
+				return this.activeCouple ? this.activeRelationTitle : this.selfRelationTitle
 			},
-			selfStatusBadgeText() {
-				if (!this.activeCouple && !this.incomingRequests.length && !this.outgoingRequests.length) {
-					return ''
-				}
-
-				return this.selfStatusText
+			primaryCardDesc() {
+				return this.activeCouple ? this.activeRelationDesc : this.selfStatusBarDesc
 			},
 			selfStatusSummary() {
 				if (this.activeCouple) {
@@ -723,6 +654,12 @@
 		onShow() {
 			this.restoreLoginState()
 		},
+		onPullDownRefresh() {
+			this.fetchCoupleCenter({
+				silent: true,
+				stopPullDownRefresh: true
+			})
+		},
 		onUnload() {
 			if (this.removeAuthListener) {
 				this.removeAuthListener()
@@ -831,7 +768,7 @@
 					silent: true
 				})
 			},
-			async fetchCoupleCenter({ silent = false } = {}) {
+			async fetchCoupleCenter({ silent = false, stopPullDownRefresh = false } = {}) {
 				try {
 					const result = await getCoupleApi().getCenter()
 					if (result && result.errCode && result.errCode !== 0) {
@@ -846,6 +783,10 @@
 							title: error.message || '获取情侣信息失败',
 							icon: 'none'
 						})
+					}
+				} finally {
+					if (stopPullDownRefresh) {
+						uni.stopPullDownRefresh()
 					}
 				}
 			},
