@@ -37,40 +37,54 @@
 				</love-glass-card>
 			</view>
 
-			<love-glass-card
-				class="menu-card"
-				:margin="['24rpx', '0', '0', '0']"
-				:padding="['0', '0']"
-				:content-padding="['12rpx', '14rpx']"
-				:header-line="false"
+			<view
+				v-for="(group, groupIndex) in menuGroups"
+				:key="group.key"
+				class="menu-group"
+				:class="{ 'menu-group--first': groupIndex === 0 }"
 			>
-				<view class="menu-card__body">
-					<fui-list-cell
-						v-for="(item, index) in centerCards"
-						:key="item.key"
-						:padding="['26rpx', '28rpx']"
-						background="transparent"
-						:bottom-border="index !== centerCards.length - 1"
-						border-color="rgba(231, 204, 194, 0.6)"
-						arrow
-						arrow-color="#d2a394"
-						@click="handleCardClick(item)"
-					>
-						<view class="menu-item">
-							<view class="menu-item__icon" :style="{ background: item.iconBg }">
-								<text class="menu-item__icon-text">{{ item.iconText }}</text>
+
+				<love-glass-card
+					class="menu-card"
+					:margin="['0', '0', '0', '0']"
+					:padding="['0', '0']"
+					:content-padding="['12rpx', '14rpx']"
+					:header-line="false"
+				>
+					<view class="menu-card__body">
+						<fui-list-cell
+							v-for="(item, index) in group.items"
+							:key="item.key"
+							:padding="['26rpx', '28rpx']"
+							background="transparent"
+							:bottom-border="index !== group.items.length - 1"
+							border-color="rgba(231, 204, 194, 0.6)"
+							arrow
+							arrow-color="#d2a394"
+							@click="handleCardClick(item)"
+						>
+							<view class="menu-item">
+								<view class="menu-item__icon" :style="{ background: item.iconBg }">
+									<text class="menu-item__icon-text">{{ item.iconText }}</text>
+								</view>
+								<view class="menu-item__body">
+									<text class="menu-item__title">{{ item.title }}</text>
+									<text class="menu-item__desc">{{ item.desc }}</text>
+								</view>
+								<view class="menu-item__right">
+									<view
+										v-if="item.value"
+										class="menu-item__value-badge"
+										:style="{ background: item.iconBg || 'rgba(181, 140, 126, 0.14)' }"
+									>
+										<text class="menu-item__value-text">{{ item.value }}</text>
+									</view>
+								</view>
 							</view>
-							<view class="menu-item__body">
-								<text class="menu-item__title">{{ item.title }}</text>
-								<text class="menu-item__desc">{{ item.desc }}</text>
-							</view>
-							<view class="menu-item__right">
-								<text class="menu-item__value">{{ item.value }}</text>
-							</view>
-						</view>
-					</fui-list-cell>
-				</view>
-			</love-glass-card>
+						</fui-list-cell>
+					</view>
+				</love-glass-card>
+			</view>
 
 			<fui-button
 				:margin="['80rpx']"
@@ -101,6 +115,8 @@
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getAuthApi } from '../../common/api/auth.js'
+	import { getAlbumApi } from '../../common/api/album.js'
+	import { getAnniversaryApi } from '../../common/api/anniversary.js'
 	import { getUserApi } from '../../common/api/user.js'
 
 	const genderOptions = ['保密', '男', '女']
@@ -131,12 +147,19 @@
 		data() {
 			return {
 				userInfo: null,
-				removeAuthListener: null
+				removeAuthListener: null,
+				featureStats: {
+					anniversaryTotal: null,
+					albumTotal: null
+				}
 			}
 		},
 		computed: {
 			isLoggedIn() {
 				return Boolean(this.userInfo && this.userInfo._id)
+			},
+			hasBoundCouple() {
+				return Boolean(this.currentCouple && this.currentCouple.isBound)
 			},
 			currentUserName() {
 				return this.userInfo && this.userInfo.nickname ? this.userInfo.nickname : '微信用户'
@@ -159,11 +182,6 @@
 			currentCouple() {
 				return this.userInfo && this.userInfo.coupleInfo ? this.userInfo.coupleInfo : null
 			},
-			anniversaryText() {
-				return this.currentCouple && this.currentCouple.anniversaryDate
-					? formatDate(this.currentCouple.anniversaryDate)
-					: '未设置'
-			},
 			profileMetaText() {
 				if (!this.isLoggedIn) {
 					return '默认头像已展示，点击进入登录'
@@ -176,7 +194,7 @@
 				if (this.currentBirthdayText !== '未设置') {
 					meta.push(`生日 ${this.currentBirthdayText}`)
 				}
-				return meta.join(' · ')
+				return meta.length ? meta.join(' · ') : `注册于 ${this.registerDateText}`
 			},
 			profileDescText() {
 				return this.isLoggedIn
@@ -233,7 +251,44 @@
 
 				return '当前绑定邀请还在等待确认'
 			},
-			centerCards() {
+			anniversaryCardValue() {
+				if (!this.isLoggedIn) {
+					return '登录后开启'
+				}
+				if (!this.hasBoundCouple) {
+					return '未绑定'
+				}
+
+				const total = this.featureStats.anniversaryTotal
+				if (total === null || total === undefined) {
+					return '去查看'
+				}
+				return Number(total) > 0 ? `${Number(total)}` : '去创建'
+			},
+			albumCardValue() {
+				if (!this.isLoggedIn) {
+					return '登录后开启'
+				}
+				if (!this.hasBoundCouple) {
+					return '未绑定'
+				}
+
+				const total = this.featureStats.albumTotal
+				if (total === null || total === undefined) {
+					return '去查看'
+				}
+				return Number(total) > 0 ? `${Number(total)}` : '去创建'
+			},
+			planCardValue() {
+				if (!this.isLoggedIn) {
+					return '登录后开启'
+				}
+				if (!this.hasBoundCouple) {
+					return '未绑定'
+				}
+				return '开发中'
+			},
+			coreCards() {
 				return [
 					{
 						key: 'couple',
@@ -247,7 +302,7 @@
 						key: 'anniversary',
 						title: '纪念日',
 						desc: '记录相恋、生日与重要时刻',
-						value: this.anniversaryText,
+						value: this.anniversaryCardValue,
 						iconText: '纪',
 						iconBg: 'linear-gradient(135deg, #ffe29f 0%, #ffa99f 100%)'
 					},
@@ -255,7 +310,7 @@
 						key: 'album',
 						title: '相册',
 						desc: '保存你们的照片和回忆片段',
-						value: this.isLoggedIn ? '待开启' : '登录后开启',
+						value: this.albumCardValue,
 						iconText: '册',
 						iconBg: 'linear-gradient(135deg, #ffd8f1 0%, #f6b7d2 100%)'
 					},
@@ -263,15 +318,19 @@
 						key: 'plan',
 						title: '计划',
 						desc: '同步愿望清单和约会安排',
-						value: this.isLoggedIn ? '待完善' : '登录后开启',
+						value: this.planCardValue,
 						iconText: '计',
 						iconBg: 'linear-gradient(135deg, #d7f5c6 0%, #98d8aa 100%)'
-					},
+					}
+				]
+			},
+			supportCards() {
+				return [
 					{
 						key: 'feedback',
 						title: '反馈与帮助',
 						desc: '遇到问题或有建议都可以告诉我们',
-						value: '联系我们',
+						value: '',
 						iconText: '助',
 						iconBg: 'linear-gradient(135deg, #d7e8ff 0%, #afcfff 100%)'
 					},
@@ -282,6 +341,18 @@
 						value: VERSION_TEXT,
 						iconText: '版',
 						iconBg: 'linear-gradient(135deg, #f6ddc3 0%, #eac6a3 100%)'
+					}
+				]
+			},
+			menuGroups() {
+				return [
+					{
+						key: 'core',
+						items: this.coreCards
+					},
+					{
+						key: 'support',
+						items: this.supportCards
 					}
 				]
 			}
@@ -301,22 +372,79 @@
 			}
 		},
 		methods: {
+			resetFeatureStats() {
+				this.featureStats = {
+					anniversaryTotal: null,
+					albumTotal: null
+				}
+			},
+			resolveListTotal(result = {}) {
+				if (!result) {
+					return null
+				}
+				if (result.errCode && result.errCode !== 0) {
+					if (result.errCode === 'love-note-no-couple') {
+						return 0
+					}
+					return null
+				}
+
+				const data = result.data || {}
+				if (data.pagination && data.pagination.total !== undefined) {
+					return Number(data.pagination.total || 0)
+				}
+
+				const list = Array.isArray(data.list) ? data.list : []
+				return list.length
+			},
+			async refreshFeatureStats() {
+				if (!this.isLoggedIn || !this.hasBoundCouple) {
+					this.resetFeatureStats()
+					return
+				}
+
+				try {
+					const [anniversaryRes, albumRes] = await Promise.all([
+						getAnniversaryApi().getList({
+							page: 1,
+							pageSize: 1
+						}),
+						getAlbumApi().getList({
+							page: 1,
+							pageSize: 1
+						})
+					])
+
+					const anniversaryTotal = this.resolveListTotal(anniversaryRes)
+					const albumTotal = this.resolveListTotal(albumRes)
+					this.featureStats = {
+						anniversaryTotal,
+						albumTotal
+					}
+				} catch (error) {
+					console.warn('profile refreshFeatureStats failed', error)
+					this.resetFeatureStats()
+				}
+			},
 			async restoreLoginState() {
 				const currentUserInfo = getCurrentUniIdUser()
 				if (!currentUserInfo || !currentUserInfo.uid) {
 					this.userInfo = null
+					this.resetFeatureStats()
 					return
 				}
 
 				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
 					clearUniIdTokenStorage()
 					this.userInfo = null
+					this.resetFeatureStats()
 					return
 				}
 
 				await this.fetchCurrentUser({
 					silent: true
 				})
+				await this.refreshFeatureStats()
 			},
 			async fetchCurrentUser({ silent = false } = {}) {
 				try {
@@ -331,6 +459,7 @@
 					console.warn('profile fetchCurrentUser failed', error)
 					clearUniIdTokenStorage()
 					this.userInfo = null
+					this.resetFeatureStats()
 
 					if (!silent) {
 						uni.showToast({
@@ -425,6 +554,7 @@
 				} finally {
 					clearUniIdTokenStorage()
 					this.userInfo = null
+					this.resetFeatureStats()
 					emitAuthChanged({
 						action: 'logout'
 					})
@@ -506,6 +636,14 @@
 		color: #bf6e59;
 	}
 
+	.menu-group {
+		margin-top: 22rpx;
+	}
+
+	.menu-group--first {
+		margin-top: 24rpx;
+	}
+
 	.menu-card__body {
 		padding: 0;
 	}
@@ -547,27 +685,43 @@
 	}
 
 	.menu-item__desc {
-		display: block;
 		margin-top: 8rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
 		color: #9b786d;
+		display: -webkit-box;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
 	}
 
 	.menu-item__right {
 		display: flex;
 		align-items: center;
 		flex-shrink: 0;
-		margin-left: 10rpx;
+		margin-left: 14rpx;
+		max-width: 220rpx;
 	}
 
-	.menu-item__value {
-		max-width: 200rpx;
-		text-align: right;
-		font-size: 22rpx;
-		line-height: 1.5;
-		color: #bf826f;
-		word-break: break-all;
+	.menu-item__value-badge {
+		max-width: 220rpx;
+		padding: 6rpx 10rpx;
+		border-radius: 12rpx;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 10rpx 20rpx rgba(183, 120, 94, 0.16);
+	}
+
+	.menu-item__value-text {
+		max-width: 188rpx;
+		font-size: 20rpx;
+		color: #ffffff;
+		font-weight: 500;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 </style>
