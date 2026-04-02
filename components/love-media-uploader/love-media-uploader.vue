@@ -82,6 +82,7 @@ import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 
 const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif']
 const VIDEO_EXTS = ['mp4', 'mov', 'm4v', 'avi', 'wmv', 'flv', 'mkv', 'webm']
+const DEFAULT_COMPRESS_OVER_SIZE = 10 * 1024 * 1024
 
 function toUniqueArray(value = [], fallback = []) {
 	const list = Array.isArray(value) ? value : fallback
@@ -150,6 +151,18 @@ export default {
 		enableCompression: {
 			type: Boolean,
 			default: true
+		},
+		compressOverSize: {
+			type: Number,
+			default: DEFAULT_COMPRESS_OVER_SIZE
+		},
+		imageCompressQuality: {
+			type: Number,
+			default: 80
+		},
+		videoCompressQuality: {
+			type: String,
+			default: 'medium'
 		},
 		savePath: {
 			type: String,
@@ -250,13 +263,18 @@ export default {
 		useCompression() {
 			return this.enableCompression && this.compressed
 		},
+		compressThreshold() {
+			const value = Number(this.compressOverSize || 0)
+			return value > 0 ? value : DEFAULT_COMPRESS_OVER_SIZE
+		},
 		resolvedTipText() {
 			if (this.tipText) {
 				return this.tipText
 			}
 			const typeText = this.safeFileTypes.length > 1 ? '图片和视频' : (this.safeFileTypes[0] === 'video' ? '视频' : '图片')
 			const sizeText = this.maxFileSize > 0 ? `，单个不超过 ${Math.floor(this.maxFileSize / 1024 / 1024)}MB` : ''
-			return `支持上传${typeText}${sizeText}`
+			const compressText = this.useCompression ? `，超过 ${Math.floor(this.compressThreshold / 1024 / 1024)}MB 自动压缩` : ''
+			return `支持上传${typeText}${sizeText}${compressText}`
 		},
 		isIconImage() {
 			return /^https?:\/\//i.test(String(this.uploadIcon || ''))
@@ -449,6 +467,116 @@ export default {
 				current: current >= 0 ? current : 0
 			})
 		},
+		getFileInfo(filePath = '') {
+			return new Promise((resolve) => {
+				if (!filePath || typeof uni.getFileInfo !== 'function') {
+					resolve(null)
+					return
+				}
+				uni.getFileInfo({
+					filePath,
+					success: (res) => {
+						resolve(res || null)
+					},
+					fail: () => {
+						resolve(null)
+					}
+				})
+			})
+		},
+		compressImageFile(filePath = '') {
+			return new Promise((resolve, reject) => {
+				if (!filePath || typeof uni.compressImage !== 'function') {
+					reject(new Error('当前环境不支持图片压缩'))
+					return
+				}
+				const quality = Math.max(1, Math.min(100, Number(this.imageCompressQuality || 80)))
+				uni.compressImage({
+					src: filePath,
+					quality,
+					success: (res) => {
+						resolve(res || {})
+					},
+					fail: (error) => {
+						reject(error || new Error('图片压缩失败'))
+					}
+				})
+			})
+		},
+		compressVideoFile(filePath = '') {
+			return new Promise((resolve, reject) => {
+				if (!filePath || typeof uni.compressVideo !== 'function') {
+					reject(new Error('当前环境不支持视频压缩'))
+					return
+				}
+				uni.compressVideo({
+					src: filePath,
+					quality: this.videoCompressQuality || 'medium',
+					success: (res) => {
+						resolve(res || {})
+					},
+					fail: (error) => {
+						reject(error || new Error('视频压缩失败'))
+					}
+				})
+			})
+		},
+		async prepareFileForUpload(file = {}) {
+			const originPath = String(file.path || '')
+			const originSize = Number(file.size || 0)
+			if (!originPath) {
+				return {
+					path: '',
+					size: 0,
+					compressed: false
+				}
+			}
+
+			if (!this.useCompression || originSize <= this.compressThreshold) {
+				return {
+					path: originPath,
+					size: originSize,
+					compressed: false
+				}
+			}
+
+			try {
+				if (file.mediaType === 'image') {
+					const compressRes = await this.compressImageFile(originPath)
+					const compressedPath = String(compressRes.tempFilePath || compressRes.filePath || '')
+					if (!compressedPath) {
+						throw new Error('图片压缩结果无效')
+					}
+					const info = await this.getFileInfo(compressedPath)
+					return {
+						path: compressedPath,
+						size: Number((info && info.size) || originSize),
+						compressed: compressedPath !== originPath
+					}
+				}
+
+				if (file.mediaType === 'video') {
+					const compressRes = await this.compressVideoFile(originPath)
+					const compressedPath = String(compressRes.tempFilePath || compressRes.filePath || '')
+					if (!compressedPath) {
+						throw new Error('视频压缩结果无效')
+					}
+					return {
+						path: compressedPath,
+						size: Number(compressRes.size || originSize),
+						compressed: compressedPath !== originPath
+					}
+				}
+			} catch (error) {
+				console.warn('prepareFileForUpload compress failed, fallback to original file', error)
+			}
+
+			return {
+				path: originPath,
+				size: originSize,
+				compressed: false
+			}
+		},
 		async uploadAll(options = {}) {
 			if (this.uploading) {
 				return []
@@ -479,8 +607,9 @@ export default {
 					})
 
 					try {
+						const uploadSource = await this.prepareFileForUpload(current)
 						const uploadRes = await uploadFileWithModule({
-							filePath: current.path,
+							filePath: uploadSource.path || current.path,
 							module: modulePath,
 							prefix,
 							fileType: current.mediaType === 'video' ? 'video' : 'image'
@@ -488,6 +617,7 @@ export default {
 
 						const nextItem = {
 							...current,
+							size: Number(uploadSource.size || current.size || 0),
 							status: 'success',
 							cloudPath: uploadRes.cloudPath || '',
 							url: uploadRes.fileURL || '',
