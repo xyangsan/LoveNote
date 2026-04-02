@@ -1,0 +1,123 @@
+{
+	"bsonType": "object",
+	"required": [
+		"couple_id",
+		"author_uid",
+		"media_type",
+		"media_list"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "动态 ID，系统自动生成"
+		},
+		"couple_id": {
+			"bsonType": "string",
+			"title": "情侣关系ID",
+			"description": "关联的情侣关系ID"
+		},
+		"author_uid": {
+			"bsonType": "string",
+			"title": "发布者ID",
+			"description": "发布动态的用户ID"
+		},
+		"author_snapshot": {
+			"bsonType": "object",
+			"title": "发布者快照",
+			"properties": {
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"avatar_file_id": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"content": {
+			"bsonType": "string",
+			"title": "动态文字内容",
+			"description": "支持普通文本和 emoji 表情"
+		},
+		"media_type": {
+			"bsonType": "string",
+			"title": "动态媒体类型",
+			"description": "text / image / video",
+			"defaultValue": "text"
+		},
+		"media_count": {
+			"bsonType": "int",
+			"title": "媒体数量",
+			"description": "单条动态媒体数量，图片最多9张，视频最多1个",
+			"defaultValue": 0
+		},
+		"media_list": {
+			"bsonType": "array",
+			"title": "媒体列表",
+			"description": "动态关联的图片或视频列表",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"url": {
+						"bsonType": "string"
+					},
+					"file_id": {
+						"bsonType": "string"
+					},
+					"thumbnail_url": {
+						"bsonType": "string"
+					},
+					"media_type": {
+						"bsonType": "string"
+					},
+					"mime_type": {
+						"bsonType": "string"
+					},
+					"duration": {
+						"bsonType": "int"
+					},
+					"width": {
+						"bsonType": "int"
+					},
+					"height": {
+						"bsonType": "int"
+					},
+					"file_size": {
+						"bsonType": "int"
+					}
+				}
+			}
+		},
+		"like_count": {
+			"bsonType": "int",
+			"title": "点赞数",
+			"defaultValue": 0
+		},
+		"comment_count": {
+			"bsonType": "int",
+			"title": "评论数",
+			"defaultValue": 0
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

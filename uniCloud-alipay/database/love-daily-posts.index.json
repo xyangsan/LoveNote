@@ -1,0 +1,42 @@
+[
+	{
+		"IndexName": "idx_couple_create_time",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "couple_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_author_uid",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "author_uid",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_is_deleted",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

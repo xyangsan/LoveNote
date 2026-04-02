@@ -65,6 +65,20 @@
 			"style": {
 				"navigationBarTitleText": "编辑相册"
 			}
+		},
+		{
+			"path": "pages/feed/list",
+			"style": {
+				"navigationBarTitleText": "双人日常",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/feed/publish",
+			"style": {
+				"navigationBarTitleText": "发布日常"
+			}
 		}
 	],
 	"tabBar": {

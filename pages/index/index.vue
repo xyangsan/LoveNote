@@ -136,7 +136,7 @@
 		<view class="section">
 			<view class="section__header">
 				<text class="section__title">最近双人动态</text>
-				<text class="section__hint">后续替换为真实双人日常时间轴</text>
+				<text class="section__hint">点击进入双人日常时间轴</text>
 			</view>
 			<view
 				v-for="post in moments"
@@ -710,6 +710,13 @@
 				if (name === '相册') {
 					uni.navigateTo({
 						url: '/pages/album/list'
+					})
+					return
+				}
+
+				if (name === '双人日常' || name === '双人动态') {
+					uni.navigateTo({
+						url: '/pages/feed/list'
 					})
 					return
 				}

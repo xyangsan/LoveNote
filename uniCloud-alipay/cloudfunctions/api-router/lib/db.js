@@ -9,5 +9,6 @@ module.exports = {
 	userCollection: db.collection('uni-id-users'),
 	coupleCollection: db.collection('love-couples'),
 	albumCollection: db.collection('love-albums'),
-	photoCollection: db.collection('love-photos')
+	photoCollection: db.collection('love-photos'),
+	dailyPostCollection: db.collection('love-daily-posts')
 }
