@@ -1,10 +1,17 @@
 import { clearUniIdTokenStorage } from './api/router.js'
+import {
+	getFileExtname,
+	normalizeHttpsUrl,
+	resolveHttpsFileUrl,
+	uploadFileWithModule
+} from './utils/file-upload.js'
 
 export const DEFAULT_AVATAR = '/static/user-empty.png'
 export const AUTH_CHANGE_EVENT = 'love-note-auth-change'
 export const USER_PROFILE_CACHE_KEY = 'love_note_user_profile_cache'
 
 export { clearUniIdTokenStorage }
+export { getFileExtname }
 
 export function getCachedUserProfile() {
 	const cachedValue = uni.getStorageSync(USER_PROFILE_CACHE_KEY)
@@ -75,16 +82,6 @@ export function subscribeAuthChanged(handler) {
 	}
 }
 
-export function getFileExtname(filePath = '') {
-	const normalizedPath = `${filePath}`.split('?')[0]
-	const dotIndex = normalizedPath.lastIndexOf('.')
-	if (dotIndex === -1 || dotIndex === normalizedPath.length - 1) {
-		return 'png'
-	}
-
-	return normalizedPath.slice(dotIndex + 1).toLowerCase()
-}
-
 export async function uploadAvatarIfNeeded(currentAvatar = '') {
 	if (!currentAvatar) {
 		return {
@@ -95,8 +92,9 @@ export async function uploadAvatarIfNeeded(currentAvatar = '') {
 	}
 
 	if (currentAvatar.startsWith('cloud://')) {
+		const avatarUrl = await resolveHttpsFileUrl(currentAvatar)
 		return {
-			avatarUrl: '',
+			avatarUrl,
 			avatarFileId: currentAvatar,
 			avatarFile: {
 				name: currentAvatar.split('/').pop() || `avatar.${getFileExtname(currentAvatar)}`,
@@ -108,24 +106,26 @@ export async function uploadAvatarIfNeeded(currentAvatar = '') {
 
 	if (currentAvatar.startsWith('http://') || currentAvatar.startsWith('https://')) {
 		return {
-			avatarUrl: currentAvatar,
+			avatarUrl: normalizeHttpsUrl(currentAvatar),
 			avatarFileId: '',
 			avatarFile: null
 		}
 	}
 
-	const extname = getFileExtname(currentAvatar)
-	const cloudPath = `love-note/avatar/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extname}`
-	const uploadRes = await uniCloud.uploadFile({
-		cloudPath,
-		filePath: currentAvatar
+	const uploadRes = await uploadFileWithModule({
+		filePath: currentAvatar,
+		module: 'avatar',
+		prefix: 'avatar',
+		fileType: 'image'
 	})
+	const extname = getFileExtname(currentAvatar)
+	const fileName = uploadRes.cloudPath.split('/').pop()
 
 	return {
-		avatarUrl: '',
+		avatarUrl: uploadRes.fileURL,
 		avatarFileId: uploadRes.fileID,
 		avatarFile: {
-			name: cloudPath.split('/').pop(),
+			name: fileName,
 			extname,
 			url: uploadRes.fileID
 		}

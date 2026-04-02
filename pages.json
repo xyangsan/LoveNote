@@ -37,6 +37,34 @@
 				"enablePullDownRefresh": true,
 				"backgroundTextStyle": "dark"
 			}
+		},
+		{
+			"path": "pages/album/list",
+			"style": {
+				"navigationBarTitleText": "相册",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/album/detail",
+			"style": {
+				"navigationBarTitleText": "相册详情",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/album/upload",
+			"style": {
+				"navigationBarTitleText": "上传照片"
+			}
+		},
+		{
+			"path": "pages/album/edit",
+			"style": {
+				"navigationBarTitleText": "编辑相册"
+			}
 		}
 	],
 	"tabBar": {

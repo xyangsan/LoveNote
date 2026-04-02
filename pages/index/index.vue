@@ -273,8 +273,8 @@
 						gradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)'
 					},
 					{
-						title: '愿望清单',
-						desc: '把未来想一起做的事收集起来',
+						title: '相册',
+						desc: '记录我们的美好瞬间',
 						icon: '03',
 						gradient: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
 					},
@@ -704,6 +704,13 @@
 
 				if (name === '绑定流程' || name === '创建情侣空间') {
 					this.goToCouplePage()
+					return
+				}
+
+				if (name === '相册') {
+					uni.navigateTo({
+						url: '/pages/album/list'
+					})
 					return
 				}
 

@@ -1,0 +1,74 @@
+[
+	{
+		"IndexName": "idx_couple_id",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "couple_id",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_album_id",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "album_id",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_create_time",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_is_favorite",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "is_favorite",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_media_type",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "media_type",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_shoot_time",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "shoot_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	}
+]

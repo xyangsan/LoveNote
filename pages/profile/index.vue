@@ -358,11 +358,6 @@
 
 				this.goToEdit()
 			},
-			handleBindAction() {
-				uni.navigateTo({
-					url: '/pages/couple/index'
-				})
-			},
 			handleCardClick(item) {
 				if (!item) {
 					return
@@ -375,7 +370,9 @@
 
 				switch (item.key) {
 					case 'couple':
-						this.handleBindAction()
+						uni.navigateTo({
+							url: '/pages/couple/index'
+						})
 						break
 					case 'anniversary':
 						uni.showToast({
@@ -384,9 +381,8 @@
 						})
 						break
 					case 'album':
-						uni.showToast({
-							title: '相册功能开发中',
-							icon: 'none'
+						uni.navigateTo({
+							url: '/pages/album/list'
 						})
 						break
 					case 'plan':

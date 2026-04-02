@@ -1,0 +1,162 @@
+{
+	"bsonType": "object",
+	"required": ["couple_id", "album_id", "url"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "照片 ID，系统自动生成"
+		},
+		"couple_id": {
+			"bsonType": "string",
+			"title": "情侣关系ID",
+			"description": "关联的情侣关系ID"
+		},
+		"album_id": {
+			"bsonType": "string",
+			"title": "相册ID",
+			"description": "所属相册ID"
+		},
+		"url": {
+			"bsonType": "string",
+			"title": "图片URL",
+			"description": "图片访问地址"
+		},
+		"file_id": {
+			"bsonType": "string",
+			"title": "文件ID",
+			"description": "云存储文件ID"
+		},
+		"thumbnail_url": {
+			"bsonType": "string",
+			"title": "缩略图URL",
+			"description": "缩略图访问地址"
+		},
+		"media_type": {
+			"bsonType": "string",
+			"title": "媒体类型",
+			"description": "支持 image 或 video",
+			"defaultValue": "image"
+		},
+		"description": {
+			"bsonType": "string",
+			"title": "照片描述",
+			"description": "照片说明文字"
+		},
+		"location": {
+			"bsonType": "object",
+			"title": "拍摄地点",
+			"properties": {
+				"name": {
+					"bsonType": "string",
+					"description": "地点名称"
+				},
+				"address": {
+					"bsonType": "string",
+					"description": "详细地址"
+				},
+				"latitude": {
+					"bsonType": "double",
+					"description": "纬度"
+				},
+				"longitude": {
+					"bsonType": "double",
+					"description": "经度"
+				}
+			}
+		},
+		"shoot_time": {
+			"bsonType": "timestamp",
+			"title": "拍摄时间",
+			"description": "照片拍摄时间"
+		},
+		"width": {
+			"bsonType": "int",
+			"title": "图片宽度",
+			"description": "原始图片宽度"
+		},
+		"height": {
+			"bsonType": "int",
+			"title": "图片高度",
+			"description": "原始图片高度"
+		},
+		"file_size": {
+			"bsonType": "int",
+			"title": "文件大小",
+			"description": "文件大小（字节）"
+		},
+		"duration": {
+			"bsonType": "int",
+			"title": "视频时长",
+			"description": "视频时长（秒）"
+		},
+		"mime_type": {
+			"bsonType": "string",
+			"title": "MIME类型",
+			"description": "媒体格式类型"
+		},
+		"tags": {
+			"bsonType": "array",
+			"title": "标签",
+			"description": "照片标签",
+			"items": {
+				"bsonType": "string"
+			}
+		},
+		"uploader_uid": {
+			"bsonType": "string",
+			"title": "上传者ID",
+			"description": "上传照片的用户ID"
+		},
+		"uploader_snapshot": {
+			"bsonType": "object",
+			"title": "上传者快照",
+			"properties": {
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"like_count": {
+			"bsonType": "int",
+			"title": "点赞数",
+			"description": "照片被点赞次数",
+			"defaultValue": 0
+		},
+		"comment_count": {
+			"bsonType": "int",
+			"title": "评论数",
+			"description": "照片评论数量",
+			"defaultValue": 0
+		},
+		"is_favorite": {
+			"bsonType": "bool",
+			"title": "是否收藏",
+			"description": "标记为收藏照片",
+			"defaultValue": false
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"title": "上传时间",
+			"description": "照片上传时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"update_time": {
+			"bsonType": "timestamp",
+			"title": "更新时间",
+			"description": "照片最后更新时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

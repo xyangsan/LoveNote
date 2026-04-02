@@ -4,7 +4,10 @@ const db = uniCloud.database()
 
 module.exports = {
 	db,
+	database: uniCloud.database,
 	dbCmd: db.command,
 	userCollection: db.collection('uni-id-users'),
-	coupleCollection: db.collection('love-couples')
+	coupleCollection: db.collection('love-couples'),
+	albumCollection: db.collection('love-albums'),
+	photoCollection: db.collection('love-photos')
 }

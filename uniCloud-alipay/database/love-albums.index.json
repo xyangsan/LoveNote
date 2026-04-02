@@ -1,0 +1,38 @@
+[
+	{
+		"IndexName": "idx_couple_id",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "couple_id",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_create_time",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_sort_order",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "sort_order",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

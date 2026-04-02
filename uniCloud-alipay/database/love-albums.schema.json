@@ -1,0 +1,88 @@
+{
+	"bsonType": "object",
+	"required": ["couple_id", "title"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "相册 ID，系统自动生成"
+		},
+		"couple_id": {
+			"bsonType": "string",
+			"title": "情侣关系ID",
+			"description": "关联的情侣关系ID"
+		},
+		"title": {
+			"bsonType": "string",
+			"title": "相册标题",
+			"description": "相册名称"
+		},
+		"description": {
+			"bsonType": "string",
+			"title": "相册描述",
+			"description": "相册简介"
+		},
+		"cover_image": {
+			"bsonType": "object",
+			"title": "封面图片",
+			"properties": {
+				"url": {
+					"bsonType": "string",
+					"description": "封面图片URL"
+				},
+				"file_id": {
+					"bsonType": "string",
+					"description": "封面图片文件ID"
+				}
+			}
+		},
+		"cover_url": {
+			"bsonType": "string",
+			"title": "封面图片URL（兼容字段）",
+			"description": "用于前端快速读取封面链接，保持与 cover_image.url 一致"
+		},
+		"photo_count": {
+			"bsonType": "int",
+			"title": "照片数量",
+			"description": "相册中的照片数量",
+			"defaultValue": 0
+		},
+		"sort_order": {
+			"bsonType": "int",
+			"title": "排序权重",
+			"description": "用于自定义相册排序",
+			"defaultValue": 0
+		},
+		"is_default": {
+			"bsonType": "bool",
+			"title": "是否默认相册",
+			"description": "系统默认相册标记",
+			"defaultValue": false
+		},
+		"create_uid": {
+			"bsonType": "string",
+			"title": "创建者ID",
+			"description": "创建相册的用户ID"
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"title": "创建时间",
+			"description": "相册创建时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"update_time": {
+			"bsonType": "timestamp",
+			"title": "更新时间",
+			"description": "相册最后更新时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}
