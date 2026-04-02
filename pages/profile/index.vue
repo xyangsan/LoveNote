@@ -158,6 +158,10 @@
 			isLoggedIn() {
 				return Boolean(this.userInfo && this.userInfo._id)
 			},
+			isAdmin() {
+				const roleList = Array.isArray(this.userInfo && this.userInfo.role) ? this.userInfo.role : []
+				return roleList.some((item) => String(item || '').trim().toLowerCase() === 'admin')
+			},
 			hasBoundCouple() {
 				return Boolean(this.currentCouple && this.currentCouple.isBound)
 			},
@@ -328,7 +332,7 @@
 				return [
 					{
 						key: 'feedback',
-						title: '反馈与帮助',
+						title: '反馈&帮助',
 						desc: '遇到问题或有建议都可以告诉我们',
 						value: '',
 						iconText: '助',
@@ -492,7 +496,7 @@
 					return
 				}
 
-				if (!this.isLoggedIn && ['couple', 'anniversary', 'album', 'plan'].includes(item.key)) {
+				if (!this.isLoggedIn && ['couple', 'anniversary', 'album', 'plan', 'feedback'].includes(item.key)) {
 					this.goToLoginPage()
 					return
 				}
@@ -520,9 +524,27 @@
 						})
 						break
 					case 'feedback':
-						uni.showToast({
-							title: '反馈与帮助功能开发中',
-							icon: 'none'
+						if (!this.isAdmin) {
+							uni.navigateTo({
+								url: '/pages/feedback/index'
+							})
+							break
+						}
+
+						uni.showActionSheet({
+							itemList: ['进入反馈列表', '我要反馈'],
+							success: (res = {}) => {
+								const tapIndex = Number(res.tapIndex || 0)
+								if (tapIndex === 0) {
+									uni.navigateTo({
+										url: '/pages/feedback/list'
+									})
+									return
+								}
+								uni.navigateTo({
+									url: '/pages/feedback/index'
+								})
+							}
 						})
 						break
 					case 'version':

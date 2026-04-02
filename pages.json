@@ -93,6 +93,26 @@
 			"style": {
 				"navigationBarTitleText": "编辑纪念日"
 			}
+		},
+		{
+			"path": "pages/feedback/index",
+			"style": {
+				"navigationBarTitleText": "反馈与帮助"
+			}
+		},
+		{
+			"path": "pages/feedback/list",
+			"style": {
+				"navigationBarTitleText": "反馈列表",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/feedback/detail",
+			"style": {
+				"navigationBarTitleText": "反馈详情"
+			}
 		}
 	],
 	"tabBar": {

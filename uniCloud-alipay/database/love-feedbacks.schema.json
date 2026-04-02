@@ -1,0 +1,124 @@
+{
+	"bsonType": "object",
+	"required": [
+		"user_uid",
+		"category",
+		"content",
+		"status",
+		"create_time"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "反馈ID，系统自动生成"
+		},
+		"user_uid": {
+			"bsonType": "string",
+			"title": "提交人UID"
+		},
+		"user_snapshot": {
+			"bsonType": "object",
+			"title": "提交人快照",
+			"properties": {
+				"uid": {
+					"bsonType": "string"
+				},
+				"nickname": {
+					"bsonType": "string"
+				},
+				"avatar_url": {
+					"bsonType": "string"
+				},
+				"avatar_file_id": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"category": {
+			"bsonType": "string",
+			"title": "反馈分类",
+			"description": "bug / feature / experience / other"
+		},
+		"content": {
+			"bsonType": "string",
+			"title": "反馈内容"
+		},
+		"image_count": {
+			"bsonType": "int",
+			"title": "图片数量",
+			"defaultValue": 0
+		},
+		"image_list": {
+			"bsonType": "array",
+			"title": "反馈图片",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"url": {
+						"bsonType": "string"
+					},
+					"file_id": {
+						"bsonType": "string"
+					},
+					"mime_type": {
+						"bsonType": "string"
+					},
+					"file_size": {
+						"bsonType": "int"
+					},
+					"width": {
+						"bsonType": "int"
+					},
+					"height": {
+						"bsonType": "int"
+					}
+				}
+			}
+		},
+		"status": {
+			"bsonType": "int",
+			"title": "反馈状态",
+			"description": "0 待处理 1 已回复 2 已解决",
+			"defaultValue": 0
+		},
+		"admin_reply": {
+			"bsonType": "string",
+			"title": "管理员回复",
+			"defaultValue": ""
+		},
+		"reply_uid": {
+			"bsonType": "string",
+			"title": "回复管理员UID",
+			"defaultValue": ""
+		},
+		"reply_time": {
+			"bsonType": "long",
+			"title": "回复时间",
+			"defaultValue": 0
+		},
+		"resolved_time": {
+			"bsonType": "long",
+			"title": "解决时间",
+			"defaultValue": 0
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}
