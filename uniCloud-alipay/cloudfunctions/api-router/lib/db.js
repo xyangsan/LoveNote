@@ -10,5 +10,6 @@ module.exports = {
 	coupleCollection: db.collection('love-couples'),
 	albumCollection: db.collection('love-albums'),
 	photoCollection: db.collection('love-photos'),
-	dailyPostCollection: db.collection('love-daily-posts')
+	dailyPostCollection: db.collection('love-daily-posts'),
+	anniversaryCollection: db.collection('love-anniversaries')
 }

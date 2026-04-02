@@ -375,9 +375,8 @@
 						})
 						break
 					case 'anniversary':
-						uni.showToast({
-							title: '纪念日功能开发中',
-							icon: 'none'
+						uni.navigateTo({
+							url: '/pages/anniversary/list'
 						})
 						break
 					case 'album':
@@ -470,6 +469,7 @@
 	.user-card__avatar {
 		flex-shrink: 0;
 		box-shadow: 0 18rpx 34rpx rgba(196, 126, 101, 0.18);
+		border-radius: 50%;
 	}
 
 	.user-card__body {

@@ -1,0 +1,106 @@
+{
+	"bsonType": "object",
+	"required": [
+		"couple_id",
+		"title",
+		"date_type",
+		"date_value",
+		"repeat_type"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "纪念日ID，系统自动生成"
+		},
+		"couple_id": {
+			"bsonType": "string",
+			"title": "情侣关系ID"
+		},
+		"creator_uid": {
+			"bsonType": "string",
+			"title": "创建人用户ID"
+		},
+		"title": {
+			"bsonType": "string",
+			"title": "纪念日标题"
+		},
+		"date_type": {
+			"bsonType": "string",
+			"title": "日期类型",
+			"description": "solar 公历 / lunar 农历",
+			"defaultValue": "solar"
+		},
+		"date_value": {
+			"bsonType": "string",
+			"title": "日期值",
+			"description": "格式 YYYY-MM-DD"
+		},
+		"repeat_type": {
+			"bsonType": "string",
+			"title": "重复方式",
+			"description": "none / weekly / monthly / yearly",
+			"defaultValue": "yearly"
+		},
+		"background_type": {
+			"bsonType": "string",
+			"title": "背景类型",
+			"description": "image / color",
+			"defaultValue": "color"
+		},
+		"background_image": {
+			"bsonType": "object",
+			"title": "背景图片",
+			"properties": {
+				"url": {
+					"bsonType": "string"
+				},
+				"file_id": {
+					"bsonType": "string"
+				}
+			}
+		},
+		"background_color": {
+			"bsonType": "string",
+			"title": "背景色",
+			"defaultValue": "#EC7558"
+		},
+		"font_color": {
+			"bsonType": "string",
+			"title": "字体色",
+			"defaultValue": "#FFFFFF"
+		},
+		"mask_enabled": {
+			"bsonType": "bool",
+			"title": "是否启用遮罩",
+			"defaultValue": true
+		},
+		"mask_color": {
+			"bsonType": "string",
+			"title": "遮罩颜色",
+			"defaultValue": "#000000"
+		},
+		"mask_opacity": {
+			"bsonType": "double",
+			"title": "遮罩透明度",
+			"defaultValue": 0.35
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

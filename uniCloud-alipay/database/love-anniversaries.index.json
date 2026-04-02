@@ -1,0 +1,42 @@
+[
+	{
+		"IndexName": "idx_couple_deleted_date",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "couple_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				},
+				{
+					"Name": "date_value",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_couple_deleted_create",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "couple_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	}
+]

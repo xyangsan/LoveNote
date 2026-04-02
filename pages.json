@@ -5,7 +5,7 @@
 			"fui-(.*)": "@/components/firstui/fui-$1/fui-$1.vue"
 		}
 	},
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	"pages": [
 		{
 			"path": "pages/index/index",
 			"style": {
@@ -78,6 +78,20 @@
 			"path": "pages/feed/publish",
 			"style": {
 				"navigationBarTitleText": "发布日常"
+			}
+		},
+		{
+			"path": "pages/anniversary/list",
+			"style": {
+				"navigationBarTitleText": "纪念日",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/anniversary/edit",
+			"style": {
+				"navigationBarTitleText": "编辑纪念日"
 			}
 		}
 	],

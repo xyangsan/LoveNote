@@ -102,7 +102,7 @@
 					v-for="item in quickActions"
 					:key="item.title"
 					class="quick-grid__item"
-					@click="handleAction(item.title)"
+					@click="handleAction(item.action || item.title)"
 				>
 					<view class="quick-grid__icon" :style="{ background: item.gradient }">
 						<text class="quick-grid__emoji">{{ item.icon }}</text>
@@ -263,24 +263,28 @@
 					{
 						title: '纪念日',
 						desc: '记录重要节点与倒计时',
+						action: 'anniversary',
 						icon: '01',
 						gradient: 'linear-gradient(135deg, #ffe29f 0%, #ffa99f 100%)'
 					},
 					{
 						title: '双人日常',
 						desc: '发布今天的小片段',
+						action: 'feed',
 						icon: '02',
 						gradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)'
 					},
 					{
 						title: '相册',
 						desc: '记录我们的美好瞬间',
+						action: 'album',
 						icon: '03',
 						gradient: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
 					},
 					{
 						title: '约会计划',
 						desc: '安排下一次见面和惊喜',
+						action: 'plan',
 						icon: '04',
 						gradient: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
 					}
@@ -689,6 +693,7 @@
 				})
 			},
 			handleAction(name) {
+				const action = String(name || '').trim()
 				if (!this.isLoggedIn && name !== '登录') {
 					uni.showToast({
 						title: '请先完成微信登录',
@@ -717,6 +722,35 @@
 				if (name === '双人日常' || name === '双人动态') {
 					uni.navigateTo({
 						url: '/pages/feed/list'
+					})
+					return
+				}
+
+				if (action === 'anniversary') {
+					uni.navigateTo({
+						url: '/pages/anniversary/list'
+					})
+					return
+				}
+
+				if (action === 'album') {
+					uni.navigateTo({
+						url: '/pages/album/list'
+					})
+					return
+				}
+
+				if (action === 'feed') {
+					uni.navigateTo({
+						url: '/pages/feed/list'
+					})
+					return
+				}
+
+				if (action === 'plan') {
+					uni.showToast({
+						title: '计划功能开发中',
+						icon: 'none'
 					})
 					return
 				}
