@@ -319,7 +319,8 @@
 				if (wishTotal === null || wishTotal === undefined || planTotal === null || planTotal === undefined) {
 					return '去查看'
 				}
-				return `愿望${Number(wishTotal || 0)} / 计划${Number(planTotal || 0)}`
+				
+				return `${Number(wishTotal || 0) + Number(planTotal || 0)}`
 			},
 			coreCards() {
 				return [

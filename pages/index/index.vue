@@ -604,7 +604,7 @@
 				if (!this.anniversaries.length) {
 					return '暂未创建纪念日，点击进入去添加'
 				}
-				return `已同步 ${this.anniversaries.length} 条提醒，按最近日期展示`
+				return `已同步 ${this.anniversaries.length} 条提醒`
 			},
 			momentHint() {
 				if (!this.isLoggedIn) {
@@ -616,7 +616,7 @@
 				if (!this.moments.length) {
 					return '还没有双人日常，点击去发布第一条'
 				}
-				return `已展示最新 ${this.moments.length} 条动态，点击可查看完整时间轴`
+				return `已展示最新 ${this.moments.length} 条动态`
 			}
 		},
 		onLoad() {
