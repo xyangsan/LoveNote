@@ -1,113 +1,195 @@
 <template>
-	<view class="page">
-		<view class="page__glow page__glow--left"></view>
-		<view class="page__glow page__glow--right"></view>
-
-		<view class="header">
-			<view>
-				<text class="header__title">双人日常</text>
-				<text class="header__subtitle">定格我们在一起的平凡与美好。</text>
+	<view class="moments-page" @click="closeActionPanel">
+		<view class="moments-shell">
+			<view class="moments-topbar">
+				<view class="moments-topbar__icon" @click.stop="goBack">
+					<text class="moments-topbar__icon-text">‹</text>
+				</view>
+				<view class="moments-topbar__icon">
+					<text class="moments-topbar__camera">◻</text>
+				</view>
 			</view>
-		</view>
 
-		<view v-if="loading && postList.length === 0" class="loading-state">
-			<fui-loading type="rotate" size="48"></fui-loading>
-			<text class="loading-text">加载中...</text>
-		</view>
+			<view class="moments-header">
+				<image class="moments-header__cover" :src="coverImage" mode="aspectFill"></image>
+				<view class="moments-header__mask"></view>
+				<view class="moments-header__user">
+					<text class="moments-header__name">{{ headerNickname }}</text>
+					<fui-avatar
+						class="moments-header__avatar"
+						:src="headerAvatar"
+						error-src="/static/user-empty.png"
+						width="120"
+						height="120"
+						background="#f2f2f2"
+						radius="14"
+					></fui-avatar>
+				</view>
+			</view>
 
-		<view v-else-if="postList.length === 0" class="empty-state">
-			<image class="empty-icon" src="/static/user-empty.png" mode="aspectFit" />
-			<text class="empty-title">{{ noCouple ? '还未绑定情侣关系' : '还没有双人日常' }}</text>
-			<text class="empty-desc">{{ noCouple ? '请先进入情侣信息页面完成绑定，再发布双人日常。' : '发一条图文或视频，记录今天的心情吧。' }}</text>
-		</view>
+			<view v-if="loading && postList.length === 0" class="state-block">
+				<fui-loading type="rotate" size="44"></fui-loading>
+				<text class="state-block__text">加载中...</text>
+			</view>
 
-		<view v-else class="post-list">
-			<view v-for="post in postList" :key="post._id" class="post-card">
-				<view class="post-card__top">
-					<view class="post-author">
-						<fui-avatar
-							:src="post.author_snapshot && post.author_snapshot.avatar_url"
-							error-src="/static/user-empty.png"
-							width="72"
-							height="72"
-							background="#fff1eb"
-						></fui-avatar>
-						<view class="post-author__body">
-							<text class="post-author__name">{{ post.author_snapshot && post.author_snapshot.nickname || '恋人' }}</text>
-							<text class="post-author__time">{{ formatTime(post.create_time) }}</text>
+			<view v-else-if="postList.length === 0" class="state-block">
+				<image class="state-block__icon" src="/static/user-empty.png" mode="aspectFit" />
+				<text class="state-block__title">{{ noCouple ? '还未绑定情侣关系' : '还没有双人日常' }}</text>
+				<text class="state-block__text">{{ noCouple ? '请先完成情侣绑定，再发布双人日常。' : '发布第一条日常，记录你们的今天。' }}</text>
+			</view>
+
+			<view v-else class="moments-list">
+				<view v-for="post in postList" :key="post._id" class="moment-item" @click.stop>
+					<fui-avatar
+						:src="post.author_snapshot && post.author_snapshot.avatar_url"
+						error-src="/static/user-empty.png"
+						width="84"
+						height="84"
+						background="#f3f3f3"
+						radius="12"
+					></fui-avatar>
+
+					<view class="moment-item__main">
+						<text class="moment-item__nickname">{{ post.author_snapshot && post.author_snapshot.nickname || '恋人' }}</text>
+
+						<text v-if="post.content" class="moment-item__content" selectable>{{ post.content }}</text>
+
+						<view v-if="isVideoPost(post)" class="moment-video-wrap">
+							<video
+								class="moment-video"
+								:style="singleMediaBoxStyle(post)"
+								:src="post.media_list[0].url"
+								:poster="post.media_list[0].thumbnail_url"
+								object-fit="contain"
+								:controls="true"
+								:show-play-btn="true"
+							></video>
 						</view>
-					</view>
-					<view class="post-card__actions">
-						<text v-if="post.is_self" class="post-card__delete" @click.stop="handleDelete(post)">删除</text>
-					</view>
-				</view>
 
-				<text v-if="post.content" class="post-card__content" selectable>{{ post.content }}</text>
+						<image
+							v-else-if="isImagePost(post) && post.media_list.length === 1"
+							class="moment-image--single"
+							:style="singleMediaBoxStyle(post)"
+							:src="post.media_list[0].thumbnail_url || post.media_list[0].url"
+							mode="aspectFit"
+							@click.stop="previewImages(post, 0)"
+						/>
 
-				<view v-if="isVideoPost(post)" class="post-media-video">
-					<video
-						class="post-media-video__player"
-						:src="post.media_list[0].url"
-						:poster="post.media_list[0].thumbnail_url"
-						object-fit="cover"
-						:controls="true"
-						:show-play-btn="true"
-					></video>
-				</view>
+						<view v-else-if="isImagePost(post)" class="moment-images">
+							<image
+								v-for="(media, index) in post.media_list"
+								:key="`${post._id}_${index}`"
+								class="moment-images__item"
+								:src="media.thumbnail_url || media.url"
+								mode="aspectFill"
+								@click.stop="previewImages(post, index)"
+							/>
+						</view>
 
-				<view v-else-if="isImagePost(post)" class="post-media-grid">
-					<image
-						v-for="(media, index) in post.media_list"
-						:key="`${post._id}_${index}`"
-						class="post-media-grid__item"
-						:src="media.thumbnail_url || media.url"
-						mode="aspectFill"
-						@click="previewImages(post, index)"
-					/>
-				</view>
+						<text v-if="locationText(post)" class="moment-item__location">{{ locationText(post) }}</text>
 
-				<view v-if="locationText(post)" class="post-card__footer">
-					<text class="post-card__meta post-card__meta--location">{{ locationText(post) }}</text>
-				</view>
-
-				<view class="post-reaction">
-					<text
-						class="post-reaction__btn"
-						:class="{ 'post-reaction__btn--active': post.is_liked }"
-						@click.stop="toggleLike(post)"
-					>{{ post.is_liked ? '取消点赞' : '点赞' }} {{ Number(post.like_count || 0) }}</text>
-					<text class="post-reaction__btn" @click.stop="openCommentInput(post)">评论 {{ Number(post.comment_count || 0) }}</text>
-				</view>
-
-				<view v-if="Array.isArray(post.comment_list) && post.comment_list.length" class="comment-list">
-					<view v-for="comment in post.comment_list" :key="comment.comment_id" class="comment-item">
-						<fui-avatar
-							:src="comment.avatar_url"
-							error-src="/static/user-empty.png"
-							width="52"
-							height="52"
-							background="#fff1eb"
-						></fui-avatar>
-						<view class="comment-item__body">
-							<view class="comment-item__head">
-								<text class="comment-item__name">{{ comment.nickname || '用户' }}</text>
-								<text class="comment-item__time">{{ formatCommentTime(comment.create_time) }}</text>
+						<view class="moment-item__meta-row">
+							<view class="moment-item__meta-left">
+								<text class="moment-item__time">{{ formatTime(post.create_time) }}</text>
+								<text
+									v-if="post.is_self"
+									class="moment-item__delete"
+									@click.stop="handleDelete(post)"
+								>删除</text>
 							</view>
-							<text
-								class="comment-item__content"
-								@click.stop="openCommentInput(post, comment)"
-							>{{ commentDisplayContent(comment) }}</text>
+
+							<view class="moment-actions">
+								<view
+									v-if="activeActionPostId === post._id"
+									class="moment-action-panel"
+									@click.stop
+								>
+									<text class="moment-action-panel__item" @click.stop="toggleLike(post)">{{ post.is_liked ? '取消' : '赞' }}</text>
+									<view class="moment-action-panel__divider"></view>
+									<text class="moment-action-panel__item" @click.stop="openCommentInput(post)">评论</text>
+								</view>
+								<view class="moment-action-trigger" @click.stop="toggleActionPanel(post)">
+									<view class="moment-action-trigger__dot"></view>
+									<view class="moment-action-trigger__dot"></view>
+								</view>
+							</view>
+						</view>
+
+						<view v-if="hasInteractions(post)" class="moment-interactions">
+							<view class="moment-interactions__triangle"></view>
+
+							<view v-if="Number(post.like_count || 0) > 0" class="moment-like-row">
+								<text class="moment-like-row__icon">♥</text>
+								<text class="moment-like-row__text">{{ likeSummary(post) }}</text>
+							</view>
+
+							<view
+								v-if="Array.isArray(post.comment_list) && post.comment_list.length"
+								class="moment-comment-list"
+								:class="{ 'moment-comment-list--with-like': Number(post.like_count || 0) > 0 }"
+							>
+								<view v-for="comment in post.comment_list" :key="comment.comment_id" class="moment-comment-item">
+									<fui-avatar
+										:src="comment.avatar_url"
+										error-src="/static/user-empty.png"
+										width="44"
+										height="44"
+										background="#f4f4f4"
+										radius="8"
+									></fui-avatar>
+
+									<view class="moment-comment-item__main">
+										<view class="moment-comment-item__head">
+											<text class="moment-comment-item__name">{{ comment.nickname || '用户' }}</text>
+											<text class="moment-comment-item__time">{{ formatCommentTime(comment.create_time) }}</text>
+										</view>
+										<text
+											class="moment-comment-item__content"
+											@click.stop="openCommentInput(post, comment)"
+										>{{ commentDisplayContent(comment) }}</text>
+									</view>
+								</view>
+							</view>
 						</view>
 					</view>
 				</view>
 			</view>
+
+			<view v-if="!loading && postList.length > 0 && !pagination.hasMore" class="load-more">
+				<text class="load-more__text">已经到底了</text>
+			</view>
 		</view>
 
-		<view v-if="!loading && postList.length > 0 && !pagination.hasMore" class="load-more">
-			<text class="load-more__text">已经到底了</text>
+		<view v-if="commentEditorVisible" class="comment-editor-mask" @click.stop="closeCommentEditor"></view>
+		<view
+			v-if="commentEditorVisible"
+			class="comment-editor"
+			:style="{ bottom: `${keyboardHeight}px` }"
+			@click.stop
+		>
+			<view class="comment-editor__box">
+				<textarea
+					class="comment-editor__textarea"
+					:value="commentDraft"
+					:placeholder="commentPlaceholder"
+					:focus="commentInputFocus"
+					:cursor-spacing="24"
+					:adjust-position="false"
+					:show-confirm-bar="false"
+					@input="onCommentInput"
+					@focus="onCommentFocus"
+					@blur="onCommentBlur"
+					@confirm="submitComment"
+				></textarea>
+			</view>
+			<text
+				class="comment-editor__submit"
+				:class="{ 'comment-editor__submit--disabled': !canSubmitComment }"
+				@click.stop="submitComment"
+			>发布</text>
 		</view>
 
-		<view class="publish-fab" @click="noCouple ? goCouplePage() : goPublish()">
+		<view v-if="!commentEditorVisible" class="publish-fab" @click.stop="noCouple ? goCouplePage() : goPublish()">
 			<text class="publish-fab__icon">+</text>
 			<text class="publish-fab__text">{{ noCouple ? '去绑定' : '发布' }}</text>
 		</view>
@@ -115,7 +197,11 @@
 </template>
 
 <script>
+import { DEFAULT_AVATAR, getCachedUserProfile } from '../../common/auth-center.js'
 import { getDailyApi } from '../../common/api/daily.js'
+import { useAppStateStore } from '../../store/app-state.js'
+
+const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
 
 function formatDateTime(timestamp) {
 	if (!timestamp) {
@@ -123,12 +209,25 @@ function formatDateTime(timestamp) {
 	}
 
 	const date = new Date(Number(timestamp))
+	if (Number.isNaN(date.getTime())) {
+		return ''
+	}
+
 	const year = date.getFullYear()
 	const month = `${date.getMonth() + 1}`.padStart(2, '0')
 	const day = `${date.getDate()}`.padStart(2, '0')
 	const hour = `${date.getHours()}`.padStart(2, '0')
 	const minute = `${date.getMinutes()}`.padStart(2, '0')
 	return `${year}-${month}-${day} ${hour}:${minute}`
+}
+
+function resolvePostCover(post = {}) {
+	const mediaList = Array.isArray(post.media_list) ? post.media_list : []
+	if (!mediaList.length) {
+		return ''
+	}
+	const firstMedia = mediaList[0] || {}
+	return String(firstMedia.thumbnail_url || firstMedia.url || '').trim()
 }
 
 export default {
@@ -142,11 +241,54 @@ export default {
 				pageSize: 10,
 				total: 0,
 				hasMore: true
-			}
+			},
+			activeActionPostId: '',
+			headerProfile: {
+				nickname: '',
+				avatarUrl: ''
+			},
+			appStateStore: null,
+			commentEditorVisible: false,
+			commentDraft: '',
+			commentTargetPostId: '',
+			commentReplyCommentId: '',
+			commentReplyNickname: '',
+			commentInputFocus: false,
+			keyboardHeight: 0
+		}
+	},
+	onLoad() {
+		this.syncHeaderProfile()
+		this.loadPostList(true)
+		this.bindKeyboardHeightListener()
+	},
+	computed: {
+		headerNickname() {
+			const nickname = String(this.headerProfile.nickname || '').trim()
+			return nickname || '未登录'
+		},
+		headerAvatar() {
+			const avatar = String(this.headerProfile.avatarUrl || '').trim()
+			return avatar || DEFAULT_AVATAR
+		},
+		coverImage() {
+			const firstPost = this.postList.find((item) => Array.isArray(item.media_list) && item.media_list.length)
+			const mediaCover = firstPost ? resolvePostCover(firstPost) : ''
+			return mediaCover || DEFAULT_COVER_IMAGE
+		},
+		commentPlaceholder() {
+			const nickname = String(this.commentReplyNickname || '').trim()
+			return nickname ? `回复${nickname}` : '评论一下，交个朋友'
+		},
+		canSubmitComment() {
+			return String(this.commentDraft || '').trim().length > 0
 		}
 	},
 	onShow() {
-		this.loadPostList(true)
+		this.syncHeaderProfile()
+	},
+	onUnload() {
+		this.unbindKeyboardHeightListener()
 	},
 	onPullDownRefresh() {
 		this.loadPostList(true).finally(() => {
@@ -160,11 +302,88 @@ export default {
 		this.loadPostList(false)
 	},
 	methods: {
+		goBack() {
+			if (getCurrentPages().length > 1) {
+				uni.navigateBack()
+				return
+			}
+			uni.switchTab({
+				url: '/pages/index/index'
+			})
+		},
+		ensureStore() {
+			if (!this.appStateStore) {
+				this.appStateStore = useAppStateStore()
+			}
+			return this.appStateStore
+		},
+		syncHeaderProfile() {
+			const cached = getCachedUserProfile() || {}
+			const store = this.ensureStore()
+			const userInfo = store && store.userInfo ? store.userInfo : null
+
+			this.headerProfile = {
+				nickname: String((userInfo && userInfo.nickname) || cached.nickname || '').trim(),
+				avatarUrl: String((userInfo && userInfo.avatarUrl) || cached.avatarUrl || '').trim()
+			}
+		},
+		closeActionPanel() {
+			this.activeActionPostId = ''
+		},
+		bindKeyboardHeightListener() {
+			if (typeof uni.onKeyboardHeightChange !== 'function') {
+				return
+			}
+			uni.onKeyboardHeightChange((res = {}) => {
+				this.keyboardHeight = Math.max(0, Number(res.height || 0))
+			})
+		},
+		unbindKeyboardHeightListener() {
+			if (typeof uni.offKeyboardHeightChange !== 'function') {
+				return
+			}
+			uni.offKeyboardHeightChange()
+		},
+		resetCommentEditorState() {
+			this.commentDraft = ''
+			this.commentTargetPostId = ''
+			this.commentReplyCommentId = ''
+			this.commentReplyNickname = ''
+			this.commentInputFocus = false
+			this.keyboardHeight = 0
+		},
+		closeCommentEditor() {
+			this.commentEditorVisible = false
+			this.resetCommentEditorState()
+		},
+		onCommentInput(event = {}) {
+			this.commentDraft = String(event.detail && event.detail.value || '')
+		},
+		onCommentFocus() {
+			this.commentInputFocus = true
+		},
+		onCommentBlur() {
+			this.commentInputFocus = false
+		},
+		toggleActionPanel(post = {}) {
+			const postId = String(post._id || '').trim()
+			if (!postId) {
+				return
+			}
+			this.activeActionPostId = this.activeActionPostId === postId ? '' : postId
+		},
 		formatTime(value) {
 			return formatDateTime(value) || '刚刚'
 		},
 		formatCommentTime(value) {
 			return formatDateTime(value) || '刚刚'
+		},
+		hasInteractions(post = {}) {
+			return Number(post.like_count || 0) > 0 || (Array.isArray(post.comment_list) && post.comment_list.length > 0)
+		},
+		likeSummary(post = {}) {
+			const likeCount = Number(post.like_count || 0)
+			return likeCount > 0 ? `${likeCount} 人点赞` : ''
 		},
 		commentDisplayContent(comment = {}) {
 			const content = String(comment.content || '').trim()
@@ -193,37 +412,64 @@ export default {
 				return this.normalizePostItem(updater(Object.assign({}, item)) || item)
 			})
 		},
-		promptCommentInput({ replyNickname = '' } = {}) {
-			return new Promise((resolve) => {
-				uni.showModal({
-					title: replyNickname ? `回复 ${replyNickname}` : '发表评论',
-					editable: true,
-					placeholderText: replyNickname ? '输入回复内容' : '输入评论内容',
-					success: (res) => {
-						resolve({
-							confirm: Boolean(res.confirm),
-							content: String(res.content || '').trim()
-						})
-					},
-					fail: () => {
-						resolve({
-							confirm: false,
-							content: ''
-						})
-					}
-				})
-			})
-		},
 		locationText(post = {}) {
 			const location = post && post.location && typeof post.location === 'object' ? post.location : {}
 			const name = String(location.name || '').trim()
 			return name ? `📍 ${name}` : ''
+		},
+		singleMediaBoxStyle(post = {}) {
+			const mediaList = Array.isArray(post.media_list) ? post.media_list : []
+			const firstMedia = mediaList[0] && typeof mediaList[0] === 'object' ? mediaList[0] : {}
+			const mediaWidth = Number(firstMedia.width || 0)
+			const mediaHeight = Number(firstMedia.height || 0)
+			const mediaType = String(post.media_type || '').toLowerCase()
+
+			const maxWidth = 560
+			const maxHeight = 680
+			if (mediaWidth <= 0 || mediaHeight <= 0) {
+				const fallbackRatio = mediaType === 'video' ? (16 / 9) : (4 / 3)
+				const fallbackHeight = Math.max(1, Math.round(maxWidth / fallbackRatio))
+				return {
+					width: `${maxWidth}rpx`,
+					height: `${Math.min(fallbackHeight, maxHeight)}rpx`,
+					maxWidth: `${maxWidth}rpx`,
+					maxHeight: `${maxHeight}rpx`
+				}
+			}
+
+			const ratio = mediaWidth / mediaHeight
+			let boxWidth = maxWidth
+			let boxHeight = maxHeight
+
+			if (mediaWidth >= mediaHeight) {
+				boxWidth = maxWidth
+				boxHeight = Math.max(1, Math.round(maxWidth / ratio))
+				if (boxHeight > maxHeight) {
+					boxHeight = maxHeight
+					boxWidth = Math.max(1, Math.round(maxHeight * ratio))
+				}
+			} else {
+				boxHeight = maxHeight
+				boxWidth = Math.max(1, Math.round(maxHeight * ratio))
+				if (boxWidth > maxWidth) {
+					boxWidth = maxWidth
+					boxHeight = Math.max(1, Math.round(maxWidth / ratio))
+				}
+			}
+
+			return {
+				width: `${boxWidth}rpx`,
+				height: `${boxHeight}rpx`,
+				maxWidth: `${maxWidth}rpx`,
+				maxHeight: `${maxHeight}rpx`
+			}
 		},
 		async toggleLike(post = {}) {
 			const postId = String(post._id || '').trim()
 			if (!postId) {
 				return
 			}
+			this.closeActionPanel()
 			try {
 				const result = await getDailyApi().toggleLike({
 					postId
@@ -248,24 +494,38 @@ export default {
 			if (!postId) {
 				return
 			}
+			this.closeActionPanel()
 
 			const replyNickname = replyComment && replyComment.nickname
 				? String(replyComment.nickname).trim()
 				: ''
-			const modalRes = await this.promptCommentInput({
-				replyNickname
+			this.commentTargetPostId = postId
+			this.commentReplyCommentId = replyComment && replyComment.comment_id
+				? String(replyComment.comment_id)
+				: ''
+			this.commentReplyNickname = replyNickname
+			this.commentDraft = ''
+			this.commentEditorVisible = true
+			this.$nextTick(() => {
+				this.commentInputFocus = true
 			})
-			if (!modalRes.confirm || !modalRes.content) {
+		},
+		async submitComment() {
+			const postId = String(this.commentTargetPostId || '').trim()
+			if (!postId) {
 				return
 			}
+			const content = String(this.commentDraft || '').trim()
+			if (!content) {
+				return
+			}
+			const replyToCommentId = String(this.commentReplyCommentId || '').trim()
 
 			try {
 				const result = await getDailyApi().addComment({
 					postId,
-					content: modalRes.content,
-					replyToCommentId: replyComment && replyComment.comment_id
-						? String(replyComment.comment_id)
-						: ''
+					content,
+					replyToCommentId
 				})
 				if (result && result.errCode && result.errCode !== 0) {
 					throw new Error(result.errMsg || '评论失败')
@@ -282,6 +542,7 @@ export default {
 						comment_count: Number(data.comment_count || commentList.length)
 					})
 				})
+				this.closeCommentEditor()
 			} catch (error) {
 				uni.showToast({
 					title: error.message || '评论失败',
@@ -433,286 +694,421 @@ export default {
 </script>
 
 <style>
-.page {
-	position: relative;
+.moments-page {
 	min-height: 100vh;
-	padding: 32rpx 24rpx 170rpx;
 	background: linear-gradient(180deg, #FFF7F1 0%, #FFF0E8 100%);
-	overflow: hidden;
+	padding-bottom: 160rpx;
 }
 
-.page__glow {
+.moments-shell {
+	background: transparent;
+}
+
+.moments-topbar {
 	position: absolute;
-	width: 320rpx;
-	height: 320rpx;
-	border-radius: 50%;
-	filter: blur(24rpx);
-	opacity: 0.4;
-	z-index: 0;
-}
-
-.page__glow--left {
-	top: -80rpx;
-	left: -120rpx;
-	background: rgba(255, 170, 153, 0.55);
-}
-
-.page__glow--right {
-	top: 240rpx;
-	right: -120rpx;
-	background: rgba(255, 220, 174, 0.55);
-}
-
-.header,
-.loading-state,
-.empty-state,
-.post-list,
-.load-more {
-	position: relative;
-	z-index: 1;
-}
-
-.header {
+	top: calc(24rpx + env(safe-area-inset-top));
+	left: 0;
+	right: 0;
+	z-index: 5;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 28rpx;
+	padding: 0 22rpx;
 }
 
-.header__title {
-	display: block;
-	font-size: 48rpx;
+.moments-topbar__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 58rpx;
+	height: 58rpx;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.28);
+}
+
+.moments-topbar__icon-text {
+	font-size: 40rpx;
+	color: #ffffff;
+	line-height: 1;
+}
+
+.moments-topbar__camera {
+	font-size: 25rpx;
+	color: #ffffff;
+	line-height: 1;
+}
+
+.moments-header {
+	position: relative;
+	height: 420rpx;
+	overflow: visible;
+}
+
+.moments-header__cover {
+	width: 100%;
+	height: 100%;
+}
+
+.moments-header__mask {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 200rpx;
+	background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.moments-header__user {
+	position: absolute;
+	right: 28rpx;
+	bottom: -60rpx;
+	display: flex;
+	align-items: flex-end;
+	gap: 18rpx;
+	z-index: 8;
+}
+
+.moments-header__name {
+	padding-bottom: 78rpx;
+	font-size: 40rpx;
 	font-weight: 700;
-	color: #5a3427;
+	color: #ffffff;
+	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.4);
 }
 
-.header__subtitle {
-	display: block;
-	margin-top: 12rpx;
-	font-size: 24rpx;
-	color: #8b6659;
+.moments-header__avatar {
+	border-radius: 14rpx;
+	box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.22);
+	border: 4rpx solid #ffffff;
 }
 
-.loading-state,
-.empty-state {
+.state-block {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 80rpx 40rpx;
+	padding: 90rpx 40rpx;
 }
 
-.loading-text {
-	margin-top: 18rpx;
-	font-size: 24rpx;
-	color: #8b6659;
+.state-block__icon {
+	width: 180rpx;
+	height: 180rpx;
+	opacity: 0.68;
 }
 
-.empty-icon {
-	width: 200rpx;
-	height: 200rpx;
-	opacity: 0.65;
+.state-block__title {
+	margin-top: 22rpx;
+	font-size: 30rpx;
+	font-weight: 600;
+	color: #333333;
 }
 
-.empty-title {
-	margin-top: 24rpx;
-	font-size: 32rpx;
-	font-weight: 700;
-	color: #5a3427;
-}
-
-.empty-desc {
+.state-block__text {
 	margin-top: 14rpx;
 	font-size: 24rpx;
-	color: #8b6659;
-	line-height: 1.7;
+	line-height: 1.6;
+	color: #8b8b8b;
 	text-align: center;
 }
 
-.post-card {
-	margin-bottom: 20rpx;
-	padding: 24rpx;
-	border-radius: 24rpx;
-	background: rgba(255, 255, 255, 0.92);
-	box-shadow: 0 12rpx 30rpx rgba(177, 114, 83, 0.09);
+.moments-list {
+	padding-top: 76rpx;
+	background: transparent;
 }
 
-.post-card__top {
+.moment-item {
 	display: flex;
 	align-items: flex-start;
-	justify-content: space-between;
 	gap: 16rpx;
+	padding: 26rpx 24rpx 24rpx;
+	border-bottom: 1rpx solid #f1f1f1;
+	background: transparent;
 }
 
-.post-author {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-	align-items: center;
-	gap: 14rpx;
-}
-
-.post-author__body {
+.moment-item__main {
 	flex: 1;
 	min-width: 0;
 }
 
-.post-author__name {
+.moment-item__nickname {
 	display: block;
+	font-size: 30rpx;
+	font-weight: 600;
+	color: #576b95;
+	line-height: 1.2;
+}
+
+.moment-item__content {
+	display: block;
+	margin-top: 10rpx;
 	font-size: 28rpx;
-	font-weight: 700;
-	color: #5d372b;
-}
-
-.post-author__time {
-	display: block;
-	margin-top: 6rpx;
-	font-size: 22rpx;
-	color: #9b786d;
-}
-
-.post-card__actions {
-	display: flex;
-	align-items: center;
-	gap: 14rpx;
-}
-
-.post-card__type {
-	padding: 8rpx 16rpx;
-	border-radius: 999rpx;
-	background: rgba(255, 241, 235, 0.96);
-	font-size: 20rpx;
-	color: #b05b48;
-}
-
-.post-card__delete {
-	font-size: 22rpx;
-	color: #c46e56;
-}
-
-.post-card__content {
-	display: block;
-	margin-top: 18rpx;
-	font-size: 28rpx;
-	line-height: 1.8;
-	color: #6d473a;
+	line-height: 1.62;
+	color: #111111;
 	white-space: pre-wrap;
+	word-break: break-all;
 }
 
-.post-media-video {
-	margin-top: 18rpx;
+.moment-video-wrap {
+	margin-top: 14rpx;
 }
 
-.post-media-video__player {
-	width: 100%;
-	height: 420rpx;
-	border-radius: 18rpx;
-	background: #000;
-}
-
-.post-media-grid {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10rpx;
-	margin-top: 18rpx;
-}
-
-.post-media-grid__item {
-	width: calc((100% - 20rpx) / 3);
-	height: 220rpx;
-	border-radius: 14rpx;
-	background: #f3ece8;
-}
-
-.post-card__footer {
-	margin-top: 16rpx;
-}
-
-.post-card__meta {
-	font-size: 22rpx;
-	color: #9b786d;
-}
-
-.post-card__meta--location {
+.moment-video {
 	display: block;
+	border-radius: 8rpx;
+}
+
+.moment-image--single {
+	margin-top: 14rpx;
+	display: block;
+	border-radius: 8rpx;
+	overflow: hidden;
+}
+
+.moment-images {
+	display: grid;
+	gap: 6rpx;
+	margin-top: 14rpx;
+	width: 546rpx;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.moment-images__item {
+	width: 100%;
+	height: 178rpx;
+	border-radius: 6rpx;
+	overflow: hidden;
+}
+
+.moment-item__location {
+	display: block;
+	margin-top: 10rpx;
 	max-width: 100%;
+	font-size: 22rpx;
+	color: #8e8e8e;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
 
-.post-reaction {
+.moment-item__meta-row {
 	display: flex;
 	align-items: center;
-	gap: 22rpx;
-	margin-top: 14rpx;
+	justify-content: space-between;
+	margin-top: 12rpx;
+	min-height: 48rpx;
 }
 
-.post-reaction__btn {
+.moment-item__meta-left {
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+}
+
+.moment-item__time {
+	font-size: 22rpx;
+	color: #b2b2b2;
+}
+
+.moment-item__delete {
 	font-size: 23rpx;
-	color: #9b786d;
+	color: #576b95;
 }
 
-.post-reaction__btn--active {
-	color: #e76f51;
+.moment-actions {
+	position: relative;
+	display: flex;
+	align-items: center;
 }
 
-.comment-list {
-	margin-top: 14rpx;
-	padding-top: 12rpx;
-	border-top: 1rpx solid rgba(231, 204, 194, 0.6);
+.moment-action-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6rpx;
+	width: 52rpx;
+	height: 36rpx;
+	border-radius: 6rpx;
 }
 
-.comment-item {
+.moment-action-trigger__dot {
+	width: 6rpx;
+	height: 6rpx;
+	border-radius: 50%;
+	background: #576b95;
+}
+
+.moment-action-panel {
+	position: absolute;
+	right: 60rpx;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	height: 62rpx;
+	padding: 0 8rpx;
+	border-radius: 8rpx;
+	background: #4c5154;
+	white-space: nowrap;
+}
+
+.moment-action-panel__item {
+	padding: 0 18rpx;
+	font-size: 24rpx;
+	color: #ffffff;
+	line-height: 62rpx;
+}
+
+.moment-action-panel__divider {
+	width: 1rpx;
+	height: 24rpx;
+	background: rgba(255, 255, 255, 0.28);
+}
+
+.moment-interactions {
+	position: relative;
+	margin-top: 6rpx;
+	border-radius: 8rpx;
+	overflow: hidden;
+}
+
+.moment-interactions__triangle {
+	position: absolute;
+	top: -10rpx;
+	left: 22rpx;
+	width: 0;
+	height: 0;
+	border-left: 10rpx solid transparent;
+	border-right: 10rpx solid transparent;
+	border-bottom: 10rpx solid #f7f7f7;
+}
+
+.moment-like-row {
+	display: flex;
+	align-items: center;
+	gap: 10rpx;
+	padding: 14rpx 18rpx;
+}
+
+.moment-like-row__icon {
+	font-size: 22rpx;
+	color: #576b95;
+}
+
+.moment-like-row__text {
+	font-size: 24rpx;
+	color: #576b95;
+}
+
+.moment-comment-list {
+	padding: 10rpx 18rpx 14rpx;
+}
+
+.moment-comment-list--with-like {
+	border-top: 1rpx solid #ececec;
+}
+
+.moment-comment-item {
 	display: flex;
 	align-items: flex-start;
-	gap: 12rpx;
+	gap: 10rpx;
 }
 
-.comment-item + .comment-item {
-	margin-top: 14rpx;
+.moment-comment-item + .moment-comment-item {
+	margin-top: 12rpx;
 }
 
-.comment-item__body {
+.moment-comment-item__main {
 	flex: 1;
 	min-width: 0;
 }
 
-.comment-item__head {
+.moment-comment-item__head {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 12rpx;
 }
 
-.comment-item__name {
-	font-size: 22rpx;
-	color: #6d473a;
-	font-weight: 600;
+.moment-comment-item__name {
+	font-size: 24rpx;
+	color: #576b95;
+	font-weight: 500;
 }
 
-.comment-item__time {
-	font-size: 20rpx;
-	color: #ab8578;
+.moment-comment-item__time {
+	font-size: 21rpx;
+	color: #b2b2b2;
 }
 
-.comment-item__content {
+.moment-comment-item__content {
 	display: block;
-	margin-top: 6rpx;
-	font-size: 23rpx;
-	line-height: 1.65;
-	color: #7b574b;
+	margin-top: 4rpx;
+	font-size: 24rpx;
+	line-height: 1.58;
+	color: #111111;
 	word-break: break-all;
 }
 
 .load-more {
-	padding: 20rpx 0 8rpx;
+	padding: 24rpx 0 12rpx;
 	text-align: center;
 }
 
 .load-more__text {
 	font-size: 22rpx;
-	color: #ad8476;
+	color: #ababab;
+}
+
+.comment-editor-mask {
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 120;
+}
+
+.comment-editor {
+	position: fixed;
+	left: 0;
+	right: 0;
+	padding: 16rpx 16rpx calc(16rpx + env(safe-area-inset-bottom));
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+	background: #ffffff;
+	z-index: 130;
+}
+
+.comment-editor__box {
+	flex: 1;
+	height: 160rpx;
+	padding: 14rpx 16rpx;
+	border-radius: 12rpx;
+	border: 1rpx solid #e5e5e5;
+	background: #f6f6f6;
+	box-sizing: border-box;
+}
+
+.comment-editor__textarea {
+	width: 100%;
+	height: 100%;
+	font-size: 28rpx;
+	line-height: 1.55;
+	color: #333333;
+}
+
+.comment-editor__submit {
+	flex-shrink: 0;
+	font-size: 32rpx;
+	font-weight: 500;
+	color: #ffb422;
+	padding: 12rpx 6rpx;
+}
+
+.comment-editor__submit--disabled {
+	color: #e2d2a6;
 }
 
 .publish-fab {
@@ -733,13 +1129,13 @@ export default {
 .publish-fab__icon {
 	font-size: 28rpx;
 	line-height: 1;
-	color: #fff;
+	color: #ffffff;
 	font-weight: 700;
 }
 
 .publish-fab__text {
 	font-size: 24rpx;
-	color: #fff;
+	color: #ffffff;
 	font-weight: 600;
 }
 </style>
