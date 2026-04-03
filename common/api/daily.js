@@ -7,6 +7,8 @@ export function getDailyApi() {
 		dailyApi = createRouterModule({
 			getList: 'daily/getList',
 			create: 'daily/create',
+			toggleLike: 'daily/toggleLike',
+			addComment: 'daily/addComment',
 			delete: 'daily/delete'
 		})
 	}

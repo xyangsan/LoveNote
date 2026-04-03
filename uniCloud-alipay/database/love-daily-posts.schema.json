@@ -96,10 +96,78 @@
 				}
 			}
 		},
+		"location": {
+			"bsonType": "object",
+			"title": "发布位置",
+			"description": "选择位置后保存名称、地址和经纬度信息",
+			"defaultValue": {},
+			"properties": {
+				"name": {
+					"bsonType": "string"
+				},
+				"address": {
+					"bsonType": "string"
+				},
+				"latitude": {
+					"bsonType": "double"
+				},
+				"longitude": {
+					"bsonType": "double"
+				}
+			}
+		},
+		"like_uid_list": {
+			"bsonType": "array",
+			"title": "点赞用户ID列表",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "string"
+			}
+		},
 		"like_count": {
 			"bsonType": "int",
 			"title": "点赞数",
 			"defaultValue": 0
+		},
+		"comment_list": {
+			"bsonType": "array",
+			"title": "评论列表",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"comment_id": {
+						"bsonType": "string"
+					},
+					"uid": {
+						"bsonType": "string"
+					},
+					"nickname": {
+						"bsonType": "string"
+					},
+					"avatar_url": {
+						"bsonType": "string"
+					},
+					"avatar_file_id": {
+						"bsonType": "string"
+					},
+					"content": {
+						"bsonType": "string"
+					},
+					"create_time": {
+						"bsonType": "long"
+					},
+					"reply_to_comment_id": {
+						"bsonType": "string"
+					},
+					"reply_to_uid": {
+						"bsonType": "string"
+					},
+					"reply_to_nickname": {
+						"bsonType": "string"
+					}
+				}
+			}
 		},
 		"comment_count": {
 			"bsonType": "int",

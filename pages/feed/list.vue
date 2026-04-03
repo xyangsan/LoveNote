@@ -66,7 +66,39 @@
 					/>
 				</view>
 
-				<view class="post-card__footer">
+				<view v-if="locationText(post)" class="post-card__footer">
+					<text class="post-card__meta post-card__meta--location">{{ locationText(post) }}</text>
+				</view>
+
+				<view class="post-reaction">
+					<text
+						class="post-reaction__btn"
+						:class="{ 'post-reaction__btn--active': post.is_liked }"
+						@click.stop="toggleLike(post)"
+					>{{ post.is_liked ? '取消点赞' : '点赞' }} {{ Number(post.like_count || 0) }}</text>
+					<text class="post-reaction__btn" @click.stop="openCommentInput(post)">评论 {{ Number(post.comment_count || 0) }}</text>
+				</view>
+
+				<view v-if="Array.isArray(post.comment_list) && post.comment_list.length" class="comment-list">
+					<view v-for="comment in post.comment_list" :key="comment.comment_id" class="comment-item">
+						<fui-avatar
+							:src="comment.avatar_url"
+							error-src="/static/user-empty.png"
+							width="52"
+							height="52"
+							background="#fff1eb"
+						></fui-avatar>
+						<view class="comment-item__body">
+							<view class="comment-item__head">
+								<text class="comment-item__name">{{ comment.nickname || '用户' }}</text>
+								<text class="comment-item__time">{{ formatCommentTime(comment.create_time) }}</text>
+							</view>
+							<text
+								class="comment-item__content"
+								@click.stop="openCommentInput(post, comment)"
+							>{{ commentDisplayContent(comment) }}</text>
+						</view>
+					</view>
 				</view>
 			</view>
 		</view>
@@ -131,6 +163,132 @@ export default {
 		formatTime(value) {
 			return formatDateTime(value) || '刚刚'
 		},
+		formatCommentTime(value) {
+			return formatDateTime(value) || '刚刚'
+		},
+		commentDisplayContent(comment = {}) {
+			const content = String(comment.content || '').trim()
+			if (!content) {
+				return ''
+			}
+			const replyNickname = String(comment.reply_to_nickname || '').trim()
+			return replyNickname ? `回复${replyNickname}：${content}` : content
+		},
+		normalizePostItem(post = {}) {
+			return Object.assign({}, post, {
+				like_count: Number(post.like_count || 0),
+				comment_count: Number(post.comment_count || 0),
+				is_liked: Boolean(post.is_liked),
+				comment_list: Array.isArray(post.comment_list) ? post.comment_list : []
+			})
+		},
+		updatePostInList(postId = '', updater = null) {
+			if (!postId || typeof updater !== 'function') {
+				return
+			}
+			this.postList = this.postList.map((item) => {
+				if (String(item._id || '') !== postId) {
+					return item
+				}
+				return this.normalizePostItem(updater(Object.assign({}, item)) || item)
+			})
+		},
+		promptCommentInput({ replyNickname = '' } = {}) {
+			return new Promise((resolve) => {
+				uni.showModal({
+					title: replyNickname ? `回复 ${replyNickname}` : '发表评论',
+					editable: true,
+					placeholderText: replyNickname ? '输入回复内容' : '输入评论内容',
+					success: (res) => {
+						resolve({
+							confirm: Boolean(res.confirm),
+							content: String(res.content || '').trim()
+						})
+					},
+					fail: () => {
+						resolve({
+							confirm: false,
+							content: ''
+						})
+					}
+				})
+			})
+		},
+		locationText(post = {}) {
+			const location = post && post.location && typeof post.location === 'object' ? post.location : {}
+			const name = String(location.name || '').trim()
+			return name ? `📍 ${name}` : ''
+		},
+		async toggleLike(post = {}) {
+			const postId = String(post._id || '').trim()
+			if (!postId) {
+				return
+			}
+			try {
+				const result = await getDailyApi().toggleLike({
+					postId
+				})
+				if (result && result.errCode && result.errCode !== 0) {
+					throw new Error(result.errMsg || '操作失败')
+				}
+				const data = result.data || {}
+				this.updatePostInList(postId, (item) => Object.assign({}, item, {
+					like_count: Number(data.like_count || 0),
+					is_liked: Boolean(data.is_liked)
+				}))
+			} catch (error) {
+				uni.showToast({
+					title: error.message || '点赞操作失败',
+					icon: 'none'
+				})
+			}
+		},
+		async openCommentInput(post = {}, replyComment = null) {
+			const postId = String(post._id || '').trim()
+			if (!postId) {
+				return
+			}
+
+			const replyNickname = replyComment && replyComment.nickname
+				? String(replyComment.nickname).trim()
+				: ''
+			const modalRes = await this.promptCommentInput({
+				replyNickname
+			})
+			if (!modalRes.confirm || !modalRes.content) {
+				return
+			}
+
+			try {
+				const result = await getDailyApi().addComment({
+					postId,
+					content: modalRes.content,
+					replyToCommentId: replyComment && replyComment.comment_id
+						? String(replyComment.comment_id)
+						: ''
+				})
+				if (result && result.errCode && result.errCode !== 0) {
+					throw new Error(result.errMsg || '评论失败')
+				}
+				const data = result.data || {}
+				const newComment = data.comment && typeof data.comment === 'object' ? data.comment : null
+				this.updatePostInList(postId, (item) => {
+					const commentList = Array.isArray(item.comment_list) ? [...item.comment_list] : []
+					if (newComment) {
+						commentList.push(newComment)
+					}
+					return Object.assign({}, item, {
+						comment_list: commentList,
+						comment_count: Number(data.comment_count || commentList.length)
+					})
+				})
+			} catch (error) {
+				uni.showToast({
+					title: error.message || '评论失败',
+					icon: 'none'
+				})
+			}
+		},
 		isVideoPost(post = {}) {
 			return String(post.media_type || '').toLowerCase() === 'video'
 				&& Array.isArray(post.media_list)
@@ -186,7 +344,7 @@ export default {
 				}
 
 				const data = result.data || {}
-				const list = Array.isArray(data.list) ? data.list : []
+				const list = Array.isArray(data.list) ? data.list.map((item) => this.normalizePostItem(item)) : []
 				const pageInfo = data.pagination || {}
 
 				this.noCouple = false
@@ -473,6 +631,78 @@ export default {
 .post-card__meta {
 	font-size: 22rpx;
 	color: #9b786d;
+}
+
+.post-card__meta--location {
+	display: block;
+	max-width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.post-reaction {
+	display: flex;
+	align-items: center;
+	gap: 22rpx;
+	margin-top: 14rpx;
+}
+
+.post-reaction__btn {
+	font-size: 23rpx;
+	color: #9b786d;
+}
+
+.post-reaction__btn--active {
+	color: #e76f51;
+}
+
+.comment-list {
+	margin-top: 14rpx;
+	padding-top: 12rpx;
+	border-top: 1rpx solid rgba(231, 204, 194, 0.6);
+}
+
+.comment-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12rpx;
+}
+
+.comment-item + .comment-item {
+	margin-top: 14rpx;
+}
+
+.comment-item__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.comment-item__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12rpx;
+}
+
+.comment-item__name {
+	font-size: 22rpx;
+	color: #6d473a;
+	font-weight: 600;
+}
+
+.comment-item__time {
+	font-size: 20rpx;
+	color: #ab8578;
+}
+
+.comment-item__content {
+	display: block;
+	margin-top: 6rpx;
+	font-size: 23rpx;
+	line-height: 1.65;
+	color: #7b574b;
+	word-break: break-all;
 }
 
 .load-more {

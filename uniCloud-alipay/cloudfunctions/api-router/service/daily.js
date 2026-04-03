@@ -20,6 +20,10 @@ const MAX_CONTENT_LENGTH = 2000
 const MAX_IMAGE_COUNT = 9
 const MAX_VIDEO_COUNT = 1
 const MAX_MEDIA_COUNT = 9
+const MAX_LOCATION_NAME_LENGTH = 80
+const MAX_LOCATION_ADDRESS_LENGTH = 200
+const MAX_COMMENT_LENGTH = 500
+const MAX_COMMENT_COUNT = 300
 
 function parseMediaTypeInput(value = '') {
 	const mediaType = String(value || '').trim().toLowerCase()
@@ -28,6 +32,96 @@ function parseMediaTypeInput(value = '') {
 
 function normalizeMimeTypeInput(value = '') {
 	return String(value || '').trim().toLowerCase()
+}
+
+function normalizeCommentText(value = '', maxLength = MAX_COMMENT_LENGTH) {
+	const text = String(value || '').trim()
+	if (!text) {
+		return ''
+	}
+	return text.length > maxLength ? text.slice(0, maxLength) : text
+}
+
+function createRecordId(prefix = 'id') {
+	return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function normalizeUidList(uidList = []) {
+	if (!Array.isArray(uidList)) {
+		return []
+	}
+	return Array.from(
+		new Set(
+			uidList
+				.map((item) => String(item || '').trim())
+				.filter(Boolean)
+		)
+	)
+}
+
+function normalizeLocationText(value = '', maxLength = 80) {
+	const text = String(value || '').trim()
+	if (!text) {
+		return ''
+	}
+	return text.length > maxLength ? text.slice(0, maxLength) : text
+}
+
+function hasInputValue(value) {
+	if (value === undefined || value === null) {
+		return false
+	}
+	if (typeof value === 'number') {
+		return !Number.isNaN(value)
+	}
+	return String(value).trim() !== ''
+}
+
+function parseCoordinate(value, min, max) {
+	const num = Number(value)
+	if (Number.isNaN(num) || num < min || num > max) {
+		return null
+	}
+	return num
+}
+
+function normalizeLocationInput(params = {}) {
+	const rawLocation = params.location && typeof params.location === 'object' ? params.location : {}
+	const name = normalizeLocationText(
+		rawLocation.name !== undefined ? rawLocation.name : (params.locationName !== undefined ? params.locationName : params.location_name),
+		MAX_LOCATION_NAME_LENGTH
+	)
+	const address = normalizeLocationText(
+		rawLocation.address !== undefined ? rawLocation.address : (params.locationAddress !== undefined ? params.locationAddress : params.location_address),
+		MAX_LOCATION_ADDRESS_LENGTH
+	)
+
+	const rawLatitude = rawLocation.latitude !== undefined ? rawLocation.latitude : params.latitude
+	const rawLongitude = rawLocation.longitude !== undefined ? rawLocation.longitude : params.longitude
+	const hasLatitudeInput = hasInputValue(rawLatitude)
+	const hasLongitudeInput = hasInputValue(rawLongitude)
+	const latitude = hasLatitudeInput ? parseCoordinate(rawLatitude, -90, 90) : null
+	const longitude = hasLongitudeInput ? parseCoordinate(rawLongitude, -180, 180) : null
+
+	if (hasLatitudeInput || hasLongitudeInput) {
+		if (latitude === null || longitude === null) {
+			throw {
+				errCode: 'love-note-location-invalid',
+				errMsg: '位置信息格式不正确，请重新选择位置'
+			}
+		}
+	}
+
+	if (!name && !address && latitude === null && longitude === null) {
+		return null
+	}
+
+	return {
+		name,
+		address,
+		latitude,
+		longitude
+	}
 }
 
 function buildMimeType(mediaType = '') {
@@ -106,8 +200,54 @@ function collectCloudFileIdsFromPosts(postList = []) {
 		if (authorAvatarFileId && isCloudFileId(authorAvatarFileId)) {
 			fileIds.push(authorAvatarFileId)
 		}
+
+		const commentList = Array.isArray(post.comment_list) ? post.comment_list : []
+		commentList.forEach((comment) => {
+			const avatarFileId = String(comment && comment.avatar_file_id || '').trim()
+			const avatarUrl = String(comment && comment.avatar_url || '').trim()
+			if (avatarFileId && isCloudFileId(avatarFileId)) {
+				fileIds.push(avatarFileId)
+			}
+			if (avatarUrl && isCloudFileId(avatarUrl)) {
+				fileIds.push(avatarUrl)
+			}
+		})
 	})
 	return fileIds
+}
+
+function normalizeCommentRecord(comment = {}, fileUrlMap = {}) {
+	const avatarFileId = String(comment.avatar_file_id || '').trim()
+	const rawAvatarUrl = String(comment.avatar_url || '').trim()
+	let avatarUrl = ensureHttpsUrl(rawAvatarUrl)
+	if (!avatarUrl && avatarFileId && fileUrlMap[avatarFileId]) {
+		avatarUrl = fileUrlMap[avatarFileId]
+	}
+	if (!avatarUrl && rawAvatarUrl && isCloudFileId(rawAvatarUrl)) {
+		avatarUrl = fileUrlMap[rawAvatarUrl] || ''
+	}
+
+	return {
+		comment_id: String(comment.comment_id || '').trim(),
+		uid: String(comment.uid || '').trim(),
+		nickname: String(comment.nickname || '').trim() || DEFAULT_NICKNAME,
+		avatar_url: avatarUrl,
+		avatar_file_id: avatarFileId,
+		content: normalizeCommentText(comment.content || ''),
+		create_time: Number(comment.create_time || 0),
+		reply_to_comment_id: String(comment.reply_to_comment_id || '').trim(),
+		reply_to_uid: String(comment.reply_to_uid || '').trim(),
+		reply_to_nickname: String(comment.reply_to_nickname || '').trim()
+	}
+}
+
+function normalizeCommentList(commentList = [], fileUrlMap = {}) {
+	if (!Array.isArray(commentList)) {
+		return []
+	}
+	return commentList
+		.map((item) => normalizeCommentRecord(item, fileUrlMap))
+		.filter((item) => item.comment_id && item.content)
 }
 
 function normalizeMediaItem(item = {}, fileUrlMap = {}) {
@@ -164,6 +304,13 @@ function normalizePostRecord(post = {}, fileUrlMap = {}, uid = '') {
 	}
 
 	const mediaList = Array.isArray(post.media_list) ? post.media_list : []
+	const likeUidList = normalizeUidList(post.like_uid_list)
+	const commentList = normalizeCommentList(post.comment_list, fileUrlMap)
+	const rawLocation = post.location && typeof post.location === 'object' ? post.location : {}
+	const locationName = normalizeLocationText(rawLocation.name || '', MAX_LOCATION_NAME_LENGTH)
+	const locationAddress = normalizeLocationText(rawLocation.address || '', MAX_LOCATION_ADDRESS_LENGTH)
+	const latitude = parseCoordinate(rawLocation.latitude, -90, 90)
+	const longitude = parseCoordinate(rawLocation.longitude, -180, 180)
 
 	return Object.assign({}, post, {
 		author_snapshot: {
@@ -172,6 +319,16 @@ function normalizePostRecord(post = {}, fileUrlMap = {}, uid = '') {
 			avatar_file_id: avatarFileId
 		},
 		media_list: mediaList.map((item) => normalizeMediaItem(item, fileUrlMap)),
+		like_count: Number(post.like_count || likeUidList.length || 0),
+		comment_count: Number(post.comment_count || commentList.length || 0),
+		comment_list: commentList,
+		location: {
+			name: locationName,
+			address: locationAddress,
+			latitude,
+			longitude
+		},
+		is_liked: uid ? likeUidList.includes(String(uid)) : false,
 		is_self: uid && String(post.author_uid || '') === uid
 	})
 }
@@ -188,6 +345,23 @@ async function buildAuthorSnapshot(uid = '') {
 		avatar_url: ensureHttpsUrl(avatar.avatarUrl || ''),
 		avatar_file_id: String(avatar.avatarFileId || '').trim()
 	}
+}
+
+async function getPostRecord(postId = '', coupleId = '') {
+	if (!postId || !coupleId) {
+		return null
+	}
+	const postRes = await dailyPostCollection
+		.where({
+			_id: postId,
+			couple_id: coupleId,
+			is_deleted: false
+		})
+		.limit(1)
+		.get()
+	return postRes && Array.isArray(postRes.data) && postRes.data[0]
+		? postRes.data[0]
+		: null
 }
 
 module.exports = class DailyService extends Service {
@@ -365,6 +539,12 @@ module.exports = class DailyService extends Service {
 			const now = Date.now()
 			const authorSnapshot = await buildAuthorSnapshot(uid)
 			const postMediaType = videoCount > 0 ? 'video' : (imageCount > 0 ? 'image' : 'text')
+			const location = normalizeLocationInput(params) || {
+				name: '',
+				address: '',
+				latitude: null,
+				longitude: null
+			}
 			const postData = {
 				couple_id: activeCouple._id,
 				author_uid: uid,
@@ -373,7 +553,10 @@ module.exports = class DailyService extends Service {
 				media_type: postMediaType,
 				media_count: mediaList.length,
 				media_list: mediaList,
+				location,
+				like_uid_list: [],
 				like_count: 0,
+				comment_list: [],
 				comment_count: 0,
 				is_deleted: false,
 				create_time: now,
@@ -389,6 +572,175 @@ module.exports = class DailyService extends Service {
 			}
 		} catch (error) {
 			return formatError(error, '发布双人日常失败')
+		}
+	}
+
+	async toggleLike(params = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = String(authState.authResult.uid || '').trim()
+			const activeCouple = await getActiveCoupleByUid(uid)
+			if (!activeCouple) {
+				return {
+					errCode: 'love-note-no-couple',
+					errMsg: '请先绑定情侣关系'
+				}
+			}
+
+			const postId = String(params.postId || '').trim()
+			if (!postId) {
+				return {
+					errCode: 'love-note-param-required',
+					errMsg: '动态ID不能为空'
+				}
+			}
+
+			const post = await getPostRecord(postId, activeCouple._id)
+			if (!post) {
+				return {
+					errCode: 'love-note-post-not-found',
+					errMsg: '动态不存在或无权访问'
+				}
+			}
+
+			const action = String(params.action || '').trim().toLowerCase()
+			let likeUidList = normalizeUidList(post.like_uid_list)
+			const likedBefore = likeUidList.includes(uid)
+
+			if (action === 'like') {
+				if (!likedBefore) {
+					likeUidList.push(uid)
+				}
+			} else if (action === 'unlike') {
+				likeUidList = likeUidList.filter((item) => item !== uid)
+			} else if (likedBefore) {
+				likeUidList = likeUidList.filter((item) => item !== uid)
+			} else {
+				likeUidList.push(uid)
+			}
+
+			likeUidList = normalizeUidList(likeUidList)
+			const now = Date.now()
+			const likeCount = likeUidList.length
+			const isLiked = likeUidList.includes(uid)
+
+			await dailyPostCollection.doc(postId).update({
+				like_uid_list: likeUidList,
+				like_count: likeCount,
+				update_time: now
+			})
+
+			return {
+				errCode: 0,
+				data: {
+					postId,
+					like_count: likeCount,
+					is_liked: isLiked
+				}
+			}
+		} catch (error) {
+			return formatError(error, '更新点赞状态失败')
+		}
+	}
+
+	async addComment(params = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = String(authState.authResult.uid || '').trim()
+			const activeCouple = await getActiveCoupleByUid(uid)
+			if (!activeCouple) {
+				return {
+					errCode: 'love-note-no-couple',
+					errMsg: '请先绑定情侣关系'
+				}
+			}
+
+			const postId = String(params.postId || '').trim()
+			if (!postId) {
+				return {
+					errCode: 'love-note-param-required',
+					errMsg: '动态ID不能为空'
+				}
+			}
+
+			const content = normalizeCommentText(params.content || '')
+			if (!content) {
+				return {
+					errCode: 'love-note-param-required',
+					errMsg: '评论内容不能为空'
+				}
+			}
+			if (String(params.content || '').trim().length > MAX_COMMENT_LENGTH) {
+				return {
+					errCode: 'love-note-param-invalid',
+					errMsg: `评论内容不能超过 ${MAX_COMMENT_LENGTH} 个字符`
+				}
+			}
+
+			const post = await getPostRecord(postId, activeCouple._id)
+			if (!post) {
+				return {
+					errCode: 'love-note-post-not-found',
+					errMsg: '动态不存在或无权访问'
+				}
+			}
+
+			const commentList = normalizeCommentList(post.comment_list || [])
+			if (commentList.length >= MAX_COMMENT_COUNT) {
+				return {
+					errCode: 'love-note-comment-limit',
+					errMsg: `单条动态最多支持 ${MAX_COMMENT_COUNT} 条评论`
+				}
+			}
+
+			const replyToCommentId = String(params.replyToCommentId || params.reply_to_comment_id || '').trim()
+			let replyToUid = ''
+			let replyToNickname = ''
+			if (replyToCommentId) {
+				const target = commentList.find((item) => item.comment_id === replyToCommentId)
+				if (!target) {
+					return {
+						errCode: 'love-note-comment-reply-target-not-found',
+						errMsg: '回复目标不存在，请刷新后重试'
+					}
+				}
+				replyToUid = String(target.uid || '').trim()
+				replyToNickname = String(target.nickname || '').trim() || DEFAULT_NICKNAME
+			}
+
+			const authorSnapshot = await buildAuthorSnapshot(uid)
+			const now = Date.now()
+			const commentRecord = {
+				comment_id: createRecordId('comment'),
+				uid,
+				nickname: String(authorSnapshot.nickname || '').trim() || DEFAULT_NICKNAME,
+				avatar_url: String(authorSnapshot.avatar_url || '').trim(),
+				avatar_file_id: String(authorSnapshot.avatar_file_id || '').trim(),
+				content,
+				create_time: now,
+				reply_to_comment_id: replyToCommentId,
+				reply_to_uid: replyToUid,
+				reply_to_nickname: replyToNickname
+			}
+
+			commentList.push(commentRecord)
+			const nextCommentCount = commentList.length
+			await dailyPostCollection.doc(postId).update({
+				comment_list: commentList,
+				comment_count: nextCommentCount,
+				update_time: now
+			})
+
+			return {
+				errCode: 0,
+				data: {
+					postId,
+					comment_count: nextCommentCount,
+					comment: normalizeCommentRecord(commentRecord)
+				}
+			}
+		} catch (error) {
+			return formatError(error, '发表评论失败')
 		}
 	}
 

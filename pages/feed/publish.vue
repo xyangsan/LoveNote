@@ -19,14 +19,14 @@
 					:class="{ 'type-switch__item--active': publishType === 'image' }"
 					@click="changePublishType('image')"
 				>
-					<text class="type-switch__text">图文动态</text>
+					<text class="type-switch__text">图片</text>
 				</view>
 				<view
 					class="type-switch__item"
 					:class="{ 'type-switch__item--active': publishType === 'video' }"
 					@click="changePublishType('video')"
 				>
-					<text class="type-switch__text">视频动态</text>
+					<text class="type-switch__text">视频</text>
 				</view>
 			</view>
 
@@ -80,6 +80,24 @@
 			</love-media-uploader>
 		</view>
 
+		<view class="card">
+			<view class="location-row" @click="handleChooseLocation">
+				<view class="location-row__main">
+					<text class="location-row__label">当前位置</text>
+					<text class="location-row__value">{{ locationDisplayText }}</text>
+				</view>
+				<text class="location-row__action">{{ hasSelectedLocation ? '重新选择' : '选择位置' }}</text>
+			</view>
+			<view v-if="hasSelectedLocation" class="location-extra">
+				<text v-if="locationAddressText" class="location-extra__line">{{ locationAddressText }}</text>
+				<text
+					v-if="locationCoordinateText"
+					class="location-extra__line"
+				>经纬度 {{ locationCoordinateText }}</text>
+				<text class="location-extra__clear" @click="clearLocation">清除位置</text>
+			</view>
+		</view>
+
 		<view class="footer">
 			<button class="submit-btn" :loading="submitting" :disabled="submitting" @click="handleSubmit">
 				{{ submitting ? `发布中 ${uploadProgress}/${selectedCount || 0}` : '发布动态' }}
@@ -90,8 +108,10 @@
 
 <script>
 import { getDailyApi } from '../../common/api/daily.js'
+import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
+const THUMBNAIL_IMAGE_QUALITY = 45
 
 export default {
 	data() {
@@ -102,7 +122,13 @@ export default {
 			maxFileSize: MAX_FILE_SIZE,
 			selectedCount: 0,
 			uploadProgress: 0,
-			submitting: false
+			submitting: false,
+			locationInfo: {
+				name: '',
+				address: '',
+				latitude: null,
+				longitude: null
+			}
 		}
 	},
 	computed: {
@@ -117,13 +143,174 @@ export default {
 		},
 		uploaderTipText() {
 			return this.publishType === 'video'
-				? '视频动态：单次最多 1 个视频'
-				: '图文动态：单次最多 9 张图片'
+				? '单次最多 1 个视频'
+				: '单次最多 9 张图片'
+		},
+		hasSelectedLocation() {
+			return Boolean(
+				this.locationInfo &&
+				(this.locationInfo.name || this.locationInfo.address || (
+					this.locationInfo.latitude !== null && this.locationInfo.longitude !== null
+				))
+			)
+		},
+		locationDisplayText() {
+			if (!this.hasSelectedLocation) {
+				return '未选择位置'
+			}
+			return this.locationInfo.name || this.locationInfo.address || '已选择坐标位置'
+		},
+		locationAddressText() {
+			return this.locationInfo.address || ''
+		},
+		locationCoordinateText() {
+			if (this.locationInfo.latitude === null || this.locationInfo.longitude === null) {
+				return ''
+			}
+			return `${this.formatCoordinate(this.locationInfo.longitude)}, ${this.formatCoordinate(this.locationInfo.latitude)}`
 		}
 	},
 	methods: {
 		appendEmoji(emoji = '') {
 			this.content = `${this.content || ''}${emoji}`
+		},
+		formatCoordinate(value) {
+			const num = Number(value)
+			if (Number.isNaN(num)) {
+				return '--'
+			}
+			return num.toFixed(6)
+		},
+		clearLocation() {
+			this.locationInfo = {
+				name: '',
+				address: '',
+				latitude: null,
+				longitude: null
+			}
+		},
+		async handleChooseLocation() {
+			if (this.submitting) {
+				return
+			}
+
+			try {
+				const selected = await new Promise((resolve, reject) => {
+					uni.chooseLocation({
+						success: (res) => resolve(res || {}),
+						fail: (error) => reject(error)
+					})
+				})
+
+				this.locationInfo = {
+					name: String(selected.name || '').trim(),
+					address: String(selected.address || '').trim(),
+					latitude: Number.isNaN(Number(selected.latitude)) ? null : Number(selected.latitude),
+					longitude: Number.isNaN(Number(selected.longitude)) ? null : Number(selected.longitude)
+				}
+			} catch (error) {
+				const message = String(error && (error.errMsg || error.message) || '')
+				if (message.includes('cancel')) {
+					return
+				}
+				uni.showToast({
+					title: '位置选择失败，请重试',
+					icon: 'none'
+				})
+			}
+		},
+		buildLocationPayload() {
+			if (!this.hasSelectedLocation) {
+				return null
+			}
+			return {
+				name: String(this.locationInfo.name || '').trim(),
+				address: String(this.locationInfo.address || '').trim(),
+				latitude: this.locationInfo.latitude === null ? null : Number(this.locationInfo.latitude),
+				longitude: this.locationInfo.longitude === null ? null : Number(this.locationInfo.longitude)
+			}
+		},
+		compressImageForThumbnail(filePath = '') {
+			return new Promise((resolve) => {
+				const sourcePath = String(filePath || '').trim()
+				if (!sourcePath || typeof uni.compressImage !== 'function') {
+					resolve(sourcePath)
+					return
+				}
+				uni.compressImage({
+					src: sourcePath,
+					quality: THUMBNAIL_IMAGE_QUALITY,
+					success: (res) => {
+						const nextPath = String(res && (res.tempFilePath || res.filePath) || '').trim()
+						resolve(nextPath || sourcePath)
+					},
+					fail: () => {
+						resolve(sourcePath)
+					}
+				})
+			})
+		},
+		async uploadThumbnailFile({
+			localPath = '',
+			module = '',
+			prefix = ''
+		} = {}) {
+			const sourcePath = String(localPath || '').trim()
+			if (!sourcePath) {
+				return ''
+			}
+			const result = await uploadFileWithModule({
+				filePath: sourcePath,
+				module,
+				prefix,
+				fileType: 'image'
+			})
+			return String(result.fileURL || '').trim()
+		},
+		async buildMediaPayload(file = {}) {
+			const mediaType = String(file.mediaType || '').trim().toLowerCase()
+			const sourceUrl = String(file.url || '').trim()
+			let thumbnailUrl = ''
+
+			if (mediaType === 'image') {
+				try {
+					const thumbnailSourcePath = await this.compressImageForThumbnail(String(file.path || '').trim())
+					thumbnailUrl = await this.uploadThumbnailFile({
+						localPath: thumbnailSourcePath,
+						module: 'daily/thumbnails/images',
+						prefix: 'thumb'
+					})
+				} catch (error) {
+					console.warn('build image thumbnail failed', error)
+				}
+				if (!thumbnailUrl) {
+					thumbnailUrl = sourceUrl
+				}
+			}
+
+			if (mediaType === 'video') {
+				try {
+					thumbnailUrl = await this.uploadThumbnailFile({
+						localPath: String(file.poster || '').trim(),
+						module: 'daily/thumbnails/videos',
+						prefix: 'poster'
+					})
+				} catch (error) {
+					console.warn('build video thumbnail failed', error)
+				}
+			}
+
+			return {
+				url: sourceUrl,
+				fileId: file.fileId,
+				thumbnailUrl,
+				mediaType: file.mediaType,
+				mimeType: file.mimeType || '',
+				fileSize: Number(file.fileSize || 0),
+				duration: Number(file.duration || 0),
+				width: Number(file.width || 0),
+				height: Number(file.height || 0)
+			}
 		},
 		onUploaderChange(files = []) {
 			this.selectedCount = Array.isArray(files) ? files.length : 0
@@ -204,21 +391,13 @@ export default {
 					}
 				}
 
-				const mediaList = uploadedFiles.map((file) => ({
-					url: file.url,
-					fileId: file.fileId,
-					thumbnailUrl: file.mediaType === 'image' ? file.url : (file.poster || ''),
-					mediaType: file.mediaType,
-					mimeType: file.mimeType || '',
-					fileSize: Number(file.fileSize || 0),
-					duration: Number(file.duration || 0),
-					width: Number(file.width || 0),
-					height: Number(file.height || 0)
-				}))
+				const mediaList = await Promise.all(uploadedFiles.map((file) => this.buildMediaPayload(file)))
 
+				const location = this.buildLocationPayload()
 				const result = await getDailyApi().create({
 					content,
-					mediaList
+					mediaList,
+					location
 				})
 				if (result && result.errCode && result.errCode !== 0) {
 					throw new Error(result.errMsg || '发布失败')
@@ -235,6 +414,7 @@ export default {
 				this.content = ''
 				this.selectedCount = 0
 				this.uploadProgress = 0
+				this.clearLocation()
 
 				setTimeout(() => {
 					uni.navigateBack()
@@ -407,6 +587,64 @@ export default {
 	font-size: 52rpx;
 	line-height: 1;
 	color: #e76f51;
+}
+
+.location-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20rpx;
+}
+
+.location-row__main {
+	flex: 1;
+	min-width: 0;
+}
+
+.location-row__label {
+	display: block;
+	font-size: 24rpx;
+	color: #7d5c52;
+}
+
+.location-row__value {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 28rpx;
+	font-weight: 600;
+	color: #5a3427;
+	word-break: break-all;
+}
+
+.location-row__action {
+	flex-shrink: 0;
+	font-size: 24rpx;
+	color: #c46e56;
+}
+
+.location-extra {
+	margin-top: 16rpx;
+	padding-top: 14rpx;
+	border-top: 1rpx solid rgba(231, 204, 194, 0.6);
+}
+
+.location-extra__line {
+	display: block;
+	font-size: 22rpx;
+	line-height: 1.6;
+	color: #8d695f;
+	word-break: break-all;
+}
+
+.location-extra__line + .location-extra__line {
+	margin-top: 6rpx;
+}
+
+.location-extra__clear {
+	display: inline-block;
+	margin-top: 10rpx;
+	font-size: 22rpx;
+	color: #c46e56;
 }
 
 .footer {

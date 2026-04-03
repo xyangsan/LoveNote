@@ -159,12 +159,10 @@
 								<text class="moment-card__time">{{ post.time }}</text>
 							</view>
 						</view>
-						<view class="moment-card__tag">{{ post.mood }}</view>
 					</view>
 					<text class="moment-card__content">{{ post.content }}</text>
-					<view class="moment-card__footer">
-						<text class="moment-card__meta">{{ post.location }}</text>
-						<text class="moment-card__meta">{{ post.stats }}</text>
+					<view v-if="post.location" class="moment-card__footer">
+						<text v-if="post.location" class="moment-card__meta moment-card__meta--location">{{ post.location }}</text>
 					</view>
 				</view>
 			</view>
@@ -272,23 +270,10 @@
 		return text ? text.slice(0, 1) : '爱'
 	}
 
-	function getMomentMoodText(mediaType = '') {
-		const type = String(mediaType || '').trim().toLowerCase()
-		if (type === 'video') {
-			return '视频动态'
-		}
-		if (type === 'image') {
-			return '图文动态'
-		}
-		return '文字动态'
-	}
-
-	function getMomentStatsText(post = {}) {
-		const mediaCount = Number(post.media_count || (Array.isArray(post.media_list) ? post.media_list.length : 0))
-		if (!mediaCount || Number.isNaN(mediaCount)) {
-			return '纯文字记录'
-		}
-		return `包含 ${mediaCount} 个媒体`
+	function getMomentLocationText(post = {}) {
+		const location = post && post.location && typeof post.location === 'object' ? post.location : {}
+		const name = String(location.name || '').trim()
+		return name
 	}
 
 	function trimContentText(content = '', maxLength = 64) {
@@ -356,10 +341,8 @@
 				author: authorName,
 				authorShort: getAuthorShortName(authorName),
 				time: formatDateTimeWithTime(item.create_time),
-				mood: getMomentMoodText(item.media_type),
 				content: trimContentText(item.content || fallbackText, 72),
-				location: item.is_self ? '你发布' : 'TA 发布',
-				stats: getMomentStatsText(item),
+				location: getMomentLocationText(item),
 				avatarGradient: buildAvatarGradient(item.author_uid || authorName)
 			}
 		})
@@ -1576,6 +1559,13 @@
 	.moment-card__meta {
 		font-size: 22rpx;
 		color: #a07d71;
+	}
+
+	.moment-card__meta--location {
+		max-width: 100%;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
 	.plan-card {
