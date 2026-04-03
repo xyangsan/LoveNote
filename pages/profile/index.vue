@@ -111,13 +111,10 @@
 		clearUniIdTokenStorage,
 		emitAuthChanged,
 		getCurrentUniIdUser,
-		saveCachedUserProfile,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getAuthApi } from '../../common/api/auth.js'
-	import { getAlbumApi } from '../../common/api/album.js'
-	import { getAnniversaryApi } from '../../common/api/anniversary.js'
-	import { getUserApi } from '../../common/api/user.js'
+	import { useAppStateStore } from '../../store/app-state.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const PROFILE_DEFAULT_AVATAR = '/static/user-empty.png'
@@ -146,11 +143,15 @@
 	export default {
 		data() {
 			return {
+				appStateStore: null,
 				userInfo: null,
 				removeAuthListener: null,
 				featureStats: {
 					anniversaryTotal: null,
-					albumTotal: null
+					albumTotal: null,
+					dailyTotal: null,
+					wishTotal: null,
+					planTotal: null
 				}
 			}
 		},
@@ -184,6 +185,28 @@
 				return this.userInfo ? formatDate(this.userInfo.registerDate) : '暂未设置'
 			},
 			currentCouple() {
+				const appStateStore = this.appStateStore || null
+				const centerData = appStateStore && appStateStore.coupleCenterData ? appStateStore.coupleCenterData : null
+				const activeCouple = centerData && centerData.activeCouple ? centerData.activeCouple : null
+				const incomingRequests = centerData && Array.isArray(centerData.incomingRequests) ? centerData.incomingRequests : []
+				const outgoingRequests = centerData && Array.isArray(centerData.outgoingRequests) ? centerData.outgoingRequests : []
+
+				if (activeCouple || incomingRequests.length || outgoingRequests.length) {
+					return {
+						isBound: Boolean(activeCouple),
+						statusText: activeCouple
+							? '已绑定'
+							: (incomingRequests.length ? '待处理' : (outgoingRequests.length ? '等待回应' : '未绑定')),
+						partnerNickname: activeCouple
+							? (activeCouple.partnerNickname || '')
+							: ((incomingRequests[0] && incomingRequests[0].partnerNicknameMasked) ||
+								(outgoingRequests[0] && outgoingRequests[0].partnerNicknameMasked) ||
+								''),
+						pendingIncomingCount: incomingRequests.length,
+						pendingOutgoingCount: outgoingRequests.length
+					}
+				}
+
 				return this.userInfo && this.userInfo.coupleInfo ? this.userInfo.coupleInfo : null
 			},
 			profileMetaText() {
@@ -290,7 +313,13 @@
 				if (!this.hasBoundCouple) {
 					return '未绑定'
 				}
-				return '开发中'
+
+				const wishTotal = this.featureStats.wishTotal
+				const planTotal = this.featureStats.planTotal
+				if (wishTotal === null || wishTotal === undefined || planTotal === null || planTotal === undefined) {
+					return '去查看'
+				}
+				return `愿望${Number(wishTotal || 0)} / 计划${Number(planTotal || 0)}`
 			},
 			coreCards() {
 				return [
@@ -320,8 +349,8 @@
 					},
 					{
 						key: 'plan',
-						title: '计划',
-						desc: '同步愿望清单和约会安排',
+						title: '愿望清单',
+						desc: '同步愿望与计划，查看双方进度',
 						value: this.planCardValue,
 						iconText: '计',
 						iconBg: 'linear-gradient(135deg, #d7f5c6 0%, #98d8aa 100%)'
@@ -362,6 +391,8 @@
 			}
 		},
 		onLoad() {
+			this.ensureAppStateStore()
+			this.syncFromAppState()
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
 			})
@@ -376,94 +407,83 @@
 			}
 		},
 		methods: {
+			ensureAppStateStore() {
+				if (!this.appStateStore) {
+					this.appStateStore = useAppStateStore()
+				}
+				return this.appStateStore
+			},
+			syncFromAppState() {
+				const appStateStore = this.ensureAppStateStore()
+				this.userInfo = appStateStore.userInfo || null
+				this.featureStats = appStateStore.profileFeatureStats || {
+					anniversaryTotal: null,
+					albumTotal: null,
+					dailyTotal: null,
+					wishTotal: null,
+					planTotal: null
+				}
+			},
 			resetFeatureStats() {
 				this.featureStats = {
 					anniversaryTotal: null,
-					albumTotal: null
+					albumTotal: null,
+					dailyTotal: null,
+					wishTotal: null,
+					planTotal: null
 				}
-			},
-			resolveListTotal(result = {}) {
-				if (!result) {
-					return null
-				}
-				if (result.errCode && result.errCode !== 0) {
-					if (result.errCode === 'love-note-no-couple') {
-						return 0
-					}
-					return null
-				}
-
-				const data = result.data || {}
-				if (data.pagination && data.pagination.total !== undefined) {
-					return Number(data.pagination.total || 0)
-				}
-
-				const list = Array.isArray(data.list) ? data.list : []
-				return list.length
 			},
 			async refreshFeatureStats() {
-				if (!this.isLoggedIn || !this.hasBoundCouple) {
-					this.resetFeatureStats()
-					return
-				}
-
+				const appStateStore = this.ensureAppStateStore()
 				try {
-					const [anniversaryRes, albumRes] = await Promise.all([
-						getAnniversaryApi().getList({
-							page: 1,
-							pageSize: 1
-						}),
-						getAlbumApi().getList({
-							page: 1,
-							pageSize: 1
-						})
-					])
-
-					const anniversaryTotal = this.resolveListTotal(anniversaryRes)
-					const albumTotal = this.resolveListTotal(albumRes)
-					this.featureStats = {
-						anniversaryTotal,
-						albumTotal
-					}
+					await appStateStore.fetchOverviewStats({
+						force: false
+					})
+					this.syncFromAppState()
 				} catch (error) {
 					console.warn('profile refreshFeatureStats failed', error)
-					this.resetFeatureStats()
+					this.syncFromAppState()
 				}
 			},
 			async restoreLoginState() {
+				const appStateStore = this.ensureAppStateStore()
 				const currentUserInfo = getCurrentUniIdUser()
 				if (!currentUserInfo || !currentUserInfo.uid) {
-					this.userInfo = null
-					this.resetFeatureStats()
+					appStateStore.clearAllState()
+					this.syncFromAppState()
 					return
 				}
 
 				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
 					clearUniIdTokenStorage()
-					this.userInfo = null
-					this.resetFeatureStats()
+					appStateStore.clearAllState()
+					this.syncFromAppState()
 					return
 				}
 
-				await this.fetchCurrentUser({
-					silent: true
-				})
-				await this.refreshFeatureStats()
-			},
-			async fetchCurrentUser({ silent = false } = {}) {
 				try {
-					const result = await getUserApi().getMine()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取用户信息失败')
-					}
-
-					this.userInfo = result.userInfo || null
-					saveCachedUserProfile(this.userInfo)
+					await Promise.all([
+						this.fetchCurrentUser({
+							silent: true,
+							force: false
+						}),
+						this.refreshFeatureStats()
+					])
+				} catch (error) {
+					console.warn('profile restoreLoginState failed', error)
+					this.syncFromAppState()
+				}
+			},
+			async fetchCurrentUser({ silent = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.fetchUserInfo({
+						force
+					})
+					this.syncFromAppState()
 				} catch (error) {
 					console.warn('profile fetchCurrentUser failed', error)
-					clearUniIdTokenStorage()
-					this.userInfo = null
-					this.resetFeatureStats()
+					this.syncFromAppState()
 
 					if (!silent) {
 						uni.showToast({
@@ -518,9 +538,8 @@
 						})
 						break
 					case 'plan':
-						uni.showToast({
-							title: '计划功能开发中',
-							icon: 'none'
+						uni.navigateTo({
+							url: '/pages/plan/list'
 						})
 						break
 					case 'feedback':
@@ -575,8 +594,8 @@
 					console.warn('profile handleLogout failed', error)
 				} finally {
 					clearUniIdTokenStorage()
-					this.userInfo = null
-					this.resetFeatureStats()
+					this.ensureAppStateStore().clearAllState()
+					this.syncFromAppState()
 					emitAuthChanged({
 						action: 'logout'
 					})

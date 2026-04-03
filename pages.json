@@ -81,6 +81,14 @@
 			}
 		},
 		{
+			"path": "pages/plan/list",
+			"style": {
+				"navigationBarTitleText": "愿望清单",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
 			"path": "pages/anniversary/list",
 			"style": {
 				"navigationBarTitleText": "纪念日",

@@ -377,6 +377,7 @@
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getCoupleApi } from '../../common/api/couple.js'
+	import { useAppStateStore } from '../../store/app-state.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
 
 	const TAB_KEYS = ['incoming', 'outgoing', 'history']
@@ -413,6 +414,7 @@
 		data() {
 			return {
 				DEFAULT_AVATAR,
+				appStateStore: null,
 				actionLoading: '',
 				activeTabIndex: 0,
 				removeAuthListener: null,
@@ -647,6 +649,8 @@
 			}
 		},
 		onLoad() {
+			this.ensureAppStateStore()
+			this.syncCenterDataFromStore()
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
 			})
@@ -657,7 +661,8 @@
 		onPullDownRefresh() {
 			this.fetchCoupleCenter({
 				silent: true,
-				stopPullDownRefresh: true
+				stopPullDownRefresh: true,
+				force: true
 			})
 		},
 		onUnload() {
@@ -668,6 +673,17 @@
 		},
 		methods: {
 			formatDateTime,
+			ensureAppStateStore() {
+				if (!this.appStateStore) {
+					this.appStateStore = useAppStateStore()
+				}
+				return this.appStateStore
+			},
+			syncCenterDataFromStore() {
+				const appStateStore = this.ensureAppStateStore()
+				this.centerData = appStateStore.coupleCenterData || getDefaultCenterData()
+				this.syncActiveTabIndex()
+			},
 			formatHistoryPeriod(item = {}) {
 				const parts = []
 				if (item.bindDate) {
@@ -723,6 +739,9 @@
 			},
 			resetCenterData() {
 				this.centerData = getDefaultCenterData()
+				this.ensureAppStateStore().updateCoupleCenterData(getDefaultCenterData(), {
+					markFetched: false
+				})
 				this.activeTabIndex = 0
 				this.resetTargetForm()
 			},
@@ -749,35 +768,45 @@
 					historyList: Array.isArray(result.historyList) ? result.historyList : [],
 					canSendRequest: Boolean(result.canSendRequest)
 				}
+				this.ensureAppStateStore().updateCoupleCenterData(this.centerData)
 				this.syncActiveTabIndex()
 			},
 			async restoreLoginState() {
+				const appStateStore = this.ensureAppStateStore()
 				const currentUserInfo = getCurrentUniIdUser()
 				if (!currentUserInfo || !currentUserInfo.uid) {
+					appStateStore.clearAllState()
 					this.resetCenterData()
 					return
 				}
 
 				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
 					clearUniIdTokenStorage()
+					appStateStore.clearAllState()
 					this.resetCenterData()
 					return
 				}
 
-				await this.fetchCoupleCenter({
-					silent: true
-				})
-			},
-			async fetchCoupleCenter({ silent = false, stopPullDownRefresh = false } = {}) {
 				try {
-					const result = await getCoupleApi().getCenter()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取情侣信息失败')
-					}
-
-					this.applyCenterData(result)
+					await appStateStore.fetchCoupleCenter({
+						force: false
+					})
+					this.syncCenterDataFromStore()
+				} catch (error) {
+					console.warn('couple restoreLoginState failed', error)
+					this.syncCenterDataFromStore()
+				}
+			},
+			async fetchCoupleCenter({ silent = false, stopPullDownRefresh = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.fetchCoupleCenter({
+						force
+					})
+					this.syncCenterDataFromStore()
 				} catch (error) {
 					console.warn('couple fetchCoupleCenter failed', error)
+					this.syncCenterDataFromStore()
 					if (!silent) {
 						uni.showToast({
 							title: error.message || '获取情侣信息失败',
@@ -859,6 +888,7 @@
 					}
 
 					this.applyCenterData(result)
+					this.ensureAppStateStore().invalidateRelationCounters()
 					this.resetTargetForm()
 					uni.showToast({
 						title: result.errMsg || '绑定请求已发送',
@@ -914,6 +944,7 @@
 					}
 
 					this.applyCenterData(result)
+					this.ensureAppStateStore().invalidateRelationCounters()
 					uni.showToast({
 						title: result.errMsg || (isAccept ? '绑定成功' : '已拒绝请求'),
 						icon: isAccept ? 'success' : 'none'
@@ -950,6 +981,7 @@
 					}
 
 					this.applyCenterData(result)
+					this.ensureAppStateStore().invalidateRelationCounters()
 					uni.showToast({
 						title: result.errMsg || '已撤回绑定请求',
 						icon: 'none'
@@ -986,6 +1018,7 @@
 					}
 
 					this.applyCenterData(result)
+					this.ensureAppStateStore().invalidateRelationCounters()
 					uni.showToast({
 						title: result.errMsg || '已解绑当前情侣关系',
 						icon: 'none'

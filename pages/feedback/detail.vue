@@ -30,7 +30,7 @@
 			></love-auth-required>
 
 			<fui-card
-				v-else-if="!isAdmin"
+				v-else-if="adminChecked && !isAdmin"
 				:margin="['0', '0', '0', '0']"
 				background="rgba(255, 250, 247, 0.97)"
 				radius="32rpx"
@@ -184,7 +184,6 @@
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getFeedbackApi } from '../../common/api/feedback.js'
-	import { getUserApi } from '../../common/api/user.js'
 
 	const STATUS_TEXT_MAP = {
 		0: '待处理',
@@ -218,6 +217,7 @@
 				feedbackId: '',
 				loggedIn: false,
 				isAdmin: false,
+				adminChecked: false,
 				loading: false,
 				actionLoading: '',
 				detail: null,
@@ -288,6 +288,7 @@
 				if (!userInfo || !userInfo.uid) {
 					this.loggedIn = false
 					this.isAdmin = false
+					this.adminChecked = false
 					this.detail = null
 					return
 				}
@@ -296,38 +297,14 @@
 					clearUniIdTokenStorage()
 					this.loggedIn = false
 					this.isAdmin = false
+					this.adminChecked = false
 					this.detail = null
 					return
 				}
 
 				this.loggedIn = true
-				await this.fetchRoleAndDetail()
-			},
-			async fetchRoleAndDetail() {
-				try {
-					const result = await getUserApi().getMine()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取用户信息失败')
-					}
-					const roleList = Array.isArray(result && result.userInfo && result.userInfo.role)
-						? result.userInfo.role
-						: []
-					this.isAdmin = roleList.some((item) => String(item || '').trim().toLowerCase() === 'admin')
-					if (!this.isAdmin) {
-						this.detail = null
-						return
-					}
-
-					await this.fetchDetail()
-				} catch (error) {
-					console.warn('feedback detail fetchRoleAndDetail failed', error)
-					this.isAdmin = false
-					this.detail = null
-					uni.showToast({
-						title: error.message || '获取用户信息失败',
-						icon: 'none'
-					})
-				}
+				this.adminChecked = false
+				await this.fetchDetail()
 			},
 			async fetchDetail() {
 				if (!this.feedbackId) {
@@ -345,17 +322,21 @@
 					if (result && result.errCode && result.errCode !== 0) {
 						if (result.errCode === 'love-note-no-permission') {
 							this.isAdmin = false
+							this.adminChecked = true
 							this.detail = null
 							return
 						}
 						throw new Error(result.errMsg || '获取反馈详情失败')
 					}
 
+					this.isAdmin = true
+					this.adminChecked = true
 					const detail = result && result.data ? result.data.detail || null : null
 					this.detail = detail
 					this.replyContent = detail && detail.admin_reply ? detail.admin_reply : ''
 				} catch (error) {
 					console.error('fetch feedback detail failed', error)
+					this.adminChecked = true
 					uni.showToast({
 						title: error.message || '获取反馈详情失败',
 						icon: 'none'

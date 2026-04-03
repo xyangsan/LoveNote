@@ -1,6 +1,13 @@
 'use strict'
 
-const { dbCmd, userCollection, coupleCollection } = require('./db')
+const {
+	dbCmd,
+	userCollection,
+	coupleCollection,
+	anniversaryCollection,
+	dailyPostCollection,
+	wishPlanCollection
+} = require('./db')
 const {
 	DEFAULT_NICKNAME,
 	COUPLE_STATUS_PENDING,
@@ -394,6 +401,119 @@ async function getRelationPartnerMeta(uid, relation = {}) {
 	}
 }
 
+function normalizeNonNegativeInteger(value, fallback = 0) {
+	const nextValue = Number(value)
+	if (Number.isNaN(nextValue)) {
+		return Math.max(0, Number(fallback) || 0)
+	}
+	return Math.max(0, Math.floor(nextValue))
+}
+
+function pickFirstDefinedValue(...values) {
+	for (let index = 0; index < values.length; index += 1) {
+		if (values[index] !== undefined && values[index] !== null) {
+			return values[index]
+		}
+	}
+	return undefined
+}
+
+function normalizeMetrics(metrics = {}) {
+	const source = metrics && typeof metrics === 'object' ? metrics : {}
+	return {
+		anniversaryCount: normalizeNonNegativeInteger(
+			pickFirstDefinedValue(source.anniversaryCount, source.anniversary_count),
+			0
+		),
+		momentCount: normalizeNonNegativeInteger(
+			pickFirstDefinedValue(source.momentCount, source.moment_count),
+			0
+		),
+		wishCount: normalizeNonNegativeInteger(
+			pickFirstDefinedValue(source.wishCount, source.wish_count),
+			0
+		)
+	}
+}
+
+function getRelationWishCount(relation = {}) {
+	const metrics = normalizeMetrics(relation.metrics)
+	return normalizeNonNegativeInteger(
+		pickFirstDefinedValue(relation.wishCount, relation.wish_count),
+		metrics.wishCount
+	)
+}
+
+async function buildBoundCoupleStats(relation = null) {
+	if (!relation || !relation._id) {
+		return {
+			anniversaryCount: 0,
+			momentCount: 0,
+			wishCount: 0
+		}
+	}
+
+	const relationWishCount = getRelationWishCount(relation)
+	const fallbackMetrics = normalizeMetrics(relation.metrics)
+
+	try {
+		const [anniversaryTotalRes, momentTotalRes, wishTotalRes] = await Promise.all([
+			anniversaryCollection.where({
+				couple_id: relation._id,
+				is_deleted: false
+			}).count(),
+			dailyPostCollection.where({
+				couple_id: relation._id,
+				is_deleted: false
+			}).count(),
+			wishPlanCollection.where({
+				couple_id: relation._id,
+				type: 'wish',
+				is_deleted: false
+			}).count()
+		])
+
+		return {
+			anniversaryCount: normalizeNonNegativeInteger(anniversaryTotalRes && anniversaryTotalRes.total, fallbackMetrics.anniversaryCount),
+			momentCount: normalizeNonNegativeInteger(momentTotalRes && momentTotalRes.total, fallbackMetrics.momentCount),
+			wishCount: normalizeNonNegativeInteger(wishTotalRes && wishTotalRes.total, relationWishCount)
+		}
+	} catch (error) {
+		console.warn('api-router buildBoundCoupleStats failed', error)
+		return {
+			anniversaryCount: fallbackMetrics.anniversaryCount,
+			momentCount: fallbackMetrics.momentCount,
+			wishCount: relationWishCount
+		}
+	}
+}
+
+async function enrichActiveCoupleWithStats(relation = null) {
+	if (!relation || Number(relation.status || 0) !== COUPLE_STATUS_BOUND) {
+		return relation
+	}
+
+	const stats = await buildBoundCoupleStats(relation)
+	const nextMetrics = Object.assign({}, relation.metrics || {}, {
+		anniversaryCount: stats.anniversaryCount,
+		anniversary_count: stats.anniversaryCount,
+		momentCount: stats.momentCount,
+		moment_count: stats.momentCount,
+		wishCount: stats.wishCount,
+		wish_count: stats.wishCount
+	})
+
+	return Object.assign({}, relation, {
+		anniversaryCount: stats.anniversaryCount,
+		anniversary_count: stats.anniversaryCount,
+		momentCount: stats.momentCount,
+		moment_count: stats.momentCount,
+		wishCount: stats.wishCount,
+		wish_count: stats.wishCount,
+		metrics: nextMetrics
+	})
+}
+
 async function formatCoupleInfo(uid, relation = null) {
 	if (!relation) {
 		return null
@@ -402,6 +522,19 @@ async function formatCoupleInfo(uid, relation = null) {
 	const { partnerUid, partnerAvatar, partnerNickname } = await getRelationPartnerMeta(uid, relation)
 	const status = Number(relation.status || 0)
 	const requesterUid = getRequesterUid(relation)
+	const metrics = normalizeMetrics(relation.metrics)
+	const anniversaryCount = normalizeNonNegativeInteger(
+		pickFirstDefinedValue(relation.anniversaryCount, relation.anniversary_count),
+		metrics.anniversaryCount || (relation.anniversary_date ? 1 : 0)
+	)
+	const momentCount = normalizeNonNegativeInteger(
+		pickFirstDefinedValue(relation.momentCount, relation.moment_count),
+		metrics.momentCount
+	)
+	const wishCount = normalizeNonNegativeInteger(
+		pickFirstDefinedValue(relation.wishCount, relation.wish_count),
+		metrics.wishCount
+	)
 
 	return {
 		coupleId: relation._id || '',
@@ -420,7 +553,18 @@ async function formatCoupleInfo(uid, relation = null) {
 		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
 		bindDate: relation.bind_date || relation.created_at || 0,
 		anniversaryDate: relation.anniversary_date || 0,
-		requestDate: relation.created_at || 0
+		requestDate: relation.created_at || 0,
+		anniversaryCount,
+		momentCount,
+		wishCount,
+		metrics: {
+			anniversaryCount,
+			anniversary_count: anniversaryCount,
+			momentCount,
+			moment_count: momentCount,
+			wishCount,
+			wish_count: wishCount
+		}
 	}
 }
 
@@ -481,11 +625,12 @@ async function buildCoupleSummary(uid) {
 		return null
 	}
 
-	const [activeCouple, incomingRequests, outgoingRequests] = await Promise.all([
+	const [activeCoupleRecord, incomingRequests, outgoingRequests] = await Promise.all([
 		getActiveCoupleByUid(uid),
 		getIncomingPendingCouples(uid),
 		getOutgoingPendingCouples(uid)
 	])
+	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord)
 
 	const pendingIncomingCount = incomingRequests.length
 	const pendingOutgoingCount = outgoingRequests.length
@@ -521,12 +666,13 @@ async function buildCoupleCenterPayload(uid) {
 		}
 	}
 
-	const [activeCouple, incomingRequests, outgoingRequests, historyRelations] = await Promise.all([
+	const [activeCoupleRecord, incomingRequests, outgoingRequests, historyRelations] = await Promise.all([
 		getActiveCoupleByUid(uid),
 		getIncomingPendingCouples(uid),
 		getOutgoingPendingCouples(uid),
 		getCoupleHistoryByUid(uid)
 	])
+	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord)
 
 	const historyList = await Promise.all(
 		historyRelations

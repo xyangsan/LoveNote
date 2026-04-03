@@ -225,6 +225,7 @@
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
 	import { getUserApi } from '../../common/api/user.js'
+	import { useAppStateStore } from '../../store/app-state.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const NICKNAME_MAX_LENGTH = 20
@@ -278,6 +279,7 @@
 		data() {
 			return {
 				isSaving: false,
+				appStateStore: null,
 				userInfo: null,
 				genderOptions,
 				removeAuthListener: null,
@@ -326,6 +328,8 @@
 			}
 		},
 		onLoad() {
+			this.ensureAppStateStore()
+			this.syncUserFromStore()
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
 			})
@@ -340,6 +344,16 @@
 			}
 		},
 		methods: {
+			ensureAppStateStore() {
+				if (!this.appStateStore) {
+					this.appStateStore = useAppStateStore()
+				}
+				return this.appStateStore
+			},
+			syncUserFromStore() {
+				const appStateStore = this.ensureAppStateStore()
+				this.userInfo = appStateStore.userInfo || null
+			},
 			resetValidation() {
 				this.formErrors = {
 					nickname: '',
@@ -439,6 +453,7 @@
 				}
 			},
 			async restoreLoginState() {
+				const appStateStore = this.ensureAppStateStore()
 				const currentUserInfo = getCurrentUniIdUser()
 				if (!currentUserInfo || !currentUserInfo.uid) {
 					this.userInfo = null
@@ -448,29 +463,42 @@
 
 				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
 					clearUniIdTokenStorage()
+					appStateStore.clearAllState()
 					this.userInfo = null
 					this.resetProfileForm()
 					return
 				}
 
-				await this.fetchCurrentUser({
-					silent: true
-				})
-			},
-			async fetchCurrentUser({ silent = false } = {}) {
 				try {
-					const result = await getUserApi().getMine()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取用户信息失败')
+					await appStateStore.fetchUserInfo({
+						force: false
+					})
+					this.syncUserFromStore()
+					if (this.userInfo) {
+						this.fillProfileForm(this.userInfo)
+					} else {
+						this.resetProfileForm()
 					}
-
-					this.userInfo = result.userInfo || null
+				} catch (error) {
+					console.warn('profile edit restoreLoginState failed', error)
+					this.syncUserFromStore()
+					if (!this.userInfo) {
+						this.resetProfileForm()
+					}
+				}
+			},
+			async fetchCurrentUser({ silent = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.fetchUserInfo({
+						force
+					})
+					this.syncUserFromStore()
 					saveCachedUserProfile(this.userInfo)
 					this.fillProfileForm(this.userInfo)
 				} catch (error) {
 					console.warn('profile edit fetchCurrentUser failed', error)
-					clearUniIdTokenStorage()
-					this.userInfo = null
+					this.syncUserFromStore()
 					this.resetProfileForm()
 
 					if (!silent) {
@@ -615,6 +643,7 @@
 
 					this.userInfo = result.userInfo || this.userInfo
 					saveCachedUserProfile(this.userInfo)
+					this.ensureAppStateStore().updateUserInfo(this.userInfo)
 					this.fillProfileForm(this.userInfo)
 
 					uni.showToast({

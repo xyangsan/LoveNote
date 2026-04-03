@@ -68,7 +68,7 @@
 			></love-relation-bar>
 
 			<view class="hero-stats">
-				<view v-for="item in heroStats" :key="item.label" class="hero-stats__item">
+				<view v-for="item in relationshipStats()" :key="item.label" class="hero-stats__item">
 					<text class="hero-stats__value">{{ item.value }}</text>
 					<text class="hero-stats__label">{{ item.label }}</text>
 				</view>
@@ -116,10 +116,10 @@
 		<view class="section">
 			<view class="section__header">
 				<text class="section__title">纪念日提醒</text>
-				<text class="section__hint">{{ isLoggedIn ? '下一步可接真实倒计时数据' : '登录后可同步到你的情侣空间' }}</text>
+				<text class="section__hint">{{ anniversaryHint }}</text>
 			</view>
-			<view class="timeline-card">
-				<view v-for="item in anniversaries" :key="item.title" class="timeline-card__item">
+			<view v-if="anniversaries.length" class="timeline-card">
+				<view v-for="item in anniversaries" :key="item.id" class="timeline-card__item">
 					<view class="timeline-card__dot"></view>
 					<view class="timeline-card__body">
 						<view class="timeline-card__row">
@@ -131,43 +131,53 @@
 					</view>
 				</view>
 			</view>
+			<view v-else class="section-empty-card" @click="handleAction('anniversary')">
+				<text class="section-empty-card__title">暂无纪念日提醒</text>
+				<text class="section-empty-card__desc">去创建一条纪念日，首页会自动展示倒计时</text>
+			</view>
 		</view>
 
 		<view class="section">
 			<view class="section__header">
 				<text class="section__title">最近双人动态</text>
-				<text class="section__hint">点击进入双人日常时间轴</text>
+				<text class="section__hint">{{ momentHint }}</text>
 			</view>
-			<view
-				v-for="post in moments"
-				:key="post.id"
-				class="moment-card"
-				@click="handleAction('双人动态')"
-			>
-				<view class="moment-card__top">
-					<view class="moment-card__author">
-						<view class="moment-card__avatar" :style="{ background: post.avatarGradient }">
-							<text class="moment-card__avatar-text">{{ post.authorShort }}</text>
+			<view v-if="moments.length">
+				<view
+					v-for="post in moments"
+					:key="post.id"
+					class="moment-card"
+					@click="handleAction('feed')"
+				>
+					<view class="moment-card__top">
+						<view class="moment-card__author">
+							<view class="moment-card__avatar" :style="{ background: post.avatarGradient }">
+								<text class="moment-card__avatar-text">{{ post.authorShort }}</text>
+							</view>
+							<view>
+								<text class="moment-card__name">{{ post.author }}</text>
+								<text class="moment-card__time">{{ post.time }}</text>
+							</view>
 						</view>
-						<view>
-							<text class="moment-card__name">{{ post.author }}</text>
-							<text class="moment-card__time">{{ post.time }}</text>
-						</view>
+						<view class="moment-card__tag">{{ post.mood }}</view>
 					</view>
-					<view class="moment-card__tag">{{ post.mood }}</view>
+					<text class="moment-card__content">{{ post.content }}</text>
+					<view class="moment-card__footer">
+						<text class="moment-card__meta">{{ post.location }}</text>
+						<text class="moment-card__meta">{{ post.stats }}</text>
+					</view>
 				</view>
-				<text class="moment-card__content">{{ post.content }}</text>
-				<view class="moment-card__footer">
-					<text class="moment-card__meta">{{ post.location }}</text>
-					<text class="moment-card__meta">{{ post.stats }}</text>
-				</view>
+			</view>
+			<view v-else class="section-empty-card" @click="handleAction('feed')">
+				<text class="section-empty-card__title">暂无双人日常</text>
+				<text class="section-empty-card__desc">发布第一条图文或视频，记录你们今天的瞬间</text>
 			</view>
 		</view>
 
 		<view class="section">
 			<view class="section__header">
-				<text class="section__title">愿望与计划预览</text>
-				<text class="section__hint">帮助首页具备共同成长的感觉</text>
+				<text class="section__title">愿望清单预览</text>
+				<text class="section__hint">同步展示双方愿望与计划进度</text>
 			</view>
 			<view class="plan-card">
 				<view v-for="item in plans" :key="item.title" class="plan-card__item">
@@ -196,8 +206,9 @@
 		uploadAvatarIfNeeded
 	} from '../../common/auth-center.js'
 	import { getAuthApi } from '../../common/api/auth.js'
-	import { getCoupleApi } from '../../common/api/couple.js'
-	import { getUserApi } from '../../common/api/user.js'
+	import { getAnniversaryApi } from '../../common/api/anniversary.js'
+	import { getDailyApi } from '../../common/api/daily.js'
+	import { useAppStateStore } from '../../store/app-state.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
 
 	function getDefaultCoupleCenterData() {
@@ -209,6 +220,149 @@
 			historyList: [],
 			canSendRequest: true
 		}
+	}
+
+	function getDefaultPlanPreview() {
+		return [
+			{
+				title: '创建第一条愿望',
+				status: '待开始',
+				desc: '可在愿望清单里创建愿望或计划，并同步双方进度。',
+				progress: 0
+			}
+		]
+	}
+
+	function getDefaultOverviewStats() {
+		return {
+			isBound: false,
+			albumTotal: null,
+			dailyTotal: null,
+			anniversaryTotal: null,
+			planTotal: null,
+			wishTotal: null
+		}
+	}
+
+	function getDefaultAnniversaryReminderList() {
+		return []
+	}
+
+	function getDefaultMomentPreviewList() {
+		return []
+	}
+
+	function formatDateTimeWithTime(timestamp) {
+		if (!timestamp) {
+			return '--'
+		}
+		const date = new Date(Number(timestamp))
+		if (Number.isNaN(date.getTime())) {
+			return '--'
+		}
+		const month = `${date.getMonth() + 1}`.padStart(2, '0')
+		const day = `${date.getDate()}`.padStart(2, '0')
+		const hour = `${date.getHours()}`.padStart(2, '0')
+		const minute = `${date.getMinutes()}`.padStart(2, '0')
+		return `${month}-${day} ${hour}:${minute}`
+	}
+
+	function getAuthorShortName(name = '') {
+		const text = String(name || '').trim()
+		return text ? text.slice(0, 1) : '爱'
+	}
+
+	function getMomentMoodText(mediaType = '') {
+		const type = String(mediaType || '').trim().toLowerCase()
+		if (type === 'video') {
+			return '视频动态'
+		}
+		if (type === 'image') {
+			return '图文动态'
+		}
+		return '文字动态'
+	}
+
+	function getMomentStatsText(post = {}) {
+		const mediaCount = Number(post.media_count || (Array.isArray(post.media_list) ? post.media_list.length : 0))
+		if (!mediaCount || Number.isNaN(mediaCount)) {
+			return '纯文字记录'
+		}
+		return `包含 ${mediaCount} 个媒体`
+	}
+
+	function trimContentText(content = '', maxLength = 64) {
+		const text = String(content || '').trim()
+		if (text.length <= maxLength) {
+			return text
+		}
+		return `${text.slice(0, maxLength)}...`
+	}
+
+	function buildAnniversaryNote(item = {}) {
+		const parts = []
+		if (item.repeat_type === 'yearly') {
+			parts.push('每年提醒')
+		} else if (item.repeat_type === 'monthly') {
+			parts.push('每月提醒')
+		} else if (item.repeat_type === 'weekly') {
+			parts.push('每周提醒')
+		} else if (item.repeat_type === 'none') {
+			parts.push('单次提醒')
+		}
+		if (item.date_type === 'lunar') {
+			parts.push('农历')
+		} else {
+			parts.push('公历')
+		}
+		if (item.next_date) {
+			parts.push(`下次 ${item.next_date}`)
+		}
+		return parts.join(' · ')
+	}
+
+	function normalizeAnniversaryReminderList(list = []) {
+		const sourceList = Array.isArray(list) ? list : []
+		return sourceList.slice(0, 3).map((item) => ({
+			id: String(item._id || ''),
+			title: String(item.title || '').trim() || '纪念日',
+			date: String(item.date_value || '--'),
+			countdown: String(item.countdown_text || '--'),
+			note: buildAnniversaryNote(item)
+		}))
+	}
+
+	function buildAvatarGradient(seed = '') {
+		const palettes = [
+			'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 100%)',
+			'linear-gradient(135deg, #ffc371 0%, #ff8c42 100%)',
+			'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+			'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
+		]
+		const text = String(seed || '')
+		const sum = text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+		return palettes[sum % palettes.length]
+	}
+
+	function normalizeMomentPreviewList(list = []) {
+		const sourceList = Array.isArray(list) ? list : []
+		return sourceList.slice(0, 3).map((item) => {
+			const authorName = String(item.author_snapshot && item.author_snapshot.nickname || '').trim() || '恋人'
+			const fallbackText = item.media_type === 'video'
+				? '发布了一个视频'
+				: (item.media_type === 'image' ? '分享了新的照片' : '记录了一条日常')
+			return {
+				id: String(item._id || ''),
+				author: authorName,
+				authorShort: getAuthorShortName(authorName),
+				time: formatDateTimeWithTime(item.create_time),
+				mood: getMomentMoodText(item.media_type),
+				content: trimContentText(item.content || fallbackText, 72),
+				location: item.is_self ? '你发布' : 'TA 发布',
+				stats: getMomentStatsText(item),
+				avatarGradient: buildAvatarGradient(item.author_uid || authorName)
+			}
+		})
 	}
 
 	function formatDateTime(timestamp) {
@@ -252,6 +406,7 @@
 				loveDays,
 				startDateText: formatDate(startDate),
 				isLoggingIn: false,
+				appStateStore: null,
 				userInfo: null,
 				coupleCenterData: getDefaultCoupleCenterData(),
 				loginForm: {
@@ -282,71 +437,17 @@
 						gradient: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
 					},
 					{
-						title: '约会计划',
-						desc: '安排下一次见面和惊喜',
+						title: '愿望清单',
+						desc: '制定愿望与计划并同步执行进度',
 						action: 'plan',
 						icon: '04',
 						gradient: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
 					}
 				],
-				anniversaries: [
-					{
-						title: '恋爱两周年',
-						date: '2026-02-14',
-						countdown: '已纪念',
-						note: '已经一起走过两年，适合补一张周年合照。'
-					},
-					{
-						title: '第一次旅行',
-						date: '2026-03-15',
-						countdown: '还有 4 天',
-						note: '记得准备旅拍清单和当天的早餐惊喜。'
-					},
-					{
-						title: '她的生日',
-						date: '2026-04-08',
-						countdown: '还有 28 天',
-						note: '提前准备礼物、贺卡和餐厅预约。'
-					}
-				],
-				moments: [
-					{
-						id: 1,
-						author: '小满',
-						authorShort: '满',
-						time: '今天 08:40',
-						mood: '早安日常',
-						content: '今天出门前给你留了热拿铁和便利贴，晚上一起去试那家新开的烘焙店吧。',
-						location: '上海 · 静安',
-						stats: '2 条回应 · 6 次喜欢',
-						avatarGradient: 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 100%)'
-					},
-					{
-						id: 2,
-						author: '阿澈',
-						authorShort: '澈',
-						time: '昨天 21:15',
-						mood: '回忆收藏',
-						content: '把上周末拍的照片挑了 18 张，想做成我们三月的回忆卡片，周末一起选封面。',
-						location: '家',
-						stats: '1 条评论 · 9 次喜欢',
-						avatarGradient: 'linear-gradient(135deg, #ffc371 0%, #ff8c42 100%)'
-					}
-				],
-				plans: [
-					{
-						title: '四月短途旅行',
-						status: '筹备中',
-						desc: '目的地暂定杭州，待确认出行日期和拍照路线。',
-						progress: 65
-					},
-					{
-						title: '一起学会做三道新菜',
-						status: '进行中',
-						desc: '已完成奶油意面和寿喜锅，还差一道甜品。',
-						progress: 67
-					}
-				]
+				anniversaries: getDefaultAnniversaryReminderList(),
+				moments: getDefaultMomentPreviewList(),
+				plans: getDefaultPlanPreview(),
+				overviewStats: getDefaultOverviewStats()
 			}
 		},
 		computed: {
@@ -492,12 +593,55 @@
 						value: `${this.historyList.length + (this.activeCouple ? 1 : 0)}`
 					}
 				]
+			},
+			anniversaryHint() {
+				if (!this.isLoggedIn) {
+					return '登录后可查看你们的纪念日倒计时'
+				}
+				if (!this.activeCouple) {
+					return '完成情侣绑定后自动同步纪念日提醒'
+				}
+				if (!this.anniversaries.length) {
+					return '暂未创建纪念日，点击进入去添加'
+				}
+				return `已同步 ${this.anniversaries.length} 条提醒，按最近日期展示`
+			},
+			momentHint() {
+				if (!this.isLoggedIn) {
+					return '登录后可查看你们最近发布的双人日常'
+				}
+				if (!this.activeCouple) {
+					return '完成情侣绑定后同步双人动态'
+				}
+				if (!this.moments.length) {
+					return '还没有双人日常，点击去发布第一条'
+				}
+				return `已展示最新 ${this.moments.length} 条动态，点击可查看完整时间轴`
 			}
+		},
+		onLoad() {
+			this.ensureAppStateStore()
+			this.syncFromAppState()
 		},
 		onShow() {
 			this.restoreLoginState()
 		},
 		methods: {
+			ensureAppStateStore() {
+				if (!this.appStateStore) {
+					this.appStateStore = useAppStateStore()
+				}
+				return this.appStateStore
+			},
+			syncFromAppState() {
+				const appStateStore = this.ensureAppStateStore()
+				this.userInfo = appStateStore.userInfo || null
+				this.coupleCenterData = appStateStore.coupleCenterData || getDefaultCoupleCenterData()
+				this.plans = Array.isArray(appStateStore.planPreview) && appStateStore.planPreview.length
+					? appStateStore.planPreview
+					: getDefaultPlanPreview()
+				this.overviewStats = appStateStore.overviewStats || getDefaultOverviewStats()
+			},
 			resetLoginForm() {
 				this.loginForm = {
 					nickname: '',
@@ -505,39 +649,163 @@
 					avatarFileId: ''
 				}
 			},
-
-			async restoreLoginState() {
-				const currentUserInfo = getCurrentUniIdUser()
-				if (!currentUserInfo || !currentUserInfo.uid) {
-					this.userInfo = null
-					this.coupleCenterData = getDefaultCoupleCenterData()
+			resetOverviewStats() {
+				this.overviewStats = getDefaultOverviewStats()
+			},
+			resetHomeSections() {
+				this.anniversaries = getDefaultAnniversaryReminderList()
+				this.moments = getDefaultMomentPreviewList()
+			},
+			async fetchAnniversaryReminders({ silent = true } = {}) {
+				if (!this.isLoggedIn || !this.activeCouple) {
+					this.anniversaries = getDefaultAnniversaryReminderList()
 					return
 				}
 
-				if (currentUserInfo.tokenExpired && currentUserInfo.tokenExpired <= Date.now()) {
-					clearUniIdTokenStorage()
-					this.userInfo = null
-					this.coupleCenterData = getDefaultCoupleCenterData()
+				try {
+					const result = await getAnniversaryApi().getList({
+						page: 1,
+						pageSize: 3
+					})
+					if (result && result.errCode && result.errCode !== 0) {
+						if (result.errCode === 'love-note-no-couple') {
+							this.anniversaries = getDefaultAnniversaryReminderList()
+							return
+						}
+						throw new Error(result.errMsg || '获取纪念日提醒失败')
+					}
+					const list = Array.isArray(result.data && result.data.list) ? result.data.list : []
+					this.anniversaries = normalizeAnniversaryReminderList(list)
+				} catch (error) {
+					console.warn('fetchAnniversaryReminders failed', error)
+					this.anniversaries = getDefaultAnniversaryReminderList()
+					if (!silent) {
+						uni.showToast({
+							title: error.message || '获取纪念日提醒失败',
+							icon: 'none'
+						})
+					}
+				}
+			},
+			async fetchMomentPreview({ silent = true } = {}) {
+				if (!this.isLoggedIn || !this.activeCouple) {
+					this.moments = getDefaultMomentPreviewList()
 					return
 				}
 
+				try {
+					const result = await getDailyApi().getList({
+						page: 1,
+						pageSize: 3
+					})
+					if (result && result.errCode && result.errCode !== 0) {
+						if (result.errCode === 'love-note-no-couple') {
+							this.moments = getDefaultMomentPreviewList()
+							return
+						}
+						throw new Error(result.errMsg || '获取双人日常失败')
+					}
+					const list = Array.isArray(result.data && result.data.list) ? result.data.list : []
+					this.moments = normalizeMomentPreviewList(list)
+				} catch (error) {
+					console.warn('fetchMomentPreview failed', error)
+					this.moments = getDefaultMomentPreviewList()
+					if (!silent) {
+						uni.showToast({
+							title: error.message || '获取双人日常失败',
+							icon: 'none'
+						})
+					}
+				}
+			},
+			async loadHomeSections({ silent = true } = {}) {
+				if (!this.isLoggedIn || !this.activeCouple) {
+					this.resetHomeSections()
+					return
+				}
 				await Promise.all([
-					this.fetchCurrentUser({
-						silent: true
+					this.fetchAnniversaryReminders({
+						silent
 					}),
-					this.fetchCoupleCenter({
-						silent: true
+					this.fetchMomentPreview({
+						silent
 					})
 				])
 			},
-			async fetchCurrentUser({ silent = false } = {}) {
-				try {
-					const result = await getUserApi().getMine()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取用户信息失败')
-					}
-					this.userInfo = result.userInfo || null
+			safeCount(value) {
+				const nextValue = Number(value)
+				return Number.isNaN(nextValue) ? 0 : Math.max(0, Math.floor(nextValue))
+			},
+			relationshipStats() {
+				const stats = this.overviewStats || {}
+				if (!stats.isBound) {
+					return [
+						{
+							label: '共同纪念日',
+							value: '--'
+						},
+						{
+							label: '双人动态',
+							value: '--'
+						},
+						{
+							label: '共同计划',
+							value: '--'
+						},
+						{
+							label: '相册',
+							value: '--'
+						}
+					]
+				}
 
+				return [
+					{
+						label: '共同纪念日',
+						value: `${this.safeCount(stats.anniversaryTotal)}`
+					},
+					{
+						label: '双人动态',
+						value: `${this.safeCount(stats.dailyTotal)}`
+					},
+					{
+						label: '共同计划',
+						value: `${this.safeCount(stats.planTotal)}`
+					},
+					{
+						label: '相册',
+						value: `${this.safeCount(stats.albumTotal)}`
+					}
+				]
+			},
+			async restoreLoginState() {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.restoreSessionData({
+						force: false
+					})
+					this.syncFromAppState()
+					if (this.userInfo) {
+						this.loginForm.nickname = this.userInfo.nickname || this.loginForm.nickname
+						this.loginForm.avatarUrl = this.userInfo.avatarUrl || this.loginForm.avatarUrl
+						this.loginForm.avatarFileId = this.userInfo.avatarFileId || this.loginForm.avatarFileId
+					}
+					await this.loadHomeSections({
+						silent: true
+					})
+				} catch (error) {
+					console.warn('restoreLoginState failed', error)
+					this.syncFromAppState()
+					this.resetHomeSections()
+				}
+			},
+			async fetchCurrentUser({ silent = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.fetchUserInfo({
+						force
+					})
+					this.syncFromAppState()
 					if (this.userInfo) {
 						this.loginForm.nickname = this.userInfo.nickname || this.loginForm.nickname
 						this.loginForm.avatarUrl = this.userInfo.avatarUrl || this.loginForm.avatarUrl
@@ -545,39 +813,64 @@
 					}
 				} catch (error) {
 					console.warn('fetchCurrentUser failed', error)
-					clearUniIdTokenStorage()
-					this.userInfo = null
-					this.coupleCenterData = getDefaultCoupleCenterData()
-
+					this.syncFromAppState()
 					if (!silent) {
 						uni.showToast({
-							title: '登录状态已失效，请重新登录',
+							title: error.message || '登录状态已失效，请重新登录',
 							icon: 'none'
 						})
 					}
 				}
 			},
-			async fetchCoupleCenter({ silent = false } = {}) {
+			async fetchCoupleCenter({ silent = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
 				try {
-					const result = await getCoupleApi().getCenter()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取情侣信息失败')
-					}
-
-					this.coupleCenterData = {
-						selfInfo: result.selfInfo || null,
-						activeCouple: result.activeCouple || null,
-						incomingRequests: Array.isArray(result.incomingRequests) ? result.incomingRequests : [],
-						outgoingRequests: Array.isArray(result.outgoingRequests) ? result.outgoingRequests : [],
-						historyList: Array.isArray(result.historyList) ? result.historyList : [],
-						canSendRequest: Boolean(result.canSendRequest)
-					}
+					await appStateStore.fetchCoupleCenter({
+						force
+					})
+					this.syncFromAppState()
 				} catch (error) {
 					console.warn('fetchCoupleCenter failed', error)
-					this.coupleCenterData = getDefaultCoupleCenterData()
+					this.syncFromAppState()
 					if (!silent) {
 						uni.showToast({
 							title: error.message || '获取情侣信息失败',
+							icon: 'none'
+						})
+					}
+				}
+			},
+			async fetchPlanPreview({ silent = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.fetchPlanPreview({
+						force
+					})
+					this.syncFromAppState()
+				} catch (error) {
+					console.warn('fetchPlanPreview failed', error)
+					this.syncFromAppState()
+					if (!silent) {
+						uni.showToast({
+							title: error.message || '获取愿望清单失败',
+							icon: 'none'
+						})
+					}
+				}
+			},
+			async fetchOverviewStats({ silent = false, force = false } = {}) {
+				const appStateStore = this.ensureAppStateStore()
+				try {
+					await appStateStore.fetchOverviewStats({
+						force
+					})
+					this.syncFromAppState()
+				} catch (error) {
+					console.warn('fetchOverviewStats failed', error)
+					this.syncFromAppState()
+					if (!silent) {
+						uni.showToast({
+							title: error.message || '获取统计信息失败',
 							icon: 'none'
 						})
 					}
@@ -644,14 +937,29 @@
 						throw new Error(result.errMsg || '登录失败')
 					}
 
+					const appStateStore = this.ensureAppStateStore()
+					appStateStore.clearAllState()
 					await Promise.all([
 						this.fetchCurrentUser({
-							silent: true
+							silent: true,
+							force: true
 						}),
 						this.fetchCoupleCenter({
-							silent: true
+							silent: true,
+							force: true
+						}),
+						this.fetchPlanPreview({
+							silent: true,
+							force: true
+						}),
+						this.fetchOverviewStats({
+							silent: true,
+							force: true
 						})
 					])
+					await this.loadHomeSections({
+						silent: true
+					})
 
 					uni.showToast({
 						title: '登录成功',
@@ -678,9 +986,10 @@
 					console.warn('handleLogout failed', error)
 				} finally {
 					clearUniIdTokenStorage()
-					this.userInfo = null
-					this.coupleCenterData = getDefaultCoupleCenterData()
+					this.ensureAppStateStore().clearAllState()
+					this.syncFromAppState()
 					this.resetLoginForm()
+					this.resetHomeSections()
 					uni.showToast({
 						title: '已退出登录',
 						icon: 'none'
@@ -748,9 +1057,8 @@
 				}
 
 				if (action === 'plan') {
-					uni.showToast({
-						title: '计划功能开发中',
-						icon: 'none'
+					uni.navigateTo({
+						url: '/pages/plan/list'
 					})
 					return
 				}
@@ -1056,6 +1364,28 @@
 	.section__hint {
 		font-size: 22rpx;
 		color: #ad8476;
+	}
+
+	.section-empty-card {
+		padding: 30rpx 28rpx;
+		border-radius: 30rpx;
+		background: rgba(255, 255, 255, 0.94);
+		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+	}
+
+	.section-empty-card__title {
+		display: block;
+		font-size: 28rpx;
+		font-weight: 700;
+		color: #5d372b;
+	}
+
+	.section-empty-card__desc {
+		display: block;
+		margin-top: 10rpx;
+		font-size: 23rpx;
+		line-height: 1.6;
+		color: #8f6e63;
 	}
 
 	.quick-grid {

@@ -30,7 +30,7 @@
 			></love-auth-required>
 
 			<fui-card
-				v-else-if="!isAdmin"
+				v-else-if="adminChecked && !isAdmin"
 				:margin="['0', '0', '0', '0']"
 				background="rgba(255, 250, 247, 0.97)"
 				radius="32rpx"
@@ -164,7 +164,6 @@
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getFeedbackApi } from '../../common/api/feedback.js'
-	import { getUserApi } from '../../common/api/user.js'
 
 	const STATUS_FILTERS = [{
 		name: '全部',
@@ -211,6 +210,7 @@
 			return {
 				loggedIn: false,
 				isAdmin: false,
+				adminChecked: false,
 				loading: false,
 				loadingMore: false,
 				statusIndex: 0,
@@ -316,6 +316,7 @@
 				if (!userInfo || !userInfo.uid) {
 					this.loggedIn = false
 					this.isAdmin = false
+					this.adminChecked = false
 					this.resetListState()
 					return
 				}
@@ -324,45 +325,17 @@
 					clearUniIdTokenStorage()
 					this.loggedIn = false
 					this.isAdmin = false
+					this.adminChecked = false
 					this.resetListState()
 					return
 				}
 
 				this.loggedIn = true
-				await this.fetchRoleAndLoad()
-			},
-			async fetchRoleAndLoad() {
-				try {
-					const result = await getUserApi().getMine()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '获取用户信息失败')
-					}
-
-					const roleList = Array.isArray(result && result.userInfo && result.userInfo.role)
-						? result.userInfo.role
-						: []
-					this.isAdmin = roleList.some((item) => String(item || '').trim().toLowerCase() === 'admin')
-					if (!this.isAdmin) {
-						this.resetListState()
-						return
-					}
-
-					await this.loadFeedbackList(true)
-				} catch (error) {
-					console.warn('feedback list fetchRoleAndLoad failed', error)
-					this.isAdmin = false
-					this.resetListState()
-					uni.showToast({
-						title: error.message || '获取用户信息失败',
-						icon: 'none'
-					})
-				}
+				this.adminChecked = false
+				await this.loadFeedbackList(true)
 			},
 			async loadFeedbackList(reset = false) {
 				if (this.loading || this.loadingMore) {
-					return
-				}
-				if (!this.isAdmin) {
 					return
 				}
 
@@ -386,12 +359,15 @@
 					if (result && result.errCode && result.errCode !== 0) {
 						if (result.errCode === 'love-note-no-permission') {
 							this.isAdmin = false
+							this.adminChecked = true
 							this.resetListState()
 							return
 						}
 						throw new Error(result.errMsg || '获取反馈列表失败')
 					}
 
+					this.isAdmin = true
+					this.adminChecked = true
 					const data = result && result.data ? result.data : {}
 					const list = Array.isArray(data.list) ? data.list : []
 					const pageInfo = data.pagination || {}
@@ -404,6 +380,7 @@
 						: Number(pageInfo.page || this.pagination.page)
 				} catch (error) {
 					console.error('loadFeedbackList failed', error)
+					this.adminChecked = true
 					uni.showToast({
 						title: error.message || '获取反馈列表失败',
 						icon: 'none'
