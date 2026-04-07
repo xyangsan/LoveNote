@@ -4,6 +4,10 @@ const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
 const { dailyPostCollection } = require('../lib/db')
 const { getActiveCoupleByUid } = require('../lib/couple')
+const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('../lib/content-scope')
 const { getUserById, resolveAvatar } = require('../lib/user-base')
 const {
 	ensureHttpsUrl,
@@ -371,20 +375,18 @@ module.exports = class DailyService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const page = Math.max(1, parseInt(params.page) || 1)
 			const pageSize = Math.min(20, Math.max(1, parseInt(params.pageSize) || 10))
 
-			const whereCondition = {
-				couple_id: activeCouple._id,
+			const visibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'author_uid'
+			})
+			const whereCondition = andWhereConditions(visibilityCondition, {
 				is_deleted: false
-			}
+			})
 
 			const totalRes = await dailyPostCollection.where(whereCondition).count()
 			const total = Number(totalRes.total || 0)

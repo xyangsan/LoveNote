@@ -5,6 +5,10 @@ const { checkAuth } = require('../lib/auth')
 const { albumCollection, photoCollection } = require('../lib/db')
 const { getActiveCoupleByUid } = require('../lib/couple')
 const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('../lib/content-scope')
+const {
 	collectFileIdsFromAlbums,
 	collectFileIdsFromPhotos,
 	getTempFileUrlMap,
@@ -45,19 +49,15 @@ module.exports = class AlbumService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const page = Math.max(1, parseInt(params.page) || 1)
 			const pageSize = Math.min(50, Math.max(1, parseInt(params.pageSize) || 20))
 
-			const whereCondition = {
-				couple_id: activeCouple._id
-			}
+			const whereCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'create_uid'
+			})
 
 			const totalRes = await albumCollection.where(whereCondition).count()
 			const total = totalRes.total || 0
@@ -96,12 +96,6 @@ module.exports = class AlbumService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const albumId = String(params.albumId || '').trim()
 			if (!albumId) {
@@ -111,11 +105,15 @@ module.exports = class AlbumService extends Service {
 				}
 			}
 
+			const albumVisibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'create_uid'
+			})
 			const albumRes = await albumCollection
-				.where({
-					_id: albumId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(albumVisibilityCondition, {
+					_id: albumId
+				}))
 				.limit(1)
 				.get()
 
@@ -130,22 +128,25 @@ module.exports = class AlbumService extends Service {
 
 			const photoPage = Math.max(1, parseInt(params.photoPage) || 1)
 			const photoPageSize = Math.min(50, Math.max(1, parseInt(params.photoPageSize) || 20))
+			
+			const photoVisibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'uploader_uid'
+			})
+			const photoWhereCondition = andWhereConditions(photoVisibilityCondition, {
+				album_id: albumId
+			})
 
 			const photoRes = await photoCollection
-				.where({
-					album_id: albumId,
-					couple_id: activeCouple._id
-				})
+				.where(photoWhereCondition)
 				.orderBy('create_time', 'desc')
 				.skip((photoPage - 1) * photoPageSize)
 				.limit(photoPageSize)
 				.get()
 
 			const photoTotalRes = await photoCollection
-				.where({
-					album_id: albumId,
-					couple_id: activeCouple._id
-				})
+				.where(photoWhereCondition)
 				.count()
 			const rawPhotos = photoRes.data || []
 			const fileIds = [

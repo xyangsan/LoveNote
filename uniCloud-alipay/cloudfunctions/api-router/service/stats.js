@@ -4,6 +4,10 @@ const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
 const { getActiveCoupleByUid } = require('../lib/couple')
 const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('../lib/content-scope')
+const {
 	albumCollection,
 	anniversaryCollection,
 	dailyPostCollection,
@@ -43,62 +47,68 @@ module.exports = class StatsService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple || !activeCouple._id) {
-				return {
-					errCode: 0,
-					data: buildEmptyOverview()
-				}
-			}
 
-			const coupleId = activeCouple._id
+			const albumWhereCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'create_uid'
+			})
+			const dailyWhereCondition = andWhereConditions(
+				buildCreatorVisibilityCondition({
+					uid,
+					activeCouple,
+					creatorField: 'author_uid'
+				}),
+				{ is_deleted: false }
+			)
+			const anniversaryWhereCondition = andWhereConditions(
+				buildCreatorVisibilityCondition({
+					uid,
+					activeCouple,
+					creatorField: 'creator_uid'
+				}),
+				{ is_deleted: false }
+			)
+			const wishPlanBaseWhereCondition = andWhereConditions(
+				buildCreatorVisibilityCondition({
+					uid,
+					activeCouple,
+					creatorField: 'create_uid'
+				}),
+				{ is_deleted: false }
+			)
+
 			const [albumRes, dailyRes, anniversaryRes, wishRes, planRes, wishPlanRes, completedRes] = await Promise.all([
-				albumCollection.where({
-					couple_id: coupleId
-				}).count(),
-				dailyPostCollection.where({
-					couple_id: coupleId,
-					is_deleted: false
-				}).count(),
-				anniversaryCollection.where({
-					couple_id: coupleId,
-					is_deleted: false
-				}).count(),
-				wishPlanCollection.where({
-					couple_id: coupleId,
-					type: PLAN_TYPE_WISH,
-					is_deleted: false
-				}).count(),
-				wishPlanCollection.where({
-					couple_id: coupleId,
-					type: PLAN_TYPE_PLAN,
-					is_deleted: false
-				}).count(),
-				wishPlanCollection.where({
-					couple_id: coupleId,
-					is_deleted: false
-				}).count(),
-				wishPlanCollection.where({
-					couple_id: coupleId,
-					status: PLAN_STATUS_COMPLETED,
-					is_deleted: false
-				}).count()
+				albumCollection.where(albumWhereCondition).count(),
+				dailyPostCollection.where(dailyWhereCondition).count(),
+				anniversaryCollection.where(anniversaryWhereCondition).count(),
+				wishPlanCollection.where(andWhereConditions(wishPlanBaseWhereCondition, {
+					type: PLAN_TYPE_WISH
+				})).count(),
+				wishPlanCollection.where(andWhereConditions(wishPlanBaseWhereCondition, {
+					type: PLAN_TYPE_PLAN
+				})).count(),
+				wishPlanCollection.where(wishPlanBaseWhereCondition).count(),
+				wishPlanCollection.where(andWhereConditions(wishPlanBaseWhereCondition, {
+					status: PLAN_STATUS_COMPLETED
+				})).count()
 			])
 
 			const dailyTotal = normalizeCount(dailyRes && dailyRes.total)
+			const overview = buildEmptyOverview()
+			overview.isBound = Boolean(activeCouple && activeCouple._id)
+			overview.album_total = normalizeCount(albumRes && albumRes.total)
+			overview.daily_total = dailyTotal
+			overview.anniversary_total = normalizeCount(anniversaryRes && anniversaryRes.total)
+			overview.plan_total = normalizeCount(planRes && planRes.total)
+			overview.wish_total = normalizeCount(wishRes && wishRes.total)
+			overview.wish_plan_total = normalizeCount(wishPlanRes && wishPlanRes.total)
+			overview.completed_total = normalizeCount(completedRes && completedRes.total)
+			overview.moment_total = dailyTotal
 
 			return {
 				errCode: 0,
-				data: {
-					isBound: true,
-					album_total: normalizeCount(albumRes && albumRes.total),
-					daily_total: dailyTotal,
-					anniversary_total: normalizeCount(anniversaryRes && anniversaryRes.total),
-					plan_total: normalizeCount(planRes && planRes.total),
-					wish_total: normalizeCount(wishRes && wishRes.total),
-					wish_plan_total: normalizeCount(wishPlanRes && wishPlanRes.total),
-					completed_total: normalizeCount(completedRes && completedRes.total),
-					moment_total: dailyTotal
-				}
+				data: overview
 			}
 		} catch (error) {
 			return formatError(error, '获取统计数据失败')

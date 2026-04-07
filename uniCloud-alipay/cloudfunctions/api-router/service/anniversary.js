@@ -5,6 +5,10 @@ const { checkAuth } = require('../lib/auth')
 const { anniversaryCollection } = require('../lib/db')
 const { getActiveCoupleByUid } = require('../lib/couple')
 const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('../lib/content-scope')
+const {
 	ensureHttpsUrl,
 	isCloudFileId,
 	getTempFileUrlMap
@@ -481,20 +485,18 @@ module.exports = class AnniversaryService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return withAuthResponse(authState, {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				})
-			}
 
 			const page = Math.max(1, parseInt(params.page, 10) || 1)
 			const pageSize = Math.min(50, Math.max(1, parseInt(params.pageSize, 10) || 20))
 
-			const whereCondition = {
-				couple_id: activeCouple._id,
+			const visibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'creator_uid'
+			})
+			const whereCondition = andWhereConditions(visibilityCondition, {
 				is_deleted: false
-			}
+			})
 
 			const totalRes = await anniversaryCollection.where(whereCondition).count()
 			const total = Number(totalRes.total || 0)
@@ -535,12 +537,6 @@ module.exports = class AnniversaryService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return withAuthResponse(authState, {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				})
-			}
 
 			const anniversaryId = String(params.anniversaryId || params.id || '').trim()
 			if (!anniversaryId) {
@@ -550,12 +546,16 @@ module.exports = class AnniversaryService extends Service {
 				})
 			}
 
+			const visibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'creator_uid'
+			})
 			const detailRes = await anniversaryCollection
-				.where({
+				.where(andWhereConditions(visibilityCondition, {
 					_id: anniversaryId,
-					couple_id: activeCouple._id,
 					is_deleted: false
-				})
+				}))
 				.limit(1)
 				.get()
 

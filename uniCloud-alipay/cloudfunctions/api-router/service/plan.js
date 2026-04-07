@@ -3,6 +3,10 @@
 const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
 const { getActiveCoupleByUid } = require('../lib/couple')
+const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('../lib/content-scope')
 const { getUserById } = require('../lib/user-base')
 const { wishPlanCollection } = require('../lib/db')
 const { DEFAULT_NICKNAME } = require('../lib/constants')
@@ -395,26 +399,12 @@ async function getWishPlanById(itemId = '', coupleId = '') {
 	return res && Array.isArray(res.data) && res.data[0] ? res.data[0] : null
 }
 
-async function buildStats(coupleId = '') {
-	if (!coupleId) {
-		return {
-			total: 0,
-			wish_total: 0,
-			plan_total: 0,
-			completed_total: 0
-		}
-	}
-
-	const baseCondition = {
-		couple_id: coupleId,
-		is_deleted: false
-	}
-
+async function buildStats(baseCondition = {}) {
 	const [totalRes, wishRes, planRes, completedRes] = await Promise.all([
 		wishPlanCollection.where(baseCondition).count(),
-		wishPlanCollection.where(Object.assign({}, baseCondition, { type: ITEM_TYPE_WISH })).count(),
-		wishPlanCollection.where(Object.assign({}, baseCondition, { type: ITEM_TYPE_PLAN })).count(),
-		wishPlanCollection.where(Object.assign({}, baseCondition, { status: ITEM_STATUS_COMPLETED })).count()
+		wishPlanCollection.where(andWhereConditions(baseCondition, { type: ITEM_TYPE_WISH })).count(),
+		wishPlanCollection.where(andWhereConditions(baseCondition, { type: ITEM_TYPE_PLAN })).count(),
+		wishPlanCollection.where(andWhereConditions(baseCondition, { status: ITEM_STATUS_COMPLETED })).count()
 	])
 
 	return {
@@ -425,15 +415,8 @@ async function buildStats(coupleId = '') {
 	}
 }
 
-async function buildRecommendations(coupleId = '', typeFilter = '') {
-	if (!coupleId) {
-		return []
-	}
-
-	const allRes = await wishPlanCollection.where({
-		couple_id: coupleId,
-		is_deleted: false
-	}).limit(500).get()
+async function buildRecommendations(baseCondition = {}, typeFilter = '') {
+	const allRes = await wishPlanCollection.where(baseCondition).limit(500).get()
 
 	const existingList = Array.isArray(allRes.data) ? allRes.data : []
 	const existingRecommendKeys = new Set(
@@ -468,12 +451,6 @@ module.exports = class PlanService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const page = Math.max(1, parseInt(params.page, 10) || 1)
 			const pageSize = Math.min(MAX_LIST_PAGE_SIZE, Math.max(1, parseInt(params.pageSize, 10) || 20))
@@ -481,16 +458,19 @@ module.exports = class PlanService extends Service {
 			const status = normalizeStatusFilter(params.status)
 			const shouldQueryRecommendations = String(params.recommend || '').trim() === '1'
 
-			const whereCondition = {
-				couple_id: activeCouple._id,
+			const visibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'create_uid'
+			})
+			const baseWhereCondition = andWhereConditions(visibilityCondition, {
 				is_deleted: false
-			}
-			if (type) {
-				whereCondition.type = type
-			}
-			if (status) {
-				whereCondition.status = status
-			}
+			})
+			const whereCondition = andWhereConditions(
+				baseWhereCondition,
+				type ? { type } : {},
+				status ? { status } : {}
+			)
 
 			const [totalRes, listRes, stats, recommendations] = await Promise.all([
 				wishPlanCollection.where(whereCondition).count(),
@@ -499,9 +479,9 @@ module.exports = class PlanService extends Service {
 					.skip((page - 1) * pageSize)
 					.limit(pageSize)
 					.get(),
-				buildStats(activeCouple._id),
+				buildStats(baseWhereCondition),
 				shouldQueryRecommendations
-					? buildRecommendations(activeCouple._id, type)
+					? buildRecommendations(baseWhereCondition, type)
 					: Promise.resolve([])
 			])
 
