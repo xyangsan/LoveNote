@@ -14,6 +14,7 @@
 	import LoveLoginPopup from './components/love-login-popup/love-login-popup.vue'
 	import { emitAuthChanged } from './common/auth-center.js'
 	import { continuePendingRoute, installRouteAuthGuard } from './common/auth-guard.js'
+	import { useAppStateStore } from './store/app-state.js'
 	import {
 		closeLoginModal,
 		getLoginModalSnapshot,
@@ -27,6 +28,7 @@
 		},
 		data() {
 			return {
+				appStateStore: null,
 				loginModal: getLoginModalSnapshot(),
 				unsubscribeLoginModal: null
 			}
@@ -44,15 +46,27 @@
 		},
 		onLaunch() {
 			installRouteAuthGuard()
-			console.log('App Launch')
+			this.ensureAppStateStore().initAppBaseInfo()
 		},
 		onShow() {
-			console.log('App Show')
 		},
 		onHide() {
-			console.log('App Hide')
+		},
+		onShareAppMessage() {
+			const appStateStore = this.ensureAppStateStore()
+			return {
+				title: appStateStore.appName || '恋人手册',
+				path: '/pages/index/index',
+				imageUrl: ''
+			}
 		},
 		methods: {
+			ensureAppStateStore() {
+				if (!this.appStateStore) {
+					this.appStateStore = useAppStateStore()
+				}
+				return this.appStateStore
+			},
 			handleCloseLoginModal() {
 				closeLoginModal()
 			},

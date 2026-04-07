@@ -9,6 +9,24 @@ import { getCoupleApi } from '@/common/api/couple.js'
 import { getPlanApi } from '@/common/api/plan.js'
 import { getStatsApi } from '@/common/api/stats.js'
 import { defineStore } from 'pinia'
+import {
+	getDefaultAppBaseInfo,
+	normalizeAppBaseInfo
+} from './modules/app.js'
+import {
+	getDefaultCoupleCenterData,
+	normalizeCoupleCenterResult
+} from './modules/couple.js'
+import {
+	getDefaultPlanPreview,
+	buildPlanPreviewFromResult
+} from './modules/plan.js'
+import {
+	getDefaultOverviewStats,
+	getDefaultProfileFeatureStats,
+	buildOverviewStats,
+	buildProfileFeatureStatsFromOverview
+} from './modules/overview.js'
 
 const CACHE_KEY_USER = 'user'
 const CACHE_KEY_COUPLE = 'couple'
@@ -24,129 +42,75 @@ const CACHE_TTL = {
 
 const pendingTaskMap = {}
 
-function getDefaultCoupleCenterData() {
+function getDefaultCacheAt() {
 	return {
-		selfInfo: null,
-		activeCouple: null,
-		incomingRequests: [],
-		outgoingRequests: [],
-		historyList: [],
-		canSendRequest: true
-	}
-}
-
-function getDefaultPlanPreview() {
-	return [
-		{
-			title: '创建第一条愿望',
-			status: '待开始',
-			desc: '可在愿望清单里创建愿望或计划，并同步双方进度。',
-			progress: 0
-		}
-	]
-}
-
-function getDefaultOverviewStats() {
-	return {
-		isBound: false,
-		albumTotal: null,
-		dailyTotal: null,
-		anniversaryTotal: null,
-		planTotal: null,
-		wishTotal: null
-	}
-}
-
-function getDefaultProfileFeatureStats() {
-	return {
-		anniversaryTotal: null,
-		albumTotal: null,
-		dailyTotal: null,
-		wishTotal: null,
-		planTotal: null
-	}
-}
-
-function normalizeCoupleCenterResult(result = {}) {
-	return {
-		selfInfo: result.selfInfo || null,
-		activeCouple: result.activeCouple || null,
-		incomingRequests: Array.isArray(result.incomingRequests) ? result.incomingRequests : [],
-		outgoingRequests: Array.isArray(result.outgoingRequests) ? result.outgoingRequests : [],
-		historyList: Array.isArray(result.historyList) ? result.historyList : [],
-		canSendRequest: Boolean(result.canSendRequest)
-	}
-}
-
-function buildPlanPreviewFromResult(result = {}) {
-	const data = result && result.data ? result.data : {}
-	const list = Array.isArray(data.list) ? data.list : []
-	if (!list.length) {
-		const recommendations = Array.isArray(data.recommendations) ? data.recommendations : []
-		if (recommendations.length) {
-			return recommendations.slice(0, 2).map((item) => ({
-				title: item.title || '推荐愿望',
-				status: '推荐',
-				desc: item.description || `分类：${item.category || '未分类'}`,
-				progress: 0
-			}))
-		}
-		return getDefaultPlanPreview()
-	}
-
-	return list.slice(0, 3).map((item) => ({
-		title: item.title || '愿望清单',
-		status: item.status_text || '待开始',
-		desc: `${item.type_text || '清单'} · ${item.category || '未分类'} · 负责人 ${item.owner_snapshot && item.owner_snapshot.nickname ? item.owner_snapshot.nickname : '我'}`,
-		progress: Number(item.progress || 0)
-	}))
-}
-
-function buildOverviewStats(result = {}) {
-	const data = result && result.data ? result.data : {}
-	if (!data.isBound) {
-		return getDefaultOverviewStats()
-	}
-
-	return {
-		isBound: true,
-		albumTotal: Number(data.album_total || 0),
-		dailyTotal: Number(data.daily_total || 0),
-		anniversaryTotal: Number(data.anniversary_total || 0),
-		planTotal: Number(data.plan_total || 0),
-		wishTotal: Number(data.wish_total || 0)
-	}
-}
-
-function buildProfileFeatureStatsFromOverview(overviewStats = {}) {
-	if (!overviewStats || !overviewStats.isBound) {
-		return getDefaultProfileFeatureStats()
-	}
-
-	return {
-		anniversaryTotal: Number(overviewStats.anniversaryTotal || 0),
-		albumTotal: Number(overviewStats.albumTotal || 0),
-		dailyTotal: Number(overviewStats.dailyTotal || 0),
-		wishTotal: Number(overviewStats.wishTotal || 0),
-		planTotal: Number(overviewStats.planTotal || 0)
+		[CACHE_KEY_USER]: 0,
+		[CACHE_KEY_COUPLE]: 0,
+		[CACHE_KEY_PLAN_PREVIEW]: 0,
+		[CACHE_KEY_OVERVIEW]: 0
 	}
 }
 
 export const useAppStateStore = defineStore('app-state', {
 	state: () => ({
-		userInfo: null,
-		coupleCenterData: getDefaultCoupleCenterData(),
-		planPreview: getDefaultPlanPreview(),
-		overviewStats: getDefaultOverviewStats(),
-		profileFeatureStats: getDefaultProfileFeatureStats(),
-		cacheAt: {
-			[CACHE_KEY_USER]: 0,
-			[CACHE_KEY_COUPLE]: 0,
-			[CACHE_KEY_PLAN_PREVIEW]: 0,
-			[CACHE_KEY_OVERVIEW]: 0
+		appModule: {
+			baseInfo: getDefaultAppBaseInfo()
+		},
+		authModule: {
+			userInfo: null
+		},
+		coupleModule: {
+			centerData: getDefaultCoupleCenterData()
+		},
+		planModule: {
+			preview: getDefaultPlanPreview()
+		},
+		overviewModule: {
+			stats: getDefaultOverviewStats(),
+			profileFeatureStats: getDefaultProfileFeatureStats()
+		},
+		cacheModule: {
+			at: getDefaultCacheAt()
 		}
 	}),
 	getters: {
+		appBaseInfo(state) {
+			return state.appModule && state.appModule.baseInfo
+				? state.appModule.baseInfo
+				: getDefaultAppBaseInfo()
+		},
+		appName() {
+			const name = String(this.appBaseInfo && this.appBaseInfo.appName || '').trim()
+			return name || '恋人手册'
+		},
+		userInfo(state) {
+			return state.authModule ? state.authModule.userInfo : null
+		},
+		coupleCenterData(state) {
+			return state.coupleModule && state.coupleModule.centerData
+				? state.coupleModule.centerData
+				: getDefaultCoupleCenterData()
+		},
+		planPreview(state) {
+			return state.planModule && Array.isArray(state.planModule.preview)
+				? state.planModule.preview
+				: getDefaultPlanPreview()
+		},
+		overviewStats(state) {
+			return state.overviewModule && state.overviewModule.stats
+				? state.overviewModule.stats
+				: getDefaultOverviewStats()
+		},
+		profileFeatureStats(state) {
+			return state.overviewModule && state.overviewModule.profileFeatureStats
+				? state.overviewModule.profileFeatureStats
+				: getDefaultProfileFeatureStats()
+		},
+		cacheAt(state) {
+			return state.cacheModule && state.cacheModule.at
+				? state.cacheModule.at
+				: getDefaultCacheAt()
+		},
 		isLoggedIn() {
 			const userState = this.userInfo || {}
 			if (userState && userState._id) {
@@ -156,6 +120,18 @@ export const useAppStateStore = defineStore('app-state', {
 		}
 	},
 	actions: {
+		initAppBaseInfo(baseInfo = null) {
+			const nextBaseInfo = baseInfo && typeof baseInfo === 'object'
+				? baseInfo
+				: (typeof uni.getAppBaseInfo === 'function' ? uni.getAppBaseInfo() : {})
+			this.setAppBaseInfo(nextBaseInfo)
+			return this.appBaseInfo
+		},
+		setAppBaseInfo(baseInfo = {}) {
+			this.appModule = {
+				baseInfo: normalizeAppBaseInfo(baseInfo)
+			}
+		},
 		isCacheValid(cacheKey = '', ttl = 0) {
 			const cachedAt = Number(this.cacheAt[cacheKey] || 0)
 			if (!cachedAt) {
@@ -174,9 +150,11 @@ export const useAppStateStore = defineStore('app-state', {
 				return
 			}
 
-			this.cacheAt = Object.assign({}, this.cacheAt, {
-				[cacheKey]: Date.now()
-			})
+			this.cacheModule = {
+				at: Object.assign({}, this.cacheAt, {
+					[cacheKey]: Date.now()
+				})
+			}
 		},
 		invalidateCaches(cacheKeys = []) {
 			const keys = Array.isArray(cacheKeys) && cacheKeys.length
@@ -187,24 +165,42 @@ export const useAppStateStore = defineStore('app-state', {
 			keys.forEach((cacheKey) => {
 				nextCacheAt[cacheKey] = 0
 			})
-			this.cacheAt = nextCacheAt
+			this.cacheModule = {
+				at: nextCacheAt
+			}
 		},
 		invalidateRelationCounters() {
 			this.invalidateCaches([CACHE_KEY_PLAN_PREVIEW, CACHE_KEY_OVERVIEW])
 		},
 		clearAllState() {
-			this.userInfo = null
-			this.coupleCenterData = getDefaultCoupleCenterData()
-			this.planPreview = getDefaultPlanPreview()
-			this.overviewStats = getDefaultOverviewStats()
-			this.profileFeatureStats = getDefaultProfileFeatureStats()
-			this.invalidateCaches()
+			const currentBaseInfo = this.appBaseInfo
+			this.appModule = {
+				baseInfo: normalizeAppBaseInfo(currentBaseInfo)
+			}
+			this.authModule = {
+				userInfo: null
+			}
+			this.coupleModule = {
+				centerData: getDefaultCoupleCenterData()
+			}
+			this.planModule = {
+				preview: getDefaultPlanPreview()
+			}
+			this.overviewModule = {
+				stats: getDefaultOverviewStats(),
+				profileFeatureStats: getDefaultProfileFeatureStats()
+			}
+			this.cacheModule = {
+				at: getDefaultCacheAt()
+			}
 			Object.keys(pendingTaskMap).forEach((taskKey) => {
 				delete pendingTaskMap[taskKey]
 			})
 		},
 		updateUserInfo(userInfo = null, { markFetched = true } = {}) {
-			this.userInfo = userInfo || null
+			this.authModule = {
+				userInfo: userInfo || null
+			}
 			if (userInfo) {
 				saveCachedUserProfile(userInfo)
 			}
@@ -213,22 +209,29 @@ export const useAppStateStore = defineStore('app-state', {
 			}
 		},
 		updateCoupleCenterData(centerData = {}, { markFetched = true } = {}) {
-			this.coupleCenterData = normalizeCoupleCenterResult(centerData)
+			this.coupleModule = {
+				centerData: normalizeCoupleCenterResult(centerData)
+			}
 			if (markFetched) {
 				this.markCache(CACHE_KEY_COUPLE)
 			}
 		},
 		updateOverviewStats(overviewStats = {}, { markFetched = true } = {}) {
-			this.overviewStats = overviewStats && typeof overviewStats === 'object'
+			const nextOverviewStats = overviewStats && typeof overviewStats === 'object'
 				? Object.assign({}, getDefaultOverviewStats(), overviewStats)
 				: getDefaultOverviewStats()
-			this.profileFeatureStats = buildProfileFeatureStatsFromOverview(this.overviewStats)
+			this.overviewModule = {
+				stats: nextOverviewStats,
+				profileFeatureStats: buildProfileFeatureStatsFromOverview(nextOverviewStats)
+			}
 			if (markFetched) {
 				this.markCache(CACHE_KEY_OVERVIEW)
 			}
 		},
 		updatePlanPreview(planPreview = [], { markFetched = true } = {}) {
-			this.planPreview = Array.isArray(planPreview) && planPreview.length ? planPreview : getDefaultPlanPreview()
+			this.planModule = {
+				preview: Array.isArray(planPreview) && planPreview.length ? planPreview : getDefaultPlanPreview()
+			}
 			if (markFetched) {
 				this.markCache(CACHE_KEY_PLAN_PREVIEW)
 			}
@@ -249,7 +252,6 @@ export const useAppStateStore = defineStore('app-state', {
 				})
 
 			pendingTaskMap[taskKey] = pendingTask
-
 			return pendingTask
 		},
 		async restoreSessionData({ force = false } = {}) {
@@ -263,18 +265,10 @@ export const useAppStateStore = defineStore('app-state', {
 			}
 
 			await Promise.all([
-				this.fetchUserInfo({
-					force
-				}),
-				this.fetchCoupleCenter({
-					force
-				}),
-				this.fetchPlanPreview({
-					force
-				}),
-				this.fetchOverviewStats({
-					force
-				})
+				this.fetchUserInfo({ force }),
+				this.fetchCoupleCenter({ force }),
+				this.fetchPlanPreview({ force }),
+				this.fetchOverviewStats({ force })
 			])
 		},
 		async fetchUserInfo({ force = false } = {}) {
@@ -378,6 +372,7 @@ export const useAppStateStore = defineStore('app-state', {
 })
 
 export {
+	getDefaultAppBaseInfo,
 	getDefaultCoupleCenterData,
 	getDefaultOverviewStats,
 	getDefaultPlanPreview,
