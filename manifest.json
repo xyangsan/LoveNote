@@ -1,78 +1,86 @@
 {
-    "name" : "恋人手札",
-    "appid" : "__UNI__19A522B",
-    "description" : "一款面向情侣关系场景的双人记录与陪伴应用，支持情侣绑定、纪念日、相册、计划与日常互动。",
-    "versionName" : "1.1.1",
-    "versionCode" : "100",
-    "transformPx" : false,
-    /* 5+App特有相关 */
-    "app-plus" : {
-        "usingComponents" : true,
-        "nvueStyleCompiler" : "uni-app",
-        "compilerVersion" : 3,
-        "splashscreen" : {
-            "alwaysShowBeforeRender" : true,
-            "waiting" : true,
-            "autoclose" : true,
-            "delay" : 0
-        },
-        /* 模块配置 */
-        "modules" : {},
-        /* 应用发布信息 */
-        "distribute" : {
-            /* android打包配置 */
-            "android" : {
-                "permissions" : [
-                    "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
-                    "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>",
-                    "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.CAMERA\"/>",
-                    "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
-                    "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
-                    "<uses-feature android:name=\"android.hardware.camera\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
-                ]
-            },
-            /* ios打包配置 */
-            "ios" : {},
-            /* SDK配置 */
-            "sdkConfigs" : {}
-        }
-    },
-    /* 快应用特有相关 */
-    "quickapp" : {},
-    /* 小程序特有相关 */
-    "mp-weixin" : {
-        "appid" : "wxd18ed19b94e50036",
-        "setting" : {
-            "urlCheck" : false,
-            "minified" : true
-        },
-        "usingComponents" : true,
-        "permission" : {
-            "scope.userLocation" : {
-                "desc" : "用户在发表动态时，可手动选择当前位置，发布动态后展示位置"
-            }
-        }
-    },
-    "mp-alipay" : {
-        "usingComponents" : true
-    },
-    "mp-baidu" : {
-        "usingComponents" : true
-    },
-    "mp-toutiao" : {
-        "usingComponents" : true
-    },
-    "uniStatistics" : {
-        "enable" : false
-    },
-    "vueVersion" : "3"
+	"name": "恋人手札",
+	"appid": "__UNI__19A522B",
+	"description": "一款面向情侣关系场景的双人记录与陪伴应用，支持情侣绑定、纪念日、相册、计划与日常互动。",
+	"versionName": "1.1.1",
+	"versionCode": "100",
+	"transformPx": false,
+	/* 5+App特有相关 */
+	"app-plus": {
+		"usingComponents": true,
+		"nvueStyleCompiler": "uni-app",
+		"compilerVersion": 3,
+		"splashscreen": {
+			"alwaysShowBeforeRender": true,
+			"waiting": true,
+			"autoclose": true,
+			"delay": 0
+		},
+		/* 模块配置 */
+		"modules": {},
+		/* 应用发布信息 */
+		"distribute": {
+			/* android打包配置 */
+			"android": {
+				"permissions": [
+					"<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
+					"<uses-permission android:name=\"android.permission.VIBRATE\"/>",
+					"<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
+					"<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>",
+					"<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
+					"<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.CAMERA\"/>",
+					"<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
+					"<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
+					"<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
+					"<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
+					"<uses-feature android:name=\"android.hardware.camera\"/>",
+					"<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
+				]
+			},
+			/* ios打包配置 */
+			"ios": {},
+			/* SDK配置 */
+			"sdkConfigs": {}
+		}
+	},
+	/* 快应用特有相关 */
+	"quickapp": {},
+	/* 小程序特有相关 */
+	"mp-weixin": {
+		"appid": "wxd18ed19b94e50036",
+		"setting": {
+			"urlCheck": false,
+			"minified": true
+		},
+		"usingComponents": true,
+		"permission": {
+			"scope.userLocation": {
+				"desc": "用户在发表动态时，可手动选择当前位置，发布动态后展示位置"
+			}
+		}
+	},
+	"mp-alipay": {
+		"usingComponents": true
+	},
+	"mp-baidu": {
+		"usingComponents": true,
+		"setting": {
+			"urlCheck": true
+		},
+		"dynamicLib": { //引入百度小程序动态库
+			"editorLib": {
+				"provider": "swan-editor"
+			}
+		}
+	},
+	"mp-toutiao": {
+		"usingComponents": true
+	},
+	"uniStatistics": {
+		"enable": false
+	},
+	"vueVersion": "3"
 }

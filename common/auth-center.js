@@ -22,8 +22,10 @@ export function getCachedUserProfile() {
 	const nickname = cachedValue.nickname ? `${cachedValue.nickname}`.trim() : ''
 	const avatarUrl = cachedValue.avatarUrl ? `${cachedValue.avatarUrl}` : ''
 	const avatarFileId = cachedValue.avatarFileId ? `${cachedValue.avatarFileId}` : ''
+	const momentsCoverUrl = cachedValue.momentsCoverUrl ? `${cachedValue.momentsCoverUrl}` : ''
+	const momentsCoverFileId = cachedValue.momentsCoverFileId ? `${cachedValue.momentsCoverFileId}` : ''
 
-	if (!nickname && !avatarUrl && !avatarFileId) {
+	if (!nickname && !avatarUrl && !avatarFileId && !momentsCoverUrl && !momentsCoverFileId) {
 		return null
 	}
 
@@ -31,6 +33,8 @@ export function getCachedUserProfile() {
 		nickname,
 		avatarUrl,
 		avatarFileId,
+		momentsCoverUrl,
+		momentsCoverFileId,
 		updatedAt: Number(cachedValue.updatedAt || Date.now())
 	}
 }
@@ -43,8 +47,10 @@ export function saveCachedUserProfile(profile = {}) {
 	const nickname = profile.nickname ? `${profile.nickname}`.trim() : ''
 	const avatarUrl = profile.avatarUrl ? `${profile.avatarUrl}` : ''
 	const avatarFileId = profile.avatarFileId ? `${profile.avatarFileId}` : ''
+	const momentsCoverUrl = profile.momentsCoverUrl ? `${profile.momentsCoverUrl}` : ''
+	const momentsCoverFileId = profile.momentsCoverFileId ? `${profile.momentsCoverFileId}` : ''
 
-	if (!nickname && !avatarUrl && !avatarFileId) {
+	if (!nickname && !avatarUrl && !avatarFileId && !momentsCoverUrl && !momentsCoverFileId) {
 		return null
 	}
 
@@ -52,6 +58,8 @@ export function saveCachedUserProfile(profile = {}) {
 		nickname,
 		avatarUrl,
 		avatarFileId,
+		momentsCoverUrl,
+		momentsCoverFileId,
 		updatedAt: Date.now()
 	}
 

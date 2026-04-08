@@ -1,18 +1,17 @@
 <template>
 	<view class="moments-page" @click="closeActionPanel">
 		<view class="moments-shell">
-			<view class="moments-topbar">
-				<view class="moments-topbar__icon" @click.stop="goBack">
-					<text class="moments-topbar__icon-text">‹</text>
-				</view>
-				<view class="moments-topbar__icon">
-					<text class="moments-topbar__camera">◻</text>
-				</view>
-			</view>
 
 			<view class="moments-header">
-				<image class="moments-header__cover" :src="coverImage" mode="aspectFill"></image>
+				<image
+					class="moments-header__cover"
+					:src="coverImage"
+					mode="aspectFill"
+				></image>
 				<view class="moments-header__mask"></view>
+				<view class="moments-header__cover-edit" @click.stop="openCoverActionSheet">
+					<text class="moments-header__cover-edit-text">{{ '编辑封面' }}</text>
+				</view>
 				<view class="moments-header__user">
 					<text class="moments-header__name">{{ headerNickname }}</text>
 					<fui-avatar
@@ -26,10 +25,9 @@
 					></fui-avatar>
 				</view>
 			</view>
-
 			<view v-if="loading && postList.length === 0" class="state-block">
 				<fui-loading type="rotate" size="44"></fui-loading>
-				<text class="state-block__text">加载中...</text>
+				<text class="state-block__text">{{ '加载中...' }}</text>
 			</view>
 
 			<view v-else-if="postList.length === 0" class="state-block">
@@ -95,7 +93,7 @@
 									v-if="post.is_self"
 									class="moment-item__delete"
 									@click.stop="handleDelete(post)"
-								>删除</text>
+								>{{ '删除' }}</text>
 							</view>
 
 							<view class="moment-actions">
@@ -104,9 +102,9 @@
 									class="moment-action-panel"
 									@click.stop
 								>
-									<text class="moment-action-panel__item" @click.stop="toggleLike(post)">{{ post.is_liked ? '取消' : '赞' }}</text>
+									<text class="moment-action-panel__item" @click.stop="toggleLike(post)">{{ post.is_liked ? '取消赞' : '赞' }}</text>
 									<view class="moment-action-panel__divider"></view>
-									<text class="moment-action-panel__item" @click.stop="openCommentInput(post)">评论</text>
+									<text class="moment-action-panel__item" @click.stop="openCommentInput(post)">{{ '评论' }}</text>
 								</view>
 								<view class="moment-action-trigger" @click.stop="toggleActionPanel(post)">
 									<view class="moment-action-trigger__dot"></view>
@@ -119,7 +117,7 @@
 							<view class="moment-interactions__triangle"></view>
 
 							<view v-if="Number(post.like_count || 0) > 0" class="moment-like-row">
-								<text class="moment-like-row__icon">♥</text>
+								<text class="moment-like-row__icon">{{ '♥' }}</text>
 								<text class="moment-like-row__text">{{ likeSummary(post) }}</text>
 							</view>
 
@@ -160,45 +158,47 @@
 			</view>
 		</view>
 
-		<view v-if="commentEditorVisible" class="comment-editor-mask" @click.stop="closeCommentEditor"></view>
-		<view
-			v-if="commentEditorVisible"
-			class="comment-editor"
-			:style="{ bottom: `${keyboardHeight}px` }"
-			@click.stop
-		>
-			<view class="comment-editor__box">
-				<textarea
-					class="comment-editor__textarea"
-					:value="commentDraft"
-					:placeholder="commentPlaceholder"
-					:focus="commentInputFocus"
-					:cursor-spacing="24"
-					:adjust-position="false"
-					:show-confirm-bar="false"
-					@input="onCommentInput"
-					@focus="onCommentFocus"
-					@blur="onCommentBlur"
-					@confirm="submitComment"
-				></textarea>
-			</view>
-			<text
-				class="comment-editor__submit"
-				:class="{ 'comment-editor__submit--disabled': !canSubmitComment }"
-				@click.stop="submitComment"
-			>发布</text>
-		</view>
+		<love-editor-picker
+			:visible="commentEditorVisible"
+			:value="commentDraft"
+			:placeholder="commentPlaceholder"
+			@input="commentDraft = $event"
+			@close="handleCommentEditorClose"
+			@send="submitComment"
+		></love-editor-picker>
 
 		<view v-if="!commentEditorVisible" class="publish-fab" @click.stop="noCouple ? goCouplePage() : goPublish()">
 			<text class="publish-fab__icon">+</text>
 			<text class="publish-fab__text">{{ noCouple ? '去绑定' : '发布' }}</text>
 		</view>
+		<fui-actionsheet
+			:show="coverActionSheet.show"
+			:item-list="coverActionSheet.items"
+			@cancel="closeCoverActionSheet"
+			@click="handleCoverActionSheetClick"
+		></fui-actionsheet>
+
+		<qf-image-cropper
+			v-if="coverCropperVisible"
+			ref="coverCropper"
+			:src="coverCropperSrc"
+			:choosable="false"
+			:width="720"
+			:height="420"
+			file-type="jpg"
+			:z-index="1200"
+			@crop="handleCoverCrop"
+		>
+			<view class="cover-cropper__cancel" @click="cancelCoverCropper">{{ '取消' }}</view>
+		</qf-image-cropper>
 	</view>
 </template>
 
 <script>
 import { DEFAULT_AVATAR, getCachedUserProfile } from '../../common/auth-center.js'
 import { getDailyApi } from '../../common/api/daily.js'
+import { getUserApi } from '../../common/api/user.js'
+import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 import { useAppStateStore } from '../../store/app-state.js'
 
 const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
@@ -230,6 +230,29 @@ function resolvePostCover(post = {}) {
 	return String(firstMedia.thumbnail_url || firstMedia.url || '').trim()
 }
 
+function isChooseCanceledError(error = {}) {
+	const message = String((error && (error.errMsg || error.message)) || '').toLowerCase()
+	return message.includes('cancel')
+}
+
+function getChooseResultFilePath(result = {}) {
+	const tempFiles = Array.isArray(result.tempFiles) ? result.tempFiles : []
+	if (tempFiles.length) {
+		const firstFile = tempFiles[0] && typeof tempFiles[0] === 'object' ? tempFiles[0] : {}
+		const filePath = String(firstFile.tempFilePath || firstFile.path || '').trim()
+		if (filePath) {
+			return filePath
+		}
+	}
+
+	const tempFilePaths = Array.isArray(result.tempFilePaths) ? result.tempFilePaths : []
+	if (tempFilePaths.length) {
+		return String(tempFilePaths[0] || '').trim()
+	}
+
+	return ''
+}
+
 export default {
 	data() {
 		return {
@@ -245,50 +268,57 @@ export default {
 			activeActionPostId: '',
 			headerProfile: {
 				nickname: '',
-				avatarUrl: ''
+				avatarUrl: '',
+				momentsCoverUrl: '',
+				momentsCoverFileId: ''
 			},
+			coverActionSheet: {
+				show: false,
+				items: [
+					{ text: '拍照' },
+					{ text: '从相册中选择' }
+				]
+			},
+			coverCropperVisible: false,
+			coverCropperSrc: '',
+			coverUploading: false,
 			appStateStore: null,
 			commentEditorVisible: false,
 			commentDraft: '',
 			commentTargetPostId: '',
 			commentReplyCommentId: '',
 			commentReplyNickname: '',
-			commentInputFocus: false,
-			keyboardHeight: 0
 		}
 	},
 	onLoad() {
 		this.syncHeaderProfile()
 		this.loadPostList(true)
-		this.bindKeyboardHeightListener()
 	},
 	computed: {
 		headerNickname() {
 			const nickname = String(this.headerProfile.nickname || '').trim()
-			return nickname || '未登录'
+			return nickname || '我'
 		},
 		headerAvatar() {
 			const avatar = String(this.headerProfile.avatarUrl || '').trim()
 			return avatar || DEFAULT_AVATAR
 		},
 		coverImage() {
+			const customCover = String(this.headerProfile.momentsCoverUrl || '').trim()
+			if (customCover) {
+				return customCover
+			}
 			const firstPost = this.postList.find((item) => Array.isArray(item.media_list) && item.media_list.length)
 			const mediaCover = firstPost ? resolvePostCover(firstPost) : ''
 			return mediaCover || DEFAULT_COVER_IMAGE
 		},
 		commentPlaceholder() {
 			const nickname = String(this.commentReplyNickname || '').trim()
-			return nickname ? `回复${nickname}` : '评论一下，交个朋友'
-		},
-		canSubmitComment() {
-			return String(this.commentDraft || '').trim().length > 0
+			return nickname ? `回复 ${nickname}` : '评论'
 		}
 	},
 	onShow() {
 		this.syncHeaderProfile()
-	},
-	onUnload() {
-		this.unbindKeyboardHeightListener()
 	},
 	onPullDownRefresh() {
 		this.loadPostList(true).finally(() => {
@@ -324,46 +354,166 @@ export default {
 
 			this.headerProfile = {
 				nickname: String((userInfo && userInfo.nickname) || cached.nickname || '').trim(),
-				avatarUrl: String((userInfo && userInfo.avatarUrl) || cached.avatarUrl || '').trim()
+				avatarUrl: String((userInfo && userInfo.avatarUrl) || cached.avatarUrl || '').trim(),
+				momentsCoverUrl: String((userInfo && userInfo.momentsCoverUrl) || cached.momentsCoverUrl || '').trim(),
+				momentsCoverFileId: String((userInfo && userInfo.momentsCoverFileId) || cached.momentsCoverFileId || '').trim()
 			}
 		},
 		closeActionPanel() {
 			this.activeActionPostId = ''
 		},
-		bindKeyboardHeightListener() {
-			if (typeof uni.onKeyboardHeightChange !== 'function') {
+		openCoverActionSheet() {
+			if (this.coverUploading) {
 				return
 			}
-			uni.onKeyboardHeightChange((res = {}) => {
-				this.keyboardHeight = Math.max(0, Number(res.height || 0))
+			this.closeActionPanel()
+			this.coverActionSheet = Object.assign({}, this.coverActionSheet, {
+				show: true
 			})
 		},
-		unbindKeyboardHeightListener() {
-			if (typeof uni.offKeyboardHeightChange !== 'function') {
+		closeCoverActionSheet() {
+			if (!this.coverActionSheet.show) {
 				return
 			}
-			uni.offKeyboardHeightChange()
+			this.coverActionSheet = Object.assign({}, this.coverActionSheet, {
+				show: false
+			})
+		},
+		async handleCoverActionSheetClick(action = {}) {
+			const actionIndex = Number(action.index)
+			this.closeCoverActionSheet()
+			if (![0, 1].includes(actionIndex)) {
+				return
+			}
+			await this.chooseCoverImage(actionIndex === 0 ? 'camera' : 'album')
+		},
+		async chooseCoverImage(sourceType = 'album') {
+			try {
+				const tempFilePath = await new Promise((resolve, reject) => {
+					if (typeof uni.chooseMedia === 'function') {
+						uni.chooseMedia({
+							count: 1,
+							mediaType: ['image'],
+							sourceType: [sourceType],
+							success: (result) => {
+								resolve(getChooseResultFilePath(result))
+							},
+							fail: reject
+						})
+						return
+					}
+
+					uni.chooseImage({
+						count: 1,
+						sourceType: [sourceType],
+						success: (result) => {
+							resolve(getChooseResultFilePath(result))
+						},
+						fail: reject
+					})
+				})
+
+				const normalizedFilePath = String(tempFilePath || '').trim()
+				if (!normalizedFilePath) {
+					throw new Error('未获取到可用的图片文件')
+				}
+
+				this.coverCropperSrc = ''
+				this.coverCropperVisible = true
+				this.$nextTick(() => {
+					this.coverCropperSrc = normalizedFilePath
+				})
+			} catch (error) {
+				if (isChooseCanceledError(error)) {
+					return
+				}
+				uni.showToast({
+					title: error.message || '选择图片失败',
+					icon: 'none'
+				})
+			}
+		},
+		cancelCoverCropper() {
+			this.coverCropperVisible = false
+			this.coverCropperSrc = ''
+		},
+		async handleCoverCrop(event = {}) {
+			const tempFilePath = String(event.tempFilePath || '').trim()
+			this.cancelCoverCropper()
+			if (!tempFilePath) {
+				uni.showToast({
+					title: '裁剪失败，请重试',
+					icon: 'none'
+				})
+				return
+			}
+			await this.saveCoverImage(tempFilePath)
+		},
+		async saveCoverImage(filePath = '') {
+			if (this.coverUploading) {
+				return
+			}
+
+			const normalizedFilePath = String(filePath || '').trim()
+			if (!normalizedFilePath) {
+				return
+			}
+
+			this.coverUploading = true
+			uni.showLoading({
+				title: '上传中...',
+				mask: true
+			})
+			try {
+				const uploadResult = await uploadFileWithModule({
+					filePath: normalizedFilePath,
+					module: 'daily/covers',
+					prefix: 'feed-cover',
+					fileType: 'image'
+				})
+				const result = await getUserApi().updateProfile({
+					momentsCoverUrl: uploadResult.fileURL || '',
+					momentsCoverFileId: uploadResult.fileID || ''
+				})
+				if (result && result.errCode && result.errCode !== 0) {
+					throw new Error(result.errMsg || '更新封面失败')
+				}
+
+				const latestUserInfo = result && result.userInfo ? result.userInfo : null
+				if (latestUserInfo) {
+					this.ensureStore().updateUserInfo(latestUserInfo)
+					this.syncHeaderProfile()
+				} else {
+					this.headerProfile = Object.assign({}, this.headerProfile, {
+						momentsCoverUrl: String(uploadResult.fileURL || '').trim(),
+						momentsCoverFileId: String(uploadResult.fileID || '').trim()
+					})
+				}
+
+				uni.showToast({
+					title: '封面更新成功',
+					icon: 'success'
+				})
+			} catch (error) {
+				console.error('saveCoverImage failed', error)
+				uni.showToast({
+					title: error.message || '更新封面失败',
+					icon: 'none'
+				})
+			} finally {
+				this.coverUploading = false
+				uni.hideLoading()
+			}
 		},
 		resetCommentEditorState() {
 			this.commentDraft = ''
 			this.commentTargetPostId = ''
 			this.commentReplyCommentId = ''
 			this.commentReplyNickname = ''
-			this.commentInputFocus = false
-			this.keyboardHeight = 0
 		},
-		closeCommentEditor() {
+		handleCommentEditorClose() {
 			this.commentEditorVisible = false
 			this.resetCommentEditorState()
-		},
-		onCommentInput(event = {}) {
-			this.commentDraft = String(event.detail && event.detail.value || '')
-		},
-		onCommentFocus() {
-			this.commentInputFocus = true
-		},
-		onCommentBlur() {
-			this.commentInputFocus = false
 		},
 		toggleActionPanel(post = {}) {
 			const postId = String(post._id || '').trim()
@@ -391,7 +541,7 @@ export default {
 				return ''
 			}
 			const replyNickname = String(comment.reply_to_nickname || '').trim()
-			return replyNickname ? `回复${replyNickname}：${content}` : content
+			return replyNickname ? `回复 ${replyNickname}: ${content}` : content
 		},
 		normalizePostItem(post = {}) {
 			return Object.assign({}, post, {
@@ -415,7 +565,7 @@ export default {
 		locationText(post = {}) {
 			const location = post && post.location && typeof post.location === 'object' ? post.location : {}
 			const name = String(location.name || '').trim()
-			return name ? `📍 ${name}` : ''
+			return name ? `位置：${name}` : ''
 		},
 		singleMediaBoxStyle(post = {}) {
 			const mediaList = Array.isArray(post.media_list) ? post.media_list : []
@@ -475,7 +625,7 @@ export default {
 					postId
 				})
 				if (result && result.errCode && result.errCode !== 0) {
-					throw new Error(result.errMsg || '操作失败')
+					throw new Error(result.errMsg || '操作失败，请重试')
 				}
 				const data = result.data || {}
 				this.updatePostInList(postId, (item) => Object.assign({}, item, {
@@ -484,7 +634,7 @@ export default {
 				}))
 			} catch (error) {
 				uni.showToast({
-					title: error.message || '点赞操作失败',
+					title: error.message || '操作失败，请重试',
 					icon: 'none'
 				})
 			}
@@ -506,9 +656,6 @@ export default {
 			this.commentReplyNickname = replyNickname
 			this.commentDraft = ''
 			this.commentEditorVisible = true
-			this.$nextTick(() => {
-				this.commentInputFocus = true
-			})
 		},
 		async submitComment() {
 			const postId = String(this.commentTargetPostId || '').trim()
@@ -528,7 +675,7 @@ export default {
 					replyToCommentId
 				})
 				if (result && result.errCode && result.errCode !== 0) {
-					throw new Error(result.errMsg || '评论失败')
+					throw new Error(result.errMsg || '评论失败，请重试')
 				}
 				const data = result.data || {}
 				const newComment = data.comment && typeof data.comment === 'object' ? data.comment : null
@@ -542,10 +689,10 @@ export default {
 						comment_count: Number(data.comment_count || commentList.length)
 					})
 				})
-				this.closeCommentEditor()
+				this.handleCommentEditorClose()
 			} catch (error) {
 				uni.showToast({
-					title: error.message || '评论失败',
+					title: error.message || '评论失败，请重试',
 					icon: 'none'
 				})
 			}
@@ -601,7 +748,7 @@ export default {
 						this.pagination.hasMore = false
 						return
 					}
-					throw new Error(result.errMsg || '加载双人日常失败')
+					throw new Error(result.errMsg || '加载动态失败，请重试')
 				}
 
 				const data = result.data || {}
@@ -628,7 +775,7 @@ export default {
 			} catch (error) {
 				console.error('loadPostList failed', error)
 				uni.showToast({
-					title: error.message || '加载失败',
+					title: error.message || '加载动态失败，请重试',
 					icon: 'none'
 				})
 			} finally {
@@ -653,7 +800,7 @@ export default {
 
 			uni.showModal({
 				title: '删除动态',
-				content: '确定删除这条日常吗？删除后无法恢复。',
+				content: '删除后不可恢复，确定删除这条动态吗？',
 				confirmColor: '#e76f51',
 				success: async (res) => {
 					if (!res.confirm) {
@@ -661,7 +808,7 @@ export default {
 					}
 
 					uni.showLoading({
-						title: '删除中...',
+						title: '正在删除...',
 						mask: true
 					})
 					try {
@@ -669,7 +816,7 @@ export default {
 							postId
 						})
 						if (result && result.errCode && result.errCode !== 0) {
-							throw new Error(result.errMsg || '删除失败')
+							throw new Error(result.errMsg || '删除失败，请重试')
 						}
 
 						uni.showToast({
@@ -680,7 +827,7 @@ export default {
 					} catch (error) {
 						console.error('delete daily post failed', error)
 						uni.showToast({
-							title: error.message || '删除失败',
+							title: error.message || '删除失败，请重试',
 							icon: 'none'
 						})
 					} finally {
@@ -695,7 +842,7 @@ export default {
 
 <style>
 .moments-page {
-	min-height: 100vh;
+	height: 100vh;
 	background: linear-gradient(180deg, #FFF7F1 0%, #FFF0E8 100%);
 	padding-bottom: 160rpx;
 }
@@ -756,6 +903,22 @@ export default {
 	bottom: 0;
 	height: 200rpx;
 	background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.moments-header__cover-edit {
+	position: absolute;
+	left: 24rpx;
+	top: 24rpx;
+	z-index: 9;
+	padding: 10rpx 20rpx;
+	border-radius: 999rpx;
+	background: rgba(0, 0, 0, 0.34);
+}
+
+.moments-header__cover-edit-text {
+	font-size: 22rpx;
+	color: #ffffff;
+	line-height: 1;
 }
 
 .moments-header__user {
@@ -1059,58 +1222,6 @@ export default {
 	color: #ababab;
 }
 
-.comment-editor-mask {
-	position: fixed;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	z-index: 120;
-}
-
-.comment-editor {
-	position: fixed;
-	left: 0;
-	right: 0;
-	padding: 16rpx 16rpx calc(16rpx + env(safe-area-inset-bottom));
-	display: flex;
-	align-items: center;
-	gap: 20rpx;
-	background: #ffffff;
-	z-index: 130;
-}
-
-.comment-editor__box {
-	flex: 1;
-	height: 160rpx;
-	padding: 14rpx 16rpx;
-	border-radius: 12rpx;
-	border: 1rpx solid #e5e5e5;
-	background: #f6f6f6;
-	box-sizing: border-box;
-}
-
-.comment-editor__textarea {
-	width: 100%;
-	height: 100%;
-	font-size: 28rpx;
-	line-height: 1.55;
-	color: #333333;
-}
-
-.comment-editor__submit {
-	flex-shrink: 0;
-	font-size: 32rpx;
-	font-weight: 500;
-	color: #ffb422;
-	padding: 12rpx 6rpx;
-}
-
-.comment-editor__submit--disabled {
-	color: #e2d2a6;
-}
-
 .publish-fab {
 	position: fixed;
 	left: 50%;
@@ -1137,5 +1248,18 @@ export default {
 	font-size: 24rpx;
 	color: #ffffff;
 	font-weight: 600;
+}
+
+.cover-cropper__cancel {
+	position: fixed;
+	top: calc(24rpx + env(safe-area-inset-top));
+	left: 24rpx;
+	padding: 10rpx 20rpx;
+	border-radius: 999rpx;
+	font-size: 24rpx;
+	line-height: 1.1;
+	color: #ffffff;
+	background: rgba(255, 255, 255, 0.24);
+	z-index: 1600;
 }
 </style>

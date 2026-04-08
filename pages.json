@@ -5,8 +5,7 @@
 			"fui-(.*)": "@/components/firstui/fui-$1/fui-$1.vue"
 		}
 	},
-	"pages": [
-		{
+	"pages": [{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "恋人手札"
@@ -71,7 +70,12 @@
 			"style": {
 				"navigationBarTitleText": "双人日常",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
+				"backgroundTextStyle": "dark",
+				// #ifdef MP-BAIDU
+				"usingComponents": {
+					"editor": "dynamicLib://editorLib/editor"
+				}
+				// #endif
 			}
 		},
 		{
@@ -128,8 +132,7 @@
 		"selectedColor": "#EC7558",
 		"backgroundColor": "#FFF7F1",
 		"borderStyle": "black",
-		"list": [
-			{
+		"list": [{
 				"pagePath": "pages/index/index",
 				"text": "首页",
 				"iconPath": "/static/tabber/home.png",

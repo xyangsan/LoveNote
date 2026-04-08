@@ -53,6 +53,14 @@
 				}
 			}
 		},
+		"moments_cover_url": {
+			"bsonType": "string",
+			"title": "日常封面地址"
+		},
+		"moments_cover_file_id": {
+			"bsonType": "string",
+			"title": "日常封面文件ID"
+		},
 		"gender": {
 			"bsonType": "int",
 			"title": "性别",

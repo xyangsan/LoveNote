@@ -26,6 +26,46 @@ function isValidBirthday(value = '') {
 	return `${date.getFullYear()}-${padDateUnit(date.getMonth() + 1)}-${padDateUnit(date.getDate())}` === value
 }
 
+async function resolveMomentsCover(record = {}) {
+	const momentsCoverFileId = String(record.moments_cover_file_id || '').trim()
+	const momentsCoverUrl = String(record.moments_cover_url || '').trim()
+
+	if (momentsCoverFileId) {
+		if (/^https?:\/\//i.test(momentsCoverFileId)) {
+			return {
+				momentsCoverFileId: '',
+				momentsCoverUrl: momentsCoverFileId
+			}
+		}
+
+		try {
+			const tempFileRes = await uniCloud.getTempFileURL({
+				fileList: [momentsCoverFileId]
+			})
+			const fileItem = tempFileRes && Array.isArray(tempFileRes.fileList) ? tempFileRes.fileList[0] : null
+			const tempFileUrl = String((fileItem && (fileItem.tempFileURL || fileItem.tempFileUrl || fileItem.url || fileItem.download_url)) || '').trim()
+			if (tempFileUrl) {
+				return {
+					momentsCoverFileId,
+					momentsCoverUrl: tempFileUrl
+				}
+			}
+		} catch (error) {
+			console.warn('resolveMomentsCover failed', error)
+		}
+
+		return {
+			momentsCoverFileId,
+			momentsCoverUrl: momentsCoverUrl || momentsCoverFileId
+		}
+	}
+
+	return {
+		momentsCoverFileId: '',
+		momentsCoverUrl
+	}
+}
+
 function buildProfileUpdateData(params = {}) {
 	const updateData = {
 		updated_at: Date.now()
@@ -115,6 +155,8 @@ function buildProfileUpdateData(params = {}) {
 	const avatarFileId = typeof params.avatarFileId === 'string' ? params.avatarFileId.trim() : ''
 	const avatarUrl = typeof params.avatarUrl === 'string' ? params.avatarUrl.trim() : ''
 	const avatarFile = params.avatarFile && typeof params.avatarFile === 'object' ? params.avatarFile : null
+	const momentsCoverFileId = typeof params.momentsCoverFileId === 'string' ? params.momentsCoverFileId.trim() : ''
+	const momentsCoverUrl = typeof params.momentsCoverUrl === 'string' ? params.momentsCoverUrl.trim() : ''
 
 	if (avatarFileId) {
 		updateData.avatar = avatarFileId
@@ -128,6 +170,19 @@ function buildProfileUpdateData(params = {}) {
 		updateData.avatar = avatarUrl
 		updateData.avatar_file_id = dbCmd.remove()
 		updateData.avatar_file = dbCmd.remove()
+	}
+
+	if (params.momentsCoverFileId !== undefined || params.momentsCoverUrl !== undefined) {
+		if (momentsCoverFileId) {
+			updateData.moments_cover_file_id = momentsCoverFileId
+			updateData.moments_cover_url = momentsCoverUrl || momentsCoverFileId
+		} else if (momentsCoverUrl) {
+			updateData.moments_cover_url = momentsCoverUrl
+			updateData.moments_cover_file_id = dbCmd.remove()
+		} else {
+			updateData.moments_cover_url = dbCmd.remove()
+			updateData.moments_cover_file_id = dbCmd.remove()
+		}
 	}
 
 	return updateData
@@ -145,6 +200,7 @@ async function updateUserProfile(uid, params = {}) {
 async function formatUserInfo(record = {}) {
 	const { buildCoupleSummary } = require('./couple')
 	const { avatarFileId, avatarUrl } = await resolveAvatar(record)
+	const { momentsCoverFileId, momentsCoverUrl } = await resolveMomentsCover(record)
 	const coupleInfo = record._id ? await buildCoupleSummary(record._id) : null
 
 	return {
@@ -152,6 +208,8 @@ async function formatUserInfo(record = {}) {
 		nickname: record.nickname || record.username || DEFAULT_NICKNAME,
 		avatarUrl,
 		avatarFileId,
+		momentsCoverUrl,
+		momentsCoverFileId,
 		gender: Number(record.gender || 0),
 		mobile: record.mobile || '',
 		birthday: record.birthday || '',
