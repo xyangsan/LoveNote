@@ -1,6 +1,6 @@
 {
   "name": "love-note",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "private": true,
   "dependencies": {
     "pinia": "^2.1.7",

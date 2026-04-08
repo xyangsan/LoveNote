@@ -5,7 +5,6 @@ import { hasValidLogin } from './common/auth-center.js'
 
 // #ifndef VUE3
 import Vue from 'vue'
-console.log('VUE 2');
 import { PiniaVuePlugin, createPinia as createVue2Pinia } from 'pinia'
 import './uni.promisify.adaptor'
 Vue.config.productionTip = false
@@ -53,7 +52,6 @@ app.$mount()
 // #endif
 
 // #ifdef VUE3
-console.log('VUE3');
 import { createSSRApp } from 'vue'
 import { createPinia } from 'pinia'
 export function createApp() {
