@@ -1,0 +1,682 @@
+[
+  {
+    "glyph": "🌚",
+    "group": "Travel & Places",
+    "unicode": "1f31a"
+  },
+  {
+    "glyph": "🌛",
+    "group": "Travel & Places",
+    "unicode": "1f31b"
+  },
+  {
+    "glyph": "🌜",
+    "group": "Travel & Places",
+    "unicode": "1f31c"
+  },
+  {
+    "glyph": "🌝",
+    "group": "Travel & Places",
+    "unicode": "1f31d"
+  },
+  {
+    "glyph": "🌞",
+    "group": "Travel & Places",
+    "unicode": "1f31e"
+  },
+  {
+    "glyph": "🌬️",
+    "group": "Travel & Places",
+    "unicode": "1f32c fe0f"
+  },
+  {
+    "glyph": "🐭",
+    "group": "Animals & Nature",
+    "unicode": "1f42d"
+  },
+  {
+    "glyph": "🐮",
+    "group": "Animals & Nature",
+    "unicode": "1f42e"
+  },
+  {
+    "glyph": "🐯",
+    "group": "Animals & Nature",
+    "unicode": "1f42f"
+  },
+  {
+    "glyph": "🐰",
+    "group": "Animals & Nature",
+    "unicode": "1f430"
+  },
+  {
+    "glyph": "🐱",
+    "group": "Animals & Nature",
+    "unicode": "1f431"
+  },
+  {
+    "glyph": "🐲",
+    "group": "Animals & Nature",
+    "unicode": "1f432"
+  },
+  {
+    "glyph": "🐴",
+    "group": "Animals & Nature",
+    "unicode": "1f434"
+  },
+  {
+    "glyph": "🐵",
+    "group": "Animals & Nature",
+    "unicode": "1f435"
+  },
+  {
+    "glyph": "🐶",
+    "group": "Animals & Nature",
+    "unicode": "1f436"
+  },
+  {
+    "glyph": "🐷",
+    "group": "Animals & Nature",
+    "unicode": "1f437"
+  },
+  {
+    "glyph": "👿",
+    "group": "Smileys & Emotion",
+    "unicode": "1f47f"
+  },
+  {
+    "glyph": "😀",
+    "group": "Smileys & Emotion",
+    "unicode": "1f600"
+  },
+  {
+    "glyph": "😁",
+    "group": "Smileys & Emotion",
+    "unicode": "1f601"
+  },
+  {
+    "glyph": "😂",
+    "group": "Smileys & Emotion",
+    "unicode": "1f602"
+  },
+  {
+    "glyph": "😃",
+    "group": "Smileys & Emotion",
+    "unicode": "1f603"
+  },
+  {
+    "glyph": "😄",
+    "group": "Smileys & Emotion",
+    "unicode": "1f604"
+  },
+  {
+    "glyph": "😅",
+    "group": "Smileys & Emotion",
+    "unicode": "1f605"
+  },
+  {
+    "glyph": "😆",
+    "group": "Smileys & Emotion",
+    "unicode": "1f606"
+  },
+  {
+    "glyph": "😇",
+    "group": "Smileys & Emotion",
+    "unicode": "1f607"
+  },
+  {
+    "glyph": "😈",
+    "group": "Smileys & Emotion",
+    "unicode": "1f608"
+  },
+  {
+    "glyph": "😉",
+    "group": "Smileys & Emotion",
+    "unicode": "1f609"
+  },
+  {
+    "glyph": "😊",
+    "group": "Smileys & Emotion",
+    "unicode": "1f60a"
+  },
+  {
+    "glyph": "😋",
+    "group": "Smileys & Emotion",
+    "unicode": "1f60b"
+  },
+  {
+    "glyph": "😌",
+    "group": "Smileys & Emotion",
+    "unicode": "1f60c"
+  },
+  {
+    "glyph": "😍",
+    "group": "Smileys & Emotion",
+    "unicode": "1f60d"
+  },
+  {
+    "glyph": "😎",
+    "group": "Smileys & Emotion",
+    "unicode": "1f60e"
+  },
+  {
+    "glyph": "😏",
+    "group": "Smileys & Emotion",
+    "unicode": "1f60f"
+  },
+  {
+    "glyph": "😐",
+    "group": "Smileys & Emotion",
+    "unicode": "1f610"
+  },
+  {
+    "glyph": "😑",
+    "group": "Smileys & Emotion",
+    "unicode": "1f611"
+  },
+  {
+    "glyph": "😒",
+    "group": "Smileys & Emotion",
+    "unicode": "1f612"
+  },
+  {
+    "glyph": "😓",
+    "group": "Smileys & Emotion",
+    "unicode": "1f613"
+  },
+  {
+    "glyph": "😔",
+    "group": "Smileys & Emotion",
+    "unicode": "1f614"
+  },
+  {
+    "glyph": "😕",
+    "group": "Smileys & Emotion",
+    "unicode": "1f615"
+  },
+  {
+    "glyph": "😖",
+    "group": "Smileys & Emotion",
+    "unicode": "1f616"
+  },
+  {
+    "glyph": "😗",
+    "group": "Smileys & Emotion",
+    "unicode": "1f617"
+  },
+  {
+    "glyph": "😘",
+    "group": "Smileys & Emotion",
+    "unicode": "1f618"
+  },
+  {
+    "glyph": "😙",
+    "group": "Smileys & Emotion",
+    "unicode": "1f619"
+  },
+  {
+    "glyph": "😚",
+    "group": "Smileys & Emotion",
+    "unicode": "1f61a"
+  },
+  {
+    "glyph": "😛",
+    "group": "Smileys & Emotion",
+    "unicode": "1f61b"
+  },
+  {
+    "glyph": "😜",
+    "group": "Smileys & Emotion",
+    "unicode": "1f61c"
+  },
+  {
+    "glyph": "😝",
+    "group": "Smileys & Emotion",
+    "unicode": "1f61d"
+  },
+  {
+    "glyph": "😞",
+    "group": "Smileys & Emotion",
+    "unicode": "1f61e"
+  },
+  {
+    "glyph": "😟",
+    "group": "Smileys & Emotion",
+    "unicode": "1f61f"
+  },
+  {
+    "glyph": "😠",
+    "group": "Smileys & Emotion",
+    "unicode": "1f620"
+  },
+  {
+    "glyph": "😡",
+    "group": "Smileys & Emotion",
+    "unicode": "1f621"
+  },
+  {
+    "glyph": "😢",
+    "group": "Smileys & Emotion",
+    "unicode": "1f622"
+  },
+  {
+    "glyph": "😣",
+    "group": "Smileys & Emotion",
+    "unicode": "1f623"
+  },
+  {
+    "glyph": "😤",
+    "group": "Smileys & Emotion",
+    "unicode": "1f624"
+  },
+  {
+    "glyph": "😥",
+    "group": "Smileys & Emotion",
+    "unicode": "1f625"
+  },
+  {
+    "glyph": "😦",
+    "group": "Smileys & Emotion",
+    "unicode": "1f626"
+  },
+  {
+    "glyph": "😧",
+    "group": "Smileys & Emotion",
+    "unicode": "1f627"
+  },
+  {
+    "glyph": "😨",
+    "group": "Smileys & Emotion",
+    "unicode": "1f628"
+  },
+  {
+    "glyph": "😩",
+    "group": "Smileys & Emotion",
+    "unicode": "1f629"
+  },
+  {
+    "glyph": "😪",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62a"
+  },
+  {
+    "glyph": "😫",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62b"
+  },
+  {
+    "glyph": "😬",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62c"
+  },
+  {
+    "glyph": "😭",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62d"
+  },
+  {
+    "glyph": "😮",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62e"
+  },
+  {
+    "glyph": "😮‍💨",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62e 200d 1f4a8"
+  },
+  {
+    "glyph": "😯",
+    "group": "Smileys & Emotion",
+    "unicode": "1f62f"
+  },
+  {
+    "glyph": "😰",
+    "group": "Smileys & Emotion",
+    "unicode": "1f630"
+  },
+  {
+    "glyph": "😱",
+    "group": "Smileys & Emotion",
+    "unicode": "1f631"
+  },
+  {
+    "glyph": "😲",
+    "group": "Smileys & Emotion",
+    "unicode": "1f632"
+  },
+  {
+    "glyph": "😳",
+    "group": "Smileys & Emotion",
+    "unicode": "1f633"
+  },
+  {
+    "glyph": "😴",
+    "group": "Smileys & Emotion",
+    "unicode": "1f634"
+  },
+  {
+    "glyph": "😵",
+    "group": "Smileys & Emotion",
+    "unicode": "1f635"
+  },
+  {
+    "glyph": "😵‍💫",
+    "group": "Smileys & Emotion",
+    "unicode": "1f635 200d 1f4ab"
+  },
+  {
+    "glyph": "😶",
+    "group": "Smileys & Emotion",
+    "unicode": "1f636"
+  },
+  {
+    "glyph": "😶‍🌫️",
+    "group": "Smileys & Emotion",
+    "unicode": "1f636 200d 1f32b fe0f"
+  },
+  {
+    "glyph": "😷",
+    "group": "Smileys & Emotion",
+    "unicode": "1f637"
+  },
+  {
+    "glyph": "🙁",
+    "group": "Smileys & Emotion",
+    "unicode": "1f641"
+  },
+  {
+    "glyph": "🙂",
+    "group": "Smileys & Emotion",
+    "unicode": "1f642"
+  },
+  {
+    "glyph": "🙃",
+    "group": "Smileys & Emotion",
+    "unicode": "1f643"
+  },
+  {
+    "glyph": "🙄",
+    "group": "Smileys & Emotion",
+    "unicode": "1f644"
+  },
+  {
+    "glyph": "🤐",
+    "group": "Smileys & Emotion",
+    "unicode": "1f910"
+  },
+  {
+    "glyph": "🤑",
+    "group": "Smileys & Emotion",
+    "unicode": "1f911"
+  },
+  {
+    "glyph": "🤒",
+    "group": "Smileys & Emotion",
+    "unicode": "1f912"
+  },
+  {
+    "glyph": "🤓",
+    "group": "Smileys & Emotion",
+    "unicode": "1f913"
+  },
+  {
+    "glyph": "🤔",
+    "group": "Smileys & Emotion",
+    "unicode": "1f914"
+  },
+  {
+    "glyph": "🤕",
+    "group": "Smileys & Emotion",
+    "unicode": "1f915"
+  },
+  {
+    "glyph": "🤗",
+    "group": "Smileys & Emotion",
+    "unicode": "1f917"
+  },
+  {
+    "glyph": "🤠",
+    "group": "Smileys & Emotion",
+    "unicode": "1f920"
+  },
+  {
+    "glyph": "🤡",
+    "group": "Smileys & Emotion",
+    "unicode": "1f921"
+  },
+  {
+    "glyph": "🤢",
+    "group": "Smileys & Emotion",
+    "unicode": "1f922"
+  },
+  {
+    "glyph": "🤤",
+    "group": "Smileys & Emotion",
+    "unicode": "1f924"
+  },
+  {
+    "glyph": "🤥",
+    "group": "Smileys & Emotion",
+    "unicode": "1f925"
+  },
+  {
+    "glyph": "🤦",
+    "group": "People & Body",
+    "unicode": "1f926"
+  },
+  {
+    "glyph": "🤦",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fb"
+  },
+  {
+    "glyph": "🤦",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fc"
+  },
+  {
+    "glyph": "🤦",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fd"
+  },
+  {
+    "glyph": "🤦",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fe"
+  },
+  {
+    "glyph": "🤦",
+    "group": "People & Body",
+    "unicode": "1f926 1f3ff"
+  },
+  {
+    "glyph": "🤦‍♀️",
+    "group": "People & Body",
+    "unicode": "1f926 200d 2640 fe0f"
+  },
+  {
+    "glyph": "🤦‍♀️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fb 200d 2640 fe0f"
+  },
+  {
+    "glyph": "🤦‍♀️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fc 200d 2640 fe0f"
+  },
+  {
+    "glyph": "🤦‍♀️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fd 200d 2640 fe0f"
+  },
+  {
+    "glyph": "🤦‍♀️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fe 200d 2640 fe0f"
+  },
+  {
+    "glyph": "🤦‍♀️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3ff 200d 2640 fe0f"
+  },
+  {
+    "glyph": "🤦‍♂️",
+    "group": "People & Body",
+    "unicode": "1f926 200d 2642 fe0f"
+  },
+  {
+    "glyph": "🤦‍♂️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fb 200d 2642 fe0f"
+  },
+  {
+    "glyph": "🤦‍♂️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fc 200d 2642 fe0f"
+  },
+  {
+    "glyph": "🤦‍♂️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fd 200d 2642 fe0f"
+  },
+  {
+    "glyph": "🤦‍♂️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3fe 200d 2642 fe0f"
+  },
+  {
+    "glyph": "🤦‍♂️",
+    "group": "People & Body",
+    "unicode": "1f926 1f3ff 200d 2642 fe0f"
+  },
+  {
+    "glyph": "🤧",
+    "group": "Smileys & Emotion",
+    "unicode": "1f927"
+  },
+  {
+    "glyph": "🤨",
+    "group": "Smileys & Emotion",
+    "unicode": "1f928"
+  },
+  {
+    "glyph": "🤪",
+    "group": "Smileys & Emotion",
+    "unicode": "1f92a"
+  },
+  {
+    "glyph": "🤫",
+    "group": "Smileys & Emotion",
+    "unicode": "1f92b"
+  },
+  {
+    "glyph": "🤬",
+    "group": "Smileys & Emotion",
+    "unicode": "1f92c"
+  },
+  {
+    "glyph": "🤭",
+    "group": "Smileys & Emotion",
+    "unicode": "1f92d"
+  },
+  {
+    "glyph": "🤮",
+    "group": "Smileys & Emotion",
+    "unicode": "1f92e"
+  },
+  {
+    "glyph": "🥰",
+    "group": "Smileys & Emotion",
+    "unicode": "1f970"
+  },
+  {
+    "glyph": "🥱",
+    "group": "Smileys & Emotion",
+    "unicode": "1f971"
+  },
+  {
+    "glyph": "🥲",
+    "group": "Smileys & Emotion",
+    "unicode": "1f972"
+  },
+  {
+    "glyph": "🥳",
+    "group": "Smileys & Emotion",
+    "unicode": "1f973"
+  },
+  {
+    "glyph": "🥴",
+    "group": "Smileys & Emotion",
+    "unicode": "1f974"
+  },
+  {
+    "glyph": "🥵",
+    "group": "Smileys & Emotion",
+    "unicode": "1f975"
+  },
+  {
+    "glyph": "🥶",
+    "group": "Smileys & Emotion",
+    "unicode": "1f976"
+  },
+  {
+    "glyph": "🥸",
+    "group": "Smileys & Emotion",
+    "unicode": "1f978"
+  },
+  {
+    "glyph": "🥹",
+    "group": "Smileys & Emotion",
+    "unicode": "1f979"
+  },
+  {
+    "glyph": "🥺",
+    "group": "Smileys & Emotion",
+    "unicode": "1f97a"
+  },
+  {
+    "glyph": "🧐",
+    "group": "Smileys & Emotion",
+    "unicode": "1f9d0"
+  },
+  {
+    "glyph": "🫠",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae0"
+  },
+  {
+    "glyph": "🫡",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae1"
+  },
+  {
+    "glyph": "🫢",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae2"
+  },
+  {
+    "glyph": "🫣",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae3"
+  },
+  {
+    "glyph": "🫤",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae4"
+  },
+  {
+    "glyph": "🫥",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae5"
+  },
+  {
+    "glyph": "🫨",
+    "group": "Smileys & Emotion",
+    "unicode": "1fae8"
+  },
+  {
+    "glyph": "☹️",
+    "group": "Smileys & Emotion",
+    "unicode": "2639 fe0f"
+  }
+];
