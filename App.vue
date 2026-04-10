@@ -1,20 +1,22 @@
 <template>
 	<view class="app-root">
-		<love-login-popup
-			:visible="loginModal.visible"
-			:reason="loginModal.reason"
-			:redirect-url="loginModal.redirectUrl"
-			@close="handleCloseLoginModal"
-			@success="handleLoginSuccess"
-		/>
+		<love-login-popup :visible="loginModal.visible" :reason="loginModal.reason"
+			:redirect-url="loginModal.redirectUrl" @close="handleCloseLoginModal" @success="handleLoginSuccess" />
 	</view>
 </template>
 
 <script>
 	import LoveLoginPopup from './components/love-login-popup/love-login-popup.vue'
-	import { emitAuthChanged } from './common/auth-center.js'
-	import { continuePendingRoute, installRouteAuthGuard } from './common/auth-guard.js'
-	import { useAppStateStore } from './store/app-state.js'
+	import {
+		emitAuthChanged
+	} from './common/auth-center.js'
+	import {
+		continuePendingRoute,
+		installRouteAuthGuard
+	} from './common/auth-guard.js'
+	import {
+		useAppStateStore
+	} from './store/app-state.js'
 	import {
 		closeLoginModal,
 		getLoginModalSnapshot,
@@ -47,11 +49,18 @@
 		onLaunch() {
 			installRouteAuthGuard()
 			this.ensureAppStateStore().initAppBaseInfo()
+			uni.loadFontFace({
+				global: true,
+				family: "Fluent Emoji Flat",
+				source: 'url("https://env-00jxhb140x6o.normal.cloudstatic.cn/fonts/FluentEmojiFlat.ttf")',
+				success() {
+					console.log("font load success");
+				},
+			});
+
 		},
-		onShow() {
-		},
-		onHide() {
-		},
+		onShow() {},
+		onHide() {},
 		onShareAppMessage() {
 			const appStateStore = this.ensureAppStateStore()
 			return {
@@ -94,7 +103,7 @@
 	@import './components/firstui/common/fui-app.css';
 	@import './components/firstui/fui-theme/fui-theme.css';
 	@import './common/styles/love-theme.css';
-	
+
 	.app-root {
 		position: relative;
 		z-index: 0;

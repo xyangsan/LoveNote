@@ -3,27 +3,33 @@
 		:show="visible"
 		:background="backdropBackground"
 		:z-index="zIndex"
-		:closable="maskClosable"
-		@click="handleMaskClick"
+		:closable="false"
 	>
-		<view
-			v-if="visible"
-			class="love-editor-picker__panel"
-			:style="{ marginBottom: safeKeyboardHeight + 'px' }"
-			@tap.stop
-		>
-			<love-editor
-				ref="editor"
-				:value="value"
-				:placeholder="placeholder"
-				:maxlength="maxlength"
-				:send-text="sendText"
-				:deleteable="deleteable"
-				:safe-area-input="safeAreaInput"
-				@input="handleInput"
-				@send="handleSend"
-				@keyboardheightchange="handleKeyboardHeightChange"
-			></love-editor>
+		<view v-if="visible" class="love-editor-picker">
+			<view
+				v-if="showMask"
+				class="love-editor-picker__mask"
+				@tap="handleMaskClick"
+				@touchmove.stop.prevent="handleTouchMove"
+			></view>
+			<view
+				class="love-editor-picker__panel"
+				:style="{ paddingBottom: safeKeyboardHeight + 'px' }"
+				@tap.stop
+			>
+				<love-editor
+					ref="editor"
+					:value="value"
+					:placeholder="placeholder"
+					:maxlength="maxlength"
+					:send-text="sendText"
+					:deleteable="deleteable"
+					:safe-area-input="editorSafeAreaInput"
+					@input="handleInput"
+					@send="handleSend"
+					@keyboardheightchange="handleKeyboardHeightChange"
+				></love-editor>
+			</view>
 		</view>
 	</fui-backdrop>
 </template>
@@ -94,6 +100,9 @@
 			safeKeyboardHeight() {
 				return Math.max(0, Number(this.keyboardHeight || 0))
 			},
+			editorSafeAreaInput() {
+				return this.safeAreaInput && this.safeKeyboardHeight <= 0
+			},
 			backdropBackground() {
 				return this.showMask ? 'rgba(0, 0, 0, 0.6)' : 'transparent'
 			}
@@ -122,9 +131,14 @@
 				this.$emit('send', value)
 			},
 			handleMaskClick() {
+				if (!this.maskClosable) {
+					return
+				}
 				this.blurEditor()
 				this.hideKeyboard()
 				this.$emit('close')
+			},
+			handleTouchMove() {
 			},
 			handleKeyboardHeightChange(detail = {}) {
 				const nextHeight = Number(detail.height || 0)
@@ -167,9 +181,25 @@
 </script>
 
 <style scoped lang="scss">
-	.love-editor-picker__panel {
+	.love-editor-picker {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
 		width: 100%;
-		margin-top: auto;
-		align-self: flex-end;
+		height: 100%;
+	}
+
+	.love-editor-picker__mask {
+		position: absolute;
+		inset: 0;
+	}
+
+	.love-editor-picker__panel {
+		position: relative;
+		z-index: 1;
+		width: 100%;
+		background: #f8f8f8;
+		box-sizing: border-box;
 	}
 </style>

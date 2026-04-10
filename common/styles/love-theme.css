@@ -1,7 +1,12 @@
 page {
 	min-height: 100vh;
 	background: radial-gradient(circle at top, #fff7f1 0%, #fff7f1 26%, #fff3ea 26%, #fef6f0 100%);
-	
+	font-family: sans-serif, 'Fluent Emoji Flat', 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+@font-face {
+	font-family: 'Fluent Emoji Flat';
+	src: url('https://env-00jxhb140x6o.normal.cloudstatic.cn/fonts/FluentEmojiFlat.ttf') format("truetype");
+	font-display: swap;
 }
 
 .love-page {

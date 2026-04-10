@@ -1,682 +1,567 @@
 [
   {
-    "glyph": "🌚",
-    "group": "Travel & Places",
-    "unicode": "1f31a"
-  },
-  {
-    "glyph": "🌛",
-    "group": "Travel & Places",
-    "unicode": "1f31b"
-  },
-  {
-    "glyph": "🌜",
-    "group": "Travel & Places",
-    "unicode": "1f31c"
-  },
-  {
-    "glyph": "🌝",
-    "group": "Travel & Places",
-    "unicode": "1f31d"
-  },
-  {
-    "glyph": "🌞",
-    "group": "Travel & Places",
-    "unicode": "1f31e"
-  },
-  {
-    "glyph": "🌬️",
-    "group": "Travel & Places",
-    "unicode": "1f32c fe0f"
-  },
-  {
-    "glyph": "🐭",
-    "group": "Animals & Nature",
-    "unicode": "1f42d"
-  },
-  {
-    "glyph": "🐮",
-    "group": "Animals & Nature",
-    "unicode": "1f42e"
-  },
-  {
-    "glyph": "🐯",
-    "group": "Animals & Nature",
-    "unicode": "1f42f"
-  },
-  {
-    "glyph": "🐰",
-    "group": "Animals & Nature",
-    "unicode": "1f430"
-  },
-  {
-    "glyph": "🐱",
-    "group": "Animals & Nature",
-    "unicode": "1f431"
-  },
-  {
-    "glyph": "🐲",
-    "group": "Animals & Nature",
-    "unicode": "1f432"
-  },
-  {
-    "glyph": "🐴",
-    "group": "Animals & Nature",
-    "unicode": "1f434"
-  },
-  {
-    "glyph": "🐵",
-    "group": "Animals & Nature",
-    "unicode": "1f435"
-  },
-  {
-    "glyph": "🐶",
-    "group": "Animals & Nature",
-    "unicode": "1f436"
-  },
-  {
-    "glyph": "🐷",
-    "group": "Animals & Nature",
-    "unicode": "1f437"
-  },
-  {
-    "glyph": "👿",
-    "group": "Smileys & Emotion",
-    "unicode": "1f47f"
-  },
-  {
-    "glyph": "😀",
-    "group": "Smileys & Emotion",
-    "unicode": "1f600"
-  },
-  {
+    "tts": "龇牙",
     "glyph": "😁",
-    "group": "Smileys & Emotion",
     "unicode": "1f601"
   },
   {
+    "tts": "笑哭",
     "glyph": "😂",
-    "group": "Smileys & Emotion",
     "unicode": "1f602"
   },
   {
-    "glyph": "😃",
-    "group": "Smileys & Emotion",
-    "unicode": "1f603"
+    "tts": "红心",
+    "glyph": "❤️",
+    "unicode": "2764 fe0f"
   },
   {
-    "glyph": "😄",
-    "group": "Smileys & Emotion",
-    "unicode": "1f604"
-  },
-  {
-    "glyph": "😅",
-    "group": "Smileys & Emotion",
-    "unicode": "1f605"
-  },
-  {
-    "glyph": "😆",
-    "group": "Smileys & Emotion",
-    "unicode": "1f606"
-  },
-  {
-    "glyph": "😇",
-    "group": "Smileys & Emotion",
-    "unicode": "1f607"
-  },
-  {
-    "glyph": "😈",
-    "group": "Smileys & Emotion",
-    "unicode": "1f608"
-  },
-  {
-    "glyph": "😉",
-    "group": "Smileys & Emotion",
-    "unicode": "1f609"
-  },
-  {
-    "glyph": "😊",
-    "group": "Smileys & Emotion",
-    "unicode": "1f60a"
-  },
-  {
-    "glyph": "😋",
-    "group": "Smileys & Emotion",
-    "unicode": "1f60b"
-  },
-  {
-    "glyph": "😌",
-    "group": "Smileys & Emotion",
-    "unicode": "1f60c"
-  },
-  {
+    "tts": "花痴",
     "glyph": "😍",
-    "group": "Smileys & Emotion",
     "unicode": "1f60d"
   },
   {
-    "glyph": "😎",
-    "group": "Smileys & Emotion",
-    "unicode": "1f60e"
+    "tts": "微笑",
+    "glyph": "😊",
+    "unicode": "1f60a"
   },
   {
-    "glyph": "😏",
-    "group": "Smileys & Emotion",
-    "unicode": "1f60f"
-  },
-  {
-    "glyph": "😐",
-    "group": "Smileys & Emotion",
-    "unicode": "1f610"
-  },
-  {
-    "glyph": "😑",
-    "group": "Smileys & Emotion",
-    "unicode": "1f611"
-  },
-  {
-    "glyph": "😒",
-    "group": "Smileys & Emotion",
-    "unicode": "1f612"
-  },
-  {
-    "glyph": "😓",
-    "group": "Smileys & Emotion",
-    "unicode": "1f613"
-  },
-  {
-    "glyph": "😔",
-    "group": "Smileys & Emotion",
-    "unicode": "1f614"
-  },
-  {
-    "glyph": "😕",
-    "group": "Smileys & Emotion",
-    "unicode": "1f615"
-  },
-  {
-    "glyph": "😖",
-    "group": "Smileys & Emotion",
-    "unicode": "1f616"
-  },
-  {
-    "glyph": "😗",
-    "group": "Smileys & Emotion",
-    "unicode": "1f617"
-  },
-  {
-    "glyph": "😘",
-    "group": "Smileys & Emotion",
-    "unicode": "1f618"
-  },
-  {
-    "glyph": "😙",
-    "group": "Smileys & Emotion",
-    "unicode": "1f619"
-  },
-  {
-    "glyph": "😚",
-    "group": "Smileys & Emotion",
-    "unicode": "1f61a"
-  },
-  {
-    "glyph": "😛",
-    "group": "Smileys & Emotion",
-    "unicode": "1f61b"
-  },
-  {
-    "glyph": "😜",
-    "group": "Smileys & Emotion",
-    "unicode": "1f61c"
-  },
-  {
-    "glyph": "😝",
-    "group": "Smileys & Emotion",
-    "unicode": "1f61d"
-  },
-  {
-    "glyph": "😞",
-    "group": "Smileys & Emotion",
-    "unicode": "1f61e"
-  },
-  {
-    "glyph": "😟",
-    "group": "Smileys & Emotion",
-    "unicode": "1f61f"
-  },
-  {
-    "glyph": "😠",
-    "group": "Smileys & Emotion",
-    "unicode": "1f620"
-  },
-  {
-    "glyph": "😡",
-    "group": "Smileys & Emotion",
-    "unicode": "1f621"
-  },
-  {
-    "glyph": "😢",
-    "group": "Smileys & Emotion",
-    "unicode": "1f622"
-  },
-  {
-    "glyph": "😣",
-    "group": "Smileys & Emotion",
-    "unicode": "1f623"
-  },
-  {
-    "glyph": "😤",
-    "group": "Smileys & Emotion",
-    "unicode": "1f624"
-  },
-  {
-    "glyph": "😥",
-    "group": "Smileys & Emotion",
-    "unicode": "1f625"
-  },
-  {
-    "glyph": "😦",
-    "group": "Smileys & Emotion",
-    "unicode": "1f626"
-  },
-  {
-    "glyph": "😧",
-    "group": "Smileys & Emotion",
-    "unicode": "1f627"
-  },
-  {
-    "glyph": "😨",
-    "group": "Smileys & Emotion",
-    "unicode": "1f628"
-  },
-  {
-    "glyph": "😩",
-    "group": "Smileys & Emotion",
-    "unicode": "1f629"
-  },
-  {
-    "glyph": "😪",
-    "group": "Smileys & Emotion",
-    "unicode": "1f62a"
-  },
-  {
-    "glyph": "😫",
-    "group": "Smileys & Emotion",
-    "unicode": "1f62b"
-  },
-  {
-    "glyph": "😬",
-    "group": "Smileys & Emotion",
-    "unicode": "1f62c"
-  },
-  {
+    "tts": "大哭",
     "glyph": "😭",
-    "group": "Smileys & Emotion",
     "unicode": "1f62d"
   },
   {
-    "glyph": "😮",
-    "group": "Smileys & Emotion",
-    "unicode": "1f62e"
+    "tts": "飞吻",
+    "glyph": "😘",
+    "unicode": "1f618"
   },
   {
-    "glyph": "😮‍💨",
-    "group": "Smileys & Emotion",
-    "unicode": "1f62e 200d 1f4a8"
+    "tts": "眨眼",
+    "glyph": "😉",
+    "unicode": "1f609"
   },
   {
-    "glyph": "😯",
-    "group": "Smileys & Emotion",
-    "unicode": "1f62f"
+    "tts": "尴尬笑",
+    "glyph": "😅",
+    "unicode": "1f605"
   },
   {
-    "glyph": "😰",
-    "group": "Smileys & Emotion",
-    "unicode": "1f630"
+    "tts": "墨镜笑脸",
+    "glyph": "😎",
+    "unicode": "1f60e"
   },
   {
-    "glyph": "😱",
-    "group": "Smileys & Emotion",
-    "unicode": "1f631"
-  },
-  {
-    "glyph": "😲",
-    "group": "Smileys & Emotion",
-    "unicode": "1f632"
-  },
-  {
-    "glyph": "😳",
-    "group": "Smileys & Emotion",
-    "unicode": "1f633"
-  },
-  {
-    "glyph": "😴",
-    "group": "Smileys & Emotion",
-    "unicode": "1f634"
-  },
-  {
-    "glyph": "😵",
-    "group": "Smileys & Emotion",
-    "unicode": "1f635"
-  },
-  {
-    "glyph": "😵‍💫",
-    "group": "Smileys & Emotion",
-    "unicode": "1f635 200d 1f4ab"
-  },
-  {
-    "glyph": "😶",
-    "group": "Smileys & Emotion",
-    "unicode": "1f636"
-  },
-  {
-    "glyph": "😶‍🌫️",
-    "group": "Smileys & Emotion",
-    "unicode": "1f636 200d 1f32b fe0f"
-  },
-  {
-    "glyph": "😷",
-    "group": "Smileys & Emotion",
-    "unicode": "1f637"
-  },
-  {
-    "glyph": "🙁",
-    "group": "Smileys & Emotion",
-    "unicode": "1f641"
-  },
-  {
-    "glyph": "🙂",
-    "group": "Smileys & Emotion",
-    "unicode": "1f642"
-  },
-  {
-    "glyph": "🙃",
-    "group": "Smileys & Emotion",
-    "unicode": "1f643"
-  },
-  {
-    "glyph": "🙄",
-    "group": "Smileys & Emotion",
-    "unicode": "1f644"
-  },
-  {
-    "glyph": "🤐",
-    "group": "Smileys & Emotion",
-    "unicode": "1f910"
-  },
-  {
-    "glyph": "🤑",
-    "group": "Smileys & Emotion",
-    "unicode": "1f911"
-  },
-  {
-    "glyph": "🤒",
-    "group": "Smileys & Emotion",
-    "unicode": "1f912"
-  },
-  {
-    "glyph": "🤓",
-    "group": "Smileys & Emotion",
-    "unicode": "1f913"
-  },
-  {
-    "glyph": "🤔",
-    "group": "Smileys & Emotion",
-    "unicode": "1f914"
-  },
-  {
-    "glyph": "🤕",
-    "group": "Smileys & Emotion",
-    "unicode": "1f915"
-  },
-  {
-    "glyph": "🤗",
-    "group": "Smileys & Emotion",
-    "unicode": "1f917"
-  },
-  {
-    "glyph": "🤠",
-    "group": "Smileys & Emotion",
-    "unicode": "1f920"
-  },
-  {
-    "glyph": "🤡",
-    "group": "Smileys & Emotion",
-    "unicode": "1f921"
-  },
-  {
-    "glyph": "🤢",
-    "group": "Smileys & Emotion",
-    "unicode": "1f922"
-  },
-  {
-    "glyph": "🤤",
-    "group": "Smileys & Emotion",
-    "unicode": "1f924"
-  },
-  {
-    "glyph": "🤥",
-    "group": "Smileys & Emotion",
-    "unicode": "1f925"
-  },
-  {
-    "glyph": "🤦",
-    "group": "People & Body",
-    "unicode": "1f926"
-  },
-  {
-    "glyph": "🤦",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fb"
-  },
-  {
-    "glyph": "🤦",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fc"
-  },
-  {
-    "glyph": "🤦",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fd"
-  },
-  {
-    "glyph": "🤦",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fe"
-  },
-  {
-    "glyph": "🤦",
-    "group": "People & Body",
-    "unicode": "1f926 1f3ff"
-  },
-  {
-    "glyph": "🤦‍♀️",
-    "group": "People & Body",
-    "unicode": "1f926 200d 2640 fe0f"
-  },
-  {
-    "glyph": "🤦‍♀️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fb 200d 2640 fe0f"
-  },
-  {
-    "glyph": "🤦‍♀️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fc 200d 2640 fe0f"
-  },
-  {
-    "glyph": "🤦‍♀️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fd 200d 2640 fe0f"
-  },
-  {
-    "glyph": "🤦‍♀️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fe 200d 2640 fe0f"
-  },
-  {
-    "glyph": "🤦‍♀️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3ff 200d 2640 fe0f"
-  },
-  {
-    "glyph": "🤦‍♂️",
-    "group": "People & Body",
-    "unicode": "1f926 200d 2642 fe0f"
-  },
-  {
-    "glyph": "🤦‍♂️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fb 200d 2642 fe0f"
-  },
-  {
-    "glyph": "🤦‍♂️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fc 200d 2642 fe0f"
-  },
-  {
-    "glyph": "🤦‍♂️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fd 200d 2642 fe0f"
-  },
-  {
-    "glyph": "🤦‍♂️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3fe 200d 2642 fe0f"
-  },
-  {
-    "glyph": "🤦‍♂️",
-    "group": "People & Body",
-    "unicode": "1f926 1f3ff 200d 2642 fe0f"
-  },
-  {
-    "glyph": "🤧",
-    "group": "Smileys & Emotion",
-    "unicode": "1f927"
-  },
-  {
-    "glyph": "🤨",
-    "group": "Smileys & Emotion",
-    "unicode": "1f928"
-  },
-  {
-    "glyph": "🤪",
-    "group": "Smileys & Emotion",
-    "unicode": "1f92a"
-  },
-  {
-    "glyph": "🤫",
-    "group": "Smileys & Emotion",
-    "unicode": "1f92b"
-  },
-  {
-    "glyph": "🤬",
-    "group": "Smileys & Emotion",
-    "unicode": "1f92c"
-  },
-  {
-    "glyph": "🤭",
-    "group": "Smileys & Emotion",
-    "unicode": "1f92d"
-  },
-  {
-    "glyph": "🤮",
-    "group": "Smileys & Emotion",
-    "unicode": "1f92e"
-  },
-  {
+    "tts": "爱慕",
     "glyph": "🥰",
-    "group": "Smileys & Emotion",
     "unicode": "1f970"
   },
   {
-    "glyph": "🥱",
-    "group": "Smileys & Emotion",
-    "unicode": "1f971"
+    "tts": "浅笑",
+    "glyph": "🙂",
+    "unicode": "1f642"
   },
   {
-    "glyph": "🥲",
-    "group": "Smileys & Emotion",
-    "unicode": "1f972"
+    "tts": "咧嘴笑",
+    "glyph": "😀",
+    "unicode": "1f600"
   },
   {
-    "glyph": "🥳",
-    "group": "Smileys & Emotion",
-    "unicode": "1f973"
+    "tts": "大笑",
+    "glyph": "😄",
+    "unicode": "1f604"
   },
   {
-    "glyph": "🥴",
-    "group": "Smileys & Emotion",
-    "unicode": "1f974"
-  },
-  {
-    "glyph": "🥵",
-    "group": "Smileys & Emotion",
-    "unicode": "1f975"
-  },
-  {
-    "glyph": "🥶",
-    "group": "Smileys & Emotion",
-    "unicode": "1f976"
-  },
-  {
-    "glyph": "🥸",
-    "group": "Smileys & Emotion",
-    "unicode": "1f978"
-  },
-  {
-    "glyph": "🥹",
-    "group": "Smileys & Emotion",
-    "unicode": "1f979"
-  },
-  {
+    "tts": "可怜巴巴",
     "glyph": "🥺",
-    "group": "Smileys & Emotion",
     "unicode": "1f97a"
   },
   {
-    "glyph": "🧐",
-    "group": "Smileys & Emotion",
-    "unicode": "1f9d0"
+    "tts": "思考",
+    "glyph": "🤔",
+    "unicode": "1f914"
   },
   {
+    "tts": "翻白眼",
+    "glyph": "🙄",
+    "unicode": "1f644"
+  },
+  {
+    "tts": "流泪",
+    "glyph": "😢",
+    "unicode": "1f622"
+  },
+  {
+    "tts": "得意",
+    "glyph": "😏",
+    "unicode": "1f60f"
+  },
+  {
+    "tts": "放松",
+    "glyph": "😌",
+    "unicode": "1f60c"
+  },
+  {
+    "tts": "脸红",
+    "glyph": "😳",
+    "unicode": "1f633"
+  },
+  {
+    "tts": "眨眼吐舌",
+    "glyph": "😜",
+    "unicode": "1f61c"
+  },
+  {
+    "tts": "眯眼大笑",
+    "glyph": "😆",
+    "unicode": "1f606"
+  },
+  {
+    "tts": "龇牙",
+    "glyph": "😬",
+    "unicode": "1f62c"
+  },
+  {
+    "tts": "惊讶",
+    "glyph": "😮",
+    "unicode": "1f62e"
+  },
+  {
+    "tts": "睡着",
+    "glyph": "😴",
+    "unicode": "1f634"
+  },
+  {
+    "tts": "天使笑脸",
+    "glyph": "😇",
+    "unicode": "1f607"
+  },
+  {
+    "tts": "拥抱",
+    "glyph": "🤗",
+    "unicode": "1f917"
+  },
+  {
+    "tts": "馋嘴",
+    "glyph": "😋",
+    "unicode": "1f60b"
+  },
+  {
+    "tts": "无语",
+    "glyph": "😒",
+    "unicode": "1f612"
+  },
+  {
+    "tts": "平静",
+    "glyph": "😐",
+    "unicode": "1f610"
+  },
+  {
+    "tts": "沉思",
+    "glyph": "😔",
+    "unicode": "1f614"
+  },
+  {
+    "tts": "疲惫",
+    "glyph": "😩",
+    "unicode": "1f629"
+  },
+  {
+    "tts": "累",
+    "glyph": "😫",
+    "unicode": "1f62b"
+  },
+  {
+    "tts": "傲娇",
+    "glyph": "😤",
+    "unicode": "1f624"
+  },
+  {
+    "tts": "生气",
+    "glyph": "😡",
+    "unicode": "1f621"
+  },
+  {
+    "tts": "捂嘴笑",
+    "glyph": "🤭",
+    "unicode": "1f92d"
+  },
+  {
+    "tts": "尖叫",
+    "glyph": "😱",
+    "unicode": "1f631"
+  },
+  {
+    "tts": "亲亲",
+    "glyph": "😙",
+    "unicode": "1f619"
+  },
+  {
+    "tts": "说谎",
+    "glyph": "🤥",
+    "unicode": "1f925"
+  },
+  {
+    "tts": "含泪微笑",
+    "glyph": "🥲",
+    "unicode": "1f972"
+  },
+  {
+    "tts": "头晕眼花",
+    "glyph": "😵‍💫",
+    "unicode": "1f635 200d 1f4ab"
+  },
+  {
+    "tts": "戴口罩",
+    "glyph": "😷",
+    "unicode": "1f637"
+  },
+  {
+    "tts": "融化",
     "glyph": "🫠",
-    "group": "Smileys & Emotion",
     "unicode": "1fae0"
   },
   {
+    "tts": "敬礼",
     "glyph": "🫡",
-    "group": "Smileys & Emotion",
     "unicode": "1fae1"
   },
   {
+    "tts": "睁眼捂嘴",
     "glyph": "🫢",
-    "group": "Smileys & Emotion",
     "unicode": "1fae2"
   },
   {
+    "tts": "偷看",
     "glyph": "🫣",
-    "group": "Smileys & Emotion",
     "unicode": "1fae3"
   },
   {
+    "tts": "嘴角抽动",
     "glyph": "🫤",
-    "group": "Smileys & Emotion",
     "unicode": "1fae4"
   },
   {
-    "glyph": "🫥",
-    "group": "Smileys & Emotion",
-    "unicode": "1fae5"
+    "tts": "忍住不哭",
+    "glyph": "🥹",
+    "unicode": "1f979"
   },
   {
-    "glyph": "🫨",
-    "group": "Smileys & Emotion",
-    "unicode": "1fae8"
+    "tts": "庆祝",
+    "glyph": "🥳",
+    "unicode": "1f973"
   },
   {
+    "tts": "搞怪",
+    "glyph": "🤪",
+    "unicode": "1f92a"
+  },
+  {
+    "tts": "挑眉",
+    "glyph": "🤨",
+    "unicode": "1f928"
+  },
+  {
+    "tts": "见钱眼开",
+    "glyph": "🤑",
+    "unicode": "1f911"
+  },
+  {
+    "tts": "书呆子",
+    "glyph": "🤓",
+    "unicode": "1f913"
+  },
+  {
+    "tts": "晕",
+    "glyph": "😵",
+    "unicode": "1f635"
+  },
+  {
+    "tts": "焦虑冒汗",
+    "glyph": "😰",
+    "unicode": "1f630"
+  },
+  {
+    "tts": "又难过又松口气",
+    "glyph": "😥",
+    "unicode": "1f625"
+  },
+  {
+    "tts": "失落冒汗",
+    "glyph": "😓",
+    "unicode": "1f613"
+  },
+  {
+    "tts": "失望",
+    "glyph": "😞",
+    "unicode": "1f61e"
+  },
+  {
+    "tts": "担心",
+    "glyph": "😟",
+    "unicode": "1f61f"
+  },
+  {
+    "tts": "困惑",
+    "glyph": "😕",
+    "unicode": "1f615"
+  },
+  {
+    "tts": "懊恼",
+    "glyph": "😖",
+    "unicode": "1f616"
+  },
+  {
+    "tts": "惊愕",
+    "glyph": "😯",
+    "unicode": "1f62f"
+  },
+  {
+    "tts": "震惊",
+    "glyph": "😲",
+    "unicode": "1f632"
+  },
+  {
+    "tts": "拉链嘴",
+    "glyph": "🤐",
+    "unicode": "1f910"
+  },
+  {
+    "tts": "嘘",
+    "glyph": "🤫",
+    "unicode": "1f92b"
+  },
+  {
+    "tts": "爆粗口",
+    "glyph": "🤬",
+    "unicode": "1f92c"
+  },
+  {
+    "tts": "无言",
+    "glyph": "😶",
+    "unicode": "1f636"
+  },
+  {
+    "tts": "倒脸",
+    "glyph": "🙃",
+    "unicode": "1f643"
+  },
+  {
+    "tts": "吐舌",
+    "glyph": "😛",
+    "unicode": "1f61b"
+  },
+  {
+    "tts": "迷糊",
+    "glyph": "🥴",
+    "unicode": "1f974"
+  },
+  {
+    "tts": "流口水",
+    "glyph": "🤤",
+    "unicode": "1f924"
+  },
+  {
+    "tts": "打哈欠",
+    "glyph": "🥱",
+    "unicode": "1f971"
+  },
+  {
+    "tts": "犯困",
+    "glyph": "😪",
+    "unicode": "1f62a"
+  },
+  {
+    "tts": "害怕",
+    "glyph": "😨",
+    "unicode": "1f628"
+  },
+  {
+    "tts": "痛苦",
+    "glyph": "😧",
+    "unicode": "1f627"
+  },
+  {
+    "tts": "张嘴皱眉",
+    "glyph": "😦",
+    "unicode": "1f626"
+  },
+  {
+    "tts": "强忍",
+    "glyph": "😣",
+    "unicode": "1f623"
+  },
+  {
+    "tts": "呕吐",
+    "glyph": "🤮",
+    "unicode": "1f92e"
+  },
+  {
+    "tts": "打喷嚏",
+    "glyph": "🤧",
+    "unicode": "1f927"
+  },
+  {
+    "tts": "发烧",
+    "glyph": "🤒",
+    "unicode": "1f912"
+  },
+  {
+    "tts": "受伤",
+    "glyph": "🤕",
+    "unicode": "1f915"
+  },
+  {
+    "tts": "热",
+    "glyph": "🥵",
+    "unicode": "1f975"
+  },
+  {
+    "tts": "冷",
+    "glyph": "🥶",
+    "unicode": "1f976"
+  },
+  {
+    "tts": "叹气",
+    "glyph": "😮‍💨",
+    "unicode": "1f62e 200d 1f4a8"
+  },
+  {
+    "tts": "面无表情",
+    "glyph": "😑",
+    "unicode": "1f611"
+  },
+  {
+    "tts": "皱眉",
     "glyph": "☹️",
-    "group": "Smileys & Emotion",
     "unicode": "2639 fe0f"
+  },
+  {
+    "tts": "小开心",
+    "glyph": "🙁",
+    "unicode": "1f641"
+  },
+  {
+    "tts": "单片眼镜",
+    "glyph": "🧐",
+    "unicode": "1f9d0"
+  },
+  {
+    "tts": "伪装",
+    "glyph": "🥸",
+    "unicode": "1f978"
+  },
+  {
+    "tts": "牛仔笑脸",
+    "glyph": "🤠",
+    "unicode": "1f920"
+  },
+  {
+    "tts": "小丑",
+    "glyph": "🤡",
+    "unicode": "1f921"
+  },
+  {
+    "tts": "恶魔笑脸",
+    "glyph": "😈",
+    "unicode": "1f608"
+  },
+  {
+    "tts": "花痴猫",
+    "glyph": "😻",
+    "unicode": "1f63b"
+  },
+  {
+    "tts": "亲亲猫",
+    "glyph": "😽",
+    "unicode": "1f63d"
+  },
+  {
+    "tts": "唇印",
+    "glyph": "💋",
+    "unicode": "1f48b"
+  },
+  {
+    "tts": "两颗心",
+    "glyph": "💕",
+    "unicode": "1f495"
+  },
+  {
+    "tts": "闪亮的心",
+    "glyph": "💖",
+    "unicode": "1f496"
+  },
+  {
+    "tts": "心动",
+    "glyph": "💗",
+    "unicode": "1f497"
+  },
+  {
+    "tts": "蓝心",
+    "glyph": "💙",
+    "unicode": "1f499"
+  },
+  {
+    "tts": "紫心",
+    "glyph": "💜",
+    "unicode": "1f49c"
+  },
+  {
+    "tts": "黄心",
+    "glyph": "💛",
+    "unicode": "1f49b"
+  },
+  {
+    "tts": "橙心",
+    "glyph": "🧡",
+    "unicode": "1f9e1"
+  },
+  {
+    "tts": "绿心",
+    "glyph": "💚",
+    "unicode": "1f49a"
+  },
+  {
+    "tts": "粉心",
+    "glyph": "🩷",
+    "unicode": "1fa77"
+  },
+  {
+    "tts": "浅蓝心",
+    "glyph": "🩵",
+    "unicode": "1fa75"
+  },
+  {
+    "tts": "白心",
+    "glyph": "🤍",
+    "unicode": "1f90d"
+  },
+  {
+    "tts": "黑心",
+    "glyph": "🖤",
+    "unicode": "1f5a4"
+  },
+  {
+    "tts": "棕心",
+    "glyph": "🤎",
+    "unicode": "1f90e"
+  },
+  {
+    "tts": "灰心",
+    "glyph": "🩶",
+    "unicode": "1fa76"
+  },
+  {
+    "tts": "修复爱心",
+    "glyph": "❤️‍🩹",
+    "unicode": "2764 fe0f 200d 1fa79"
+  },
+  {
+    "tts": "心碎",
+    "glyph": "💔",
+    "unicode": "1f494"
+  },
+  {
+    "tts": "跳动的心",
+    "glyph": "💓",
+    "unicode": "1f493"
   }
-];
+]
