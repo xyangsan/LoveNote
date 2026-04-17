@@ -40,6 +40,21 @@
 			"title": "日期值",
 			"description": "格式 YYYY-MM-DD"
 		},
+		"solar_date_value": {
+			"bsonType": "string",
+			"title": "公历日期值",
+			"description": "格式 YYYY-MM-DD，与 date_value 保持一致"
+		},
+		"lunar_date_value": {
+			"bsonType": "string",
+			"title": "农历日期值",
+			"description": "格式示例：2026年正月初一"
+		},
+		"date_timestamp": {
+			"bsonType": "long",
+			"title": "日期时间戳",
+			"description": "所选日期对应的本地零点时间戳，毫秒"
+		},
 		"repeat_type": {
 			"bsonType": "string",
 			"title": "重复方式",

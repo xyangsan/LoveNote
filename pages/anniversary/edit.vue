@@ -60,30 +60,8 @@
 					></fui-divider>
 
 					<view class="form-block">
-						<text class="love-field-label">日期类型</text>
-						<fui-segmented-control
-							:values="dateTypeOptions"
-							:current="dateTypeIndex"
-							color="#ec7558"
-							active-color="#ffffff"
-							:height="70"
-							:size="24"
-							:bold="true"
-							:radius="999"
-							@click="handleDateTypeChange"
-						></fui-segmented-control>
-					</view>
-
-					<view class="form-block">
 						<text class="love-field-label">日期</text>
-						<picker
-							mode="date"
-							fields="day"
-							:value="form.dateValue"
-							:start="datePickerStart"
-							:end="datePickerEnd"
-							@change="handleDateChange"
-						>
+						<view @click="openDateCalendar">
 							<fui-list-cell
 								:padding="['26rpx', '24rpx']"
 								background="#fff7f3"
@@ -92,11 +70,20 @@
 								arrow
 								arrow-color="#d2a394"
 							>
-								<view class="picker-field">
-									<text class="picker-field__value">{{ form.dateValue || '请选择日期' }}</text>
+								<view class="picker-field picker-field--space">
+									<view class="picker-field__content">
+										<text
+											class="picker-field__value"
+											:class="{ 'picker-field__value--placeholder': !currentDisplayDateText }"
+										>{{ currentDisplayDateText || '请选择日期' }}</text>
+									</view>
+									<view class="picker-field__tag">
+										<text class="picker-field__tag-text">{{ currentDateTypeText }}</text>
+									</view>
 								</view>
 							</fui-list-cell>
-						</picker>
+						</view>
+						<text class="love-field-tip">点击日期栏打开日历，可切换公历/农历并同时保存两种日期和值对应的时间戳。</text>
 						<text
 							v-if="form.dateType === 'lunar'"
 							class="love-field-tip"
@@ -274,7 +261,7 @@
 						></view>
 						<view class="preview-card__content" :style="previewTextStyle">
 							<text class="preview-card__title">{{ form.title || '纪念日标题' }}</text>
-							<text class="preview-card__meta">{{ form.dateValue || '--' }} · {{ currentDateTypeText }} · {{ currentRepeatTypeText }}</text>
+							<text class="preview-card__meta">{{ currentDisplayDateText || '--' }} · {{ currentDateTypeText }} · {{ currentRepeatTypeText }}</text>
 							<text class="preview-card__countdown">{{ previewCountdownText }}</text>
 						</view>
 					</view>
@@ -303,6 +290,61 @@
 						:bold="true"
 						@click="goBack"
 					></fui-button>
+				</view>
+			</view>
+
+			<view v-if="calendarPopupVisible" class="calendar-popup">
+				<view class="calendar-popup__mask" @click="closeDateCalendar"></view>
+				<view class="calendar-popup__panel" @click.stop="handleCalendarPanelClick">
+					<view class="calendar-popup__header">
+						<text class="calendar-popup__title">选择日期</text>
+						<view class="calendar-popup__actions">
+							<text class="calendar-popup__action" @click="closeDateCalendar">取消</text>
+							<text class="calendar-popup__action calendar-popup__action--primary" @click="confirmDateSelection">确定</text>
+						</view>
+					</view>
+
+					<view class="calendar-popup__summary">
+						<text class="calendar-popup__summary-value">{{ calendarDisplayDateText || '请选择日期' }}</text>
+						<view class="calendar-popup__selector-wrap">
+							<view class="calendar-popup__selector-inline" @click.stop="toggleCalendarDateTypeDropdown">
+								<text class="calendar-popup__selector-value-text">{{ calendarCurrentDateTypeText }}</text>
+								<text
+									class="calendar-popup__selector-arrow"
+									:class="{ 'calendar-popup__selector-arrow--open': calendarDateTypeDropdownVisible }"
+								>▼</text>
+							</view>
+							<view
+								v-if="calendarDateTypeDropdownVisible"
+								class="calendar-popup__selector-menu"
+								@click.stop
+							>
+								<view
+									v-for="(item, index) in dateTypeOptions"
+									:key="item"
+									class="calendar-popup__selector-option"
+									:class="{ 'calendar-popup__selector-option--active': index === calendarDateTypeIndex }"
+									@click.stop="selectCalendarDateType(index)"
+								>
+									<text
+										class="calendar-popup__selector-option-text"
+										:class="{ 'calendar-popup__selector-option-text--active': index === calendarDateTypeIndex }"
+									>{{ item }}</text>
+								</view>
+							</view>
+						</view>
+					</view>
+
+					<uni-calendar
+						v-if="calendarPopupVisible"
+						:insert="true"
+						:lunar="true"
+						:date="calendarDraft.solarDateValue"
+						:start-date="datePickerStart"
+						:end-date="datePickerEnd"
+						:show-month="false"
+						@change="handleCalendarChange"
+					></uni-calendar>
 				</view>
 			</view>
 		</view>
@@ -348,13 +390,46 @@ const LUNAR_MONTH_MAP = {
 	'腊月': 12
 }
 
+const CHINESE_LUNAR_DAY_TEXT = {
+	1: '初一',
+	2: '初二',
+	3: '初三',
+	4: '初四',
+	5: '初五',
+	6: '初六',
+	7: '初七',
+	8: '初八',
+	9: '初九',
+	10: '初十',
+	11: '十一',
+	12: '十二',
+	13: '十三',
+	14: '十四',
+	15: '十五',
+	16: '十六',
+	17: '十七',
+	18: '十八',
+	19: '十九',
+	20: '二十',
+	21: '廿一',
+	22: '廿二',
+	23: '廿三',
+	24: '廿四',
+	25: '廿五',
+	26: '廿六',
+	27: '廿七',
+	28: '廿八',
+	29: '廿九',
+	30: '三十'
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 function createLunarFormatter() {
 	try {
 		return new Intl.DateTimeFormat('zh-Hans-CN-u-ca-chinese', {
 			year: 'numeric',
-			month: 'numeric',
+			month: 'long',
 			day: 'numeric'
 		})
 	} catch (error) {
@@ -374,6 +449,13 @@ function getTodayDateString() {
 	return `${now.getFullYear()}-${padDateUnit(now.getMonth() + 1)}-${padDateUnit(now.getDate())}`
 }
 
+function formatDateValue(date = null) {
+	if (!date || Number.isNaN(date.getTime())) {
+		return ''
+	}
+	return `${date.getFullYear()}-${padDateUnit(date.getMonth() + 1)}-${padDateUnit(date.getDate())}`
+}
+
 function parseDateValue(value = '') {
 	const dateValue = String(value || '').trim()
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
@@ -385,6 +467,15 @@ function parseDateValue(value = '') {
 	}
 	const normalized = `${date.getFullYear()}-${padDateUnit(date.getMonth() + 1)}-${padDateUnit(date.getDate())}`
 	return normalized === dateValue ? date : null
+}
+
+function normalizeDateTimestamp(value, dateValue = '') {
+	const raw = Number(value)
+	if (Number.isFinite(raw) && raw > 0) {
+		return Math.floor(raw)
+	}
+	const date = parseDateValue(dateValue)
+	return date ? date.getTime() : 0
 }
 
 function getTodayStartDate() {
@@ -434,6 +525,10 @@ function parseLunarMonth(value = '') {
 	}
 }
 
+function getChineseLunarDayText(day = 0) {
+	return CHINESE_LUNAR_DAY_TEXT[Number(day)] || ''
+}
+
 function getLunarDateInfo(date = null) {
 	if (!LUNAR_FORMATTER || !date || Number.isNaN(date.getTime())) {
 		return null
@@ -441,6 +536,7 @@ function getLunarDateInfo(date = null) {
 
 	try {
 		const parts = LUNAR_FORMATTER.formatToParts(date)
+		const relatedYearText = String((parts.find((part) => part.type === 'relatedYear') || {}).value || '')
 		const monthText = String((parts.find((part) => part.type === 'month') || {}).value || '')
 		const dayText = String((parts.find((part) => part.type === 'day') || {}).value || '')
 		const monthInfo = parseLunarMonth(monthText)
@@ -449,13 +545,84 @@ function getLunarDateInfo(date = null) {
 			return null
 		}
 		return {
+			year: parseInt(relatedYearText.replace(/[^\d]/g, ''), 10) || 0,
 			month: monthInfo.month,
 			day,
-			isLeap: monthInfo.isLeap
+			isLeap: monthInfo.isLeap,
+			monthText,
+			dayText: getChineseLunarDayText(day)
 		}
 	} catch (error) {
 		console.warn('getLunarDateInfo failed', error)
 		return null
+	}
+}
+
+function formatLunarDateValueFromInfo(info = null) {
+	if (!info) {
+		return ''
+	}
+	const yearText = info.year ? `${info.year}年` : ''
+	const monthText = String(info.monthText || '').trim()
+	const dayText = String(info.dayText || '').trim()
+	return `${yearText}${monthText}${dayText}`.trim()
+}
+
+function buildDateSelectionFromSolarValue(value = '') {
+	const safeDate = parseDateValue(value) || parseDateValue(getTodayDateString())
+	if (!safeDate) {
+		return {
+			solarDateValue: '',
+			lunarDateValue: '',
+			selectedTimestamp: 0
+		}
+	}
+	const solarDateValue = formatDateValue(safeDate)
+	return {
+		solarDateValue,
+		lunarDateValue: formatLunarDateValueFromInfo(getLunarDateInfo(safeDate)),
+		selectedTimestamp: safeDate.getTime()
+	}
+}
+
+function formatLunarValueFromCalendarPayload(lunar = {}) {
+	if (!lunar || typeof lunar !== 'object') {
+		return ''
+	}
+	const lunarYear = parseInt(lunar.lYear, 10) || 0
+	const lunarMonth = String(lunar.IMonthCn || '').trim()
+	const lunarDay = String(lunar.IDayCn || '').trim()
+	const yearText = lunarYear ? `${lunarYear}年` : ''
+	return `${yearText}${lunarMonth}${lunarDay}`.trim()
+}
+
+function resolveDisplayDateValue(dateType = 'solar', solarDateValue = '', lunarDateValue = '') {
+	if (dateType === 'lunar') {
+		return String(lunarDateValue || solarDateValue || '').trim()
+	}
+	return String(solarDateValue || lunarDateValue || '').trim()
+}
+
+function createDefaultForm() {
+	const dateSelection = buildDateSelectionFromSolarValue(getTodayDateString())
+	return {
+		title: '',
+		dateType: 'solar',
+		dateValue: dateSelection.solarDateValue,
+		solarDateValue: dateSelection.solarDateValue,
+		lunarDateValue: dateSelection.lunarDateValue,
+		selectedTimestamp: dateSelection.selectedTimestamp,
+		repeatType: 'yearly',
+		backgroundType: 'color',
+		backgroundImage: {
+			url: '',
+			file_id: ''
+		},
+		backgroundColor: '#EC7558',
+		fontColor: '#FFFFFF',
+		maskEnabled: true,
+		maskColor: '#000000',
+		maskOpacity: 0.35
 	}
 }
 
@@ -565,23 +732,12 @@ export default {
 			saving: false,
 			anniversaryId: '',
 			pendingBackgroundFiles: [],
-			form: {
-				title: '',
-				dateType: 'solar',
-				dateValue: getTodayDateString(),
-				repeatType: 'yearly',
-				backgroundType: 'color',
-				backgroundImage: {
-					url: '',
-					file_id: ''
-				},
-				backgroundColor: '#EC7558',
-				fontColor: '#FFFFFF',
-				maskEnabled: true,
-				maskColor: '#000000',
-				maskOpacity: 0.35
-			},
-			dateTypeOptions: [{ name: '公历' }, { name: '农历' }],
+			calendarPopupVisible: false,
+			calendarDateTypeDropdownVisible: false,
+			calendarSelectionMode: 'solar',
+			calendarDraft: buildDateSelectionFromSolarValue(getTodayDateString()),
+			form: createDefaultForm(),
+			dateTypeOptions: ['公历', '农历'],
 			repeatTypeOptions: [{ name: '不重复' }, { name: '每周' }, { name: '每月' }, { name: '每年' }],
 			backgroundTypeOptions: [{ name: '背景图' }, { name: '背景色' }],
 			backgroundColorOptions: ['#EC7558', '#FA856A', '#F59E7C', '#E76F51', '#D96C6C', '#8CC0DE'],
@@ -599,8 +755,8 @@ export default {
 		saveButtonText() {
 			return this.isEditMode ? '保存修改' : '创建纪念日'
 		},
-		dateTypeIndex() {
-			const index = DATE_TYPE_OPTIONS.indexOf(this.form.dateType)
+		calendarDateTypeIndex() {
+			const index = DATE_TYPE_OPTIONS.indexOf(this.calendarSelectionMode)
 			return index === -1 ? 0 : index
 		},
 		repeatTypeIndex() {
@@ -654,11 +810,24 @@ export default {
 		currentDateTypeText() {
 			return DATE_TYPE_TEXT_MAP[this.form.dateType] || '公历'
 		},
+		currentDisplayDateText() {
+			return resolveDisplayDateValue(this.form.dateType, this.form.solarDateValue, this.form.lunarDateValue)
+		},
+		calendarCurrentDateTypeText() {
+			return DATE_TYPE_TEXT_MAP[this.calendarSelectionMode] || '公历'
+		},
+		calendarDisplayDateText() {
+			return resolveDisplayDateValue(
+				this.calendarSelectionMode,
+				this.calendarDraft.solarDateValue,
+				this.calendarDraft.lunarDateValue
+			)
+		},
 		currentRepeatTypeText() {
 			return REPEAT_TYPE_TEXT_MAP[this.form.repeatType] || '每年'
 		},
 		previewCountdownText() {
-			return buildCountdownText(this.form.dateValue, this.form.repeatType, this.form.dateType)
+			return buildCountdownText(this.form.solarDateValue, this.form.repeatType, this.form.dateType)
 		}
 	},
 	onLoad(options) {
@@ -688,12 +857,65 @@ export default {
 		onTitleInput(value) {
 			this.form.title = String(value || '')
 		},
-		handleDateTypeChange(event = {}) {
-			const index = Number(event.index || 0)
-			this.form.dateType = DATE_TYPE_OPTIONS[index] || DATE_TYPE_OPTIONS[0]
+		handleCalendarPanelClick() {
+			this.closeCalendarDateTypeDropdown()
 		},
-		handleDateChange(event = {}) {
-			this.form.dateValue = event && event.detail ? String(event.detail.value || '') : ''
+		toggleCalendarDateTypeDropdown() {
+			this.calendarDateTypeDropdownVisible = !this.calendarDateTypeDropdownVisible
+		},
+		selectCalendarDateType(index = 0) {
+			this.calendarSelectionMode = DATE_TYPE_OPTIONS[index] || DATE_TYPE_OPTIONS[0]
+			this.closeCalendarDateTypeDropdown()
+		},
+		closeCalendarDateTypeDropdown() {
+			this.calendarDateTypeDropdownVisible = false
+		},
+		openDateCalendar() {
+			const dateSelection = buildDateSelectionFromSolarValue(this.form.solarDateValue || this.form.dateValue)
+			this.calendarDraft = {
+				solarDateValue: dateSelection.solarDateValue,
+				lunarDateValue: this.form.lunarDateValue || dateSelection.lunarDateValue,
+				selectedTimestamp: normalizeDateTimestamp(this.form.selectedTimestamp, dateSelection.solarDateValue)
+			}
+			this.calendarSelectionMode = this.form.dateType || 'solar'
+			this.calendarDateTypeDropdownVisible = false
+			this.calendarPopupVisible = true
+		},
+		closeDateCalendar() {
+			this.closeCalendarDateTypeDropdown()
+			this.calendarPopupVisible = false
+		},
+		handleCalendarChange(event = {}) {
+			const solarDateValue = String(event.fulldate || event.fullDate || '').trim()
+			const dateSelection = buildDateSelectionFromSolarValue(solarDateValue)
+			if (!dateSelection.solarDateValue) {
+				return
+			}
+			this.calendarDraft = {
+				solarDateValue: dateSelection.solarDateValue,
+				lunarDateValue: formatLunarValueFromCalendarPayload(event.lunar) || dateSelection.lunarDateValue,
+				selectedTimestamp: dateSelection.selectedTimestamp
+			}
+		},
+		confirmDateSelection() {
+			if (!parseDateValue(this.calendarDraft.solarDateValue)) {
+				uni.showToast({
+					title: '请选择有效日期',
+					icon: 'none'
+				})
+				return
+			}
+
+			this.form.dateType = this.calendarSelectionMode
+			this.form.dateValue = this.calendarDraft.solarDateValue
+			this.form.solarDateValue = this.calendarDraft.solarDateValue
+			this.form.lunarDateValue = this.calendarDraft.lunarDateValue || buildDateSelectionFromSolarValue(this.calendarDraft.solarDateValue).lunarDateValue
+			this.form.selectedTimestamp = normalizeDateTimestamp(
+				this.calendarDraft.selectedTimestamp,
+				this.calendarDraft.solarDateValue
+			)
+			this.closeCalendarDateTypeDropdown()
+			this.closeDateCalendar()
 		},
 		handleRepeatTypeChange(event = {}) {
 			const index = Number(event.index || 0)
@@ -752,10 +974,17 @@ export default {
 				}
 				const data = result && result.data ? result.data : {}
 				const anniversary = data.anniversary || {}
+				const defaultForm = createDefaultForm()
+				const solarDateValue = anniversary.solar_date_value || anniversary.date_value || defaultForm.solarDateValue
+				const dateSelection = buildDateSelectionFromSolarValue(solarDateValue)
 				this.form = {
+					...defaultForm,
 					title: anniversary.title || '',
 					dateType: anniversary.date_type || 'solar',
-					dateValue: anniversary.date_value || getTodayDateString(),
+					dateValue: solarDateValue,
+					solarDateValue,
+					lunarDateValue: anniversary.lunar_date_value || dateSelection.lunarDateValue,
+					selectedTimestamp: normalizeDateTimestamp(anniversary.date_timestamp, solarDateValue),
 					repeatType: anniversary.repeat_type || 'yearly',
 					backgroundType: anniversary.background_type || 'color',
 					backgroundImage: anniversary.background_image && typeof anniversary.background_image === 'object'
@@ -794,7 +1023,7 @@ export default {
 			if (title.length > 50) {
 				return '标题不能超过 50 个字符'
 			}
-			if (!parseDateValue(this.form.dateValue)) {
+			if (!parseDateValue(this.form.solarDateValue || this.form.dateValue)) {
 				return '请选择有效日期'
 			}
 			if (this.form.backgroundType === 'image') {
@@ -860,10 +1089,18 @@ export default {
 					}
 				}
 
+				const solarDateValue = String(this.form.solarDateValue || this.form.dateValue || '').trim()
+				const normalizedDateSelection = buildDateSelectionFromSolarValue(solarDateValue)
+				const lunarDateValue = String(this.form.lunarDateValue || normalizedDateSelection.lunarDateValue || '').trim()
+				const selectedTimestamp = normalizeDateTimestamp(this.form.selectedTimestamp, solarDateValue)
+
 				const payload = {
 					title: String(this.form.title || '').trim(),
 					dateType: this.form.dateType,
-					dateValue: this.form.dateValue,
+					dateValue: solarDateValue,
+					solarDateValue: solarDateValue || normalizedDateSelection.solarDateValue,
+					lunarDateValue,
+					selectedTimestamp,
 					repeatType: this.form.repeatType,
 					style: {
 						backgroundType: this.form.backgroundType,
@@ -940,8 +1177,184 @@ export default {
 		min-height: 44rpx;
 	}
 
+	.picker-field--space {
+		width: 100%;
+		justify-content: space-between;
+		gap: 20rpx;
+	}
+
+	.picker-field__content {
+		flex: 1;
+		min-width: 0;
+	}
+
 	.picker-field__value {
+		display: block;
 		font-size: 28rpx;
+		color: #5a3427;
+	}
+
+	.picker-field__value--placeholder {
+		color: #b18a7d;
+	}
+
+	.picker-field__tag {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 8rpx 18rpx;
+		border-radius: 999rpx;
+		background: rgba(236, 117, 88, 0.12);
+	}
+
+	.picker-field__tag-text {
+		font-size: 22rpx;
+		font-weight: 600;
+		color: #d56448;
+	}
+
+	.calendar-popup {
+		position: fixed;
+		inset: 0;
+		z-index: 30;
+	}
+
+	.calendar-popup__mask {
+		position: absolute;
+		inset: 0;
+		background: rgba(55, 31, 24, 0.42);
+	}
+
+	.calendar-popup__panel {
+		position: absolute;
+		left: 24rpx;
+		right: 24rpx;
+		bottom: calc(20rpx + env(safe-area-inset-bottom));
+		max-height: calc(100vh - 120rpx);
+		padding: 28rpx 24rpx 24rpx;
+		border-radius: 32rpx;
+		background: #fffaf7;
+		box-shadow: 0 22rpx 60rpx rgba(103, 58, 45, 0.22);
+		overflow: hidden auto;
+	}
+
+	.calendar-popup__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20rpx;
+		margin-bottom: 24rpx;
+	}
+
+	.calendar-popup__title {
+		font-size: 30rpx;
+		font-weight: 700;
+		color: #5a3427;
+	}
+
+	.calendar-popup__actions {
+		display: flex;
+		align-items: center;
+		gap: 24rpx;
+	}
+
+	.calendar-popup__action {
+		font-size: 26rpx;
+		color: #8b6a60;
+	}
+
+	.calendar-popup__action--primary {
+		font-weight: 700;
+		color: #e76f51;
+	}
+
+	.calendar-popup__selector-wrap {
+		position: relative;
+		flex-shrink: 0;
+	}
+
+	.calendar-popup__selector-inline {
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+		padding: 12rpx 18rpx;
+		border-radius: 999rpx;
+		background: rgba(255, 255, 255, 0.92);
+		border: 1px solid rgba(236, 117, 88, 0.2);
+	}
+
+	.calendar-popup__selector-value-text {
+		font-size: 24rpx;
+		font-weight: 700;
+		color: #5a3427;
+	}
+
+	.calendar-popup__selector-arrow {
+		font-size: 18rpx;
+		color: #d27761;
+		transition: transform 0.2s ease;
+	}
+
+	.calendar-popup__selector-arrow--open {
+		transform: rotate(180deg);
+	}
+
+	.calendar-popup__selector-menu {
+		position: absolute;
+		top: calc(100% + 12rpx);
+		right: 0;
+		min-width: 140rpx;
+		padding: 10rpx;
+		border-radius: 20rpx;
+		background: rgba(255, 250, 247, 0.98);
+		border: 1px solid rgba(236, 117, 88, 0.14);
+		box-shadow: 0 14rpx 36rpx rgba(115, 67, 52, 0.16);
+		z-index: 8;
+	}
+
+	.calendar-popup__selector-option {
+		padding: 16rpx 18rpx;
+		border-radius: 14rpx;
+	}
+
+	.calendar-popup__selector-option + .calendar-popup__selector-option {
+		margin-top: 6rpx;
+	}
+
+	.calendar-popup__selector-option--active {
+		background: rgba(236, 117, 88, 0.14);
+	}
+
+	.calendar-popup__selector-option-text {
+		display: block;
+		font-size: 24rpx;
+		line-height: 1.4;
+		color: #6f4a3f;
+		text-align: center;
+	}
+
+	.calendar-popup__selector-option-text--active {
+		font-weight: 700;
+		color: #e76f51;
+	}
+
+	.calendar-popup__summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20rpx;
+		padding: 22rpx 20rpx;
+		margin: 0 0 16rpx;
+		border-radius: 24rpx;
+		background: #fff2ec;
+	}
+
+	.calendar-popup__summary-value {
+		flex: 1;
+		min-width: 0;
+		font-size: 30rpx;
+		font-weight: 700;
+		line-height: 1.4;
 		color: #5a3427;
 	}
 

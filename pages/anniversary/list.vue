@@ -118,7 +118,7 @@
 							</view>
 
 							<view class="anniversary-card__meta">
-								<text class="anniversary-card__date">{{ item.date_value }}</text>
+								<text class="anniversary-card__date">{{ item.display_date_value || item.date_value }}</text>
 								<fui-tag
 									:text="dateTypeTextMap[item.date_type] || '公历'"
 									:is-border="false"

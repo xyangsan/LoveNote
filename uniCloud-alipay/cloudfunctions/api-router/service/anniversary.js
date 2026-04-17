@@ -44,11 +44,44 @@ const LUNAR_MONTH_MAP = {
 	'腊月': 12
 }
 
+const CHINESE_LUNAR_DAY_TEXT = {
+	1: '初一',
+	2: '初二',
+	3: '初三',
+	4: '初四',
+	5: '初五',
+	6: '初六',
+	7: '初七',
+	8: '初八',
+	9: '初九',
+	10: '初十',
+	11: '十一',
+	12: '十二',
+	13: '十三',
+	14: '十四',
+	15: '十五',
+	16: '十六',
+	17: '十七',
+	18: '十八',
+	19: '十九',
+	20: '二十',
+	21: '廿一',
+	22: '廿二',
+	23: '廿三',
+	24: '廿四',
+	25: '廿五',
+	26: '廿六',
+	27: '廿七',
+	28: '廿八',
+	29: '廿九',
+	30: '三十'
+}
+
 function createLunarFormatter() {
 	try {
 		return new Intl.DateTimeFormat('zh-Hans-CN-u-ca-chinese', {
 			year: 'numeric',
-			month: 'numeric',
+			month: 'long',
 			day: 'numeric'
 		})
 	} catch (error) {
@@ -152,6 +185,16 @@ function formatDateValue(date = null) {
 	return `${year}-${month}-${day}`
 }
 
+function normalizeDateTimestamp(value, fallbackDateValue = '') {
+	const raw = Number(value)
+	if (Number.isFinite(raw) && raw > 0) {
+		return Math.floor(raw)
+	}
+
+	const fallbackDate = parseDateValue(fallbackDateValue)
+	return fallbackDate ? fallbackDate.getTime() : 0
+}
+
 function getTodayStartDate() {
 	const now = new Date()
 	return new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -203,6 +246,10 @@ function parseLunarMonth(value = '') {
 	}
 }
 
+function getChineseLunarDayText(day = 0) {
+	return CHINESE_LUNAR_DAY_TEXT[Number(day)] || ''
+}
+
 function getLunarDateInfo(date = null) {
 	if (!LUNAR_FORMATTER || !date || Number.isNaN(date.getTime())) {
 		return null
@@ -210,6 +257,7 @@ function getLunarDateInfo(date = null) {
 
 	try {
 		const parts = LUNAR_FORMATTER.formatToParts(date)
+		const relatedYearText = String((parts.find((part) => part.type === 'relatedYear') || {}).value || '')
 		const monthText = String((parts.find((part) => part.type === 'month') || {}).value || '')
 		const dayText = String((parts.find((part) => part.type === 'day') || {}).value || '')
 		const monthInfo = parseLunarMonth(monthText)
@@ -220,14 +268,28 @@ function getLunarDateInfo(date = null) {
 		}
 
 		return {
+			year: parseInt(relatedYearText.replace(/[^\d]/g, ''), 10) || 0,
 			month: monthInfo.month,
 			day,
-			isLeap: monthInfo.isLeap
+			isLeap: monthInfo.isLeap,
+			monthText,
+			dayText: getChineseLunarDayText(day)
 		}
 	} catch (error) {
 		console.warn('getLunarDateInfo failed', error)
 		return null
 	}
+}
+
+function formatLunarDateValueFromInfo(info = null) {
+	if (!info) {
+		return ''
+	}
+
+	const yearText = info.year ? `${info.year}年` : ''
+	const monthText = String(info.monthText || '').trim()
+	const dayText = String(info.dayText || '').trim()
+	return `${yearText}${monthText}${dayText}`.trim()
 }
 
 function findNextLunarDate(target = {}, fromDate = null, maxScanDays = 800) {
@@ -348,6 +410,63 @@ function getValueByAlias(source = {}, aliases = []) {
 	return undefined
 }
 
+function normalizeLunarDateValue(value = '', fallback = '') {
+	const lunarDateValue = String(value || '').trim()
+	return lunarDateValue || fallback
+}
+
+function buildNormalizedDateFields(params = {}, fallbackRecord = null) {
+	const rawSolarInput = getValueByAlias(params, ['solarDateValue', 'solar_date_value', 'dateValue', 'date_value'])
+	const rawLunarInput = getValueByAlias(params, ['lunarDateValue', 'lunar_date_value'])
+	const rawTimestampInput = getValueByAlias(params, ['selectedTimestamp', 'selected_timestamp', 'dateTimestamp', 'date_timestamp'])
+	const safeFallbackRecord = fallbackRecord && typeof fallbackRecord === 'object' ? fallbackRecord : {}
+
+	const fallbackSolarDateValue = getValueByAlias(safeFallbackRecord, ['solar_date_value', 'date_value'])
+	const solarCandidate = rawSolarInput !== undefined ? rawSolarInput : fallbackSolarDateValue
+	const solarDate = parseDateValue(String(solarCandidate || '').trim())
+	if (!solarDate) {
+		return null
+	}
+
+	const solarDateValue = formatDateValue(solarDate)
+	const derivedLunarDateValue = formatLunarDateValueFromInfo(getLunarDateInfo(solarDate))
+	const fallbackLunarDateValue = getValueByAlias(safeFallbackRecord, ['lunar_date_value'])
+	const lunarCandidate = rawLunarInput !== undefined
+		? rawLunarInput
+		: rawSolarInput !== undefined
+			? derivedLunarDateValue
+			: fallbackLunarDateValue
+	const fallbackTimestamp = getValueByAlias(safeFallbackRecord, ['date_timestamp'])
+	const timestampCandidate = rawTimestampInput !== undefined
+		? rawTimestampInput
+		: rawSolarInput !== undefined
+			? solarDate.getTime()
+			: fallbackTimestamp
+
+	return {
+		dateValue: solarDateValue,
+		solarDateValue,
+		lunarDateValue: normalizeLunarDateValue(lunarCandidate, derivedLunarDateValue),
+		dateTimestamp: normalizeDateTimestamp(timestampCandidate, solarDateValue)
+	}
+}
+
+function hasDateFieldInput(params = {}) {
+	const aliases = [
+		'dateValue',
+		'date_value',
+		'solarDateValue',
+		'solar_date_value',
+		'lunarDateValue',
+		'lunar_date_value',
+		'selectedTimestamp',
+		'selected_timestamp',
+		'dateTimestamp',
+		'date_timestamp'
+	]
+	return aliases.some((key) => Object.prototype.hasOwnProperty.call(params, key))
+}
+
 function extractStyleInput(params = {}) {
 	const rawStyle = params.style && typeof params.style === 'object' ? params.style : {}
 	const fields = [
@@ -454,9 +573,18 @@ function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}) {
 		backgroundImageUrl = fileUrlMap[rawUrl] || ''
 	}
 
+	const dateFields = buildNormalizedDateFields(record, record)
+	const solarDateValue = dateFields ? dateFields.solarDateValue : String(record.date_value || '').trim()
+	const lunarDateValue = dateFields ? dateFields.lunarDateValue : ''
+	const dateTimestamp = dateFields
+		? dateFields.dateTimestamp
+		: normalizeDateTimestamp(record.date_timestamp, solarDateValue)
 	const dateType = normalizeDateType(record.date_type)
 	const repeatType = normalizeRepeatType(record.repeat_type)
-	const countdown = computeCountdown(record.date_value, repeatType, dateType)
+	const countdown = computeCountdown(solarDateValue, repeatType, dateType)
+	const displayDateValue = dateType === 'lunar'
+		? lunarDateValue || solarDateValue
+		: solarDateValue || lunarDateValue
 
 	return Object.assign({}, record, {
 		background_image: {
@@ -465,6 +593,11 @@ function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}) {
 		},
 		background_type: normalizeBackgroundType(record.background_type),
 		date_type: dateType,
+		date_value: solarDateValue,
+		solar_date_value: solarDateValue,
+		lunar_date_value: lunarDateValue,
+		date_timestamp: dateTimestamp,
+		display_date_value: displayDateValue,
 		repeat_type: repeatType,
 		background_color: normalizeColor(record.background_color, DEFAULT_BACKGROUND_COLOR),
 		font_color: normalizeColor(record.font_color, DEFAULT_FONT_COLOR),
@@ -609,8 +742,8 @@ module.exports = class AnniversaryService extends Service {
 				})
 			}
 
-			const dateValue = String(params.dateValue || params.date_value || '').trim()
-			if (!parseDateValue(dateValue)) {
+			const dateFields = buildNormalizedDateFields(params)
+			if (!dateFields) {
 				return withAuthResponse(authState, {
 					errCode: 'love-note-param-invalid',
 					errMsg: '日期格式不正确，请使用 YYYY-MM-DD'
@@ -639,7 +772,10 @@ module.exports = class AnniversaryService extends Service {
 				couple_id: activeCouple._id,
 				title,
 				date_type: dateType,
-				date_value: dateValue,
+				date_value: dateFields.dateValue,
+				solar_date_value: dateFields.solarDateValue,
+				lunar_date_value: dateFields.lunarDateValue,
+				date_timestamp: dateFields.dateTimestamp,
 				repeat_type: repeatType,
 				background_type: backgroundType,
 				background_image: backgroundType === 'image'
@@ -731,15 +867,18 @@ module.exports = class AnniversaryService extends Service {
 				updateData.title = title
 			}
 
-			if (params.dateValue !== undefined || params.date_value !== undefined) {
-				const dateValue = String(params.dateValue !== undefined ? params.dateValue : params.date_value).trim()
-				if (!parseDateValue(dateValue)) {
+			if (hasDateFieldInput(params)) {
+				const dateFields = buildNormalizedDateFields(params, record)
+				if (!dateFields) {
 					return withAuthResponse(authState, {
 						errCode: 'love-note-param-invalid',
 						errMsg: '日期格式不正确，请使用 YYYY-MM-DD'
 					})
 				}
-				updateData.date_value = dateValue
+				updateData.date_value = dateFields.dateValue
+				updateData.solar_date_value = dateFields.solarDateValue
+				updateData.lunar_date_value = dateFields.lunarDateValue
+				updateData.date_timestamp = dateFields.dateTimestamp
 			}
 
 			if (params.dateType !== undefined || params.date_type !== undefined) {
