@@ -38,5 +38,77 @@
 				}
 			]
 		}
+	},
+	{
+		"IndexName": "anniversary_creator_next_date",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "creator_uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				},
+				{
+					"Name": "next_date_timestamp",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "anniversary_couple_creator_next_date",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "couple_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "creator_uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				},
+				{
+					"Name": "next_date_timestamp",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "anniversary_refresh_cursor",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				},
+				{
+					"Name": "next_date_refresh_date",
+					"Direction": "1"
+				},
+				{
+					"Name": "_id",
+					"Direction": "1"
+				}
+			]
+		}
 	}
 ]

@@ -1,0 +1,16 @@
+{
+	"name": "anniversary-refresh-next-date",
+	"version": "1.0.0",
+	"description": "Refresh anniversary next date sort fields",
+	"main": "index.js",
+	"cloudfunction-config": {
+		"timeout": 600,
+		"triggers": [
+			{
+				"name": "refreshNextDateDaily",
+				"type": "timer",
+				"config": "0 5 0 * * * *"
+			}
+		]
+	}
+}

@@ -6,7 +6,21 @@
 		<view class="love-layer">
 			<view class="love-title-block anniversary-header">
 				<text class="love-title-block__eyebrow">LOVE NOTE</text>
-				<text class="love-title-block__title">纪念日</text>
+				<view class="anniversary-header__title-row">
+					<text class="love-title-block__title">纪念日</text>
+					<fui-button
+						v-if="isLoggedIn"
+						text="新增"
+						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
+						color="#ffffff"
+						radius="999rpx"
+						height="56rpx"
+						width="112rpx"
+						:size="22"
+						:bold="true"
+						@click="goToEdit()"
+					></fui-button>
+				</view>
 				<text class="love-title-block__desc">记录重要时刻，自动计算下一次倒计时天数。</text>
 			</view>
 
@@ -19,19 +33,6 @@
 			></love-auth-required>
 
 			<view v-else>
-				<view class="toolbar">
-					<fui-button
-						text="新增纪念日"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						radius="999rpx"
-						height="78rpx"
-						:size="24"
-						:bold="true"
-						@click="goToEdit()"
-					></fui-button>
-				</view>
-
 				<love-glass-card
 					v-if="noCouple"
 					:margin="['0', '0', '0', '0']"
@@ -118,23 +119,31 @@
 							</view>
 
 							<view class="anniversary-card__meta">
-								<text class="anniversary-card__date">{{ item.display_date_value || item.date_value }}</text>
-								<fui-tag
-									:text="dateTypeTextMap[item.date_type] || '公历'"
-									:is-border="false"
-									background="rgba(255,255,255,0.18)"
-									color="#ffffff"
-									radius="999"
-									:padding="['6rpx', '14rpx']"
-								></fui-tag>
+								<view class="anniversary-card__meta-main">
+									<text class="anniversary-card__date">{{ item.display_date_value || item.date_value }}</text>
+									<fui-tag
+										:text="dateTypeTextMap[item.date_type] || '公历'"
+										:is-border="false"
+										background="rgba(255,255,255,0.18)"
+										color="#ffffff"
+										radius="999"
+										:padding="['6rpx', '14rpx']"
+									></fui-tag>
+								</view>
+								<text
+									v-if="item.elapsed_text"
+									class="anniversary-card__elapsed"
+								>{{ item.elapsed_text }}</text>
 							</view>
 
 							<view class="anniversary-card__countdown">
 								<text class="anniversary-card__countdown-text">{{ item.countdown_text || '--' }}</text>
-								<text
-									v-if="item.next_date"
-									class="anniversary-card__next-date"
-								>下一次：{{ item.next_date }}</text>
+								<view class="anniversary-card__next">
+									<text
+										v-if="item.next_date"
+										class="anniversary-card__next-date"
+									>下一次：{{ item.next_date }}</text>
+								</view>
 							</view>
 						</view>
 					</view>
@@ -154,6 +163,7 @@ import {
 	getCurrentUniIdUser
 } from '../../common/auth-center.js'
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
+import { normalizeAnniversaryCountdownItem } from '../../common/utils/anniversary-countdown.js'
 
 const DATE_TYPE_TEXT_MAP = {
 	solar: '公历',
@@ -260,7 +270,9 @@ export default {
 				}
 
 				const data = result && result.data ? result.data : {}
-				const list = Array.isArray(data.list) ? data.list : []
+				const list = Array.isArray(data.list)
+					? data.list.map(item => normalizeAnniversaryCountdownItem(item))
+					: []
 				const pageInfo = data.pagination || {}
 				const total = Number(pageInfo.total || 0)
 				const hasMore = pageInfo.hasMore !== undefined
@@ -399,8 +411,12 @@ export default {
 		padding-bottom: 10rpx;
 	}
 
-	.toolbar {
-		padding: 0 34rpx 20rpx;
+	.anniversary-header__title-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20rpx;
+		min-width: 0;
 	}
 
 	.empty-actions {
@@ -482,13 +498,22 @@ export default {
 	.anniversary-card__meta {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 12rpx;
 		margin-top: 14rpx;
+	}
+
+	.anniversary-card__meta-main {
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+		min-width: 0;
 	}
 
 	.anniversary-card__date {
 		font-size: 24rpx;
 		opacity: 0.96;
+		white-space: nowrap;
 	}
 
 	.anniversary-card__countdown {
@@ -505,8 +530,24 @@ export default {
 		line-height: 1.25;
 	}
 
+	.anniversary-card__next {
+		display: flex;
+		align-items: flex-end;
+		justify-content: flex-end;
+		min-width: 0;
+	}
+
+	.anniversary-card__elapsed {
+		font-size: 24rpx;
+		font-weight: 700;
+		line-height: 1.2;
+		opacity: 0.98;
+		white-space: nowrap;
+	}
+
 	.anniversary-card__next-date {
 		font-size: 22rpx;
+		line-height: 1.2;
 		opacity: 0.94;
 	}
 

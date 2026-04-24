@@ -14,6 +14,10 @@ const {
 	getTempFileUrlMap
 } = require('../lib/media')
 const { formatError } = require('../lib/response')
+const {
+	buildNextDateFields,
+	computeAnniversaryCountdown
+} = require('../../common/anniversary-next-date')
 
 const DATE_TYPE_SET = new Set(['solar', 'lunar'])
 const REPEAT_TYPE_SET = new Set(['none', 'weekly', 'monthly', 'yearly'])
@@ -24,7 +28,6 @@ const DEFAULT_FONT_COLOR = '#FFFFFF'
 const DEFAULT_MASK_COLOR = '#000000'
 const DEFAULT_MASK_OPACITY = 0.35
 const MAX_TITLE_LENGTH = 50
-const DAY_MS = 24 * 60 * 60 * 1000
 
 const LUNAR_MONTH_MAP = {
 	'正月': 1,
@@ -195,24 +198,6 @@ function normalizeDateTimestamp(value, fallbackDateValue = '') {
 	return fallbackDate ? fallbackDate.getTime() : 0
 }
 
-function getTodayStartDate() {
-	const now = new Date()
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-}
-
-function getDaysInMonth(year, monthIndex) {
-	return new Date(year, monthIndex + 1, 0).getDate()
-}
-
-function createDateSafe(year, monthIndex, day) {
-	const safeDay = Math.max(1, Math.min(day, getDaysInMonth(year, monthIndex)))
-	return new Date(year, monthIndex, safeDay)
-}
-
-function getDayDiff(fromDate, toDate) {
-	return Math.floor((toDate.getTime() - fromDate.getTime()) / DAY_MS)
-}
-
 function parseLunarMonth(value = '') {
 	const raw = String(value || '').trim().replace(/\s+/g, '')
 	if (!raw) {
@@ -290,99 +275,6 @@ function formatLunarDateValueFromInfo(info = null) {
 	const monthText = String(info.monthText || '').trim()
 	const dayText = String(info.dayText || '').trim()
 	return `${yearText}${monthText}${dayText}`.trim()
-}
-
-function findNextLunarDate(target = {}, fromDate = null, maxScanDays = 800) {
-	if (!fromDate || Number.isNaN(fromDate.getTime()) || !target.month || !target.day) {
-		return null
-	}
-
-	const expectLeap = Boolean(target.isLeap)
-	for (let i = 0; i <= maxScanDays; i += 1) {
-		const candidate = new Date(fromDate.getTime() + i * DAY_MS)
-		const lunarInfo = getLunarDateInfo(candidate)
-		if (!lunarInfo) {
-			continue
-		}
-
-		if (lunarInfo.month !== target.month || lunarInfo.day !== target.day) {
-			continue
-		}
-
-		if (Boolean(lunarInfo.isLeap) !== expectLeap) {
-			continue
-		}
-
-		return candidate
-	}
-
-	return null
-}
-
-function getNextSolarDate(baseDate, today, repeatType) {
-	let nextDate = new Date(baseDate.getTime())
-	if (repeatType === 'weekly') {
-		const targetWeekDay = baseDate.getDay()
-		const diff = (targetWeekDay - today.getDay() + 7) % 7
-		nextDate = new Date(today.getTime() + diff * DAY_MS)
-		return nextDate
-	}
-
-	if (repeatType === 'monthly') {
-		const targetDay = baseDate.getDate()
-		nextDate = createDateSafe(today.getFullYear(), today.getMonth(), targetDay)
-		if (nextDate.getTime() < today.getTime()) {
-			const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-			nextDate = createDateSafe(nextMonthDate.getFullYear(), nextMonthDate.getMonth(), targetDay)
-		}
-		return nextDate
-	}
-
-	if (repeatType === 'yearly') {
-		const targetMonth = baseDate.getMonth()
-		const targetDay = baseDate.getDate()
-		nextDate = createDateSafe(today.getFullYear(), targetMonth, targetDay)
-		if (nextDate.getTime() < today.getTime()) {
-			nextDate = createDateSafe(today.getFullYear() + 1, targetMonth, targetDay)
-		}
-	}
-
-	return nextDate
-}
-
-function computeCountdown(dateValue = '', repeatType = 'yearly', dateType = 'solar') {
-	const baseDate = parseDateValue(dateValue)
-	if (!baseDate) {
-		return {
-			countdownDays: null,
-			nextDate: '',
-			isPassed: false
-		}
-	}
-
-	const today = getTodayStartDate()
-	const safeRepeatType = normalizeRepeatType(repeatType)
-	const safeDateType = normalizeDateType(dateType)
-	let nextDate = new Date(baseDate.getTime())
-
-	if (safeRepeatType !== 'none') {
-		if (safeRepeatType === 'yearly' && safeDateType === 'lunar') {
-			const lunarInfo = getLunarDateInfo(baseDate)
-			const nextLunarDate = lunarInfo ? findNextLunarDate(lunarInfo, today, 800) : null
-			nextDate = nextLunarDate || getNextSolarDate(baseDate, today, safeRepeatType)
-		} else {
-			nextDate = getNextSolarDate(baseDate, today, safeRepeatType)
-		}
-	}
-
-	const countdownDays = getDayDiff(today, nextDate)
-	const isPassed = safeRepeatType === 'none' && countdownDays < 0
-
-	return {
-		countdownDays,
-		nextDate: formatDateValue(nextDate),
-		isPassed
-	}
 }
 
 function buildCountdownText(countdownDays, isPassed = false) {
@@ -581,7 +473,13 @@ function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}) {
 		: normalizeDateTimestamp(record.date_timestamp, solarDateValue)
 	const dateType = normalizeDateType(record.date_type)
 	const repeatType = normalizeRepeatType(record.repeat_type)
-	const countdown = computeCountdown(solarDateValue, repeatType, dateType)
+	const countdown = computeAnniversaryCountdown({
+		date_type: dateType,
+		repeat_type: repeatType,
+		solar_date_value: solarDateValue,
+		lunar_date_value: lunarDateValue,
+		date_timestamp: dateTimestamp
+	})
 	const displayDateValue = dateType === 'lunar'
 		? lunarDateValue || solarDateValue
 		: solarDateValue || lunarDateValue
@@ -606,6 +504,9 @@ function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}) {
 		mask_opacity: clampOpacity(record.mask_opacity, DEFAULT_MASK_OPACITY),
 		countdown_days: countdown.countdownDays,
 		next_date: countdown.nextDate,
+		next_date_timestamp: countdown.nextDateTimestamp,
+		next_date_value: countdown.nextDate,
+		next_date_refresh_date: record.next_date_refresh_date || '',
 		countdown_text: buildCountdownText(countdown.countdownDays, countdown.isPassed)
 	})
 }
@@ -636,7 +537,7 @@ module.exports = class AnniversaryService extends Service {
 
 			const listRes = await anniversaryCollection
 				.where(whereCondition)
-				.orderBy('date_value', 'asc')
+				.orderBy('next_date_timestamp', 'asc')
 				.orderBy('create_time', 'desc')
 				.skip((page - 1) * pageSize)
 				.limit(pageSize)
@@ -794,6 +695,7 @@ module.exports = class AnniversaryService extends Service {
 				create_time: now,
 				update_time: now
 			}
+			Object.assign(record, buildNextDateFields(record))
 
 			const result = await anniversaryCollection.add(record)
 			return withAuthResponse(authState, {
@@ -946,6 +848,7 @@ module.exports = class AnniversaryService extends Service {
 				updateData.mask_opacity = style.maskOpacity
 			}
 
+			Object.assign(updateData, buildNextDateFields(Object.assign({}, record, updateData)))
 			await anniversaryCollection.doc(anniversaryId).update(updateData)
 
 			return withAuthResponse(authState, {

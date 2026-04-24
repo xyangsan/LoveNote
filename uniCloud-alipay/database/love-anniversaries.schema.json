@@ -55,6 +55,21 @@
 			"title": "日期时间戳",
 			"description": "所选日期对应的本地零点时间戳，毫秒"
 		},
+		"next_date_timestamp": {
+			"bsonType": "long",
+			"title": "下一次日期时间戳",
+			"description": "用于列表按距离今天最近排序的派生字段，毫秒"
+		},
+		"next_date_value": {
+			"bsonType": "string",
+			"title": "下一次日期",
+			"description": "下一次发生日期，格式 YYYY-MM-DD"
+		},
+		"next_date_refresh_date": {
+			"bsonType": "string",
+			"title": "下一次日期刷新日期",
+			"description": "派生字段刷新日期，格式 YYYY-MM-DD"
+		},
 		"repeat_type": {
 			"bsonType": "string",
 			"title": "重复方式",

@@ -1,0 +1,360 @@
+'use strict'
+
+const calendar = require('./uni-calendar-calendar')
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const CHINA_OFFSET_MS = 8 * 60 * 60 * 1000
+
+const DATE_TYPE_SET = new Set(['solar', 'lunar'])
+const REPEAT_TYPE_SET = new Set(['none', 'weekly', 'monthly', 'yearly'])
+
+const LUNAR_MONTH_TEXT_MAP = {
+	'正月': 1,
+	'一月': 1,
+	'二月': 2,
+	'三月': 3,
+	'四月': 4,
+	'五月': 5,
+	'六月': 6,
+	'七月': 7,
+	'八月': 8,
+	'九月': 9,
+	'十月': 10,
+	'冬月': 11,
+	'十一月': 11,
+	'腊月': 12,
+	'十二月': 12
+}
+
+const LUNAR_DAY_TEXT_MAP = {
+	'初一': 1,
+	'初二': 2,
+	'初三': 3,
+	'初四': 4,
+	'初五': 5,
+	'初六': 6,
+	'初七': 7,
+	'初八': 8,
+	'初九': 9,
+	'初十': 10,
+	'十一': 11,
+	'十二': 12,
+	'十三': 13,
+	'十四': 14,
+	'十五': 15,
+	'十六': 16,
+	'十七': 17,
+	'十八': 18,
+	'十九': 19,
+	'二十': 20,
+	'廿一': 21,
+	'廿二': 22,
+	'廿三': 23,
+	'廿四': 24,
+	'廿五': 25,
+	'廿六': 26,
+	'廿七': 27,
+	'廿八': 28,
+	'廿九': 29,
+	'三十': 30
+}
+
+function normalizeDateType(value = 'solar') {
+	const dateType = String(value || '').trim().toLowerCase()
+	return DATE_TYPE_SET.has(dateType) ? dateType : 'solar'
+}
+
+function normalizeRepeatType(value = 'yearly') {
+	const repeatType = String(value || '').trim().toLowerCase()
+	return REPEAT_TYPE_SET.has(repeatType) ? repeatType : 'yearly'
+}
+
+function padDateUnit(value) {
+	return `${value}`.padStart(2, '0')
+}
+
+function formatDateValue(date = null) {
+	if (!date || Number.isNaN(date.getTime())) {
+		return ''
+	}
+	return `${date.getFullYear()}-${padDateUnit(date.getMonth() + 1)}-${padDateUnit(date.getDate())}`
+}
+
+function parseDateValue(value = '') {
+	const dateValue = String(value || '').trim()
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+		return null
+	}
+	const date = new Date(`${dateValue}T00:00:00`)
+	if (Number.isNaN(date.getTime())) {
+		return null
+	}
+	return formatDateValue(date) === dateValue ? date : null
+}
+
+function parseDateParts(value = '') {
+	const dateValue = String(value || '').trim()
+	const match = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+	if (!match) {
+		return null
+	}
+	return {
+		year: Number(match[1]),
+		month: Number(match[2]),
+		day: Number(match[3])
+	}
+}
+
+function getChinaDateTimestamp(dateValue = '') {
+	const parts = parseDateParts(dateValue)
+	if (!parts) {
+		return 0
+	}
+	return Date.UTC(parts.year, parts.month - 1, parts.day) - CHINA_OFFSET_MS
+}
+
+function getChinaTodayDateValue(now = new Date()) {
+	const chinaDate = new Date(now.getTime() + CHINA_OFFSET_MS)
+	return [
+		chinaDate.getUTCFullYear(),
+		padDateUnit(chinaDate.getUTCMonth() + 1),
+		padDateUnit(chinaDate.getUTCDate())
+	].join('-')
+}
+
+function getTodayStartDate(todayDateValue = '') {
+	return parseDateValue(todayDateValue || getChinaTodayDateValue())
+}
+
+function getDateStart(date = null) {
+	if (!date || Number.isNaN(date.getTime())) {
+		return null
+	}
+	return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function getDayDiff(fromDate = null, toDate = null) {
+	const from = getDateStart(fromDate)
+	const to = getDateStart(toDate)
+	if (!from || !to) {
+		return null
+	}
+	return Math.floor((to.getTime() - from.getTime()) / DAY_MS)
+}
+
+function getDaysInMonth(year, monthIndex) {
+	return new Date(year, monthIndex + 1, 0).getDate()
+}
+
+function createDateSafe(year, monthIndex, day) {
+	const safeDay = Math.max(1, Math.min(day, getDaysInMonth(year, monthIndex)))
+	return new Date(year, monthIndex, safeDay)
+}
+
+function buildDateFromSolarParts(year, month, day) {
+	return parseDateValue(`${year}-${padDateUnit(month)}-${padDateUnit(day)}`)
+}
+
+function normalizeDateTimestamp(value, fallbackDateValue = '') {
+	const raw = Number(value)
+	if (Number.isFinite(raw) && raw > 0) {
+		return Math.floor(raw)
+	}
+	const date = parseDateValue(fallbackDateValue)
+	return date ? date.getTime() : 0
+}
+
+function getBaseDate(record = {}) {
+	const solarDateValue = String(record.solarDateValue || record.solar_date_value || record.dateValue || record.date_value || '').trim()
+	const solarDate = parseDateValue(solarDateValue)
+	if (solarDate) {
+		return solarDate
+	}
+	const timestamp = normalizeDateTimestamp(
+		record.dateTimestamp || record.date_timestamp || record.selectedTimestamp || record.selected_timestamp,
+		solarDateValue
+	)
+	if (timestamp) {
+		return getDateStart(new Date(timestamp))
+	}
+	return parseDateValue(solarDateValue)
+}
+
+function parseLunarValue(value = '') {
+	const raw = String(value || '').replace(/\s+/g, '')
+	const yearMatch = raw.match(/(\d{4})年/)
+	const monthMatch = raw.match(/(闰)?(正月|一月|二月|三月|四月|五月|六月|七月|八月|九月|十月|冬月|十一月|腊月|十二月)/)
+	const dayMatch = raw.match(/(初一|初二|初三|初四|初五|初六|初七|初八|初九|初十|十一|十二|十三|十四|十五|十六|十七|十八|十九|二十|廿一|廿二|廿三|廿四|廿五|廿六|廿七|廿八|廿九|三十)/)
+	return {
+		year: yearMatch ? Number(yearMatch[1]) : 0,
+		month: monthMatch ? LUNAR_MONTH_TEXT_MAP[monthMatch[2]] || 0 : 0,
+		day: dayMatch ? LUNAR_DAY_TEXT_MAP[dayMatch[1]] || 0 : 0,
+		isLeap: Boolean(monthMatch && monthMatch[1])
+	}
+}
+
+function getLunarInfoFromBaseDate(baseDate = null, lunarDateValue = '') {
+	const parsed = parseLunarValue(lunarDateValue)
+	if (parsed.month && parsed.day) {
+		return parsed
+	}
+	if (!baseDate) {
+		return null
+	}
+	const lunar = calendar.solar2lunar(baseDate.getFullYear(), baseDate.getMonth() + 1, baseDate.getDate())
+	if (!lunar || lunar === -1) {
+		return null
+	}
+	return {
+		year: Number(lunar.lYear || 0),
+		month: Number(lunar.lMonth || 0),
+		day: Number(lunar.lDay || 0),
+		isLeap: Boolean(lunar.isLeap)
+	}
+}
+
+function lunarResultToDate(result) {
+	if (!result || result === -1) {
+		return null
+	}
+	return buildDateFromSolarParts(Number(result.cYear), Number(result.cMonth), Number(result.cDay))
+}
+
+function getNextSolarDate(baseDate, today, repeatType) {
+	if (!baseDate) {
+		return null
+	}
+
+	if (repeatType === 'weekly') {
+		const diff = (baseDate.getDay() - today.getDay() + 7) % 7
+		return new Date(today.getTime() + diff * DAY_MS)
+	}
+
+	if (repeatType === 'monthly') {
+		const targetDay = baseDate.getDate()
+		let nextDate = createDateSafe(today.getFullYear(), today.getMonth(), targetDay)
+		if (nextDate.getTime() < today.getTime()) {
+			const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+			nextDate = createDateSafe(nextMonthDate.getFullYear(), nextMonthDate.getMonth(), targetDay)
+		}
+		return nextDate
+	}
+
+	if (repeatType === 'yearly') {
+		const targetMonth = baseDate.getMonth()
+		const targetDay = baseDate.getDate()
+		let nextDate = createDateSafe(today.getFullYear(), targetMonth, targetDay)
+		if (nextDate.getTime() < today.getTime()) {
+			nextDate = createDateSafe(today.getFullYear() + 1, targetMonth, targetDay)
+		}
+		return nextDate
+	}
+
+	return baseDate
+}
+
+function getNextLunarYearDate(lunarInfo = {}, today = null) {
+	if (!lunarInfo || !lunarInfo.month || !lunarInfo.day || !today) {
+		return null
+	}
+	const todayLunar = calendar.solar2lunar(today.getFullYear(), today.getMonth() + 1, today.getDate())
+	const startYear = todayLunar && todayLunar !== -1 ? Number(todayLunar.lYear || today.getFullYear()) : today.getFullYear()
+	for (let offset = 0; offset <= 3; offset += 1) {
+		const result = calendar.lunar2solar(startYear + offset, lunarInfo.month, lunarInfo.day, lunarInfo.isLeap)
+		const candidate = lunarResultToDate(result)
+		if (candidate && candidate.getTime() >= today.getTime()) {
+			return candidate
+		}
+	}
+	return null
+}
+
+function findNextLunarDayDate(lunarInfo = {}, today = null, maxScanDays = 80) {
+	if (!lunarInfo || !lunarInfo.day || !today) {
+		return null
+	}
+	for (let i = 0; i <= maxScanDays; i += 1) {
+		const candidate = new Date(today.getTime() + i * DAY_MS)
+		const lunar = calendar.solar2lunar(candidate.getFullYear(), candidate.getMonth() + 1, candidate.getDate())
+		if (lunar && lunar !== -1 && Number(lunar.lDay) === Number(lunarInfo.day)) {
+			return candidate
+		}
+	}
+	return null
+}
+
+function getNextLunarDate(baseDate, today, repeatType, lunarDateValue = '') {
+	const lunarInfo = getLunarInfoFromBaseDate(baseDate, lunarDateValue)
+	if (!lunarInfo) {
+		return getNextSolarDate(baseDate, today, repeatType)
+	}
+	if (repeatType === 'monthly') {
+		return findNextLunarDayDate(lunarInfo, today) || getNextSolarDate(baseDate, today, repeatType)
+	}
+	if (repeatType === 'yearly') {
+		return getNextLunarYearDate(lunarInfo, today) || getNextSolarDate(baseDate, today, repeatType)
+	}
+	if (repeatType === 'weekly') {
+		return getNextSolarDate(baseDate, today, repeatType)
+	}
+	return baseDate
+}
+
+function computeAnniversaryCountdown(record = {}, options = {}) {
+	const repeatType = normalizeRepeatType(record.repeatType || record.repeat_type)
+	const dateType = normalizeDateType(record.dateType || record.date_type)
+	const solarDateValue = String(record.solarDateValue || record.solar_date_value || record.dateValue || record.date_value || '').trim()
+	const lunarDateValue = String(record.lunarDateValue || record.lunar_date_value || '').trim()
+	const baseDate = getBaseDate(Object.assign({}, record, {
+		solarDateValue,
+		dateValue: solarDateValue
+	}))
+
+	if (!baseDate) {
+		return {
+			countdownDays: null,
+			nextDate: '',
+			nextDateTimestamp: 0,
+			isPassed: false
+		}
+	}
+
+	const today = getTodayStartDate(options.todayDateValue)
+	let nextDate = baseDate
+	if (repeatType !== 'none') {
+		nextDate = dateType === 'lunar'
+			? getNextLunarDate(baseDate, today, repeatType, lunarDateValue)
+			: getNextSolarDate(baseDate, today, repeatType)
+	}
+
+	const countdownDays = getDayDiff(today, nextDate)
+	const isPassed = repeatType === 'none' && Number(countdownDays) < 0
+
+	return {
+		countdownDays,
+		nextDate: formatDateValue(nextDate),
+		nextDateTimestamp: nextDate ? getChinaDateTimestamp(formatDateValue(nextDate)) : 0,
+		isPassed
+	}
+}
+
+function buildNextDateFields(record = {}, options = {}) {
+	const todayDateValue = options.todayDateValue || getChinaTodayDateValue()
+	const countdown = computeAnniversaryCountdown(record, {
+		todayDateValue
+	})
+	return {
+		next_date_timestamp: countdown.nextDateTimestamp,
+		next_date_value: countdown.nextDate,
+		next_date_refresh_date: todayDateValue
+	}
+}
+
+module.exports = {
+	buildNextDateFields,
+	computeAnniversaryCountdown,
+	formatDateValue,
+	getChinaDateTimestamp,
+	getChinaTodayDateValue,
+	parseDateValue
+}

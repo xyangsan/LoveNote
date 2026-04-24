@@ -253,8 +253,9 @@
 				<love-glass-card
 					title="预览"
 					:margin="['22rpx', '0', '0', '0']"
-					:padding="['0', '0']"
+					:padding="['20rpx', '0']"
 					:content-padding="['0', '0', '0', '0']"
+					background="transparent"
 				>
 					<view class="preview-card">
 						<view class="preview-card__bg" :style="previewBackgroundStyle"></view>
@@ -265,7 +266,13 @@
 						></view>
 						<view class="preview-card__content" :style="previewTextStyle">
 							<text class="preview-card__title">{{ form.title || '纪念日标题' }}</text>
-							<text class="preview-card__meta">{{ currentDisplayDateText || '--' }} · {{ currentDateTypeText }} · {{ currentRepeatTypeText }}</text>
+							<view class="preview-card__meta">
+								<text class="preview-card__meta-main">{{ currentDisplayDateText || '--' }} · {{ currentDateTypeText }} · {{ currentRepeatTypeText }}</text>
+								<text
+									v-if="previewElapsedText"
+									class="preview-card__elapsed"
+								>{{ previewElapsedText }}</text>
+							</view>
 							<text class="preview-card__countdown">{{ previewCountdownText }}</text>
 						</view>
 					</view>
@@ -361,6 +368,7 @@ import {
 	getCurrentUniIdUser
 } from '../../common/auth-center.js'
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
+import { computeAnniversaryCountdown } from '../../common/utils/anniversary-countdown.js'
 
 const DATE_TYPE_OPTIONS = ['solar', 'lunar']
 const DATE_TYPE_TEXT_MAP = {
@@ -427,8 +435,6 @@ const CHINESE_LUNAR_DAY_TEXT = {
 	30: '三十'
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000
-
 function createLunarFormatter() {
 	try {
 		return new Intl.DateTimeFormat('zh-Hans-CN-u-ca-chinese', {
@@ -480,20 +486,6 @@ function normalizeDateTimestamp(value, dateValue = '') {
 	}
 	const date = parseDateValue(dateValue)
 	return date ? date.getTime() : 0
-}
-
-function getTodayStartDate() {
-	const now = new Date()
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-}
-
-function getDaysInMonth(year, monthIndex) {
-	return new Date(year, monthIndex + 1, 0).getDate()
-}
-
-function createDateSafe(year, monthIndex, day) {
-	const safeDay = Math.max(1, Math.min(day, getDaysInMonth(year, monthIndex)))
-	return new Date(year, monthIndex, safeDay)
 }
 
 function parseLunarMonth(value = '') {
@@ -630,104 +622,6 @@ function createDefaultForm() {
 	}
 }
 
-function findNextLunarDate(target = {}, fromDate = null, maxScanDays = 800) {
-	if (!fromDate || !target.month || !target.day) {
-		return null
-	}
-
-	const expectLeap = Boolean(target.isLeap)
-	for (let i = 0; i <= maxScanDays; i += 1) {
-		const candidate = new Date(fromDate.getTime() + i * DAY_MS)
-		const lunarInfo = getLunarDateInfo(candidate)
-		if (!lunarInfo) {
-			continue
-		}
-		if (lunarInfo.month !== target.month || lunarInfo.day !== target.day) {
-			continue
-		}
-		if (Boolean(lunarInfo.isLeap) !== expectLeap) {
-			continue
-		}
-		return candidate
-	}
-
-	return null
-}
-
-function getNextSolarDate(baseDate, today, repeatType) {
-	let nextDate = new Date(baseDate.getTime())
-
-	if (repeatType === 'weekly') {
-		const diff = (baseDate.getDay() - today.getDay() + 7) % 7
-		nextDate = new Date(today.getTime() + diff * DAY_MS)
-		return nextDate
-	}
-
-	if (repeatType === 'monthly') {
-		const targetDay = baseDate.getDate()
-		nextDate = createDateSafe(today.getFullYear(), today.getMonth(), targetDay)
-		if (nextDate.getTime() < today.getTime()) {
-			const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-			nextDate = createDateSafe(nextMonthDate.getFullYear(), nextMonthDate.getMonth(), targetDay)
-		}
-		return nextDate
-	}
-
-	if (repeatType === 'yearly') {
-		const targetMonth = baseDate.getMonth()
-		const targetDay = baseDate.getDate()
-		nextDate = createDateSafe(today.getFullYear(), targetMonth, targetDay)
-		if (nextDate.getTime() < today.getTime()) {
-			nextDate = createDateSafe(today.getFullYear() + 1, targetMonth, targetDay)
-		}
-		return nextDate
-	}
-
-	return nextDate
-}
-
-function computeCountdown(dateValue = '', repeatType = 'yearly', dateType = 'solar') {
-	const baseDate = parseDateValue(dateValue)
-	if (!baseDate) {
-		return {
-			days: null,
-			isPassed: false
-		}
-	}
-
-	const today = getTodayStartDate()
-	let nextDate = new Date(baseDate.getTime())
-
-	if (repeatType !== 'none') {
-		if (repeatType === 'yearly' && dateType === 'lunar') {
-			const lunarInfo = getLunarDateInfo(baseDate)
-			nextDate = (lunarInfo ? findNextLunarDate(lunarInfo, today, 800) : null) || getNextSolarDate(baseDate, today, repeatType)
-		} else {
-			nextDate = getNextSolarDate(baseDate, today, repeatType)
-		}
-	}
-
-	const days = Math.floor((nextDate.getTime() - today.getTime()) / DAY_MS)
-	return {
-		days,
-		isPassed: repeatType === 'none' && days < 0
-	}
-}
-
-function buildCountdownText(dateValue = '', repeatType = 'yearly', dateType = 'solar') {
-	const countdown = computeCountdown(dateValue, repeatType, dateType)
-	if (countdown.days === null || countdown.days === undefined || Number.isNaN(Number(countdown.days))) {
-		return '--'
-	}
-	if (countdown.days === 0) {
-		return '今天'
-	}
-	if (countdown.days > 0) {
-		return `还有 ${countdown.days} 天`
-	}
-	return countdown.isPassed ? `已过 ${Math.abs(countdown.days)} 天` : `还有 ${Math.abs(countdown.days)} 天`
-}
-
 export default {
 	data() {
 		return {
@@ -848,8 +742,20 @@ export default {
 		currentRepeatTypeText() {
 			return REPEAT_TYPE_TEXT_MAP[this.form.repeatType] || '每年'
 		},
+		previewCountdownInfo() {
+			return computeAnniversaryCountdown({
+				dateType: this.form.dateType,
+				repeatType: this.form.repeatType,
+				solarDateValue: this.form.solarDateValue,
+				lunarDateValue: this.form.lunarDateValue,
+				selectedTimestamp: this.form.selectedTimestamp
+			})
+		},
 		previewCountdownText() {
-			return buildCountdownText(this.form.solarDateValue, this.form.repeatType, this.form.dateType)
+			return this.previewCountdownInfo.countdownText
+		},
+		previewElapsedText() {
+			return this.previewCountdownInfo.elapsedText
 		}
 	},
 	onLoad(options) {
@@ -1536,8 +1442,30 @@ export default {
 
 	.preview-card__meta {
 		margin-top: 12rpx;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		min-width: 0;
+	}
+
+	.preview-card__meta-main {
+		flex: 1;
+		min-width: 0;
 		font-size: 22rpx;
+		line-height: 1.3;
 		opacity: 0.95;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.preview-card__elapsed {
+		font-size: 22rpx;
+		font-weight: 700;
+		line-height: 1.3;
+		opacity: 0.98;
+		white-space: nowrap;
 	}
 
 	.preview-card__countdown {
