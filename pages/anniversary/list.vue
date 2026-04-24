@@ -84,69 +84,25 @@
 				</love-glass-card>
 
 				<view v-else class="anniversary-list">
-					<view
+					<love-anniversary-card
 						v-for="item in anniversaryList"
 						:key="item._id"
-						class="anniversary-card"
+						:title="item.title"
+						:date-text="item.display_date_value || item.date_value"
+						:date-type-text="dateTypeTextMap[item.date_type] || '公历'"
+						:repeat-type-text="repeatTypeTextMap[item.repeat_type] || '每年'"
+						:elapsed-text="item.elapsed_text"
+						:countdown-text="item.countdown_text"
+						:next-date-text="item.next_date ? `下一次：${item.next_date}` : ''"
+						:background-style="buildCardBackgroundStyle(item)"
+						:mask-style="buildCardMaskStyle(item)"
+						:text-style="buildCardTextStyle(item)"
+						:mask-enabled="item.mask_enabled"
+						:show-delete="true"
+						:clickable="true"
 						@click="goToEdit(item)"
-					>
-						<view
-							class="anniversary-card__bg"
-							:style="buildCardBackgroundStyle(item)"
-						></view>
-						<view
-							v-if="item.mask_enabled"
-							class="anniversary-card__mask"
-							:style="buildCardMaskStyle(item)"
-						></view>
-						<view class="anniversary-card__content" :style="buildCardTextStyle(item)">
-							<view class="anniversary-card__top">
-								<text class="anniversary-card__title">{{ item.title }}</text>
-								<view class="anniversary-card__top-actions">
-									<fui-tag
-										:text="repeatTypeTextMap[item.repeat_type] || '每年'"
-										:is-border="false"
-										background="rgba(255,255,255,0.24)"
-										color="#ffffff"
-										radius="999"
-										:padding="['6rpx', '14rpx']"
-									></fui-tag>
-									<text
-										class="anniversary-card__delete"
-										@click.stop="handleDelete(item)"
-									>删除</text>
-								</view>
-							</view>
-
-							<view class="anniversary-card__meta">
-								<view class="anniversary-card__meta-main">
-									<text class="anniversary-card__date">{{ item.display_date_value || item.date_value }}</text>
-									<fui-tag
-										:text="dateTypeTextMap[item.date_type] || '公历'"
-										:is-border="false"
-										background="rgba(255,255,255,0.18)"
-										color="#ffffff"
-										radius="999"
-										:padding="['6rpx', '14rpx']"
-									></fui-tag>
-								</view>
-								<text
-									v-if="item.elapsed_text"
-									class="anniversary-card__elapsed"
-								>{{ item.elapsed_text }}</text>
-							</view>
-
-							<view class="anniversary-card__countdown">
-								<text class="anniversary-card__countdown-text">{{ item.countdown_text || '--' }}</text>
-								<view class="anniversary-card__next">
-									<text
-										v-if="item.next_date"
-										class="anniversary-card__next-date"
-									>下一次：{{ item.next_date }}</text>
-								</view>
-							</view>
-						</view>
-					</view>
+						@delete="handleDelete(item)"
+					></love-anniversary-card>
 				</view>
 
 				<view v-if="anniversaryList.length && !pagination.hasMore" class="list-end">
@@ -164,6 +120,7 @@ import {
 } from '../../common/auth-center.js'
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
 import { normalizeAnniversaryCountdownItem } from '../../common/utils/anniversary-countdown.js'
+import LoveAnniversaryCard from './love-anniversary-card.vue'
 
 const DATE_TYPE_TEXT_MAP = {
 	solar: '公历',
@@ -187,6 +144,9 @@ function getDefaultPagination() {
 }
 
 export default {
+	components: {
+		LoveAnniversaryCard
+	},
 	data() {
 		return {
 			isLoggedIn: false,
@@ -442,113 +402,6 @@ export default {
 		flex-direction: column;
 		gap: 20rpx;
 		padding: 0 8rpx;
-	}
-
-	.anniversary-card {
-		position: relative;
-		border-radius: 30rpx;
-		overflow: hidden;
-		box-shadow: 0 16rpx 38rpx rgba(173, 109, 77, 0.16);
-		height: 238rpx;
-	}
-
-	.anniversary-card__bg,
-	.anniversary-card__mask,
-	.anniversary-card__content {
-		position: absolute;
-		inset: 0;
-	}
-
-	.anniversary-card__content {
-		z-index: 2;
-		display: flex;
-		flex-direction: column;
-		padding: 28rpx 30rpx;
-		box-sizing: border-box;
-	}
-
-	.anniversary-card__top {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 18rpx;
-	}
-
-	.anniversary-card__top-actions {
-		display: flex;
-		align-items: center;
-		gap: 14rpx;
-	}
-
-	.anniversary-card__title {
-		flex: 1;
-		min-width: 0;
-		font-size: 36rpx;
-		font-weight: 700;
-		line-height: 1.35;
-		word-break: break-all;
-	}
-
-	.anniversary-card__delete {
-		font-size: 22rpx;
-		line-height: 1.2;
-		opacity: 0.94;
-	}
-
-	.anniversary-card__meta {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12rpx;
-		margin-top: 14rpx;
-	}
-
-	.anniversary-card__meta-main {
-		display: flex;
-		align-items: center;
-		gap: 12rpx;
-		min-width: 0;
-	}
-
-	.anniversary-card__date {
-		font-size: 24rpx;
-		opacity: 0.96;
-		white-space: nowrap;
-	}
-
-	.anniversary-card__countdown {
-		margin-top: auto;
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 18rpx;
-	}
-
-	.anniversary-card__countdown-text {
-		font-size: 42rpx;
-		font-weight: 700;
-		line-height: 1.25;
-	}
-
-	.anniversary-card__next {
-		display: flex;
-		align-items: flex-end;
-		justify-content: flex-end;
-		min-width: 0;
-	}
-
-	.anniversary-card__elapsed {
-		font-size: 24rpx;
-		font-weight: 700;
-		line-height: 1.2;
-		opacity: 0.98;
-		white-space: nowrap;
-	}
-
-	.anniversary-card__next-date {
-		font-size: 22rpx;
-		line-height: 1.2;
-		opacity: 0.94;
 	}
 
 	.list-end {

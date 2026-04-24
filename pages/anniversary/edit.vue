@@ -86,11 +86,6 @@
 								</view>
 							</fui-list-cell>
 						</view>
-						<text class="love-field-tip">点击日期栏打开日历，可切换公历/农历并同时保存两种日期和值对应的时间戳。</text>
-						<text
-							v-if="form.dateType === 'lunar'"
-							class="love-field-tip"
-						>农历模式会按农历月日计算每年倒计时。</text>
 					</view>
 
 					<view class="form-block">
@@ -166,10 +161,8 @@
 							:crop-options="backgroundCropOptions"
 							:show-tips="true"
 							tip-text="仅支持图片，超过 5MB 自动压缩。"
-							:item-width="backgroundUploaderItemWidth"
-							:item-height="backgroundUploaderItemHeight"
 							:previewable="true"
-							object-fit="aspectFill"
+							object-fit="aspectFit"
 							:source-type="['album', 'camera']"
 							:show-delete-button="true"
 							add-text="选择背景图"
@@ -257,25 +250,20 @@
 					:content-padding="['0', '0', '0', '0']"
 					background="transparent"
 				>
-					<view class="preview-card">
-						<view class="preview-card__bg" :style="previewBackgroundStyle"></view>
-						<view
-							v-if="form.maskEnabled"
-							class="preview-card__mask"
-							:style="previewMaskStyle"
-						></view>
-						<view class="preview-card__content" :style="previewTextStyle">
-							<text class="preview-card__title">{{ form.title || '纪念日标题' }}</text>
-							<view class="preview-card__meta">
-								<text class="preview-card__meta-main">{{ currentDisplayDateText || '--' }} · {{ currentDateTypeText }} · {{ currentRepeatTypeText }}</text>
-								<text
-									v-if="previewElapsedText"
-									class="preview-card__elapsed"
-								>{{ previewElapsedText }}</text>
-							</view>
-							<text class="preview-card__countdown">{{ previewCountdownText }}</text>
-						</view>
-					</view>
+					<love-anniversary-card
+						:title="form.title"
+						:meta-text="`${currentDisplayDateText || '--'} · ${currentDateTypeText} · ${currentRepeatTypeText}`"
+						:elapsed-text="previewElapsedText"
+						:countdown-text="previewCountdownText"
+						:background-style="previewBackgroundStyle"
+						:mask-style="previewMaskStyle"
+						:text-style="previewTextStyle"
+						:mask-enabled="form.maskEnabled"
+						:shadow="false"
+						:clickable="false"
+						height="228rpx"
+						radius="28rpx"
+					></love-anniversary-card>
 				</love-glass-card>
 
 				<view class="love-action-stack actions">
@@ -369,6 +357,7 @@ import {
 } from '../../common/auth-center.js'
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
 import { computeAnniversaryCountdown } from '../../common/utils/anniversary-countdown.js'
+import LoveAnniversaryCard from './love-anniversary-card.vue'
 
 const DATE_TYPE_OPTIONS = ['solar', 'lunar']
 const DATE_TYPE_TEXT_MAP = {
@@ -623,6 +612,9 @@ function createDefaultForm() {
 }
 
 export default {
+	components: {
+		LoveAnniversaryCard
+	},
 	data() {
 		return {
 			isLoggedIn: false,
@@ -1409,70 +1401,6 @@ export default {
 
 	.slider-row__slider {
 		flex: 1;
-	}
-
-	.preview-card {
-		position: relative;
-		border-radius: 28rpx;
-		overflow: hidden;
-		height: 228rpx;
-	}
-
-	.preview-card__bg,
-	.preview-card__mask,
-	.preview-card__content {
-		position: absolute;
-		inset: 0;
-	}
-
-	.preview-card__content {
-		z-index: 2;
-		display: flex;
-		flex-direction: column;
-		padding: 28rpx 30rpx;
-		box-sizing: border-box;
-	}
-
-	.preview-card__title {
-		font-size: 34rpx;
-		font-weight: 700;
-		line-height: 1.4;
-		word-break: break-all;
-	}
-
-	.preview-card__meta {
-		margin-top: 12rpx;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16rpx;
-		min-width: 0;
-	}
-
-	.preview-card__meta-main {
-		flex: 1;
-		min-width: 0;
-		font-size: 22rpx;
-		line-height: 1.3;
-		opacity: 0.95;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.preview-card__elapsed {
-		font-size: 22rpx;
-		font-weight: 700;
-		line-height: 1.3;
-		opacity: 0.98;
-		white-space: nowrap;
-	}
-
-	.preview-card__countdown {
-		margin-top: auto;
-		font-size: 42rpx;
-		font-weight: 700;
-		line-height: 1.25;
 	}
 
 	.actions {
