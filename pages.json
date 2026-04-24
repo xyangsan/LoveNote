@@ -30,6 +30,14 @@
 			}
 		},
 		{
+			"path": "pages/public/image-cropper",
+			"style": {
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
+			}
+		},
+		{
 			"path": "pages/couple/index",
 			"style": {
 				"navigationBarTitleText": "情侣信息",

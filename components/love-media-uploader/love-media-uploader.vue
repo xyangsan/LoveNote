@@ -74,6 +74,7 @@
 				<text class="love-media-uploader__add-hint">{{ files.length }}/{{ safeMaxCount }}</text>
 			</view>
 		</view>
+
 	</view>
 </template>
 
@@ -129,6 +130,72 @@ function normalizeSourceType(value = []) {
 	const list = toUniqueArray(value, ['album', 'camera'])
 	const next = list.filter(item => ['album', 'camera'].includes(item))
 	return next.length ? next : ['album', 'camera']
+}
+
+function normalizeExistingFile(file = {}, index = 0, safeFileTypes = ['image']) {
+	const path = String(file.path || file.url || file.fileURL || file.tempFileURL || '').trim()
+	const fileId = String(file.fileId || file.fileID || file.file_id || '').trim()
+	if (!path && !fileId) {
+		return null
+	}
+
+	let mediaType = String(file.mediaType || file.fileType || '').toLowerCase()
+	if (!mediaType || !safeFileTypes.includes(mediaType)) {
+		mediaType = inferMediaTypeByPath(path) || 'image'
+	}
+	if (!safeFileTypes.includes(mediaType)) {
+		return null
+	}
+
+	return {
+		id: file.id || `existing_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 8)}`,
+		path: path || fileId,
+		size: Number(file.size || file.fileSize || 0),
+		mediaType,
+		mimeType: file.mimeType || inferMimeTypeByPath(path, mediaType),
+		duration: Number(file.duration || 0),
+		width: Number(file.width || 0),
+		height: Number(file.height || 0),
+		poster: file.poster || file.thumbnailUrl || '',
+		status: file.status || 'success',
+		cloudPath: file.cloudPath || '',
+		url: String(file.url || file.fileURL || file.tempFileURL || path || '').trim(),
+		fileId,
+		errorMsg: file.errorMsg || '',
+		source: file.source || 'remote'
+	}
+}
+
+function pickCropperProps(options = {}) {
+	const propKeys = [
+		'width',
+		'height',
+		'showBorder',
+		'showGrid',
+		'showAngle',
+		'areaScale',
+		'minScale',
+		'maxScale',
+		'checkRange',
+		'backgroundColor',
+		'bounce',
+		'rotatable',
+		'reverseRotatable',
+		'gpu',
+		'angleSize',
+		'angleBorderWidth',
+		'zIndex',
+		'radius',
+		'fileType',
+		'delay',
+		'navigation'
+	]
+	return propKeys.reduce((props, key) => {
+		if (options[key] !== undefined) {
+			props[key] = options[key]
+		}
+		return props
+	}, {})
 }
 
 export default {
@@ -225,6 +292,12 @@ export default {
 		disabled: {
 			type: Boolean,
 			default: false
+		},
+		cropOptions: {
+			type: Object,
+			default() {
+				return {}
+			}
 		}
 	},
 	data() {
@@ -284,6 +357,12 @@ export default {
 				return 'contain'
 			}
 			return 'cover'
+		},
+		normalizedCropOptions() {
+			return this.cropOptions && typeof this.cropOptions === 'object' ? this.cropOptions : {}
+		},
+		cropEnabled() {
+			return this.normalizedCropOptions.enabled === true || this.normalizedCropOptions.enable === true
 		}
 	},
 	methods: {
@@ -293,12 +372,93 @@ export default {
 		getFiles() {
 			return this.files.map(item => ({ ...item }))
 		},
+		setFiles(files = [], options = {}) {
+			if (this.uploading) {
+				return
+			}
+			const list = Array.isArray(files) ? files : []
+			this.files = list
+				.map((item, index) => normalizeExistingFile(item, index, this.safeFileTypes))
+				.filter(Boolean)
+				.slice(0, this.safeMaxCount)
+			if (options.emit !== false) {
+				this.emitChange()
+			}
+		},
 		clear() {
 			if (this.uploading) {
 				return
 			}
 			this.files = []
 			this.emitChange()
+		},
+		shouldCropFile(file = {}) {
+			return this.cropEnabled && file.source === 'local' && file.mediaType === 'image'
+		},
+		openImageCropper(filePath = '') {
+			return new Promise((resolve, reject) => {
+				const path = String(filePath || '').trim()
+				if (!path) {
+					reject(new Error('图片路径不能为空'))
+					return
+				}
+				uni.navigateTo({
+					url: '/pages/public/image-cropper',
+					success: (res) => {
+						const eventChannel = res && res.eventChannel
+						if (!eventChannel) {
+							reject(new Error('裁剪页面初始化失败'))
+							return
+						}
+						eventChannel.on('cropper:success', (event = {}) => {
+							resolve(String(event.tempFilePath || '').trim())
+						})
+						eventChannel.on('cropper:cancel', () => {
+							reject(new Error('crop-cancel'))
+						})
+						eventChannel.emit('cropper:init', {
+							src: path,
+							options: {
+								zIndex: 1200,
+								navigation: false,
+								...pickCropperProps(this.normalizedCropOptions)
+							}
+						})
+					},
+					fail: (error) => {
+						reject(error || new Error('打开裁剪页面失败'))
+					}
+				})
+			})
+		},
+		async cropPickedFiles(files = []) {
+			const nextFiles = []
+			for (let i = 0; i < files.length; i += 1) {
+				const current = files[i]
+				if (!this.shouldCropFile(current)) {
+					nextFiles.push(current)
+					continue
+				}
+
+				const croppedPath = await this.openImageCropper(current.path)
+				if (!croppedPath) {
+					continue
+				}
+				const fileInfo = await this.getFileInfo(croppedPath)
+				nextFiles.push({
+					...current,
+					path: croppedPath,
+					size: Number((fileInfo && fileInfo.size) || current.size || 0),
+					mimeType: inferMimeTypeByPath(croppedPath, 'image'),
+					width: Number((fileInfo && fileInfo.width) || current.width || 0),
+					height: Number((fileInfo && fileInfo.height) || current.height || 0)
+				})
+				this.$emit('crop', {
+					file: { ...current },
+					tempFilePath: croppedPath
+				})
+			}
+			return nextFiles
 		},
 		normalizePickedFile(file, index) {
 			const path = file.tempFilePath || file.path || ''
@@ -335,7 +495,8 @@ export default {
 				cloudPath: '',
 				url: '',
 				fileId: '',
-				errorMsg: ''
+				errorMsg: '',
+				source: 'local'
 			}
 		},
 		chooseFiles() {
@@ -364,11 +525,11 @@ export default {
 				sourceType: this.pickerSourceType,
 				maxDuration: Number(this.maxDuration || 60),
 				sizeType: this.useCompression ? ['compressed'] : ['original'],
-				success: (res) => {
+				success: async (res) => {
 					const tempFiles = Array.isArray(res.tempFiles) ? res.tempFiles : []
 					let unsupportedCount = 0
 					let oversizeCount = 0
-					const nextFiles = tempFiles
+					let nextFiles = tempFiles
 						.map((item, index) => {
 							const normalized = this.normalizePickedFile(item, index)
 							if (!normalized) {
@@ -388,6 +549,22 @@ export default {
 							title: '未选择可上传文件',
 							icon: 'none'
 						})
+						return
+					}
+
+					try {
+						nextFiles = await this.cropPickedFiles(nextFiles)
+					} catch (error) {
+						if (error && error.message !== 'crop-cancel') {
+							uni.showToast({
+								title: error.message || '图片裁剪失败',
+								icon: 'none'
+							})
+						}
+						return
+					}
+
+					if (!nextFiles.length) {
 						return
 					}
 
@@ -600,6 +777,24 @@ export default {
 						continue
 					}
 
+					if (current.source === 'remote' && (current.url || current.fileId)) {
+						successList.push({
+							path: current.path,
+							url: current.url || current.path || '',
+							fileId: current.fileId || '',
+							cloudPath: current.cloudPath || '',
+							mediaType: current.mediaType,
+							mimeType: current.mimeType || '',
+							fileSize: current.size || 0,
+							duration: current.duration || 0,
+							width: current.width || 0,
+							height: current.height || 0,
+							thumbnailUrl: current.mediaType === 'video' ? '' : (current.url || current.path || ''),
+							poster: current.poster || ''
+						})
+						continue
+					}
+
 					this.files.splice(i, 1, {
 						...current,
 						status: 'uploading',
@@ -748,7 +943,6 @@ export default {
 }
 
 .love-media-uploader__mask,
-.love-media-uploader__success,
 .love-media-uploader__error {
 	position: absolute;
 	inset: 0;
@@ -762,6 +956,14 @@ export default {
 }
 
 .love-media-uploader__success {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 46rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	background: rgba(76, 175, 80, 0.8);
 }
 
@@ -770,6 +972,11 @@ export default {
 	font-size: 48rpx;
 	color: #fff;
 	font-weight: 700;
+}
+
+.love-media-uploader__success-icon {
+	font-size: 28rpx;
+	line-height: 1;
 }
 
 .love-media-uploader__error {
@@ -807,4 +1014,5 @@ export default {
 	font-size: 22rpx;
 	color: #ad8476;
 }
+
 </style>
