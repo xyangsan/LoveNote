@@ -1,5 +1,8 @@
 <template>
-	<view class="love-page anniversary-edit-page">
+	<view
+		class="love-page anniversary-edit-page"
+		:class="{ 'anniversary-edit-page--locked': calendarPopupVisible }"
+	>
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -32,7 +35,7 @@
 			<view v-else>
 				<love-glass-card
 					:margin="['0', '0', '0', '0']"
-					:padding="['0', '0']"
+					:padding="['20rpx', '0']"
 					:content-padding="['28rpx', '28rpx', '30rpx', '28rpx']"
 					:header-line="false"
 				>
@@ -129,7 +132,7 @@
 					<view v-if="form.backgroundType === 'image'" class="form-block">
 						<text class="love-field-label">背景图片</text>
 						<view
-							v-if="displayBackgroundPreview"
+							v-if="false && displayBackgroundPreview"
 							class="background-preview"
 						>
 							<image
@@ -160,10 +163,11 @@
 							save-path="anniversary/backgrounds"
 							upload-prefix="bg"
 							:max-count="1"
+							:crop-options="backgroundCropOptions"
 							:show-tips="true"
 							tip-text="仅支持图片，超过 5MB 自动压缩。"
-							:item-width="210"
-							:item-height="210"
+							:item-width="backgroundUploaderItemWidth"
+							:item-height="backgroundUploaderItemHeight"
 							:previewable="true"
 							object-fit="aspectFill"
 							:source-type="['album', 'camera']"
@@ -293,9 +297,9 @@
 				</view>
 			</view>
 
-			<view v-if="calendarPopupVisible" class="calendar-popup">
+			<view v-if="calendarPopupVisible" class="calendar-popup" @touchmove.stop.prevent="stopTouchMove">
 				<view class="calendar-popup__mask" @click="closeDateCalendar"></view>
-				<view class="calendar-popup__panel" @click.stop="handleCalendarPanelClick">
+				<view class="calendar-popup__panel" @click.stop="handleCalendarPanelClick" @touchmove.stop>
 					<view class="calendar-popup__header">
 						<text class="calendar-popup__title">选择日期</text>
 						<view class="calendar-popup__actions">
@@ -740,6 +744,13 @@ export default {
 			dateTypeOptions: ['公历', '农历'],
 			repeatTypeOptions: [{ name: '不重复' }, { name: '每周' }, { name: '每月' }, { name: '每年' }],
 			backgroundTypeOptions: [{ name: '背景图' }, { name: '背景色' }],
+			backgroundCropOptions: {
+				enabled: true,
+				width: 702,
+				height: 228,
+				fileType: 'jpg',
+				zIndex: 1200
+			},
 			backgroundColorOptions: ['#EC7558', '#FA856A', '#F59E7C', '#E76F51', '#D96C6C', '#8CC0DE'],
 			fontColorOptions: ['#FFFFFF', '#FFF5E8', '#3F2A24', '#5A3427', '#1F1F1F'],
 			maskColorOptions: ['#000000', '#1A1A1A', '#2B2B2B', '#4C2E28', '#6B3E36']
@@ -765,6 +776,17 @@ export default {
 		},
 		backgroundTypeIndex() {
 			return this.form.backgroundType === 'image' ? 0 : 1
+		},
+		backgroundUploaderItemWidth() {
+			return 646
+		},
+		backgroundUploaderItemHeight() {
+			const cropWidth = Number(this.backgroundCropOptions && this.backgroundCropOptions.width || 0)
+			const cropHeight = Number(this.backgroundCropOptions && this.backgroundCropOptions.height || 0)
+			if (cropWidth <= 0 || cropHeight <= 0) {
+				return this.backgroundUploaderItemWidth
+			}
+			return Math.max(1, Math.round(this.backgroundUploaderItemWidth * cropHeight / cropWidth))
 		},
 		maskOpacityPercent() {
 			return Math.round(Number(this.form.maskOpacity || 0) * 100)
@@ -860,6 +882,7 @@ export default {
 		handleCalendarPanelClick() {
 			this.closeCalendarDateTypeDropdown()
 		},
+		stopTouchMove() {},
 		toggleCalendarDateTypeDropdown() {
 			this.calendarDateTypeDropdownVisible = !this.calendarDateTypeDropdownVisible
 		},
@@ -930,10 +953,19 @@ export default {
 				if (uploader && typeof uploader.clear === 'function') {
 					uploader.clear()
 				}
+			} else {
+				this.syncBackgroundUploader()
 			}
 		},
 		onBackgroundUploaderChange(files = []) {
-			this.pendingBackgroundFiles = Array.isArray(files) ? files : []
+			const list = Array.isArray(files) ? files : []
+			this.pendingBackgroundFiles = list.filter(item => item && item.source !== 'remote')
+			if (!list.length) {
+				this.form.backgroundImage = {
+					url: '',
+					file_id: ''
+				}
+			}
 		},
 		clearBackgroundImage() {
 			this.pendingBackgroundFiles = []
@@ -945,6 +977,33 @@ export default {
 			if (uploader && typeof uploader.clear === 'function') {
 				uploader.clear()
 			}
+		},
+		syncBackgroundUploader() {
+			this.$nextTick(() => {
+				const uploader = this.$refs.backgroundUploader
+				if (!uploader || typeof uploader.setFiles !== 'function') {
+					return
+				}
+				const backgroundImage = this.form.backgroundImage && typeof this.form.backgroundImage === 'object'
+					? this.form.backgroundImage
+					: {}
+				const url = String(backgroundImage.url || '').trim()
+				const fileId = String(backgroundImage.file_id || backgroundImage.fileId || '').trim()
+				if (this.form.backgroundType === 'image' && (url || fileId)) {
+					uploader.setFiles([
+						{
+							path: url || fileId,
+							url,
+							fileId,
+							mediaType: 'image',
+							status: 'success',
+							source: 'remote'
+						}
+					], { emit: false })
+					return
+				}
+				uploader.setFiles([], { emit: false })
+			})
 		},
 		setColor(field, color) {
 			this.form[field] = color
@@ -1000,10 +1059,7 @@ export default {
 					maskOpacity: Number(anniversary.mask_opacity || 0.35)
 				}
 				this.pendingBackgroundFiles = []
-				const uploader = this.$refs.backgroundUploader
-				if (uploader && typeof uploader.clear === 'function') {
-					uploader.clear()
-				}
+				this.syncBackgroundUploader()
 			} catch (error) {
 				console.error('anniversary detail load failed', error)
 				uni.showToast({
@@ -1167,6 +1223,16 @@ export default {
 		padding-bottom: calc(44rpx + env(safe-area-inset-bottom));
 	}
 
+	.anniversary-edit-page--locked {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		width: 100%;
+		overflow: hidden;
+	}
+
 	.form-block + .form-block {
 		margin-top: 24rpx;
 	}
@@ -1227,9 +1293,9 @@ export default {
 
 	.calendar-popup__panel {
 		position: absolute;
-		left: 24rpx;
-		right: 24rpx;
-		bottom: calc(20rpx + env(safe-area-inset-bottom));
+		left: 0;
+		right: 0;
+		bottom: calc(env(safe-area-inset-bottom));
 		max-height: calc(100vh - 120rpx);
 		padding: 28rpx 24rpx 24rpx;
 		border-radius: 32rpx;
@@ -1443,7 +1509,7 @@ export default {
 		position: relative;
 		border-radius: 28rpx;
 		overflow: hidden;
-		min-height: 228rpx;
+		height: 228rpx;
 	}
 
 	.preview-card__bg,

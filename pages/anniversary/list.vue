@@ -433,7 +433,7 @@ export default {
 		border-radius: 30rpx;
 		overflow: hidden;
 		box-shadow: 0 16rpx 38rpx rgba(173, 109, 77, 0.16);
-		min-height: 238rpx;
+		height: 238rpx;
 	}
 
 	.anniversary-card__bg,
