@@ -98,10 +98,9 @@
 						:mask-style="buildCardMaskStyle(item)"
 						:text-style="buildCardTextStyle(item)"
 						:mask-enabled="item.mask_enabled"
-						:show-delete="true"
-						:clickable="true"
-						@click="goToEdit(item)"
-						@delete="handleDelete(item)"
+						:show-delete="false"
+						:clickable="false"
+						@longpress="handleCardLongPress(item)"
 					></love-anniversary-card>
 				</view>
 
@@ -289,6 +288,24 @@ export default {
 			const url = id ? `/pages/anniversary/edit?anniversaryId=${id}` : '/pages/anniversary/edit'
 			uni.navigateTo({
 				url
+			})
+		},
+		handleCardLongPress(item = {}) {
+			const anniversaryId = String(item._id || '').trim()
+			if (!anniversaryId) {
+				return
+			}
+			uni.showActionSheet({
+				itemList: ['编辑', '删除'],
+				success: (res) => {
+					if (res.tapIndex === 0) {
+						this.goToEdit(item)
+						return
+					}
+					if (res.tapIndex === 1) {
+						this.handleDelete(item)
+					}
+				}
 			})
 		},
 		async handleDelete(item = {}) {

@@ -4,6 +4,7 @@
 		:class="{ 'anniversary-card--clickable': clickable }"
 		:style="cardDynamicStyle"
 		@click="handleClick"
+		@longpress="handleLongPress"
 	>
 		<view class="anniversary-card__bg" :style="backgroundStyle"></view>
 		<view
@@ -162,6 +163,9 @@ export default {
 		},
 		handleDelete() {
 			this.$emit('delete')
+		},
+		handleLongPress() {
+			this.$emit('longpress')
 		}
 	}
 }
