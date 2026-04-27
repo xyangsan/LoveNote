@@ -186,6 +186,11 @@
 								:style="{ backgroundColor: color }"
 								@click="setColor('backgroundColor', color)"
 							></view>
+							<view
+								class="color-item color-item--custom"
+								:class="{ 'color-item--active': isCustomColorActive('backgroundColor', backgroundColorOptions) }"
+								@click="openCustomColorPicker('backgroundColor')"
+							></view>
 						</view>
 					</view>
 
@@ -199,6 +204,11 @@
 								:class="{ 'color-item--active': form.fontColor === color }"
 								:style="{ backgroundColor: color }"
 								@click="setColor('fontColor', color)"
+							></view>
+							<view
+								class="color-item color-item--custom"
+								:class="{ 'color-item--active': isCustomColorActive('fontColor', fontColorOptions) }"
+								@click="openCustomColorPicker('fontColor')"
 							></view>
 						</view>
 					</view>
@@ -347,6 +357,20 @@
 				</view>
 			</view>
 		</view>
+		<uv-pick-color
+			ref="backgroundColorPicker"
+			:color="backgroundPickerColor"
+			title="选择背景色"
+			confirm-color="#ec7558"
+			@confirm="handleCustomColorConfirm('backgroundColor', $event)"
+		></uv-pick-color>
+		<uv-pick-color
+			ref="fontColorPicker"
+			:color="fontPickerColor"
+			title="选择字体色"
+			confirm-color="#ec7558"
+			@confirm="handleCustomColorConfirm('fontColor', $event)"
+		></uv-pick-color>
 	</view>
 </template>
 
@@ -611,6 +635,27 @@ function createDefaultForm() {
 	}
 }
 
+function normalizeHexColor(value = '', fallback = '#000000') {
+	const color = String(value || '').trim()
+	if (/^#[\da-fA-F]{6}$/.test(color)) {
+		return color.toUpperCase()
+	}
+	if (/^#[\da-fA-F]{3}$/.test(color)) {
+		return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase()
+	}
+	return fallback
+}
+
+function hexToRgba(value = '', fallback = '#000000') {
+	const color = normalizeHexColor(value, fallback).replace('#', '')
+	return {
+		r: parseInt(color.slice(0, 2), 16),
+		g: parseInt(color.slice(2, 4), 16),
+		b: parseInt(color.slice(4, 6), 16),
+		a: 1
+	}
+}
+
 export default {
 	components: {
 		LoveAnniversaryCard
@@ -714,6 +759,12 @@ export default {
 			return {
 				color: this.form.fontColor
 			}
+		},
+		backgroundPickerColor() {
+			return hexToRgba(this.form.backgroundColor, '#EC7558')
+		},
+		fontPickerColor() {
+			return hexToRgba(this.form.fontColor, '#FFFFFF')
 		},
 		currentDateTypeText() {
 			return DATE_TYPE_TEXT_MAP[this.form.dateType] || '公历'
@@ -904,6 +955,30 @@ export default {
 			})
 		},
 		setColor(field, color) {
+			this.form[field] = color
+		},
+		isCustomColorActive(field, options = []) {
+			const color = normalizeHexColor(this.form[field] || '', '')
+			return Boolean(color && !options.includes(color))
+		},
+		openCustomColorPicker(field) {
+			const refName = field === 'fontColor' ? 'fontColorPicker' : 'backgroundColorPicker'
+			const fallback = field === 'fontColor' ? '#FFFFFF' : '#EC7558'
+			const picker = this.$refs[refName]
+			if (!picker || typeof picker.open !== 'function') {
+				return
+			}
+			picker.rgba = hexToRgba(this.form[field], fallback)
+			if (typeof picker.init === 'function') {
+				picker.init()
+			}
+			picker.open()
+		},
+		handleCustomColorConfirm(field, event = {}) {
+			const color = normalizeHexColor(event.hex || '', '')
+			if (!color) {
+				return
+			}
 			this.form[field] = color
 		},
 		handleMaskEnabledChange(event = {}) {
@@ -1363,6 +1438,20 @@ export default {
 		height: 56rpx;
 		border-radius: 50%;
 		box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.7), 0 6rpx 12rpx rgba(0, 0, 0, 0.08);
+	}
+
+	.color-item--custom {
+		position: relative;
+		background: conic-gradient(from 90deg, #ff4d6d, #ffcc33, #55d17a, #36c5ff, #8f6bff, #ff4d6d);
+	}
+
+	.color-item--custom::after {
+		content: '';
+		position: absolute;
+		inset: 12rpx;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.94);
+		box-shadow: inset 0 0 0 1rpx rgba(236, 117, 88, 0.12);
 	}
 
 	.color-item--active {
