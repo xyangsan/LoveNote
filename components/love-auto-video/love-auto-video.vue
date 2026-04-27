@@ -71,7 +71,8 @@ export default {
 			localVideoId: `love_auto_video_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
 			videoContext: null,
 			isFullscreen: false,
-			muted: true
+			muted: true,
+			playTimer: null
 		}
 	},
 	computed: {
@@ -103,28 +104,62 @@ export default {
 		handleVideoReady() {
 			this.$emit('ready')
 		},
+		clearPendingPlay() {
+			if (this.playTimer) {
+				clearTimeout(this.playTimer)
+				this.playTimer = null
+			}
+		},
+		playVideo(delay = 0) {
+			this.clearPendingPlay()
+			this.playTimer = setTimeout(() => {
+				this.playTimer = null
+				if (!this.src) {
+					return
+				}
+				const context = this.getVideoContext()
+				if (!context || typeof context.play !== 'function') {
+					return
+				}
+				try {
+					const playResult = context.play()
+					if (playResult && typeof playResult.catch === 'function') {
+						playResult.catch(() => {})
+					}
+				} catch (error) {
+					console.warn('video play failed', error)
+				}
+			}, delay)
+		},
 		playMuted() {
 			if (!this.src || this.isFullscreen) {
 				return
 			}
 			this.muted = true
-			this.$nextTick(() => {
-				const context = this.getVideoContext()
-				if (context && typeof context.play === 'function') {
-					context.play()
-				}
-			})
+			this.$nextTick(() => this.playVideo(80))
 		},
 		pause() {
+			this.clearPendingPlay()
 			const context = this.getVideoContext()
+			if (this.isFullscreen && context && typeof context.exitFullScreen === 'function') {
+				context.exitFullScreen()
+			}
 			if (context && typeof context.pause === 'function') {
 				context.pause()
+			}
+			this.muted = true
+		},
+		exitFullscreen() {
+			const context = this.getVideoContext()
+			if (context && typeof context.exitFullScreen === 'function') {
+				context.exitFullScreen()
 			}
 		},
 		playFullscreen() {
 			if (!this.src || this.isFullscreen) {
 				return
 			}
+			this.clearPendingPlay()
 			this.muted = false
 			this.isFullscreen = true
 			this.$nextTick(() => {
@@ -133,9 +168,6 @@ export default {
 					context.requestFullScreen({
 						direction: this.fullscreenDirection
 					})
-				}
-				if (context && typeof context.play === 'function') {
-					context.play()
 				}
 			})
 		},
@@ -151,12 +183,10 @@ export default {
 				fullscreen
 			})
 			if (fullscreen) {
-				const context = this.getVideoContext()
-				if (context && typeof context.play === 'function') {
-					context.play()
-				}
+				this.playVideo(80)
 				return
 			}
+			this.clearPendingPlay()
 			this.muted = true
 			this.$emit('fullscreenclose')
 		},

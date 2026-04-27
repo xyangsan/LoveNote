@@ -55,6 +55,10 @@
 				:max-file-size="maxFileSize"
 				:compressed="true"
 				:enable-compression="true"
+				:compress-over-size="uploaderCompressOverSize"
+				:image-compress-quality="uploaderImageCompressQuality"
+				:enable-thumbnail="true"
+				:thumbnail-options="uploaderThumbnailOptions"
 				:save-path="uploaderSavePath"
 				upload-prefix="daily"
 				:max-count="uploaderMaxCount"
@@ -111,6 +115,8 @@ import { getDailyApi } from '../../common/api/daily.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
+const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
+const DAILY_IMAGE_COMPRESS_QUALITY = 86
 const THUMBNAIL_IMAGE_QUALITY = 45
 
 export default {
@@ -140,6 +146,30 @@ export default {
 		},
 		uploaderSavePath() {
 			return this.publishType === 'video' ? 'daily/videos' : 'daily/images'
+		},
+		uploaderCompressOverSize() {
+			return this.publishType === 'image' ? DAILY_IMAGE_COMPRESS_OVER_SIZE : (10 * 1024 * 1024)
+		},
+		uploaderImageCompressQuality() {
+			return this.publishType === 'image' ? DAILY_IMAGE_COMPRESS_QUALITY : 80
+		},
+		uploaderThumbnailOptions() {
+			if (this.publishType === 'video') {
+				return {
+					videoSavePath: 'daily/thumbnails/videos',
+					videoPrefix: 'poster',
+					image: false,
+					video: true,
+					imageQuality: THUMBNAIL_IMAGE_QUALITY
+				}
+			}
+			return {
+				imageSavePath: 'daily/thumbnails/images',
+				imagePrefix: 'thumb',
+				image: true,
+				video: false,
+				imageQuality: THUMBNAIL_IMAGE_QUALITY
+			}
 		},
 		uploaderTipText() {
 			return this.publishType === 'video'
@@ -270,9 +300,9 @@ export default {
 		async buildMediaPayload(file = {}) {
 			const mediaType = String(file.mediaType || '').trim().toLowerCase()
 			const sourceUrl = String(file.url || '').trim()
-			let thumbnailUrl = ''
+			let thumbnailUrl = String(file.thumbnailUrl || '').trim()
 
-			if (mediaType === 'image') {
+			if (mediaType === 'image' && !thumbnailUrl) {
 				try {
 					const thumbnailSourcePath = await this.compressImageForThumbnail(String(file.path || '').trim())
 					thumbnailUrl = await this.uploadThumbnailFile({
@@ -288,7 +318,7 @@ export default {
 				}
 			}
 
-			if (mediaType === 'video') {
+			if (mediaType === 'video' && !thumbnailUrl) {
 				try {
 					thumbnailUrl = await this.uploadThumbnailFile({
 						localPath: String(file.poster || '').trim(),
@@ -304,6 +334,7 @@ export default {
 				url: sourceUrl,
 				fileId: file.fileId,
 				thumbnailUrl,
+				thumbnailFileId: file.thumbnailFileId || '',
 				mediaType: file.mediaType,
 				mimeType: file.mimeType || '',
 				fileSize: Number(file.fileSize || 0),

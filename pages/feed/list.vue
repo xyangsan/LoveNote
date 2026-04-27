@@ -57,8 +57,8 @@
 								:ref="getFeedVideoRef(post)"
 								:video-id="getFeedVideoId(post)"
 								:custom-style="singleMediaBoxStyle(post)"
-								:src="post.media_list[0].url"
-								:poster="post.media_list[0].thumbnail_url"
+								:src="getPostMediaOriginalUrl(post.media_list[0])"
+								:poster="getPostMediaThumbnailUrl(post.media_list[0])"
 								object-fit="contain"
 								@fullscreenclose="handleVideoFullscreenClose(post)"
 							></love-auto-video>
@@ -68,7 +68,7 @@
 							v-else-if="isImagePost(post) && post.media_list.length === 1"
 							class="moment-image--single"
 							:style="singleMediaBoxStyle(post)"
-							:src="post.media_list[0].thumbnail_url || post.media_list[0].url"
+							:src="getPostMediaThumbnailUrl(post.media_list[0])"
 							mode="aspectFit"
 							@click.stop="previewImages(post, 0)"
 						/>
@@ -78,7 +78,7 @@
 								v-for="(media, index) in post.media_list"
 								:key="`${post._id}_${index}`"
 								class="moment-images__item"
-								:src="media.thumbnail_url || media.url"
+								:src="getPostMediaThumbnailUrl(media)"
 								mode="aspectFill"
 								@click.stop="previewImages(post, index)"
 							/>
@@ -227,7 +227,15 @@ function resolvePostCover(post = {}) {
 		return ''
 	}
 	const firstMedia = mediaList[0] || {}
-	return String(firstMedia.thumbnail_url || firstMedia.url || '').trim()
+	return getFeedMediaThumbnailUrl(firstMedia)
+}
+
+function getFeedMediaThumbnailUrl(media = {}) {
+	return String(media.thumbnail_url || media.url || '').trim()
+}
+
+function getFeedMediaOriginalUrl(media = {}) {
+	return String(media.url || media.thumbnail_url || '').trim()
 }
 
 function isChooseCanceledError(error = {}) {
@@ -327,11 +335,11 @@ export default {
 		})
 	},
 	onHide() {
-		this.pauseAllFeedVideos()
+		this.pauseAllFeedVideos('', { force: true })
 		this.destroyVideoObserver()
 	},
 	onUnload() {
-		this.pauseAllFeedVideos()
+		this.pauseAllFeedVideos('', { force: true })
 		this.destroyVideoObserver()
 	},
 	onPullDownRefresh() {
@@ -798,11 +806,14 @@ export default {
 					}
 				})
 			} else {
+				const post = this.getVideoPostById(id)
+				const video = post ? this.getFeedVideoComponent(post) : null
+				if (video && video.isFullscreen) {
+					return
+				}
 				const nextVisibleVideoMap = Object.assign({}, this.visibleVideoMap)
 				delete nextVisibleVideoMap[id]
 				this.visibleVideoMap = nextVisibleVideoMap
-				const post = this.getVideoPostById(id)
-				const video = post ? this.getFeedVideoComponent(post) : null
 				if (video && typeof video.pause === 'function') {
 					video.pause()
 				}
@@ -810,6 +821,9 @@ export default {
 			this.updateActiveAutoVideo()
 		},
 		updateActiveAutoVideo() {
+			if (this.hasFullscreenFeedVideo()) {
+				return
+			}
 			const visibleList = Object.values(this.visibleVideoMap)
 				.sort((a, b) => {
 					if (Math.abs(a.ratio - b.ratio) > 0.01) {
@@ -838,7 +852,17 @@ export default {
 				activeVideo.playMuted()
 			}
 		},
-		pauseAllFeedVideos(exceptVideoId = '') {
+		hasFullscreenFeedVideo() {
+			return this.postList.some((post) => {
+				if (!this.isVideoPost(post)) {
+					return false
+				}
+				const video = this.getFeedVideoComponent(post)
+				return Boolean(video && video.isFullscreen)
+			})
+		},
+		pauseAllFeedVideos(exceptVideoId = '', options = {}) {
+			const forcePause = options && options.force === true
 			this.postList.forEach((post) => {
 				if (!this.isVideoPost(post)) {
 					return
@@ -848,6 +872,9 @@ export default {
 					return
 				}
 				const video = this.getFeedVideoComponent(post)
+				if (!forcePause && video && video.isFullscreen) {
+					return
+				}
 				if (video && typeof video.pause === 'function') {
 					video.pause()
 				}
@@ -874,12 +901,23 @@ export default {
 				&& Array.isArray(post.media_list)
 				&& post.media_list.length > 0
 		},
+		getPostMediaThumbnailUrl(media = {}) {
+			return getFeedMediaThumbnailUrl(media)
+		},
+		getPostMediaOriginalUrl(media = {}) {
+			return getFeedMediaOriginalUrl(media)
+		},
 		previewImages(post = {}, current = 0) {
 			const mediaList = Array.isArray(post.media_list) ? post.media_list : []
-			const urls = mediaList
-				.filter(item => String(item.media_type || '').toLowerCase() === 'image')
-				.map(item => item.url)
-				.filter(Boolean)
+			const imageList = mediaList
+				.map((item, index) => ({
+					index,
+					type: String(item.media_type || '').toLowerCase(),
+					url: this.getPostMediaOriginalUrl(item)
+				}))
+				.filter(item => item.type === 'image' && item.url)
+			const urls = imageList.map(item => item.url)
+			const currentIndex = imageList.findIndex(item => item.index === current)
 
 			if (!urls.length) {
 				return
@@ -887,7 +925,7 @@ export default {
 
 			uni.previewImage({
 				urls,
-				current: Math.max(0, Math.min(current, urls.length - 1))
+				current: currentIndex >= 0 ? currentIndex : 0
 			})
 		},
 		async loadPostList(reset = false) {

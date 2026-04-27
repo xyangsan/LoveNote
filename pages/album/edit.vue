@@ -29,7 +29,13 @@
 				:header-line="false"
 			>
 				<view class="cover-panel">
-					<image class="cover-panel__preview" :src="coverPreviewUrl" mode="aspectFill"></image>
+					<image
+						v-if="coverPreviewUrl"
+						class="cover-panel__preview"
+						:src="coverPreviewUrl"
+						mode="aspectFill"
+					></image>
+					<view v-else class="cover-panel__preview cover-panel__preview--empty"></view>
 					<view class="cover-panel__body">
 						<text class="cover-panel__title">相册封面</text>
 						<text class="cover-panel__desc">建议使用清晰图片，视觉效果更好。</text>
@@ -136,14 +142,11 @@
 import { getAlbumApi } from '../../common/api/album.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 
-const DEFAULT_COVER = 'https://pic.616pic.com/bg_w1180/00/03/95/2AHp5qATBm.jpg!w700wp'
-
 export default {
 	data() {
 		return {
 			albumId: '',
 			saving: false,
-			defaultCover: DEFAULT_COVER,
 			form: {
 				title: '',
 				description: '',
@@ -156,7 +159,7 @@ export default {
 	},
 	computed: {
 		coverPreviewUrl() {
-			return this.form.coverPreview || this.defaultCover
+			return this.form.coverPreview || ''
 		}
 	},
 	onLoad(options) {
@@ -356,6 +359,10 @@ export default {
 	border-radius: 24rpx;
 	background: #f3ece8;
 	box-shadow: 0 14rpx 30rpx rgba(192, 120, 92, 0.16);
+}
+
+.cover-panel__preview--empty {
+	background: linear-gradient(135deg, #fff2eb 0%, #f8dfd4 100%);
 }
 
 .cover-panel__body {

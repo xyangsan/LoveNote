@@ -161,6 +161,7 @@ function collectCloudFileIdsFromMediaList(mediaList = []) {
 
 		const fileId = String(item.fileId || item.file_id || '').trim()
 		const url = String(item.url || '').trim()
+		const thumbnailFileId = String(item.thumbnailFileId || item.thumbnail_file_id || '').trim()
 		const thumbnailUrl = String(item.thumbnailUrl || item.thumbnail_url || item.poster || '').trim()
 
 		if (fileId && isCloudFileId(fileId)) {
@@ -168,6 +169,9 @@ function collectCloudFileIdsFromMediaList(mediaList = []) {
 		}
 		if (isCloudFileId(url)) {
 			fileIds.push(url)
+		}
+		if (thumbnailFileId && isCloudFileId(thumbnailFileId)) {
+			fileIds.push(thumbnailFileId)
 		}
 		if (thumbnailUrl && isCloudFileId(thumbnailUrl)) {
 			fileIds.push(thumbnailUrl)
@@ -187,12 +191,16 @@ function collectCloudFileIdsFromPosts(postList = []) {
 		mediaList.forEach((item) => {
 			const fileId = String(item.file_id || '').trim()
 			const mediaUrl = String(item.url || '').trim()
+			const thumbnailFileId = String(item.thumbnail_file_id || '').trim()
 			const thumbnailUrl = String(item.thumbnail_url || '').trim()
 			if (fileId && isCloudFileId(fileId)) {
 				fileIds.push(fileId)
 			}
 			if (isCloudFileId(mediaUrl)) {
 				fileIds.push(mediaUrl)
+			}
+			if (thumbnailFileId && isCloudFileId(thumbnailFileId)) {
+				fileIds.push(thumbnailFileId)
 			}
 			if (thumbnailUrl && isCloudFileId(thumbnailUrl)) {
 				fileIds.push(thumbnailUrl)
@@ -267,7 +275,11 @@ function normalizeMediaItem(item = {}, fileUrlMap = {}) {
 	}
 
 	const rawThumbnailUrl = String(item.thumbnail_url || '').trim()
+	const thumbnailFileId = String(item.thumbnail_file_id || '').trim()
 	let thumbnailUrl = ensureHttpsUrl(rawThumbnailUrl)
+	if (!thumbnailUrl && thumbnailFileId && fileUrlMap[thumbnailFileId]) {
+		thumbnailUrl = fileUrlMap[thumbnailFileId]
+	}
 	if (!thumbnailUrl && rawThumbnailUrl && isCloudFileId(rawThumbnailUrl)) {
 		thumbnailUrl = fileUrlMap[rawThumbnailUrl] || ''
 	}
@@ -286,6 +298,7 @@ function normalizeMediaItem(item = {}, fileUrlMap = {}) {
 	return {
 		url: mediaUrl,
 		file_id: fileId,
+		thumbnail_file_id: thumbnailFileId,
 		thumbnail_url: thumbnailUrl,
 		media_type: mediaType,
 		mime_type: normalizeMimeTypeInput(item.mime_type) || buildMimeType(mediaType),
@@ -492,8 +505,15 @@ module.exports = class DailyService extends Service {
 					}
 				}
 
+				const rawThumbnailFileId = String(rawItem.thumbnailFileId || rawItem.thumbnail_file_id || '').trim()
 				const rawThumbnailUrl = String(rawItem.thumbnailUrl || rawItem.thumbnail_url || rawItem.poster || '').trim()
+				const thumbnailFileId = isCloudFileId(rawThumbnailFileId)
+					? rawThumbnailFileId
+					: (isCloudFileId(rawThumbnailUrl) ? rawThumbnailUrl : '')
 				let thumbnailUrl = ensureHttpsUrl(rawThumbnailUrl)
+				if (!thumbnailUrl && thumbnailFileId && isCloudFileId(thumbnailFileId)) {
+					thumbnailUrl = fileUrlMap[thumbnailFileId] || ''
+				}
 				if (!thumbnailUrl && rawThumbnailUrl && isCloudFileId(rawThumbnailUrl)) {
 					thumbnailUrl = fileUrlMap[rawThumbnailUrl] || ''
 				}
@@ -504,6 +524,7 @@ module.exports = class DailyService extends Service {
 				return {
 					url: mediaUrl,
 					file_id: fileId,
+					thumbnail_file_id: thumbnailFileId,
 					thumbnail_url: thumbnailUrl,
 					media_type: mediaType,
 					mime_type: mimeTypeInput || buildMimeType(mediaType),

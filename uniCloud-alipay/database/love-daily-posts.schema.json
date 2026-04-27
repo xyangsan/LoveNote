@@ -75,6 +75,9 @@
 					"thumbnail_url": {
 						"bsonType": "string"
 					},
+					"thumbnail_file_id": {
+						"bsonType": "string"
+					},
 					"media_type": {
 						"bsonType": "string"
 					},

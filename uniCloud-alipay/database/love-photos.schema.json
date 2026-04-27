@@ -36,6 +36,11 @@
 			"title": "缩略图URL",
 			"description": "缩略图访问地址"
 		},
+		"thumbnail_file_id": {
+			"bsonType": "string",
+			"title": "缩略图文件ID",
+			"description": "缩略图云存储文件ID"
+		},
 		"media_type": {
 			"bsonType": "string",
 			"title": "媒体类型",

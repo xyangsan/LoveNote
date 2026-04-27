@@ -34,20 +34,9 @@
 				@click="previewPhoto(photo)"
 				@longpress="showPhotoMenu(photo)"
 			>
-				<video
-					v-if="isVideo(photo)"
-					class="photo-item__video"
-					:src="photo.url"
-					:poster="photo.thumbnail_url"
-					object-fit="cover"
-					:controls="false"
-					:show-play-btn="true"
-					:enable-progress-gesture="false"
-				></video>
 				<image
-					v-else
 					class="photo-item__image"
-					:src="photo.thumbnail_url || photo.url"
+					:src="getPhotoThumbnailUrl(photo)"
 					mode="aspectFill"
 					lazy-load
 				/>
@@ -89,6 +78,17 @@
 			@click="handleAlbumAction"
 		/>
 
+		<love-auto-video
+			v-if="activeVideoPhoto && activeVideoPhoto.url"
+			ref="albumVideoPlayer"
+			class="album-video-player"
+			:video-id="getAlbumVideoId(activeVideoPhoto)"
+			:src="getPhotoOriginalUrl(activeVideoPhoto)"
+			:poster="getPhotoThumbnailUrl(activeVideoPhoto)"
+			object-fit="contain"
+			@fullscreenclose="handleAlbumVideoFullscreenClose"
+		></love-auto-video>
+
 	</view>
 </template>
 
@@ -107,10 +107,12 @@ export default {
 			needRefreshOnShow: false,
 			pagination: {
 				page: 1,
-				pageSize: 30,
+				pageSize: 20,
 				total: 0,
 				hasMore: true
 			},
+			renderBatchTimer: null,
+			activeVideoPhoto: null,
 			currentPhoto: null,
 			photoActionSheet: {
 				show: false,
@@ -159,7 +161,50 @@ export default {
 			uni.stopPullDownRefresh()
 		})
 	},
+	onUnload() {
+		this.clearRenderBatchTimer()
+		this.stopAlbumVideo()
+	},
+	onHide() {
+		this.stopAlbumVideo()
+	},
 	methods: {
+		clearRenderBatchTimer() {
+			if (this.renderBatchTimer) {
+				clearTimeout(this.renderBatchTimer)
+				this.renderBatchTimer = null
+			}
+		},
+
+		renderPhotosInBatches(photos = [], reset = false) {
+			const list = Array.isArray(photos) ? photos : []
+			const batchSize = 8
+			let index = 0
+			this.clearRenderBatchTimer()
+			if (reset) {
+				this.photoList = []
+			}
+
+			const appendBatch = () => {
+				const batch = list.slice(index, index + batchSize)
+				if (!batch.length) {
+					this.renderBatchTimer = null
+					return
+				}
+				this.photoList = reset && index === 0
+					? batch
+					: [...this.photoList, ...batch]
+				index += batchSize
+				if (index < list.length) {
+					this.renderBatchTimer = setTimeout(appendBatch, 60)
+					return
+				}
+				this.renderBatchTimer = null
+			}
+
+			appendBatch()
+		},
+
 		async loadAlbumDetail(reset = false) {
 			if (this.loading) return
 
@@ -169,6 +214,8 @@ export default {
 				if (reset) {
 					this.pagination.page = 1
 					this.photoList = []
+					this.activeVideoPhoto = null
+					this.clearRenderBatchTimer()
 				}
 
 				const result = await getAlbumApi().getDetail({
@@ -186,11 +233,7 @@ export default {
 				const photos = data.photos || []
 				const pagination = data.pagination || {}
 
-				if (reset) {
-					this.photoList = photos
-				} else {
-					this.photoList = [...this.photoList, ...photos]
-				}
+				this.renderPhotosInBatches(photos, reset)
 
 				this.pagination = {
 					page: pagination.page || this.pagination.page,
@@ -234,9 +277,15 @@ export default {
 				this.previewVideo(photo)
 				return
 			}
-			const imageList = this.photoList.filter(item => !this.isVideo(item))
-			const urls = imageList.map(item => item.url).filter(Boolean)
-			const currentIndex = imageList.findIndex(item => item._id === photo._id)
+			const imageList = this.photoList
+				.filter(item => !this.isVideo(item))
+				.map(item => ({
+					id: item._id,
+					url: this.getPhotoOriginalUrl(item)
+				}))
+				.filter(item => item.url)
+			const urls = imageList.map(item => item.url)
+			const currentIndex = imageList.findIndex(item => item.id === photo._id)
 			if (!urls.length) {
 				uni.showToast({
 					title: '暂无可预览图片',
@@ -275,8 +324,48 @@ export default {
 			return String(photo && photo.media_type || '').toLowerCase() === 'video'
 		},
 
+		getPhotoThumbnailUrl(photo = {}) {
+			return String(photo.thumbnail_url || photo.url || '').trim()
+		},
+
+		getPhotoOriginalUrl(photo = {}) {
+			return String(photo.url || photo.thumbnail_url || '').trim()
+		},
+
+		getAlbumVideoId(photo = {}) {
+			const id = String(photo._id || photo.id || '').trim()
+			if (id) {
+				return `album-video-${id}`
+			}
+			const seed = String(photo.url || photo.thumbnail_url || '')
+			let hash = 0
+			for (let i = 0; i < seed.length; i += 1) {
+				hash = ((hash << 5) - hash) + seed.charCodeAt(i)
+				hash |= 0
+			}
+			return `album-video-${Math.abs(hash)}`
+		},
+
+		getAlbumVideoComponent() {
+			const videoRef = this.$refs.albumVideoPlayer
+			return Array.isArray(videoRef) ? videoRef[0] : videoRef
+		},
+
+		stopAlbumVideo() {
+			const video = this.getAlbumVideoComponent()
+			if (video && typeof video.pause === 'function') {
+				video.pause()
+			}
+			this.activeVideoPhoto = null
+		},
+
+		handleAlbumVideoFullscreenClose() {
+			this.stopAlbumVideo()
+		},
+
 		previewVideo(photo) {
-			if (!photo || !photo.url) {
+			const videoUrl = this.getPhotoOriginalUrl(photo)
+			if (!photo || !videoUrl) {
 				uni.showToast({
 					title: '视频地址无效',
 					icon: 'none'
@@ -284,22 +373,17 @@ export default {
 				return
 			}
 
-			if (typeof uni.previewMedia === 'function') {
-				uni.previewMedia({
-					sources: [
-						{
-							url: photo.url,
-							type: 'video'
-						}
-					],
-					current: 0
+			this.activeVideoPhoto = photo
+			this.$nextTick(() => {
+				const video = this.getAlbumVideoComponent()
+				if (video && typeof video.playFullscreen === 'function') {
+					video.playFullscreen()
+					return
+				}
+				uni.showToast({
+					title: '当前环境暂不支持视频预览',
+					icon: 'none'
 				})
-				return
-			}
-
-			uni.showToast({
-				title: '当前环境暂不支持视频预览',
-				icon: 'none'
 			})
 		},
 
@@ -361,9 +445,17 @@ export default {
 				this.previewVideo(photo)
 				return
 			}
+			const originalUrl = this.getPhotoOriginalUrl(photo)
+			if (!originalUrl) {
+				uni.showToast({
+					title: '暂无可预览图片',
+					icon: 'none'
+				})
+				return
+			}
 
 			uni.previewImage({
-				urls: [photo.url],
+				urls: [originalUrl],
 				current: 0
 			})
 		},
@@ -425,7 +517,7 @@ export default {
 		async saveMedia(photo) {
 			try {
 				uni.showLoading({ title: '保存中...' })
-				const res = await uni.downloadFile({ url: photo.url })
+				const res = await uni.downloadFile({ url: this.getPhotoOriginalUrl(photo) })
 				if (this.isVideo(photo)) {
 					if (typeof uni.saveVideoToPhotosAlbum !== 'function') {
 						throw new Error('当前环境不支持保存视频')
@@ -648,11 +740,17 @@ export default {
 .photo-item__image {
 	width: 100%;
 	height: 100%;
+	display: block;
 }
 
-.photo-item__video {
-	width: 100%;
-	height: 100%;
+.album-video-player {
+	position: fixed;
+	left: -9999rpx;
+	top: -9999rpx;
+	width: 2rpx;
+	height: 2rpx;
+	opacity: 0;
+	pointer-events: none;
 }
 
 .photo-item__type {
@@ -662,6 +760,9 @@ export default {
 	padding: 4rpx 10rpx;
 	border-radius: 12rpx;
 	background: rgba(0, 0, 0, 0.58);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .photo-item__type-text {

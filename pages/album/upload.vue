@@ -29,6 +29,8 @@
 				:max-file-size="maxFileSize"
 				:compressed="compressed"
 				:enable-compression="enableCompression"
+				:enable-thumbnail="true"
+				:thumbnail-options="thumbnailOptions"
 				:save-path="savePath"
 				upload-prefix="photo"
 				:max-count="maxCount"
@@ -79,7 +81,7 @@ import { getAlbumApi } from '../../common/api/album.js'
 import { getPhotoApi } from '../../common/api/photo.js'
 
 const MAX_COUNT = 20
-const MAX_FILE_SIZE = 100 * 1024 * 1024
+const MAX_FILE_SIZE = 20 * 1024 * 1024
 
 export default {
 	data() {
@@ -97,7 +99,16 @@ export default {
 			sourceType: ['album', 'camera'],
 			commonDescription: '',
 			uploading: false,
-			uploadProgress: 0
+			uploadProgress: 0,
+			thumbnailOptions: {
+				imageSavePath: 'album/thumbnails/images',
+				videoSavePath: 'album/thumbnails/videos',
+				imagePrefix: 'thumb',
+				videoPrefix: 'poster',
+				imageQuality: 50,
+				image: true,
+				video: true
+			}
 		}
 	},
 	computed: {
@@ -193,7 +204,8 @@ export default {
 				const photos = uploadedFiles.map(file => ({
 					url: file.url,
 					fileId: file.fileId,
-					thumbnailUrl: file.mediaType === 'image' ? file.url : '',
+					thumbnailUrl: file.thumbnailUrl || (file.mediaType === 'image' ? file.url : ''),
+					thumbnailFileId: file.thumbnailFileId || '',
 					description: this.commonDescription,
 					fileSize: file.fileSize || 0,
 					mimeType: file.mimeType || '',

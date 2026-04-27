@@ -75,6 +75,13 @@
 			</view>
 		</view>
 
+		<canvas
+			v-if="thumbnailEnabled"
+			:id="thumbnailCanvasId"
+			:canvas-id="thumbnailCanvasId"
+			class="love-media-uploader__thumbnail-canvas"
+			:style="thumbnailCanvasStyle"
+		></canvas>
 	</view>
 </template>
 
@@ -135,6 +142,9 @@ function normalizeSourceType(value = []) {
 function normalizeExistingFile(file = {}, index = 0, safeFileTypes = ['image']) {
 	const path = String(file.path || file.url || file.fileURL || file.tempFileURL || '').trim()
 	const fileId = String(file.fileId || file.fileID || file.file_id || '').trim()
+	const thumbnailUrl = String(file.thumbnailUrl || file.thumbnail_url || file.poster || '').trim()
+	const thumbnailFileId = String(file.thumbnailFileId || file.thumbnailFileID || file.thumbnail_file_id || '').trim()
+	const thumbnailCloudPath = String(file.thumbnailCloudPath || file.thumbnail_cloud_path || '').trim()
 	if (!path && !fileId) {
 		return null
 	}
@@ -156,11 +166,14 @@ function normalizeExistingFile(file = {}, index = 0, safeFileTypes = ['image']) 
 		duration: Number(file.duration || 0),
 		width: Number(file.width || 0),
 		height: Number(file.height || 0),
-		poster: file.poster || file.thumbnailUrl || '',
+		poster: file.poster || thumbnailUrl || '',
 		status: file.status || 'success',
 		cloudPath: file.cloudPath || '',
 		url: String(file.url || file.fileURL || file.tempFileURL || path || '').trim(),
 		fileId,
+		thumbnailUrl,
+		thumbnailFileId,
+		thumbnailCloudPath,
 		errorMsg: file.errorMsg || '',
 		source: file.source || 'remote'
 	}
@@ -230,6 +243,16 @@ export default {
 		videoCompressQuality: {
 			type: String,
 			default: 'medium'
+		},
+		enableThumbnail: {
+			type: Boolean,
+			default: false
+		},
+		thumbnailOptions: {
+			type: Object,
+			default() {
+				return {}
+			}
 		},
 		savePath: {
 			type: String,
@@ -303,7 +326,8 @@ export default {
 	data() {
 		return {
 			files: [],
-			uploading: false
+			uploading: false,
+			thumbnailCanvasId: `love_media_thumbnail_${Date.now()}_${Math.floor(Math.random() * 100000)}`
 		}
 	},
 	computed: {
@@ -363,6 +387,26 @@ export default {
 		},
 		cropEnabled() {
 			return this.normalizedCropOptions.enabled === true || this.normalizedCropOptions.enable === true
+		},
+		normalizedThumbnailOptions() {
+			return this.thumbnailOptions && typeof this.thumbnailOptions === 'object' ? this.thumbnailOptions : {}
+		},
+		thumbnailEnabled() {
+			return this.enableThumbnail === true ||
+				this.normalizedThumbnailOptions.enabled === true ||
+				this.normalizedThumbnailOptions.enable === true
+		},
+		thumbnailSize() {
+			return {
+				width: this.getThumbnailOptionSize('width', 'thumbnailWidth'),
+				height: this.getThumbnailOptionSize('height', 'thumbnailHeight')
+			}
+		},
+		thumbnailCanvasStyle() {
+			return {
+				width: `${this.thumbnailSize.width}px`,
+				height: `${this.thumbnailSize.height}px`
+			}
 		}
 	},
 	methods: {
@@ -495,6 +539,9 @@ export default {
 				cloudPath: '',
 				url: '',
 				fileId: '',
+				thumbnailUrl: '',
+				thumbnailFileId: '',
+				thumbnailCloudPath: '',
 				errorMsg: '',
 				source: 'local'
 			}
@@ -725,9 +772,17 @@ export default {
 						throw new Error('图片压缩结果无效')
 					}
 					const info = await this.getFileInfo(compressedPath)
+					const compressedSize = Number((info && info.size) || originSize)
+					if (originSize > 0 && compressedSize >= originSize) {
+						return {
+							path: originPath,
+							size: originSize,
+							compressed: false
+						}
+					}
 					return {
 						path: compressedPath,
-						size: Number((info && info.size) || originSize),
+						size: compressedSize,
 						compressed: compressedPath !== originPath
 					}
 				}
@@ -752,6 +807,227 @@ export default {
 				path: originPath,
 				size: originSize,
 				compressed: false
+			}
+		},
+		shouldCreateThumbnail(file = {}) {
+			if (!this.thumbnailEnabled) {
+				return false
+			}
+			const mediaType = String(file.mediaType || '').toLowerCase()
+			if (mediaType === 'image') {
+				return this.normalizedThumbnailOptions.image !== false
+			}
+			if (mediaType === 'video') {
+				return this.normalizedThumbnailOptions.video !== false
+			}
+			return false
+		},
+		getThumbnailImageQuality() {
+			const options = this.normalizedThumbnailOptions
+			const value = Number(
+				options.imageQuality !== undefined
+					? options.imageQuality
+					: (options.quality !== undefined ? options.quality : 45)
+			)
+			if (Number.isNaN(value)) {
+				return 45
+			}
+			return Math.max(1, Math.min(100, value))
+		},
+		getThumbnailOptionSize(primaryKey = '', fallbackKey = '') {
+			const options = this.normalizedThumbnailOptions
+			const value = Number(
+				options[primaryKey] !== undefined
+					? options[primaryKey]
+					: (options[fallbackKey] !== undefined ? options[fallbackKey] : 200)
+			)
+			if (Number.isNaN(value) || value <= 0) {
+				return 200
+			}
+			return Math.round(value)
+		},
+		getThumbnailBackgroundColor() {
+			const value = String(this.normalizedThumbnailOptions.backgroundColor || '').trim()
+			return value || '#ffffff'
+		},
+		getThumbnailFileType() {
+			const value = String(this.normalizedThumbnailOptions.fileType || '').trim().toLowerCase()
+			return ['jpg', 'jpeg', 'png'].includes(value) ? (value === 'jpeg' ? 'jpg' : value) : 'jpg'
+		},
+		getThumbnailUploadModule(file = {}, modulePath = '') {
+			const options = this.normalizedThumbnailOptions
+			if (file.mediaType === 'image' && options.imageSavePath) {
+				return String(options.imageSavePath).trim()
+			}
+			if (file.mediaType === 'video' && options.videoSavePath) {
+				return String(options.videoSavePath).trim()
+			}
+			if (options.savePath) {
+				return String(options.savePath).trim()
+			}
+			const typeFolder = file.mediaType === 'video' ? 'videos' : 'images'
+			return `${modulePath}/thumbnails/${typeFolder}`
+		},
+		getThumbnailUploadPrefix(file = {}, prefix = '') {
+			const options = this.normalizedThumbnailOptions
+			if (file.mediaType === 'image' && options.imagePrefix) {
+				return String(options.imagePrefix).trim()
+			}
+			if (file.mediaType === 'video' && options.videoPrefix) {
+				return String(options.videoPrefix).trim()
+			}
+			if (options.prefix) {
+				return String(options.prefix).trim()
+			}
+			return `${prefix}-thumb`
+		},
+		getImageInfo(filePath = '') {
+			return new Promise((resolve, reject) => {
+				if (!filePath || typeof uni.getImageInfo !== 'function') {
+					reject(new Error('当前环境不支持读取图片信息'))
+					return
+				}
+				uni.getImageInfo({
+					src: filePath,
+					success: (res) => resolve(res || {}),
+					fail: (error) => reject(error || new Error('读取图片信息失败'))
+				})
+			})
+		},
+		drawThumbnailToCanvas(imageInfo = {}, sourcePath = '') {
+			return new Promise((resolve, reject) => {
+				if (typeof uni.createCanvasContext !== 'function' || typeof uni.canvasToTempFilePath !== 'function') {
+					reject(new Error('当前环境不支持生成缩略图'))
+					return
+				}
+				const sourceWidth = Number(imageInfo.width || 0)
+				const sourceHeight = Number(imageInfo.height || 0)
+				const targetWidth = this.thumbnailSize.width
+				const targetHeight = this.thumbnailSize.height
+				if (!sourcePath || sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0) {
+					reject(new Error('缩略图尺寸无效'))
+					return
+				}
+
+				const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight)
+				const drawWidth = Math.max(1, Math.round(sourceWidth * scale))
+				const drawHeight = Math.max(1, Math.round(sourceHeight * scale))
+				const drawX = Math.round((targetWidth - drawWidth) / 2)
+				const drawY = Math.round((targetHeight - drawHeight) / 2)
+				const context = uni.createCanvasContext(this.thumbnailCanvasId, this)
+
+				context.clearRect(0, 0, targetWidth, targetHeight)
+				context.setFillStyle(this.getThumbnailBackgroundColor())
+				context.fillRect(0, 0, targetWidth, targetHeight)
+				context.drawImage(sourcePath, drawX, drawY, drawWidth, drawHeight)
+				let exported = false
+				const exportCanvas = () => {
+					if (exported) {
+						return
+					}
+					exported = true
+					uni.canvasToTempFilePath({
+						canvasId: this.thumbnailCanvasId,
+						width: targetWidth,
+						height: targetHeight,
+						destWidth: targetWidth,
+						destHeight: targetHeight,
+						fileType: this.getThumbnailFileType(),
+						quality: this.getThumbnailImageQuality() / 100,
+						success: (res) => {
+							const nextPath = String(res && (res.tempFilePath || res.filePath) || '').trim()
+							nextPath ? resolve(nextPath) : reject(new Error('缩略图生成结果无效'))
+						},
+						fail: (error) => reject(error || new Error('缩略图生成失败'))
+					}, this)
+				}
+				context.draw(false, exportCanvas)
+				setTimeout(exportCanvas, 120)
+			})
+		},
+		compressImageThumbnailFallback(filePath = '') {
+			return new Promise((resolve) => {
+				const sourcePath = String(filePath || '').trim()
+				if (!sourcePath || typeof uni.compressImage !== 'function') {
+					resolve(sourcePath)
+					return
+				}
+				uni.compressImage({
+					src: sourcePath,
+					quality: this.getThumbnailImageQuality(),
+					success: (res) => {
+						const nextPath = String(res && (res.tempFilePath || res.filePath) || '').trim()
+						resolve(nextPath || sourcePath)
+					},
+					fail: () => {
+						resolve(sourcePath)
+					}
+				})
+			})
+		},
+		async createImageThumbnailFile(filePath = '') {
+			const sourcePath = String(filePath || '').trim()
+			if (!sourcePath) {
+				return ''
+			}
+			try {
+				const imageInfo = await this.getImageInfo(sourcePath)
+				const drawablePath = String(imageInfo.path || sourcePath).trim()
+				return await this.drawThumbnailToCanvas(imageInfo, drawablePath)
+			} catch (error) {
+				console.warn('create image thumbnail by canvas failed, fallback to compressImage', error)
+				return this.compressImageThumbnailFallback(sourcePath)
+			}
+		},
+		async buildThumbnailSource(file = {}) {
+			if (file.mediaType === 'image') {
+				return this.createImageThumbnailFile(file.path)
+			}
+			if (file.mediaType === 'video') {
+				return this.createImageThumbnailFile(String(file.poster || '').trim())
+			}
+			return ''
+		},
+		async uploadThumbnailForFile(file = {}, modulePath = '', prefix = '') {
+			if (!this.shouldCreateThumbnail(file)) {
+				return {
+					thumbnailUrl: '',
+					thumbnailFileId: '',
+					thumbnailCloudPath: ''
+				}
+			}
+
+			try {
+				const thumbnailSource = await this.buildThumbnailSource(file)
+				if (!thumbnailSource) {
+					return {
+						thumbnailUrl: '',
+						thumbnailFileId: '',
+						thumbnailCloudPath: ''
+					}
+				}
+				const uploadRes = await uploadFileWithModule({
+					filePath: thumbnailSource,
+					module: this.getThumbnailUploadModule(file, modulePath),
+					prefix: this.getThumbnailUploadPrefix(file, prefix),
+					fileType: 'image'
+				})
+				return {
+					thumbnailUrl: uploadRes.fileURL || '',
+					thumbnailFileId: uploadRes.fileID || '',
+					thumbnailCloudPath: uploadRes.cloudPath || ''
+				}
+			} catch (error) {
+				console.warn('upload thumbnail failed', error)
+				this.$emit('thumbnail-error', {
+					file: { ...file },
+					error
+				})
+				return {
+					thumbnailUrl: '',
+					thumbnailFileId: '',
+					thumbnailCloudPath: ''
+				}
 			}
 		},
 		async uploadAll(options = {}) {
@@ -789,7 +1065,9 @@ export default {
 							duration: current.duration || 0,
 							width: current.width || 0,
 							height: current.height || 0,
-							thumbnailUrl: current.mediaType === 'video' ? '' : (current.url || current.path || ''),
+							thumbnailUrl: current.thumbnailUrl || (current.mediaType === 'video' ? '' : (current.url || current.path || '')),
+							thumbnailFileId: current.thumbnailFileId || '',
+							thumbnailCloudPath: current.thumbnailCloudPath || '',
 							poster: current.poster || ''
 						})
 						continue
@@ -809,6 +1087,9 @@ export default {
 							prefix,
 							fileType: current.mediaType === 'video' ? 'video' : 'image'
 						})
+						const thumbnailRes = await this.uploadThumbnailForFile(current, modulePath, prefix)
+						const thumbnailUrl = thumbnailRes.thumbnailUrl ||
+							(current.mediaType === 'image' ? (uploadRes.fileURL || '') : '')
 
 						const nextItem = {
 							...current,
@@ -817,6 +1098,9 @@ export default {
 							cloudPath: uploadRes.cloudPath || '',
 							url: uploadRes.fileURL || '',
 							fileId: uploadRes.fileID || '',
+							thumbnailUrl,
+							thumbnailFileId: thumbnailRes.thumbnailFileId || '',
+							thumbnailCloudPath: thumbnailRes.thumbnailCloudPath || '',
 							errorMsg: ''
 						}
 						this.files.splice(i, 1, nextItem)
@@ -832,7 +1116,9 @@ export default {
 							duration: nextItem.duration || 0,
 							width: nextItem.width || 0,
 							height: nextItem.height || 0,
-							thumbnailUrl: nextItem.mediaType === 'video' ? '' : nextItem.url,
+							thumbnailUrl: nextItem.thumbnailUrl || (nextItem.mediaType === 'video' ? '' : nextItem.url),
+							thumbnailFileId: nextItem.thumbnailFileId || '',
+							thumbnailCloudPath: nextItem.thumbnailCloudPath || '',
 							poster: nextItem.poster || ''
 						})
 					} catch (error) {
@@ -917,6 +1203,9 @@ export default {
 	padding: 4rpx 12rpx;
 	border-radius: 12rpx;
 	background: rgba(0, 0, 0, 0.56);
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .love-media-uploader__type-text {
@@ -1013,6 +1302,14 @@ export default {
 	margin-top: 4rpx;
 	font-size: 22rpx;
 	color: #ad8476;
+}
+
+.love-media-uploader__thumbnail-canvas {
+	position: fixed;
+	left: -9999px;
+	top: -9999px;
+	opacity: 0;
+	pointer-events: none;
 }
 
 </style>

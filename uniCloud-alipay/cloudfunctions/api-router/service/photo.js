@@ -311,8 +311,22 @@ module.exports = class PhotoService extends Service {
 				avatar_url: ensureHttpsUrl(uploader.avatar || uploader.avatar_url || '')
 			} : {}
 			const uploadFileIds = photos
-				.map((item) => String(item.fileId || item.file_id || '').trim())
-				.filter(Boolean)
+				.reduce((list, item) => {
+					const rawItem = item && typeof item === 'object' ? item : {}
+					const fileId = String(rawItem.fileId || rawItem.file_id || '').trim()
+					const thumbnailFileId = String(rawItem.thumbnailFileId || rawItem.thumbnail_file_id || '').trim()
+					const thumbnailUrl = String(rawItem.thumbnailUrl || rawItem.thumbnail_url || '').trim()
+					if (fileId) {
+						list.push(fileId)
+					}
+					if (thumbnailFileId) {
+						list.push(thumbnailFileId)
+					}
+					if (thumbnailUrl) {
+						list.push(thumbnailUrl)
+					}
+					return list
+				}, [])
 				.filter((item) => isCloudFileId(item))
 			const uploadFileUrlMap = await getTempFileUrlMap(uploadFileIds)
 
@@ -350,8 +364,15 @@ module.exports = class PhotoService extends Service {
 
 				const mimeType = getMediaTypeByMimeType(mimeTypeInput) ? mimeTypeInput : buildMimeType(mediaType, mediaUrl)
 
+				const rawThumbnailFileId = String(photo.thumbnailFileId || photo.thumbnail_file_id || '').trim()
 				const rawThumbnailUrl = String(photo.thumbnailUrl || photo.thumbnail_url || '').trim()
+				const thumbnailFileId = isCloudFileId(rawThumbnailFileId)
+					? rawThumbnailFileId
+					: (isCloudFileId(rawThumbnailUrl) ? rawThumbnailUrl : '')
 				let thumbnailUrl = ensureHttpsUrl(rawThumbnailUrl)
+				if (!thumbnailUrl && isCloudFileId(thumbnailFileId)) {
+					thumbnailUrl = uploadFileUrlMap[thumbnailFileId] || ''
+				}
 				if (!thumbnailUrl && isCloudFileId(rawThumbnailUrl)) {
 					thumbnailUrl = uploadFileUrlMap[rawThumbnailUrl] || ''
 				}
@@ -364,6 +385,7 @@ module.exports = class PhotoService extends Service {
 					album_id: albumId,
 					url: mediaUrl,
 					file_id: fileId,
+					thumbnail_file_id: thumbnailFileId,
 					thumbnail_url: thumbnailUrl,
 					media_type: mediaType,
 					description: String(photo.description || '').trim().substring(0, 500),
@@ -605,10 +627,14 @@ module.exports = class PhotoService extends Service {
 
 				await transaction.commit()
 
-				if (photo.file_id) {
+				const deleteFileList = [
+					photo.file_id,
+					photo.thumbnail_file_id
+				].map((item) => String(item || '').trim()).filter(Boolean)
+				if (deleteFileList.length) {
 					try {
 						await uniCloud.deleteFile({
-							fileList: [photo.file_id]
+							fileList: deleteFileList
 						})
 					} catch (e) {
 						console.warn('删除云存储文件失败:', e)

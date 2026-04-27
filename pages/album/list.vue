@@ -14,38 +14,57 @@
 				<text class="album-card__create-text">新建相册</text>
 			</view>
 
-			<view
-				v-for="album in albumList"
-				:key="album._id"
-				class="album-card"
-				@click="goToAlbumDetail(album._id)"
-			>
-				<image
-					class="album-card__cover"
-					:src="album.cover_url || defaultCover"
-					mode="aspectFill"
-				/>
-				<view class="album-card__overlay"></view>
-				<view class="album-card__info">
-					<text class="album-card__title">{{ album.title }}</text>
-					<text class="album-card__count">{{ album.photo_count || 0 }} 个媒体</text>
-				</view>
+			<block v-if="showAlbumSkeleton">
 				<view
-					v-if="!album.is_default"
-					class="album-card__menu"
-					@click.stop="showAlbumMenu(album)"
+					v-for="item in skeletonList"
+					:key="`album-skeleton-${item}`"
+					class="album-card album-card--skeleton"
 				>
-					<text class="album-card__menu-icon">⋮</text>
+					<view class="album-skeleton__shimmer"></view>
+					<view class="album-skeleton__cover"></view>
+					<view class="album-skeleton__info">
+						<view class="album-skeleton__title"></view>
+						<view class="album-skeleton__count"></view>
+					</view>
 				</view>
-			</view>
+			</block>
+
+			<block v-else>
+				<view
+					v-for="album in albumList"
+					:key="album._id"
+					class="album-card"
+					@click="goToAlbumDetail(album._id)"
+				>
+					<image
+						v-if="album.cover_url"
+						class="album-card__cover"
+						:src="album.cover_url"
+						mode="aspectFill"
+					/>
+					<view v-else class="album-card__cover-placeholder"></view>
+					<view class="album-card__overlay"></view>
+					<view class="album-card__info">
+						<text class="album-card__title">{{ album.title }}</text>
+						<text class="album-card__count">{{ album.photo_count || 0 }} 个媒体</text>
+					</view>
+					<view
+						v-if="!album.is_default"
+						class="album-card__menu"
+						@click.stop="showAlbumMenu(album)"
+					>
+						<text class="album-card__menu-icon">⋮</text>
+					</view>
+				</view>
+			</block>
 		</view>
 
-		<view v-if="loading" class="loading-state">
+		<view v-if="loading && albumList.length > 0" class="loading-state">
 			<fui-loading type="rotate" size="48"></fui-loading>
 			<text class="loading-text">加载中...</text>
 		</view>
 
-		<view v-else-if="albumList.length === 0" class="empty-state">
+		<view v-else-if="!loading && albumList.length === 0" class="empty-state">
 			<image class="empty-icon" src="/static/user-empty.png" mode="aspectFit" />
 			<text class="empty-title">还没有相册</text>
 			<text class="empty-desc">创建一个相册，开始记录你们的回忆吧</text>
@@ -92,14 +111,12 @@
 <script>
 import { getAlbumApi } from '../../common/api/album.js'
 
-const DEFAULT_COVER = 'https://pic.616pic.com/bg_w1180/00/03/95/2AHp5qATBm.jpg!w700wp'
-
 export default {
 	data() {
 		return {
 			albumList: [],
 			loading: false,
-			defaultCover: DEFAULT_COVER,
+			skeletonList: [1, 2, 3, 4, 5],
 			pagination: {
 				page: 1,
 				pageSize: 20,
@@ -125,6 +142,11 @@ export default {
 					description: ''
 				}
 			}
+		}
+	},
+	computed: {
+		showAlbumSkeleton() {
+			return this.loading && this.albumList.length === 0
 		}
 	},
 	onShow() {
@@ -413,6 +435,12 @@ export default {
 	height: 100%;
 }
 
+.album-card__cover-placeholder {
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, #fff2eb 0%, #f8dfd4 100%);
+}
+
 .album-card__overlay {
 	position: absolute;
 	bottom: 0;
@@ -463,6 +491,63 @@ export default {
 .album-card__menu-icon {
 	font-size: 32rpx;
 	color: #fff;
+}
+
+.album-card--skeleton {
+	background: rgba(255, 255, 255, 0.76);
+	pointer-events: none;
+}
+
+.album-skeleton__shimmer {
+	position: absolute;
+	top: 0;
+	left: -120%;
+	z-index: 2;
+	width: 80%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.68) 50%, transparent 100%);
+	animation: albumSkeletonShimmer 1.4s ease-in-out infinite;
+}
+
+.album-skeleton__cover {
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, #fff2eb 0%, #f8dfd4 100%);
+}
+
+.album-skeleton__info {
+	position: absolute;
+	left: 20rpx;
+	right: 20rpx;
+	bottom: 22rpx;
+}
+
+.album-skeleton__title,
+.album-skeleton__count {
+	height: 24rpx;
+	border-radius: 999rpx;
+	background: rgba(255, 255, 255, 0.72);
+}
+
+.album-skeleton__title {
+	width: 72%;
+	margin-bottom: 16rpx;
+}
+
+.album-skeleton__count {
+	width: 42%;
+	height: 18rpx;
+	opacity: 0.74;
+}
+
+@keyframes albumSkeletonShimmer {
+	0% {
+		transform: translateX(0);
+	}
+
+	100% {
+		transform: translateX(280%);
+	}
 }
 
 .loading-state {
