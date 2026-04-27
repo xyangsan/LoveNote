@@ -53,15 +53,15 @@
 						<text v-if="post.content" class="moment-item__content" selectable>{{ post.content }}</text>
 
 						<view v-if="isVideoPost(post)" class="moment-video-wrap">
-							<video
-								class="moment-video"
-								:style="singleMediaBoxStyle(post)"
+							<love-auto-video
+								:ref="getFeedVideoRef(post)"
+								:video-id="getFeedVideoId(post)"
+								:custom-style="singleMediaBoxStyle(post)"
 								:src="post.media_list[0].url"
 								:poster="post.media_list[0].thumbnail_url"
 								object-fit="contain"
-								:controls="true"
-								:show-play-btn="true"
-							></video>
+								@fullscreenclose="handleVideoFullscreenClose(post)"
+							></love-auto-video>
 						</view>
 
 						<image
@@ -288,6 +288,9 @@ export default {
 			commentTargetPostId: '',
 			commentReplyCommentId: '',
 			commentReplyNickname: '',
+			videoObserver: null,
+			visibleVideoMap: {},
+			activeAutoVideoId: ''
 		}
 	},
 	onLoad() {
@@ -319,6 +322,17 @@ export default {
 	},
 	onShow() {
 		this.syncHeaderProfile()
+		this.$nextTick(() => {
+			this.initVideoObserver()
+		})
+	},
+	onHide() {
+		this.pauseAllFeedVideos()
+		this.destroyVideoObserver()
+	},
+	onUnload() {
+		this.pauseAllFeedVideos()
+		this.destroyVideoObserver()
 	},
 	onPullDownRefresh() {
 		this.loadPostList(true).finally(() => {
@@ -702,6 +716,159 @@ export default {
 				&& Array.isArray(post.media_list)
 				&& post.media_list.length > 0
 		},
+		getFeedVideoId(post = {}) {
+			const id = String(post._id || post.id || '').trim()
+			if (id) {
+				return `feed-video-${id}`
+			}
+			const mediaList = Array.isArray(post.media_list) ? post.media_list : []
+			const firstMedia = mediaList[0] && typeof mediaList[0] === 'object' ? mediaList[0] : {}
+			const seed = String(firstMedia.url || firstMedia.thumbnail_url || '')
+			let hash = 0
+			for (let i = 0; i < seed.length; i += 1) {
+				hash = ((hash << 5) - hash) + seed.charCodeAt(i)
+				hash |= 0
+			}
+			return `feed-video-${Math.abs(hash)}`
+		},
+		getFeedVideoRef(post = {}) {
+			return `feedVideo_${this.getFeedVideoId(post).replace(/[^\w]/g, '_')}`
+		},
+		getFeedVideoComponent(post = {}) {
+			const videoRef = this.$refs[this.getFeedVideoRef(post)]
+			return Array.isArray(videoRef) ? videoRef[0] : videoRef
+		},
+		getVideoPostById(videoId = '') {
+			const id = String(videoId || '').trim()
+			return this.postList.find((post) => this.isVideoPost(post) && this.getFeedVideoId(post) === id) || null
+		},
+		destroyVideoObserver() {
+			if (this.videoObserver && typeof this.videoObserver.disconnect === 'function') {
+				this.videoObserver.disconnect()
+			}
+			this.videoObserver = null
+		},
+		initVideoObserver() {
+			this.destroyVideoObserver()
+			this.visibleVideoMap = {}
+			this.activeAutoVideoId = ''
+
+			const videoPosts = this.postList.filter((post) => this.isVideoPost(post))
+			if (!videoPosts.length) {
+				return
+			}
+
+			const thresholds = [0, 0.55, 1]
+			let observer = null
+			if (typeof this.createIntersectionObserver === 'function') {
+				observer = this.createIntersectionObserver({
+					thresholds,
+					observeAll: true
+				})
+			} else if (typeof uni !== 'undefined' && typeof uni.createIntersectionObserver === 'function') {
+				observer = uni.createIntersectionObserver(this, {
+					thresholds,
+					observeAll: true
+				})
+			}
+			if (!observer) {
+				return
+			}
+
+			this.videoObserver = observer
+			observer
+				.relativeToViewport({
+					top: 0,
+					bottom: 0
+				})
+				.observe('.love-auto-video', this.handleVideoIntersectionChange)
+		},
+		handleVideoIntersectionChange(entry = {}) {
+			const id = String((entry.dataset && entry.dataset.videoId) || '').trim()
+			if (!id) {
+				return
+			}
+			const ratio = Number(entry.intersectionRatio || 0)
+			if (ratio >= 0.55) {
+				this.visibleVideoMap = Object.assign({}, this.visibleVideoMap, {
+					[id]: {
+						id,
+						ratio,
+						top: Number(entry.boundingClientRect && entry.boundingClientRect.top || 0)
+					}
+				})
+			} else {
+				const nextVisibleVideoMap = Object.assign({}, this.visibleVideoMap)
+				delete nextVisibleVideoMap[id]
+				this.visibleVideoMap = nextVisibleVideoMap
+				const post = this.getVideoPostById(id)
+				const video = post ? this.getFeedVideoComponent(post) : null
+				if (video && typeof video.pause === 'function') {
+					video.pause()
+				}
+			}
+			this.updateActiveAutoVideo()
+		},
+		updateActiveAutoVideo() {
+			const visibleList = Object.values(this.visibleVideoMap)
+				.sort((a, b) => {
+					if (Math.abs(a.ratio - b.ratio) > 0.01) {
+						return b.ratio - a.ratio
+					}
+					return Math.abs(a.top) - Math.abs(b.top)
+				})
+			const nextActiveId = visibleList.length ? visibleList[0].id : ''
+			if (nextActiveId === this.activeAutoVideoId) {
+				const activePost = this.getVideoPostById(nextActiveId)
+				const activeVideo = activePost ? this.getFeedVideoComponent(activePost) : null
+				if (activeVideo && typeof activeVideo.playMuted === 'function') {
+					activeVideo.playMuted()
+				}
+				return
+			}
+
+			this.pauseAllFeedVideos(nextActiveId)
+			this.activeAutoVideoId = nextActiveId
+			if (!nextActiveId) {
+				return
+			}
+			const activePost = this.getVideoPostById(nextActiveId)
+			const activeVideo = activePost ? this.getFeedVideoComponent(activePost) : null
+			if (activeVideo && typeof activeVideo.playMuted === 'function') {
+				activeVideo.playMuted()
+			}
+		},
+		pauseAllFeedVideos(exceptVideoId = '') {
+			this.postList.forEach((post) => {
+				if (!this.isVideoPost(post)) {
+					return
+				}
+				const videoId = this.getFeedVideoId(post)
+				if (exceptVideoId && videoId === exceptVideoId) {
+					return
+				}
+				const video = this.getFeedVideoComponent(post)
+				if (video && typeof video.pause === 'function') {
+					video.pause()
+				}
+			})
+		},
+		handleVideoFullscreenClose(post = {}) {
+			const videoId = this.getFeedVideoId(post)
+			if (this.visibleVideoMap[videoId]) {
+				this.activeAutoVideoId = videoId
+				const video = this.getFeedVideoComponent(post)
+				if (video && typeof video.playMuted === 'function') {
+					video.playMuted()
+				}
+				return
+			}
+			const video = this.getFeedVideoComponent(post)
+			if (video && typeof video.pause === 'function') {
+				video.pause()
+			}
+			this.updateActiveAutoVideo()
+		},
 		isImagePost(post = {}) {
 			return String(post.media_type || '').toLowerCase() === 'image'
 				&& Array.isArray(post.media_list)
@@ -734,6 +901,8 @@ export default {
 					this.pagination.page = 1
 					this.postList = []
 					this.noCouple = false
+					this.pauseAllFeedVideos()
+					this.destroyVideoObserver()
 				}
 
 				const result = await getDailyApi().getList({
@@ -772,6 +941,9 @@ export default {
 				if (this.pagination.hasMore) {
 					this.pagination.page += 1
 				}
+				this.$nextTick(() => {
+					this.initVideoObserver()
+				})
 			} catch (error) {
 				console.error('loadPostList failed', error)
 				uni.showToast({
