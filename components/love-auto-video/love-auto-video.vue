@@ -13,6 +13,7 @@
 			:poster="poster"
 			:object-fit="objectFit"
 			:autoplay="false"
+			:loop="inlineLoop && !isFullscreen"
 			:muted="muted"
 			:controls="isFullscreen && fullscreenControls"
 			:show-play-btn="isFullscreen"
@@ -64,6 +65,10 @@ export default {
 		fullscreenControls: {
 			type: Boolean,
 			default: true
+		},
+		inlineLoop: {
+			type: Boolean,
+			default: false
 		}
 	},
 	data() {
@@ -71,8 +76,10 @@ export default {
 			localVideoId: `love_auto_video_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
 			videoContext: null,
 			isFullscreen: false,
+			pendingFullscreen: false,
 			muted: true,
-			playTimer: null
+			playTimer: null,
+			fullscreenTimer: null
 		}
 	},
 	computed: {
@@ -110,6 +117,12 @@ export default {
 				this.playTimer = null
 			}
 		},
+		clearFullscreenTimer() {
+			if (this.fullscreenTimer) {
+				clearTimeout(this.fullscreenTimer)
+				this.fullscreenTimer = null
+			}
+		},
 		playVideo(delay = 0) {
 			this.clearPendingPlay()
 			this.playTimer = setTimeout(() => {
@@ -132,7 +145,7 @@ export default {
 			}, delay)
 		},
 		playMuted() {
-			if (!this.src || this.isFullscreen) {
+			if (!this.src || this.isFullscreen || this.pendingFullscreen) {
 				return
 			}
 			this.muted = true
@@ -140,6 +153,8 @@ export default {
 		},
 		pause() {
 			this.clearPendingPlay()
+			this.clearFullscreenTimer()
+			this.pendingFullscreen = false
 			const context = this.getVideoContext()
 			if (this.isFullscreen && context && typeof context.exitFullScreen === 'function') {
 				context.exitFullScreen()
@@ -150,18 +165,27 @@ export default {
 			this.muted = true
 		},
 		exitFullscreen() {
+			this.clearFullscreenTimer()
+			this.pendingFullscreen = false
 			const context = this.getVideoContext()
 			if (context && typeof context.exitFullScreen === 'function') {
 				context.exitFullScreen()
 			}
 		},
 		playFullscreen() {
-			if (!this.src || this.isFullscreen) {
+			if (!this.src || this.isFullscreen || this.pendingFullscreen) {
 				return
 			}
 			this.clearPendingPlay()
-			this.muted = false
-			this.isFullscreen = true
+			this.clearFullscreenTimer()
+			this.pendingFullscreen = true
+			this.muted = true
+			this.fullscreenTimer = setTimeout(() => {
+				if (!this.isFullscreen) {
+					this.pendingFullscreen = false
+				}
+				this.fullscreenTimer = null
+			}, 1600)
 			this.$nextTick(() => {
 				const context = this.getVideoContext()
 				if (context && typeof context.requestFullScreen === 'function') {
@@ -177,13 +201,15 @@ export default {
 		handleFullscreenChange(event = {}) {
 			const detail = event.detail || {}
 			const fullscreen = Boolean(detail.fullScreen || detail.fullscreen)
+			this.clearFullscreenTimer()
+			this.pendingFullscreen = false
 			this.isFullscreen = fullscreen
 			this.muted = !fullscreen
 			this.$emit('fullscreenchange', {
 				fullscreen
 			})
 			if (fullscreen) {
-				this.playVideo(80)
+				this.$nextTick(() => this.playVideo(80))
 				return
 			}
 			this.clearPendingPlay()

@@ -3,15 +3,6 @@
 		<view class="page__glow page__glow--left"></view>
 		<view class="page__glow page__glow--right"></view>
 
-		<view class="header">
-			<view class="header__back" @click="goBack">
-				<text class="header__back-icon">←</text>
-				<text class="header__back-text">返回</text>
-			</view>
-			<text class="header__title">发布日常</text>
-			<view class="header__placeholder"></view>
-		</view>
-
 		<view class="card">
 			<view class="type-switch">
 				<view

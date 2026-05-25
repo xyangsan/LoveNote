@@ -99,7 +99,7 @@
 			//点击遮罩 是否可关闭
 			maskClosable: {
 				type: Boolean,
-				default: false
+				default: true
 			},
 			zIndex: {
 				type: [Number, String],

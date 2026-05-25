@@ -605,9 +605,29 @@
 		onLoad() {
 			this.ensureAppStateStore()
 			this.syncFromAppState()
+			// #ifdef MP-WEIXIN
+			uni.showShareMenu({
+				withShareTicket: true,
+				menus: ['shareAppMessage', 'shareTimeline']
+			})
+			// #endif
 		},
 		onShow() {
 			this.restoreLoginState()
+		},
+		onShareAppMessage() {
+			return {
+				title: '恋人手札｜记录你们的双人日常',
+				path: '/pages/index/index',
+				imageUrl: '/static/logo.png'
+			}
+		},
+		onShareTimeline() {
+			return {
+				title: '恋人手札｜纪念日、相册和愿望清单',
+				query: '',
+				imageUrl: '/static/logo.png'
+			}
 		},
 		methods: {
 			ensureAppStateStore() {

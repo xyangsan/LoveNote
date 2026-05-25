@@ -3,6 +3,8 @@ import fui from './components/firstui/common/fui-app'
 import routerGuard from '@/uni_modules/hh-router-guard/src/index'
 import { hasValidLogin } from './common/auth-center.js'
 
+import uvUI from '@/uni_modules/uv-ui-tools'
+
 // #ifndef VUE3
 import Vue from 'vue'
 import { PiniaVuePlugin, createPinia as createVue2Pinia } from 'pinia'
@@ -10,6 +12,7 @@ import './uni.promisify.adaptor'
 Vue.config.productionTip = false
 Vue.prototype.fui = fui
 Vue.use(PiniaVuePlugin)
+Vue.use(uvUI);
 App.mpType = 'app'
 const pinia = createVue2Pinia()
 const app = new Vue({
@@ -54,12 +57,14 @@ app.$mount()
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
 import { createPinia } from 'pinia'
+
 export function createApp() {
   const app = createSSRApp(App)
   const pinia = createPinia()
   
   app.config.globalProperties.fui = fui;
   app.use(pinia)
+  app.use(uvUI);
   
   app.use(routerGuard, {
     // 白名单：无需登录即可访问的页面路径
@@ -98,3 +103,14 @@ export function createApp() {
   }
 }
 // #endif
+
+
+// 调用setConfig方法，方法内部会进行对象属性深度合并，可以放心嵌套配置
+// 需要在Vue.use(uvUI)之后执行
+uni.$uv.setConfig({
+	// 修改$uv.config对象的属性
+	config: {
+		// 修改默认单位为rpx，相当于执行 uni.$uv.config.unit = 'rpx'
+		unit: 'rpx'
+	},
+})

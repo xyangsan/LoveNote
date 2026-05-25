@@ -77,6 +77,7 @@
 			"path": "pages/feed/list",
 			"style": {
 				"navigationBarTitleText": "双人日常",
+				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
 				"backgroundTextStyle": "dark",
 				// #ifdef MP-BAIDU

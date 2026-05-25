@@ -163,7 +163,7 @@
 	.fui-avatar__wrap {
 		position: relative;
 		/* #ifndef APP-NVUE */
-		display: inline-flex;
+		display: flex;
 		overflow: hidden;
 		flex-shrink: 0;
 		z-index: 3;

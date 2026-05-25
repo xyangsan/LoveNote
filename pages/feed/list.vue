@@ -1,5 +1,39 @@
 <template>
 	<view class="moments-page" @click="closeActionPanel">
+		<uv-navbar
+			:bg-color="navBarBgColor"
+			:border="navBarOpaque"
+			:height="navContentHeight + 'px'"
+			:fixed="true"
+			:placeholder="false"
+			left-icon=""
+			title=""
+		>
+			<template #left>
+				<view class="feed-navbar__left" :class="{ 'feed-navbar__left--opaque': navBarOpaque }" @click.stop="goBack">
+					<uv-icon name="arrow-left" size="40" :color="navTextColor"></uv-icon>
+				</view>
+			</template>
+
+			<template #center>
+				<text
+					class="feed-navbar__title"
+					:class="{ 'feed-navbar__title--opaque': navBarOpaque }"
+					:style="{ color: navTextColor }"
+				>双人日常</text>
+			</template>
+
+			<template #right>
+				<view class="feed-navbar__actions" :style="{ marginRight: navRightInset + 'px' }">
+					<view class="feed-navbar__cover-action" :class="{ 'feed-navbar__cover-action--opaque': navBarOpaque }" @click.stop="openCoverActionSheet">
+						<text class="feed-navbar__cover-text" :style="{ color: navTextColor }">{{ '编辑封面' }}</text>
+					</view>
+					<view class="feed-navbar__publish" :class="{ 'feed-navbar__publish--opaque': navBarOpaque }" @click.stop="noCouple ? goCouplePage() : goPublish()">
+						<uv-icon name="camera-fill" size="48" :color="navTextColor"></uv-icon>
+					</view>
+				</view>
+			</template>
+		</uv-navbar>
 		<view class="moments-shell">
 
 			<view class="moments-header">
@@ -9,9 +43,6 @@
 					mode="aspectFill"
 				></image>
 				<view class="moments-header__mask"></view>
-				<view class="moments-header__cover-edit" @click.stop="openCoverActionSheet">
-					<text class="moments-header__cover-edit-text">{{ '编辑封面' }}</text>
-				</view>
 				<view class="moments-header__user">
 					<text class="moments-header__name">{{ headerNickname }}</text>
 					<fui-avatar
@@ -52,7 +83,11 @@
 
 						<text v-if="post.content" class="moment-item__content" selectable>{{ post.content }}</text>
 
-						<view v-if="isVideoPost(post)" class="moment-video-wrap">
+						<view
+							v-if="isVideoPost(post)"
+							class="moment-video-wrap feed-video-observer"
+							:data-video-id="getFeedVideoId(post)"
+						>
 							<love-auto-video
 								:ref="getFeedVideoRef(post)"
 								:video-id="getFeedVideoId(post)"
@@ -60,6 +95,7 @@
 								:src="getPostMediaOriginalUrl(post.media_list[0])"
 								:poster="getPostMediaThumbnailUrl(post.media_list[0])"
 								object-fit="contain"
+								inline-loop
 								@fullscreenclose="handleVideoFullscreenClose(post)"
 							></love-auto-video>
 						</view>
@@ -166,11 +202,6 @@
 			@close="handleCommentEditorClose"
 			@send="submitComment"
 		></love-editor-picker>
-
-		<view v-if="!commentEditorVisible" class="publish-fab" @click.stop="noCouple ? goCouplePage() : goPublish()">
-			<text class="publish-fab__icon">+</text>
-			<text class="publish-fab__text">{{ noCouple ? '去绑定' : '发布' }}</text>
-		</view>
 		<fui-actionsheet
 			:show="coverActionSheet.show"
 			:item-list="coverActionSheet.items"
@@ -298,10 +329,18 @@ export default {
 			commentReplyNickname: '',
 			videoObserver: null,
 			visibleVideoMap: {},
-			activeAutoVideoId: ''
+			activeAutoVideoId: '',
+			autoVideoRetryTimer: null,
+			autoVideoRetryCount: 0,
+			statusBarHeight: 0,
+			navContentHeight: 44,
+			navBarHeight: 44,
+			navRightInset: 12,
+			navBarOpaque: false
 		}
 	},
 	onLoad() {
+		this.setupNavBar()
 		this.syncHeaderProfile()
 		this.loadPostList(true)
 	},
@@ -326,6 +365,12 @@ export default {
 		commentPlaceholder() {
 			const nickname = String(this.commentReplyNickname || '').trim()
 			return nickname ? `回复 ${nickname}` : '评论'
+		},
+		navBarBgColor() {
+			return this.navBarOpaque ? 'rgba(255, 247, 241, 0.98)' : 'rgba(255, 247, 241, 0)'
+		},
+		navTextColor() {
+			return this.navBarOpaque ? '#111111' : '#ffffff'
 		}
 	},
 	onShow() {
@@ -335,10 +380,12 @@ export default {
 		})
 	},
 	onHide() {
+		this.clearAutoVideoRetryTimer()
 		this.pauseAllFeedVideos('', { force: true })
 		this.destroyVideoObserver()
 	},
 	onUnload() {
+		this.clearAutoVideoRetryTimer()
 		this.pauseAllFeedVideos('', { force: true })
 		this.destroyVideoObserver()
 	},
@@ -353,7 +400,45 @@ export default {
 		}
 		this.loadPostList(false)
 	},
+	onPageScroll(event = {}) {
+		this.updateNavBarOpaque(Number(event.scrollTop || 0))
+	},
 	methods: {
+		setupNavBar() {
+			const systemInfo = uni.getSystemInfoSync ? uni.getSystemInfoSync() : {}
+			const statusBarHeight = Number(systemInfo.statusBarHeight || 0)
+			const windowWidth = Number(systemInfo.windowWidth || 0)
+			let navContentHeight = 44
+			let navRightInset = 12
+
+			// #ifdef MP-WEIXIN
+			if (typeof uni.getMenuButtonBoundingClientRect === 'function') {
+				const menuButton = uni.getMenuButtonBoundingClientRect()
+				const menuTop = Number(menuButton.top || 0)
+				const menuHeight = Number(menuButton.height || 0)
+				const menuLeft = Number(menuButton.left || 0)
+				if (menuTop > statusBarHeight && menuHeight > 0) {
+					navContentHeight = (menuTop - statusBarHeight) * 2 + menuHeight
+				}
+				if (windowWidth > 0 && menuLeft > 0) {
+					navRightInset = Math.max(12, windowWidth - menuLeft + 8)
+				}
+			}
+			// #endif
+
+			this.statusBarHeight = statusBarHeight
+			this.navContentHeight = navContentHeight
+			this.navBarHeight = statusBarHeight + navContentHeight
+			this.navRightInset = navRightInset
+			this.updateNavBarOpaque(0)
+		},
+		updateNavBarOpaque(scrollTop = 0) {
+			const coverHeight = typeof uni.upx2px === 'function'
+				? uni.upx2px(420)
+				: 420
+			const threshold = Math.max(0, coverHeight - this.navBarHeight)
+			this.navBarOpaque = Number(scrollTop || 0) >= threshold
+		},
 		goBack() {
 			if (getCurrentPages().length > 1) {
 				uni.navigateBack()
@@ -756,17 +841,36 @@ export default {
 			}
 			this.videoObserver = null
 		},
+		clearAutoVideoRetryTimer() {
+			if (this.autoVideoRetryTimer) {
+				clearTimeout(this.autoVideoRetryTimer)
+				this.autoVideoRetryTimer = null
+			}
+		},
+		retryUpdateActiveAutoVideo() {
+			if (this.autoVideoRetryCount >= 8) {
+				return
+			}
+			this.autoVideoRetryCount += 1
+			this.clearAutoVideoRetryTimer()
+			this.autoVideoRetryTimer = setTimeout(() => {
+				this.autoVideoRetryTimer = null
+				this.updateActiveAutoVideo()
+			}, 160)
+		},
 		initVideoObserver() {
+			this.clearAutoVideoRetryTimer()
 			this.destroyVideoObserver()
 			this.visibleVideoMap = {}
 			this.activeAutoVideoId = ''
+			this.autoVideoRetryCount = 0
 
 			const videoPosts = this.postList.filter((post) => this.isVideoPost(post))
 			if (!videoPosts.length) {
 				return
 			}
 
-			const thresholds = [0, 0.55, 1]
+			const thresholds = [0, 0.35, 0.55, 1]
 			let observer = null
 			if (typeof this.createIntersectionObserver === 'function') {
 				observer = this.createIntersectionObserver({
@@ -789,15 +893,16 @@ export default {
 					top: 0,
 					bottom: 0
 				})
-				.observe('.love-auto-video', this.handleVideoIntersectionChange)
+				.observe('.feed-video-observer', this.handleVideoIntersectionChange)
 		},
 		handleVideoIntersectionChange(entry = {}) {
-			const id = String((entry.dataset && entry.dataset.videoId) || '').trim()
+			const dataset = entry.dataset || {}
+			const id = String(dataset.videoId || dataset.videoid || '').trim()
 			if (!id) {
 				return
 			}
 			const ratio = Number(entry.intersectionRatio || 0)
-			if (ratio >= 0.55) {
+			if (ratio >= 0.35) {
 				this.visibleVideoMap = Object.assign({}, this.visibleVideoMap, {
 					[id]: {
 						id,
@@ -808,7 +913,7 @@ export default {
 			} else {
 				const post = this.getVideoPostById(id)
 				const video = post ? this.getFeedVideoComponent(post) : null
-				if (video && video.isFullscreen) {
+				if (this.isFeedVideoFullscreenLike(video)) {
 					return
 				}
 				const nextVisibleVideoMap = Object.assign({}, this.visibleVideoMap)
@@ -836,7 +941,10 @@ export default {
 				const activePost = this.getVideoPostById(nextActiveId)
 				const activeVideo = activePost ? this.getFeedVideoComponent(activePost) : null
 				if (activeVideo && typeof activeVideo.playMuted === 'function') {
+					this.autoVideoRetryCount = 0
 					activeVideo.playMuted()
+				} else if (nextActiveId) {
+					this.retryUpdateActiveAutoVideo()
 				}
 				return
 			}
@@ -849,8 +957,11 @@ export default {
 			const activePost = this.getVideoPostById(nextActiveId)
 			const activeVideo = activePost ? this.getFeedVideoComponent(activePost) : null
 			if (activeVideo && typeof activeVideo.playMuted === 'function') {
+				this.autoVideoRetryCount = 0
 				activeVideo.playMuted()
+				return
 			}
+			this.retryUpdateActiveAutoVideo()
 		},
 		hasFullscreenFeedVideo() {
 			return this.postList.some((post) => {
@@ -858,8 +969,11 @@ export default {
 					return false
 				}
 				const video = this.getFeedVideoComponent(post)
-				return Boolean(video && video.isFullscreen)
+				return this.isFeedVideoFullscreenLike(video)
 			})
+		},
+		isFeedVideoFullscreenLike(video = null) {
+			return Boolean(video && (video.isFullscreen || video.pendingFullscreen))
 		},
 		pauseAllFeedVideos(exceptVideoId = '', options = {}) {
 			const forcePause = options && options.force === true
@@ -872,7 +986,7 @@ export default {
 					return
 				}
 				const video = this.getFeedVideoComponent(post)
-				if (!forcePause && video && video.isFullscreen) {
+				if (!forcePause && this.isFeedVideoFullscreenLike(video)) {
 					return
 				}
 				if (video && typeof video.pause === 'function') {
@@ -1052,9 +1166,63 @@ export default {
 
 <style>
 .moments-page {
-	height: 100vh;
+	min-height: 100vh;
 	background: linear-gradient(180deg, #FFF7F1 0%, #FFF0E8 100%);
-	padding-bottom: 160rpx;
+	padding-bottom: 48rpx;
+}
+
+.feed-navbar__left,
+.feed-navbar__publish {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.34);
+	flex-shrink: 0;
+}
+
+.feed-navbar__title {
+	font-size: 32rpx;
+	font-weight: 700;
+	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.32);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.feed-navbar__title--opaque {
+	text-shadow: none;
+}
+
+.feed-navbar__actions {
+	display: flex;
+	align-items: center;
+	gap: 14rpx;
+	flex-shrink: 0;
+}
+
+.feed-navbar__cover-action {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 64rpx;
+	padding: 0 22rpx;
+	border-radius: 999rpx;
+	background: rgba(0, 0, 0, 0.34);
+}
+
+.feed-navbar__cover-text {
+	font-size: 22rpx;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.feed-navbar__cover-action--opaque,
+.feed-navbar__left--opaque,
+.feed-navbar__publish--opaque {
+	background: rgba(255, 255, 255, 0.78);
 }
 
 .moments-shell {
@@ -1113,22 +1281,6 @@ export default {
 	bottom: 0;
 	height: 200rpx;
 	background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 100%);
-}
-
-.moments-header__cover-edit {
-	position: absolute;
-	left: 24rpx;
-	top: 24rpx;
-	z-index: 9;
-	padding: 10rpx 20rpx;
-	border-radius: 999rpx;
-	background: rgba(0, 0, 0, 0.34);
-}
-
-.moments-header__cover-edit-text {
-	font-size: 22rpx;
-	color: #ffffff;
-	line-height: 1;
 }
 
 .moments-header__user {
@@ -1430,34 +1582,6 @@ export default {
 .load-more__text {
 	font-size: 22rpx;
 	color: #ababab;
-}
-
-.publish-fab {
-	position: fixed;
-	left: 50%;
-	transform: translateX(-50%);
-	bottom: calc(34rpx + env(safe-area-inset-bottom));
-	display: flex;
-	align-items: center;
-	gap: 10rpx;
-	padding: 14rpx 24rpx;
-	border-radius: 999rpx;
-	background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-	box-shadow: 0 12rpx 28rpx rgba(231, 111, 81, 0.34);
-	z-index: 99;
-}
-
-.publish-fab__icon {
-	font-size: 28rpx;
-	line-height: 1;
-	color: #ffffff;
-	font-weight: 700;
-}
-
-.publish-fab__text {
-	font-size: 24rpx;
-	color: #ffffff;
-	font-weight: 600;
 }
 
 .cover-cropper__cancel {
