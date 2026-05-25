@@ -1107,8 +1107,15 @@ export default {
 			}
 		},
 		goPublish() {
-			uni.navigateTo({
-				url: '/pages/feed/publish'
+			uni.showActionSheet({
+				itemList: ['发布图片', '发布视频'],
+				success: (res) => {
+					const tapIndex = Number(res.tapIndex || 0)
+					const type = tapIndex === 1 ? 'video' : 'image'
+					uni.navigateTo({
+						url: `/pages/feed/publish?type=${type}`
+					})
+				}
 			})
 		},
 		goCouplePage() {

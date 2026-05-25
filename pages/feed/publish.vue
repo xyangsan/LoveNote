@@ -1,45 +1,27 @@
 <template>
-	<view class="page">
+	<view class="page" @click="handlePageTap">
 		<view class="page__glow page__glow--left"></view>
 		<view class="page__glow page__glow--right"></view>
 
 		<view class="card">
-			<view class="type-switch">
-				<view
-					class="type-switch__item"
-					:class="{ 'type-switch__item--active': publishType === 'image' }"
-					@click="changePublishType('image')"
-				>
-					<text class="type-switch__text">图片</text>
-				</view>
-				<view
-					class="type-switch__item"
-					:class="{ 'type-switch__item--active': publishType === 'video' }"
-					@click="changePublishType('video')"
-				>
-					<text class="type-switch__text">视频</text>
-				</view>
-			</view>
-
 			<textarea
 				v-model="content"
 				class="content-input"
 				placeholder="写点今天的故事"
 				maxlength="2000"
 				auto-height
+				:show-confirm-bar="false"
+				:adjust-position="false"
+				:focus="inputFocus"
+				:cursor-spacing="emojiTriggerSpacing"
+				@focus="handleInputFocus"
+				@blur="handleInputBlur"
+				@tap.stop="handleInputTap"
+				@keyboardheightchange="onKeyboardHeightChange"
 			/>
 
-			<view class="emoji-panel">
-				<text
-					v-for="emoji in emojiList"
-					:key="emoji"
-					class="emoji-panel__item"
-					@click="appendEmoji(emoji)"
-				>{{ emoji }}</text>
-			</view>
-		</view>
 
-		<view class="card">
+
 			<love-media-uploader
 				ref="mediaUploader"
 				:file-types="uploaderFileTypes"
@@ -53,22 +35,21 @@
 				:save-path="uploaderSavePath"
 				upload-prefix="daily"
 				:max-count="uploaderMaxCount"
-				:show-tips="true"
+				:exclusive-media-types="true"
+				:max-image-count="9"
+				:max-video-count="1"
+				:mixed-media-tip="'不允许同时选择图片和视频'"
 				:tip-text="uploaderTipText"
-				:item-width="210"
-				:item-height="210"
+				:item-width="200"
+				:item-height="200"
 				:previewable="true"
 				object-fit="aspectFill"
 				:source-type="['album', 'camera']"
 				:show-delete-button="true"
-				add-text="添加媒体"
-				upload-icon="+"
+				:show-tips="false"
 				@change="onUploaderChange"
 				@progress="onUploaderProgress"
 			>
-				<template #tip>
-					<text class="upload-tip">{{ uploaderTipText }}</text>
-				</template>
 				<template #upload-icon>
 					<text class="upload-icon">+</text>
 				</template>
@@ -85,10 +66,6 @@
 			</view>
 			<view v-if="hasSelectedLocation" class="location-extra">
 				<text v-if="locationAddressText" class="location-extra__line">{{ locationAddressText }}</text>
-				<text
-					v-if="locationCoordinateText"
-					class="location-extra__line"
-				>经纬度 {{ locationCoordinateText }}</text>
 				<text class="location-extra__clear" @click="clearLocation">清除位置</text>
 			</view>
 		</view>
@@ -98,12 +75,38 @@
 				{{ submitting ? `发布中 ${uploadProgress}/${selectedCount || 0}` : '发布动态' }}
 			</button>
 		</view>
+
+
+			<view
+				v-if="showEmojiToolbarPanel"
+				class="emoji-toolbar-panel"
+				@tap.stop
+			>
+				<view class="emoji-toolbar">
+					<view
+						class="emoji-toolbar__button"
+						@touchstart.prevent="prepareOpenEmojiPanel"
+						@click.stop="toggleEmojiPanel"
+					>
+						<fui-icon name="face" :size="56" color="#333333"></fui-icon>
+					</view>
+				</view>
+				<view v-if="showEmojiPanel" class="emoji-panel">
+					<text
+						v-for="emoji in emojiList"
+						:key="emoji.unicode || emoji.glyph"
+						class="emoji-panel__item"
+						@click.stop="appendEmoji(emoji)"
+					>{{ emoji.glyph }}</text>
+				</view>
+			</view>
 	</view>
 </template>
 
 <script>
 import { getDailyApi } from '../../common/api/daily.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
+import glyph from '../../components/love-editor/glyph.json'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024
 const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
@@ -113,9 +116,15 @@ const THUMBNAIL_IMAGE_QUALITY = 45
 export default {
 	data() {
 		return {
-			publishType: 'image',
+			mediaMode: 'image',
+			keyboardHeight: 0,
+			emojiPanelHeight: 0,
+			inputFocus: false,
+			inputFocused: false,
+			showEmojiPanel: false,
+			pendingOpenEmojiPanel: false,
 			content: '',
-			emojiList: ['😀', '🥰', '😍', '😘', '🥺', '🤗', '🎉', '✨', '💖', '🌈', '📷', '🎬', '🍰', '🌙', '☀️', '🧡'],
+			emojiList: glyph,
 			maxFileSize: MAX_FILE_SIZE,
 			selectedCount: 0,
 			uploadProgress: 0,
@@ -130,22 +139,22 @@ export default {
 	},
 	computed: {
 		uploaderFileTypes() {
-			return this.publishType === 'video' ? ['video'] : ['image']
+			return this.mediaMode ? [this.mediaMode] : ['image', 'video']
 		},
 		uploaderMaxCount() {
-			return this.publishType === 'video' ? 1 : 9
+			return this.mediaMode === 'video' ? 1 : 9
 		},
 		uploaderSavePath() {
-			return this.publishType === 'video' ? 'daily/videos' : 'daily/images'
+			return this.mediaMode === 'video' ? 'daily/videos' : 'daily/images'
 		},
 		uploaderCompressOverSize() {
-			return this.publishType === 'image' ? DAILY_IMAGE_COMPRESS_OVER_SIZE : (10 * 1024 * 1024)
+			return this.mediaMode === 'video' ? (10 * 1024 * 1024) : DAILY_IMAGE_COMPRESS_OVER_SIZE
 		},
 		uploaderImageCompressQuality() {
-			return this.publishType === 'image' ? DAILY_IMAGE_COMPRESS_QUALITY : 80
+			return this.mediaMode === 'video' ? 80 : DAILY_IMAGE_COMPRESS_QUALITY
 		},
 		uploaderThumbnailOptions() {
-			if (this.publishType === 'video') {
+			if (this.mediaMode === 'video') {
 				return {
 					videoSavePath: 'daily/thumbnails/videos',
 					videoPrefix: 'poster',
@@ -163,9 +172,13 @@ export default {
 			}
 		},
 		uploaderTipText() {
-			return this.publishType === 'video'
-				? '单次最多 1 个视频'
-				: '单次最多 9 张图片'
+			return this.mediaMode === 'video' ? '视频最多发布 1 个' : '图片最多发布 9 张'
+		},
+		emojiTriggerSpacing() {
+			return 24
+		},
+		showEmojiToolbarPanel() {
+			return this.inputFocused
 		},
 		hasSelectedLocation() {
 			return Boolean(
@@ -183,17 +196,64 @@ export default {
 		},
 		locationAddressText() {
 			return this.locationInfo.address || ''
-		},
-		locationCoordinateText() {
-			if (this.locationInfo.latitude === null || this.locationInfo.longitude === null) {
-				return ''
-			}
-			return `${this.formatCoordinate(this.locationInfo.longitude)}, ${this.formatCoordinate(this.locationInfo.latitude)}`
 		}
+	},
+	onLoad(options = {}) {
+		const type = String(options.type || '').trim()
+		this.mediaMode = type === 'video' ? 'video' : 'image'
 	},
 	methods: {
 		appendEmoji(emoji = '') {
-			this.content = `${this.content || ''}${emoji}`
+			const glyphText = emoji && typeof emoji === 'object' ? String(emoji.glyph || '') : String(emoji || '')
+			if (!glyphText) {
+				return
+			}
+			this.content = `${this.content || ''}${glyphText}`
+		},
+		handleInputFocus() {
+			this.inputFocused = true
+		},
+		handleInputTap() {
+			this.inputFocused = true
+		},
+		handleInputBlur() {
+			if (this.pendingOpenEmojiPanel || this.showEmojiPanel) {
+				return
+			}
+			this.inputFocused = false
+		},
+		onKeyboardHeightChange(event = {}) {
+			const detail = event.detail || {}
+			const height = Math.max(0, Number(detail.height || 0))
+			this.keyboardHeight = Number.isFinite(height) ? height : 0
+		},
+		hideKeyboardOnly() {
+			if (typeof uni.hideKeyboard === 'function') {
+				uni.hideKeyboard({})
+			}
+		},
+		prepareOpenEmojiPanel() {
+			this.pendingOpenEmojiPanel = true
+		},
+		toggleEmojiPanel() {
+			this.pendingOpenEmojiPanel = false
+			this.inputFocused = true
+			this.inputFocus = false
+			this.hideKeyboardOnly()
+			this.showEmojiPanel = !this.showEmojiPanel
+		},
+		closeEmojiPanel() {
+			this.pendingOpenEmojiPanel = false
+			this.showEmojiPanel = false
+		},
+		closeEmojiToolbarPanel() {
+			this.closeEmojiPanel()
+			this.inputFocused = false
+		},
+		handlePageTap() {
+			if (this.inputFocused || this.showEmojiPanel) {
+				this.closeEmojiToolbarPanel()
+			}
 		},
 		formatCoordinate(value) {
 			const num = Number(value)
@@ -335,41 +395,11 @@ export default {
 			}
 		},
 		onUploaderChange(files = []) {
-			this.selectedCount = Array.isArray(files) ? files.length : 0
+			const list = Array.isArray(files) ? files : []
+			this.selectedCount = list.length
 		},
 		onUploaderProgress(payload = {}) {
 			this.uploadProgress = Number(payload.current || 0)
-		},
-		changePublishType(nextType = 'image') {
-			if (this.submitting || this.publishType === nextType) {
-				return
-			}
-
-			const switchType = () => {
-				this.publishType = nextType
-				const uploader = this.$refs.mediaUploader
-				if (uploader && typeof uploader.clear === 'function') {
-					uploader.clear()
-				}
-				this.selectedCount = 0
-				this.uploadProgress = 0
-			}
-
-			if (this.selectedCount > 0) {
-				uni.showModal({
-					title: '切换发布类型',
-					content: '切换后会清空当前已选择的媒体，是否继续？',
-					confirmColor: '#e76f51',
-					success: (res) => {
-						if (res.confirm) {
-							switchType()
-						}
-					}
-				})
-				return
-			}
-
-			switchType()
 		},
 		async handleSubmit() {
 			if (this.submitting) {
@@ -575,6 +605,7 @@ export default {
 	width: 100%;
 	min-height: 220rpx;
 	padding: 18rpx 20rpx;
+	margin-bottom: 20rpx;
 	box-sizing: border-box;
 	border-radius: 18rpx;
 	background: #fff7f3;
@@ -583,20 +614,64 @@ export default {
 	color: #5a3427;
 }
 
+
+.emoji-toolbar-panel {
+	position: relative;
+	z-index: 3000;
+	width: 100%;
+	margin: 16rpx 0 20rpx;
+	box-sizing: border-box;
+	background: #ffffff;
+	border-radius: 18rpx;
+	box-shadow: 0 8rpx 24rpx rgba(177, 114, 83, 0.08);
+	overflow: hidden;
+}
+
+.emoji-toolbar {
+	width: 100%;
+	height: 88rpx;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	padding: 0 24rpx;
+	box-sizing: border-box;
+	background: #ffffff;
+}
+
+.emoji-toolbar__button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+}
+
 .emoji-panel {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 12rpx;
-	margin-top: 18rpx;
+	align-content: flex-start;
+	gap: 20rpx;
+	max-height: 560rpx;
+	padding: 20rpx 24rpx 28rpx;
+	box-sizing: border-box;
+	background: #ffffff;
+	overflow-y: auto;
 }
 
 .emoji-panel__item {
-	padding: 10rpx 12rpx;
+	width: 64rpx;
+	height: 64rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	border-radius: 14rpx;
-	background: rgba(255, 241, 235, 0.9);
-	font-size: 30rpx;
-	line-height: 1.2;
+	background: #fff1eb;
+	font-size: 34rpx;
+	line-height: 1;
 }
+
+
 
 .upload-tip {
 	display: block;

@@ -70,7 +70,7 @@
 					></image>
 					<text v-else class="love-media-uploader__add-icon">{{ uploadIcon }}</text>
 				</slot>
-				<text class="love-media-uploader__add-text">{{ addText }}</text>
+				<text class="love-media-uploader__add-text" v-if="addText">{{ addText }}</text>
 				<text class="love-media-uploader__add-hint">{{ files.length }}/{{ safeMaxCount }}</text>
 			</view>
 		</view>
@@ -302,7 +302,7 @@ export default {
 		},
 		addText: {
 			type: String,
-			default: '添加文件'
+			default: ''
 		},
 		uploadIcon: {
 			type: String,
@@ -321,6 +321,22 @@ export default {
 			default() {
 				return {}
 			}
+		},
+		exclusiveMediaTypes: {
+			type: Boolean,
+			default: false
+		},
+		maxImageCount: {
+			type: Number,
+			default: 9
+		},
+		maxVideoCount: {
+			type: Number,
+			default: 1
+		},
+		mixedMediaTip: {
+			type: String,
+			default: '不允许同时选择图片和视频'
 		}
 	},
 	data() {
@@ -345,8 +361,33 @@ export default {
 				height: toUnit(this.itemHeight, '220rpx')
 			}
 		},
+		currentMediaType() {
+			const first = this.files.find(item => item && item.mediaType)
+			return first ? first.mediaType : ''
+		},
+		safeMaxImageCount() {
+			const count = Number(this.maxImageCount || 0)
+			return count > 0 ? count : 9
+		},
+		safeMaxVideoCount() {
+			const count = Number(this.maxVideoCount || 0)
+			return count > 0 ? count : 1
+		},
 		canAdd() {
-			return !this.disabled && this.files.length < this.safeMaxCount
+			if (this.disabled || this.files.length >= this.safeMaxCount) {
+				return false
+			}
+			if (!this.exclusiveMediaTypes) {
+				return true
+			}
+			const currentType = this.currentMediaType
+			if (currentType === 'video') {
+				return this.files.filter(item => item.mediaType === 'video').length < this.safeMaxVideoCount
+			}
+			if (currentType === 'image') {
+				return this.files.filter(item => item.mediaType === 'image').length < this.safeMaxImageCount
+			}
+			return true
 		},
 		pickerMediaType() {
 			if (this.safeFileTypes.includes('image') && this.safeFileTypes.includes('video')) {
@@ -546,11 +587,54 @@ export default {
 				source: 'local'
 			}
 		},
+		getSelectableRemain() {
+			if (!this.exclusiveMediaTypes) {
+				return this.safeMaxCount - this.files.length
+			}
+			const currentType = this.currentMediaType
+			if (currentType === 'video') {
+				return Math.min(this.safeMaxCount - this.files.length, this.safeMaxVideoCount - this.files.filter(item => item.mediaType === 'video').length)
+			}
+			if (currentType === 'image') {
+				return Math.min(this.safeMaxCount - this.files.length, this.safeMaxImageCount - this.files.filter(item => item.mediaType === 'image').length)
+			}
+			return this.safeMaxCount - this.files.length
+		},
+		validateExclusivePickedFiles(nextFiles = []) {
+			if (!this.exclusiveMediaTypes) {
+				return true
+			}
+			const pickedTypes = Array.from(new Set(nextFiles.map(item => item.mediaType).filter(Boolean)))
+			const currentType = this.currentMediaType
+			if (pickedTypes.length > 1 || (currentType && pickedTypes.length && pickedTypes[0] !== currentType)) {
+				uni.showToast({
+					title: this.mixedMediaTip || '不允许同时选择图片和视频',
+					icon: 'none'
+				})
+				return false
+			}
+			const nextType = currentType || pickedTypes[0] || ''
+			if (nextType === 'video' && this.files.filter(item => item.mediaType === 'video').length + nextFiles.filter(item => item.mediaType === 'video').length > this.safeMaxVideoCount) {
+				uni.showToast({
+					title: `视频只能发布 ${this.safeMaxVideoCount} 个`,
+					icon: 'none'
+				})
+				return false
+			}
+			if (nextType === 'image' && this.files.filter(item => item.mediaType === 'image').length + nextFiles.filter(item => item.mediaType === 'image').length > this.safeMaxImageCount) {
+				uni.showToast({
+					title: `图片最多发布 ${this.safeMaxImageCount} 张`,
+					icon: 'none'
+				})
+				return false
+			}
+			return true
+		},
 		chooseFiles() {
 			if (this.disabled) {
 				return
 			}
-			const remain = this.safeMaxCount - this.files.length
+			const remain = this.getSelectableRemain()
 			if (remain <= 0) {
 				uni.showToast({
 					title: `最多选择 ${this.safeMaxCount} 个文件`,
@@ -596,6 +680,10 @@ export default {
 							title: '未选择可上传文件',
 							icon: 'none'
 						})
+						return
+					}
+
+					if (!this.validateExclusivePickedFiles(nextFiles)) {
 						return
 					}
 
@@ -1185,7 +1273,7 @@ export default {
 .love-media-uploader__item {
 	position: relative;
 	margin: 0 8rpx 16rpx;
-	border-radius: 16rpx;
+	border-radius: 10rpx;
 	overflow: hidden;
 	background: #f0f0f0;
 }
