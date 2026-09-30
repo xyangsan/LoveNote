@@ -4,6 +4,7 @@ import routerGuard from '@/uni_modules/hh-router-guard/src/index'
 import { hasValidLogin } from './common/auth-center.js'
 
 import uvUI from '@/uni_modules/uv-ui-tools'
+import shareMixin from './common/mixins/share.js'
 
 // #ifndef VUE3
 import Vue from 'vue'
@@ -13,6 +14,10 @@ Vue.config.productionTip = false
 Vue.prototype.fui = fui
 Vue.use(PiniaVuePlugin)
 Vue.use(uvUI);
+
+// 全局注册分享 mixin，让所有页面右上角胶囊都可转发/分享朋友圈
+// 必须在 new Vue 之前注册（页面级同名钩子优先级更高）
+Vue.mixin(shareMixin)
 App.mpType = 'app'
 const pinia = createVue2Pinia()
 const app = new Vue({
@@ -61,7 +66,11 @@ import { createPinia } from 'pinia'
 export function createApp() {
   const app = createSSRApp(App)
   const pinia = createPinia()
-  
+
+  // 全局注册分享 mixin：必须在首个页面创建前执行
+  // （uni Vue3 运行时用 findMixinRuntimeHooks() 读取全局 mixin，且带 once() 缓存）
+  app.mixin(shareMixin)
+
   app.config.globalProperties.fui = fui;
   app.use(pinia)
   app.use(uvUI);

@@ -19,3 +19,8 @@ unpackage/dist/dev/
 *.iml
 
 package-lock.json
+ 
+.codebuddy
+.workbuddy
+.neox
+tmp-cache-check

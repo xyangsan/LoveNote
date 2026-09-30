@@ -61,14 +61,6 @@
 		},
 		onShow() {},
 		onHide() {},
-		onShareAppMessage() {
-			const appStateStore = this.ensureAppStateStore()
-			return {
-				title: appStateStore.appName || '恋人手册',
-				path: '/pages/index/index',
-				imageUrl: ''
-			}
-		},
 		methods: {
 			ensureAppStateStore() {
 				if (!this.appStateStore) {
