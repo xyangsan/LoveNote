@@ -1,0 +1,58 @@
+[
+	{
+		"IndexName": "idx_preset_category",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "is_preset",
+					"Direction": "1"
+				},
+				{
+					"Name": "category",
+					"Direction": "1"
+				},
+				{
+					"Name": "sort_order",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_owner",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "owner_uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_words_pair",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "civilian_word",
+					"Direction": "1"
+				},
+				{
+					"Name": "undercover_word",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

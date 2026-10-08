@@ -8,6 +8,7 @@ import { getUserApi } from '@/common/api/user.js'
 import { getCoupleApi } from '@/common/api/couple.js'
 import { getPlanApi } from '@/common/api/plan.js'
 import { getStatsApi } from '@/common/api/stats.js'
+import { getGameApi } from '@/common/api/game.js'
 import { defineStore } from 'pinia'
 import {
 	getDefaultAppBaseInfo,
@@ -27,17 +28,23 @@ import {
 	buildOverviewStats,
 	buildProfileFeatureStatsFromOverview
 } from './modules/overview.js'
+import {
+	getDefaultGameActiveRoom,
+	normalizeGameRoomBrief
+} from './modules/game.js'
 
 const CACHE_KEY_USER = 'user'
 const CACHE_KEY_COUPLE = 'couple'
 const CACHE_KEY_PLAN_PREVIEW = 'plan_preview'
 const CACHE_KEY_OVERVIEW = 'overview'
+const CACHE_KEY_GAME_ACTIVE_ROOM = 'game_active_room'
 
 const CACHE_TTL = {
 	[CACHE_KEY_USER]: 2 * 60 * 1000,
 	[CACHE_KEY_COUPLE]: 60 * 1000,
 	[CACHE_KEY_PLAN_PREVIEW]: 60 * 1000,
-	[CACHE_KEY_OVERVIEW]: 60 * 1000
+	[CACHE_KEY_OVERVIEW]: 60 * 1000,
+	[CACHE_KEY_GAME_ACTIVE_ROOM]: 30 * 1000
 }
 
 const pendingTaskMap = {}
@@ -47,7 +54,8 @@ function getDefaultCacheAt() {
 		[CACHE_KEY_USER]: 0,
 		[CACHE_KEY_COUPLE]: 0,
 		[CACHE_KEY_PLAN_PREVIEW]: 0,
-		[CACHE_KEY_OVERVIEW]: 0
+		[CACHE_KEY_OVERVIEW]: 0,
+		[CACHE_KEY_GAME_ACTIVE_ROOM]: 0
 	}
 }
 
@@ -68,6 +76,9 @@ export const useAppStateStore = defineStore('app-state', {
 		overviewModule: {
 			stats: getDefaultOverviewStats(),
 			profileFeatureStats: getDefaultProfileFeatureStats()
+		},
+		gameModule: {
+			activeRoom: getDefaultGameActiveRoom()
 		},
 		cacheModule: {
 			at: getDefaultCacheAt()
@@ -105,6 +116,10 @@ export const useAppStateStore = defineStore('app-state', {
 			return state.overviewModule && state.overviewModule.profileFeatureStats
 				? state.overviewModule.profileFeatureStats
 				: getDefaultProfileFeatureStats()
+		},
+		/** 进行中的对局（仅卧底 / 斗地主），用于「继续对局」入口 */
+		gameActiveRoom(state) {
+			return state.gameModule ? state.gameModule.activeRoom : getDefaultGameActiveRoom()
 		},
 		cacheAt(state) {
 			return state.cacheModule && state.cacheModule.at
@@ -159,7 +174,13 @@ export const useAppStateStore = defineStore('app-state', {
 		invalidateCaches(cacheKeys = []) {
 			const keys = Array.isArray(cacheKeys) && cacheKeys.length
 				? cacheKeys
-				: [CACHE_KEY_USER, CACHE_KEY_COUPLE, CACHE_KEY_PLAN_PREVIEW, CACHE_KEY_OVERVIEW]
+				: [
+					CACHE_KEY_USER,
+					CACHE_KEY_COUPLE,
+					CACHE_KEY_PLAN_PREVIEW,
+					CACHE_KEY_OVERVIEW,
+					CACHE_KEY_GAME_ACTIVE_ROOM
+				]
 
 			const nextCacheAt = Object.assign({}, this.cacheAt)
 			keys.forEach((cacheKey) => {
@@ -189,6 +210,9 @@ export const useAppStateStore = defineStore('app-state', {
 			this.overviewModule = {
 				stats: getDefaultOverviewStats(),
 				profileFeatureStats: getDefaultProfileFeatureStats()
+			}
+			this.gameModule = {
+				activeRoom: getDefaultGameActiveRoom()
 			}
 			this.cacheModule = {
 				at: getDefaultCacheAt()
@@ -366,6 +390,41 @@ export const useAppStateStore = defineStore('app-state', {
 
 				this.updateOverviewStats(buildOverviewStats(result))
 				return this.overviewStats
+			})
+		},
+		updateGameActiveRoom(room = null, { markFetched = true } = {}) {
+			this.gameModule = {
+				activeRoom: normalizeGameRoomBrief(room)
+			}
+			if (markFetched) {
+				this.markCache(CACHE_KEY_GAME_ACTIVE_ROOM)
+			}
+		},
+		/** 查询我仍在参与且未结束的对局（用于首页/大厅「继续对局」） */
+		async fetchGameActiveRoom({ force = false } = {}) {
+			if (!this.isLoggedIn) {
+				this.updateGameActiveRoom(null, {
+					markFetched: false
+				})
+				return this.gameActiveRoom
+			}
+
+			if (!force && this.isCacheValid(CACHE_KEY_GAME_ACTIVE_ROOM)) {
+				return this.gameActiveRoom
+			}
+
+			return this.runPending(CACHE_KEY_GAME_ACTIVE_ROOM, async () => {
+				try {
+					const result = await getGameApi().getActiveRoom()
+					if (result && result.errCode && result.errCode !== 0) {
+						throw new Error(result.errMsg || '获取进行中的对局失败')
+					}
+					this.updateGameActiveRoom(result && result.data ? result.data.room : null)
+				} catch (error) {
+					console.warn('fetchGameActiveRoom failed', error)
+					// 查询失败时保留上一次的结果，避免入口抖动
+				}
+				return this.gameActiveRoom
 			})
 		}
 	}

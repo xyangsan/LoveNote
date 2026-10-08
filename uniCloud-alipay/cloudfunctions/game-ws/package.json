@@ -1,0 +1,14 @@
+{
+	"name": "game-ws",
+	"version": "1.0.0",
+	"description": "聚会游戏房间 WebSocket 通道（连接/鉴权/心跳/房间订阅）",
+	"main": "index.js",
+	"cloudfunction-config": {
+		"runtime": "Nodejs18"
+	},
+	"dependencies": {
+		"uni-config-center": "file:../../../uni_modules/uni-config-center/uniCloud/cloudfunctions/common/uni-config-center",
+		"uni-id": "file:../../../uni_modules/uni-id/uniCloud/cloudfunctions/common/uni-id",
+		"uni-id-common": "file:../../../uni_modules/uni-id-common/uniCloud/cloudfunctions/common/uni-id-common"
+	}
+}

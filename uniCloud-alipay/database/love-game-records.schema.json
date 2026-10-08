@@ -1,0 +1,122 @@
+{
+	"bsonType": "object",
+	"required": [
+		"game_type",
+		"players",
+		"summary",
+		"create_time"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "战绩ID，系统自动生成"
+		},
+		"game_type": {
+			"bsonType": "string",
+			"title": "游戏类型",
+			"description": "undercover / landlord / bomb"
+		},
+		"room_id": {
+			"bsonType": "string",
+			"title": "房间ID",
+			"description": "数字炸弹为空串",
+			"defaultValue": ""
+		},
+		"room_code": {
+			"bsonType": "string",
+			"title": "房间邀请码",
+			"defaultValue": ""
+		},
+		"players": {
+			"bsonType": "array",
+			"title": "参战玩家",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"uid": {
+						"bsonType": "string"
+					},
+					"nickname": {
+						"bsonType": "string"
+					},
+					"avatar_url": {
+						"bsonType": "string"
+					},
+					"seat_index": {
+						"bsonType": "int"
+					},
+					"is_robot": {
+						"bsonType": "bool",
+						"defaultValue": false
+					},
+					"role": {
+						"bsonType": "string",
+						"description": "undercover/landlord/farmer/bomb_loser/civilian 等"
+					},
+					"score_delta": {
+						"bsonType": "int",
+						"defaultValue": 0
+					},
+					"result": {
+						"bsonType": "string",
+						"description": "win / lose / draw"
+					}
+				}
+			}
+		},
+		"winner_uids": {
+			"bsonType": "array",
+			"title": "获胜方UID列表",
+			"defaultValue": []
+		},
+		"loser_uids": {
+			"bsonType": "array",
+			"title": "失败方UID列表",
+			"defaultValue": []
+		},
+		"winner_camp": {
+			"bsonType": "string",
+			"title": "获胜阵营",
+			"description": "landlord / farmer / civilian / undercover，无阵营时为 ''",
+			"defaultValue": ""
+		},
+		"summary": {
+			"bsonType": "string",
+			"title": "结果摘要文案"
+		},
+		"detail": {
+			"bsonType": "object",
+			"title": "简要过程",
+			"description": "不存全过程，防文档膨胀"
+		},
+		"round_count": {
+			"bsonType": "int",
+			"title": "局数/轮数",
+			"defaultValue": 1
+		},
+		"duration": {
+			"bsonType": "long",
+			"title": "对局时长(ms)",
+			"defaultValue": 0
+		},
+		"create_uid": {
+			"bsonType": "string",
+			"title": "落库触发人UID"
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		}
+	}
+}

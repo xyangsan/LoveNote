@@ -134,6 +134,49 @@
 			"style": {
 				"navigationBarTitleText": "反馈详情"
 			}
+		},
+		{
+			"path": "pages/game/index",
+			"style": {
+				"navigationBarTitleText": "聚会游戏",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/game/records",
+			"style": {
+				"navigationBarTitleText": "游戏战绩",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/game/bomb/index",
+			"style": {
+				"navigationBarTitleText": "数字炸弹",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/game/undercover/room",
+			"style": {
+				"navigationBarTitleText": "谁是卧底",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/game/landlord/room",
+			"style": {
+				"navigationBarTitleText": "三人斗地主",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false,
+				"disableScroll": true,
+				"pageOrientation": "landscape"
+			}
 		}
 	],
 	"tabBar": {

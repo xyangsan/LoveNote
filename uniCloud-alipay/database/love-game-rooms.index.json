@@ -1,0 +1,66 @@
+[
+	{
+		"IndexName": "idx_code_status",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "room_code",
+					"Direction": "1"
+				},
+				{
+					"Name": "status",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_status_expire",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "status",
+					"Direction": "1"
+				},
+				{
+					"Name": "expire_at",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_seat_uid",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "seats.uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "status",
+					"Direction": "1"
+				},
+				{
+					"Name": "update_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_is_deleted",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

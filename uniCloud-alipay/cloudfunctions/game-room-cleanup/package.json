@@ -1,0 +1,16 @@
+{
+	"name": "game-room-cleanup",
+	"version": "1.0.0",
+	"description": "聚会游戏房间过期清理与僵尸连接回收",
+	"main": "index.js",
+	"cloudfunction-config": {
+		"timeout": 300,
+		"triggers": [
+			{
+				"name": "cleanupGameRooms",
+				"type": "timer",
+				"config": "0 */10 * * * * *"
+			}
+		]
+	}
+}

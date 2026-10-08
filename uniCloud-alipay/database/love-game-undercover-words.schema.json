@@ -1,0 +1,69 @@
+{
+	"bsonType": "object",
+	"required": [
+		"is_preset",
+		"category",
+		"civilian_word",
+		"undercover_word",
+		"create_time"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "词条ID。预置词条使用确定性 ID：uw_preset_<categoryKey>_<nn>"
+		},
+		"owner_uid": {
+			"bsonType": "string",
+			"title": "创建者UID",
+			"description": "空串表示系统预置",
+			"defaultValue": ""
+		},
+		"is_preset": {
+			"bsonType": "bool",
+			"title": "是否系统预置",
+			"defaultValue": false
+		},
+		"category": {
+			"bsonType": "string",
+			"title": "分类",
+			"description": "动物/美食/影视/明星/地点/运动/日用品/职业",
+			"defaultValue": "其他"
+		},
+		"civilian_word": {
+			"bsonType": "string",
+			"title": "平民词"
+		},
+		"undercover_word": {
+			"bsonType": "string",
+			"title": "卧底词"
+		},
+		"use_count": {
+			"bsonType": "int",
+			"title": "被抽中次数",
+			"defaultValue": 0
+		},
+		"sort_order": {
+			"bsonType": "int",
+			"title": "同分类内排序",
+			"defaultValue": 0
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

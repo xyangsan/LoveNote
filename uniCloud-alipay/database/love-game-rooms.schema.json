@@ -1,0 +1,143 @@
+{
+	"bsonType": "object",
+	"required": [
+		"room_code",
+		"game_type",
+		"status",
+		"host_uid",
+		"max_players",
+		"version",
+		"seats",
+		"create_time",
+		"update_time"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "房间ID，系统自动生成"
+		},
+		"room_code": {
+			"bsonType": "string",
+			"title": "房间邀请码",
+			"description": "6 位大写字母数字，创建时查重"
+		},
+		"game_type": {
+			"bsonType": "string",
+			"title": "游戏类型",
+			"description": "undercover 谁是卧底 / landlord 三人斗地主"
+		},
+		"status": {
+			"bsonType": "string",
+			"title": "房间状态",
+			"description": "waiting 等待中 / playing 游戏中 / settled 已结算 / closed 已关闭",
+			"defaultValue": "waiting"
+		},
+		"host_uid": {
+			"bsonType": "string",
+			"title": "房主UID"
+		},
+		"max_players": {
+			"bsonType": "int",
+			"title": "最大人数",
+			"description": "卧底 4-10 / 斗地主 3"
+		},
+		"props": {
+			"bsonType": "object",
+			"title": "玩法属性",
+			"description": "按 game_type 决定内容（在 lib/game-constants.js 的 ROOM_PROPS_SCHEMA 定义）：undercover = { undercoverCount, partyMode }；landlord 暂为空对象。读取时字段缺失/类型不对/值非法一律用默认值填充（resolveRoomProps），并在下次写房间时自愈",
+			"defaultValue": {}
+		},
+		"version": {
+			"bsonType": "int",
+			"title": "状态版本号",
+			"description": "乐观锁 + 推送载荷 + 增量拉取游标",
+			"defaultValue": 0
+		},
+		"seats": {
+			"bsonType": "array",
+			"title": "座位列表",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"seat_index": {
+						"bsonType": "int"
+					},
+					"uid": {
+						"bsonType": "string",
+						"description": "机器人使用 robot_<roomId>_<i> 占位"
+					},
+					"nickname": {
+						"bsonType": "string"
+					},
+					"avatar_url": {
+						"bsonType": "string"
+					},
+					"avatar_file_id": {
+						"bsonType": "string"
+					},
+					"is_robot": {
+						"bsonType": "bool",
+						"defaultValue": false
+					},
+					"ready": {
+						"bsonType": "bool",
+						"defaultValue": false
+					},
+					"score": {
+						"bsonType": "int",
+						"defaultValue": 0
+					},
+					"status": {
+						"bsonType": "string",
+						"description": "waiting / playing / out / finished",
+						"defaultValue": "waiting"
+					},
+					"last_seen": {
+						"bsonType": "long",
+						"defaultValue": 0
+					}
+				}
+			}
+		},
+		"state": {
+			"bsonType": "object",
+			"title": "局内公开状态",
+			"description": "按 game_type 结构不同，见实现方案 §1.3"
+		},
+		"answer": {
+			"bsonType": "object",
+			"title": "敏感字段容器",
+			"description": "卧底身份/词、他人手牌等，下发前必须按 uid 裁剪"
+		},
+		"round": {
+			"bsonType": "int",
+			"title": "当前局数/轮次",
+			"defaultValue": 0
+		},
+		"expire_at": {
+			"bsonType": "long",
+			"title": "过期时间戳",
+			"description": "每次操作刷新为 now + 6h",
+			"defaultValue": 0
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		}
+	}
+}

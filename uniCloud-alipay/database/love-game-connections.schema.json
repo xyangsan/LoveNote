@@ -1,0 +1,44 @@
+{
+	"bsonType": "object",
+	"required": [
+		"connection_id",
+		"create_time"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "记录ID，系统自动生成"
+		},
+		"connection_id": {
+			"bsonType": "string",
+			"title": "WebSocket 连接ID",
+			"description": "由 WebSocket 网关下发，唯一"
+		},
+		"uid": {
+			"bsonType": "string",
+			"title": "用户UID",
+			"description": "未完成鉴权时为空串",
+			"defaultValue": ""
+		},
+		"room_id": {
+			"bsonType": "string",
+			"title": "当前所在房间ID",
+			"description": "未入房为空串",
+			"defaultValue": ""
+		},
+		"last_ping": {
+			"bsonType": "long",
+			"title": "最近心跳时间",
+			"defaultValue": 0
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		}
+	}
+}

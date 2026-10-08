@@ -13,5 +13,9 @@ module.exports = {
 	photoCollection: db.collection('love-photos'),
 	dailyPostCollection: db.collection('love-daily-posts'),
 	anniversaryCollection: db.collection('love-anniversaries'),
-	wishPlanCollection: db.collection('love-wish-plans')
+	wishPlanCollection: db.collection('love-wish-plans'),
+	gameRoomCollection: db.collection('love-game-rooms'),
+	gameRecordCollection: db.collection('love-game-records'),
+	gameWordCollection: db.collection('love-game-undercover-words'),
+	gameConnectionCollection: db.collection('love-game-connections')
 }

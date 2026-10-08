@@ -425,6 +425,13 @@
 						action: 'plan',
 						icon: '04',
 						gradient: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
+					},
+					{
+						title: '聚会游戏',
+						desc: '谁是卧底、斗地主、数字炸弹',
+						action: 'game',
+						icon: '05',
+						gradient: 'linear-gradient(135deg, #ffb37a 0%, #e76f51 100%)'
 					}
 				],
 				anniversaries: getDefaultAnniversaryReminderList(),
@@ -1006,6 +1013,15 @@
 			},
 			handleAction(name) {
 				const action = String(name || '').trim()
+
+				// 聚会游戏大厅免登录可进（数字炸弹本地即玩），房间类游戏内部再校验登录
+				if (action === 'game') {
+					uni.navigateTo({
+						url: '/pages/game/index'
+					})
+					return
+				}
+
 				if (!this.isLoggedIn && name !== '登录') {
 					uni.showToast({
 						title: '请先完成微信登录',
