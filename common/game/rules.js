@@ -167,7 +167,7 @@ export const GAME_RULES = {
 			{
 				heading: '开局设置',
 				items: [
-					'开始前可以设置数字范围上限：默认 1~100，最大可以调到 1~1000',
+					'开始前拖动滑块选择数字范围上限：10~1000、步长 10，默认 1~100',
 					'支持单人挑战，也可以多人用同一台设备轮流猜',
 					'点「开始游戏」后，系统会在范围内随机埋下一个炸弹数字'
 				]
@@ -215,7 +215,7 @@ export function getGameIconSrc(gameType = '') {
 
 /** 大厅卡片网格数据源 */
 export function getGameCardList() {
-	return [GAME_TYPE_UNDERCOVER, GAME_TYPE_LANDLORD, GAME_TYPE_BOMB]
+	return [GAME_TYPE_UNDERCOVER, GAME_TYPE_BOMB]
 		.map((gameType) => Object.assign({}, GAME_META[gameType], {
 			action: gameType
 		}))

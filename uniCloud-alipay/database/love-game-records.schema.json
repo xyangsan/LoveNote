@@ -95,6 +95,12 @@
 			"title": "简要过程",
 			"description": "不存全过程，防文档膨胀"
 		},
+		"match_index": {
+			"bsonType": "int",
+			"title": "局序号",
+			"description": "该房间内的第几局（从 1 起），等于 love-game-rooms.round，与对局表 love-game-matches.match_index 对应",
+			"defaultValue": 1
+		},
 		"round_count": {
 			"bsonType": "int",
 			"title": "局数/轮数",

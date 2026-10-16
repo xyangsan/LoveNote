@@ -28,34 +28,28 @@
 				</view>
 
 				<love-glass-card :margin="['0', '0', '0', '0']" :header-line="false" :padding="['22rpx', '24rpx']">
-					<text class="bomb-label">数字范围上限</text>
-					<fui-segmented-control
-						:values="limitLabels"
-						:current="limitIndex"
-						type="button"
-						color="#ec7558"
-						active-color="#ffffff"
-						:height="72"
-						:size="26"
-						:radius="999"
-						:bold="true"
-						:margin-top="16"
-						@click="handleLimitSelect"
-					></fui-segmented-control>
-
-					<view v-if="isCustomLimit" class="bomb-custom">
-						<text class="bomb-label">自定义上限（{{ minLimit }}~{{ maxLimit }}）</text>
-						<fui-input
-							type="number"
-							placeholder="请输入范围上限"
-							:value="customLimitText"
-							:size="30"
-							:radius="20"
-							background-color="#fffaf7"
-							color="#5a3427"
-							:padding="['20rpx', '24rpx']"
-							@input="handleCustomLimitInput"
-						></fui-input>
+					<view class="bomb-limit">
+						<view class="bomb-limit__head">
+							<text class="bomb-label bomb-label--inline">数字范围上限</text>
+							<text class="bomb-limit__value">1 ~ {{ limitPreview || game.rangeLimit }}</text>
+						</view>
+						<uv-slider
+							class="bomb-limit__slider"
+							:value="game.rangeLimit"
+							:min="minLimit"
+							:max="maxLimit"
+							:step="limitStep"
+							active-color="#e76f51"
+							background-color="#f4ded6"
+							block-color="#ffffff"
+							:block-size="26"
+							@changing="handleLimitChanging"
+							@change="handleLimitChange"
+						></uv-slider>
+						<view class="bomb-limit__scale">
+							<text class="bomb-limit__scale-text">{{ minLimit }}</text>
+							<text class="bomb-limit__scale-text">{{ maxLimit }}</text>
+						</view>
 					</view>
 
 					<view class="bomb-players">
@@ -213,15 +207,14 @@
 		submitGuess,
 		restartBombGame,
 		updateRangeLimit,
-		validateRangeLimit,
 		normalizePlayerCount,
 		buildRecordPayload,
 		serializeGame,
 		deserializeGame,
 		getRemainingCount,
-		RANGE_PRESETS,
 		MIN_RANGE_LIMIT,
 		MAX_RANGE_LIMIT,
+		RANGE_LIMIT_STEP,
 		DEFAULT_RANGE_LIMIT,
 		MIN_PLAYERS,
 		MAX_PLAYERS,
@@ -255,10 +248,9 @@
 				navBar: getNavBarMetrics(),
 				phase: PHASE_SETUP,
 				game: createBombGame({ rangeLimit: DEFAULT_RANGE_LIMIT }),
-				limitLabels: ['1~100', '1~200', '1~500', '1~1000', '自定义'],
-				limitIndex: 0,
-				isCustomLimit: false,
-				customLimitText: '',
+				/** uv-slider 拖动过程中的实时值（仅用于显示，松手才写回 game.rangeLimit） */
+				limitPreview: 0,
+				limitStep: RANGE_LIMIT_STEP,
 				playerCount: 1,
 				guessText: '',
 				lastMessage: '',
@@ -474,28 +466,22 @@
 			handleShowRules() {
 				this.rulesVisible = true
 			},
-			handleLimitSelect(event = {}) {
-				const index = Number(event.index)
-				if (!Number.isInteger(index) || index < 0) {
+			/** 拖动过程中只更新展示值：不动 game.rangeLimit，免得回写 :value 把滑块拽回原位 */
+			handleLimitChanging(value) {
+				const next = Number(value)
+				if (!Number.isFinite(next)) {
 					return
 				}
-				this.limitIndex = index
-				if (index === this.limitLabels.length - 1) {
-					this.isCustomLimit = true
-					return
-				}
-				this.isCustomLimit = false
-				this.customLimitText = ''
-				const limit = RANGE_PRESETS[index] || DEFAULT_RANGE_LIMIT
-				this.game = updateRangeLimit(this.game, limit)
+				this.limitPreview = next
 			},
-			handleCustomLimitInput(event = '') {
-				const value = this.resolveInputText(event)
-				this.customLimitText = value
-				const check = validateRangeLimit(value)
-				if (check.ok) {
-					this.game = updateRangeLimit(this.game, check.value)
+			/** 松手才落库；步长由滑块保证，updateRangeLimit 内部还会再夹一次 10~1000 */
+			handleLimitChange(value) {
+				const next = Number(value)
+				this.limitPreview = 0
+				if (!Number.isFinite(next)) {
+					return
 				}
+				this.game = updateRangeLimit(this.game, next)
 			},
 			/** 与 room.vue 的 resolveInputText 同口径：fui-input 的 input 事件回传原始字符串 */
 			resolveInputText(value = '') {
@@ -519,18 +505,6 @@
 				})
 			},
 			handleStart() {
-				if (this.isCustomLimit) {
-					const check = validateRangeLimit(this.customLimitText)
-					if (!check.ok) {
-						uni.showToast({
-							title: check.message,
-							icon: 'none'
-						})
-						return
-					}
-					this.game = updateRangeLimit(this.game, check.value)
-				}
-
 				const players = Array.from({ length: this.playerCount }).map((item, index) => ({
 					name: index === 0 && this.playerCount > 1 ? '玩家1' : (this.playerCount > 1 ? `玩家${index + 1}` : '我'),
 					avatarUrl: ''
@@ -826,8 +800,37 @@
 		color: #936d62;
 	}
 
-	.bomb-custom {
-		margin-top: 26rpx;
+	.bomb-label--inline {
+		margin-bottom: 0;
+	}
+
+	.bomb-limit__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+
+	.bomb-limit__value {
+		font-size: 36rpx;
+		font-weight: 700;
+		line-height: 1.1;
+		color: #b05b48;
+	}
+
+	.bomb-limit__slider {
+		margin-top: 22rpx;
+	}
+
+	.bomb-limit__scale {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-top: 2rpx;
+	}
+
+	.bomb-limit__scale-text {
+		font-size: 21rpx;
+		color: #b98069;
 	}
 
 	.bomb-players {

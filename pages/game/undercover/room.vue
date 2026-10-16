@@ -25,12 +25,6 @@
 				<template #center>
 					<view class="uc-navbar__center">
 						<text class="uc-navbar__title">谁是卧底</text>
-						<uni-tag
-							v-if="room"
-							:text="connText"
-							size="small"
-							:custom-style="connStyle"
-						></uni-tag>
 					</view>
 				</template>
 
@@ -165,6 +159,7 @@
 					:tags="seatTags"
 					:size="'small'"
 					:show-empty="false"
+					:show-score="showSeatScore"
 					empty-text="空位"
 					@select="handleSelectSeat"
 				></love-game-seats>
@@ -385,13 +380,28 @@
 						</view>
 					</template>
 
-					<!-- 已结算 -->
+					<!-- 已结算：信息行（第几局 + 本局胜负 + 累计分）+ 一行操作（查看结果 / 解散房间 / 再来一局） -->
 					<template v-else-if="state.phase === 'settled'">
-						<view class="uc-btn uc-btn--primary" @click="resultVisible = true">
-							<text class="uc-btn__text">查看本局结果</text>
+						<view class="uc-op__hint uc-op__hint--result">
+							<text class="uc-op__hint-text">{{ settledInfoText }}</text>
 						</view>
-						<view v-if="isHost" class="uc-btn uc-btn--ghost" @click="handleCloseRoom">
-							<text class="uc-btn__text uc-btn__text--ghost">解散房间</text>
+
+						<view class="uc-op__row">
+							<view class="uc-btn uc-btn--ghost" @click="resultVisible = true">
+								<text class="uc-btn__text uc-btn__text--ghost">查看结果</text>
+							</view>
+							<template v-if="isHost">
+								<view class="uc-btn uc-btn--ghost" @click="handleCloseRoom">
+									<text class="uc-btn__text uc-btn__text--ghost">解散房间</text>
+								</view>
+								<view class="uc-btn uc-btn--primary uc-btn--grow" @click="handleRematch">
+									<text class="uc-btn__text">再来一局</text>
+								</view>
+							</template>
+							<!-- 非房主：同排放一个不可点的占位，保持版式稳定、也说明在等谁 -->
+							<view v-else class="uc-btn uc-btn--wait">
+								<text class="uc-btn__text uc-btn__text--muted">等房主开下一局</text>
+							</view>
 						</view>
 					</template>
 
@@ -424,7 +434,7 @@
 			secondary-text="返回大厅"
 			@close="resultVisible = false"
 			@primary="resultVisible = false"
-			@secondary="handleBackToHall"
+			@secondary="leaveRoomAndBack"
 		></love-game-result-dialog>
 
 		<love-game-rules
@@ -514,10 +524,16 @@
 				loggedServerBuild: '',
 				// 本次提交的投票目标，用来在返回后自检「这一票到底写进去了没」
 				voteTarget: -1,
-wordEditorVisible: false,
-			rulesVisible: false,
-			resultVisible: false,
-			resultShown: false,
+				// 已经不在房间里了（主动退出 / 被移出 / 房间解散）。
+				// 置 true 后 `persistActiveRoom` 只会清缓存、绝不会再写回 ——
+				// 否则 onUnload 会把刚清掉的「继续对局」状态原样写回去。
+				roomExited: false,
+				// 「正在退出」防重入：确认弹窗与悬浮栏按钮可能被连点
+				leavingRoom: false,
+				wordEditorVisible: false,
+				rulesVisible: false,
+				resultVisible: false,
+				resultShown: false,
 			// 悬浮操作栏（.uc-op-bar）实测高度（px），用来给内容区留等高空白。
 			// 取不到就退回 OP_BAR_FALLBACK_HEIGHT，别让内容被压在栏下面。
 			opBarHeight: OP_BAR_FALLBACK_HEIGHT
@@ -845,6 +861,7 @@ wordEditorVisible: false,
 					assign: '正在分配身份',
 					speak: `第 ${this.state.round || 1} 轮 · 轮流描述`,
 					vote: `第 ${this.state.vote_round || 1} 轮投票`,
+					// 局序号（第几局）只在底部结算信息行里说，这里不重复
 					settled: '本局已结束'
 				}
 				return phaseMap[this.state.phase] || '对局进行中'
@@ -863,7 +880,7 @@ wordEditorVisible: false,
 					return '选出你认为是卧底的人，得票最多者出局'
 				}
 				if (this.state.phase === 'settled') {
-					return '本局已结算，战绩已自动保存'
+					return '战绩已保存，累计分保留到下一局'
 				}
 				return '准备好了，马上开始'
 			},
@@ -964,6 +981,38 @@ wordEditorVisible: false,
 					return ''
 				}
 				return this.iWin ? '这局表现不错，战绩已保存。' : '再来一局，换个词试试运气。'
+			},
+			/** 我的累计分（结算信息行用）：不在座位里返回 null → 这段不显示 */
+			myScore() {
+				const seats = Array.isArray(this.room && this.room.seats) ? this.room.seats : []
+				const seat = seats.find((item) => Number(item.seatIndex) === Number(this.mySeat))
+				return seat ? Number(seat.score || 0) : null
+			},
+			/**
+			 * 结算后底部信息行：第几局 + 本局胜负 + 我的累计分。
+			 * 一房多局之后，「第几局」和「累计多少分」是结算当下最该看到的两条信息。
+			 */
+			settledInfoText() {
+				const parts = []
+				const round = Number(this.room && this.room.round ? this.room.round : 0)
+				parts.push(round > 0 ? `第 ${round} 局结束` : '本局结束')
+				if (this.result) {
+					parts.push(this.iWin ? '你赢了' : '你输了')
+				}
+				if (this.myScore !== null) {
+					parts.push(`累计 ${this.myScore} 分`)
+				}
+				return parts.join(' · ')
+			},
+			/**
+			 * 是否在席位上显示累计分：**第 2 局起**或**已结算**才显示 ——
+			 * 第一局刚开始时全是「0 分」，显示出来只是噪音。
+			 */
+			showSeatScore() {
+				if (this.state.phase === 'settled') {
+					return true
+				}
+				return Number(this.room && this.room.round ? this.room.round : 0) > 1
 			}
 		},
 		onLoad(options = {}) {
@@ -1011,6 +1060,8 @@ wordEditorVisible: false,
 			this.persistActiveRoom()
 		},
 		onUnload() {
+			// 只写缓存、**不退房**：系统返回 / 侧滑 = 返回大厅（可「继续对局」回来）。
+			// 显式退出过的（roomExited）在这里只会被清掉，不会写回。
 			this.persistActiveRoom()
 			if (this.robotFallbackTimer) {
 				clearTimeout(this.robotFallbackTimer)
@@ -1096,7 +1147,10 @@ wordEditorVisible: false,
 				if (!uid) {
 					return
 				}
-				if (!this.room || this.room.status === 'settled') {
+				// settled 也保留：一房多局，结算后重进要能回到房间等下一局。
+				// 但「已退出房间」（roomExited）只能清、不能写 —— 显式退房后 onUnload 会紧接着触发，
+				// 不挡住的话会把刚清掉的房间原样写回缓存，大厅又出现一张点不进去的「继续对局」。
+				if (this.roomExited || !this.room) {
 					clearActiveRoom(uid)
 					return
 				}
@@ -1107,6 +1161,11 @@ wordEditorVisible: false,
 					version: this.room.version,
 					lastSeenSeq: this.lastSeenSeq
 				})
+			},
+			/** 标记「已不在房间」：清活跃房缓存，并阻止 onUnload 把房间写回来 */
+			markRoomExited() {
+				this.roomExited = true
+				clearActiveRoom(this.currentUid)
 			},
 			seatName(seatIndex) {
 				const seats = Array.isArray(this.room && this.room.seats) ? this.room.seats : []
@@ -1130,6 +1189,14 @@ wordEditorVisible: false,
 				}
 				return `${this.seatName(eliminated)} 被淘汰出局`
 			},
+			/**
+			 * 返回键（‹）= 返回大厅，**不真正退房**。
+			 *
+			 * 页面返回是随手操作，不能当成退房：这里只离开页面，并把活跃房写进本地缓存，
+			 * 大厅「继续对局」能原样回来（对局中尤其重要 —— 误触返回不该丢掉本局席位）。
+			 * Android 系统返回 / iOS 侧滑同样走这条路（onUnload 只 persist，不静默退房）。
+			 * **真正退房只走两个入口**：本页「退出」按钮、结算弹窗「返回大厅」。
+			 */
 			handleBack() {
 				if (this.room) {
 					this.persistActiveRoom()
@@ -1140,6 +1207,41 @@ wordEditorVisible: false,
 					return
 				}
 				this.handleBackToHall()
+			},
+			/**
+			 * 结算弹窗「返回大厅」：**真正退房**再回大厅。
+			 * 用户点的是明确的「返回大厅」按钮（不是随手返回），且结算后退出没有代价 ——
+			 * 直接退，不弹确认。
+			 */
+			leaveRoomAndBack() {
+				this.doLeaveRoom()
+			},
+			/** 退出房间的二次确认（「退出」按钮与对局中的返回共用同一段文案） */
+			confirmLeaveRoom() {
+				uni.showModal({
+					title: '退出房间',
+					content: this.buildLeaveConfirmText(),
+					confirmText: '退出',
+					confirmColor: '#e76f51',
+					success: (res) => {
+						if (res.confirm) {
+							this.doLeaveRoom()
+						}
+					}
+				})
+			},
+			/** 退出确认文案：房主提示可能解散，对局中提示放弃本局（两条都成立时都要说） */
+			buildLeaveConfirmText() {
+				const playing = Boolean(this.room && this.room.status === 'playing')
+				if (playing) {
+					return this.isHost
+						? '对局进行中，退出将放弃本局；退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
+						: '对局进行中，退出将放弃本局，确定吗？'
+				}
+				if (this.isHost) {
+					return '退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
+				}
+				return '确定要退出房间吗？'
 			},
 			handleBackToHall() {
 				this.resultVisible = false
@@ -1242,11 +1344,17 @@ wordEditorVisible: false,
 					this.applySnapshot(result.data, { source: 'local', changed: true, reset: true })
 					this.startSync()
 				} catch (error) {
+					const code = String((error && error.errCode) || '')
 					uni.showToast({
-						title: error.message || '进入房间失败',
+						title: (error && error.message) || '进入房间失败',
 						icon: 'none'
 					})
-					if (error.errCode === 'love-note-game-room-not-found') {
+					// 房间没了 / 自己已不在房间里：本地缓存里的「继续对局」已经是张死卡片，
+					// 先清掉再回大厅，否则大厅会一直挂着一个点不进去的入口。
+					if (code === 'love-note-game-room-not-found' || code === 'love-note-game-not-in-room') {
+						if (payload.roomId) {
+							this.markRoomExited()
+						}
 						setTimeout(() => this.handleBackToHall(), 1200)
 					}
 				} finally {
@@ -1280,7 +1388,7 @@ wordEditorVisible: false,
 						content: error.message || '房间不存在或已关闭',
 						showCancel: false,
 						success: () => {
-							clearActiveRoom(this.currentUid)
+							this.markRoomExited()
 							this.handleBackToHall()
 						}
 					})
@@ -1349,7 +1457,7 @@ wordEditorVisible: false,
 				if (this.state.phase === 'settled' && !this.resultShown) {
 					this.resultShown = true
 					this.resultVisible = true
-					clearActiveRoom(this.currentUid)
+					// 不再清活跃房：一房多局，结算后留在房间，重进也能回来等下一局
 				}
 				if (this.state.phase !== 'settled') {
 					this.resultShown = false
@@ -1519,6 +1627,12 @@ this.ensureRobotVotes()
 					wordSource: this.selectedWordId ? 'mine' : this.wordSource
 				})
 			},
+			/** 结算后房主点「再来一局」：重新分配卧底 + 重新抽词，直接开新局 */
+			handleRematch() {
+				this.runRoomAction('rematch', {
+					wordSource: this.selectedWordId ? 'mine' : this.wordSource
+				})
+			},
 			/**
 			 * 卧底人数变更（uni-number-box 回传绝对值）。
 			 *
@@ -1667,28 +1781,25 @@ this.ensureRobotVotes()
 							return
 						}
 						this.runRoomAction('closeRoom', {}).then(() => {
-							clearActiveRoom(this.currentUid)
+							this.markRoomExited()
 							this.handleBackToHall()
 						})
 					}
 				})
 			},
+			/** 悬浮栏「退出」按钮：始终先确认 */
 			handleLeaveRoom() {
-				uni.showModal({
-					title: '退出房间',
-					content: this.isHost
-						? '退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
-						: '退出后你会离开本局，确定吗？',
-					confirmText: '退出',
-					confirmColor: '#e76f51',
-					success: (res) => {
-						if (res.confirm) {
-							this.doLeaveRoom()
-						}
-					}
-				})
+				this.confirmLeaveRoom()
 			},
+			/**
+			 * 真正退出房间（退出按钮 / 返回键 / 结算弹窗「返回大厅」最终都落到这里）。
+			 * 已经不在房间里（被移出 / 房间解散）也算退出成功 —— 不能把人卡在房间里出不去。
+			 */
 			async doLeaveRoom() {
+				if (this.leavingRoom) {
+					return
+				}
+				this.leavingRoom = true
 				uni.showLoading({
 					title: '正在退出',
 					mask: true
@@ -1698,25 +1809,37 @@ this.ensureRobotVotes()
 						await getGameApi().leaveRoom({ roomId: this.roomId }),
 						'退出房间失败'
 					)
-					// 退出后立刻断开房间同步，免得页面还在拉一个自己已经不在的房间
-					if (this.sync) {
-						this.sync.stop()
-						this.sync = null
-					}
-					clearActiveRoom(this.currentUid)
-					uni.hideLoading()
-					uni.showToast({
-						title: result && result.data && result.data.closed ? '房间已解散' : '已退出房间',
-						icon: 'none'
-					})
-					setTimeout(() => this.handleBackToHall(), 700)
+					this.finishLeaveRoom(result)
 				} catch (error) {
+					const code = String((error && error.errCode) || '')
+					if (code === 'love-note-game-not-in-room' || code === 'love-note-game-room-not-found') {
+						// 已被移出 / 房间已解散：同样按退出处理，直接回大厅
+						this.finishLeaveRoom(null)
+						return
+					}
+					this.leavingRoom = false
 					uni.hideLoading()
 					uni.showToast({
-						title: error.message || '退出房间失败',
+						title: (error && error.message) || '退出房间失败',
 						icon: 'none'
 					})
 				}
+			},
+			/** 退房成功后的统一善后：断开同步 → 清缓存（并阻止写回）→ 提示 → 回大厅 */
+			finishLeaveRoom(result) {
+				// 退出后立刻断开房间同步，免得页面还在拉一个自己已经不在的房间
+				if (this.sync) {
+					this.sync.stop()
+					this.sync = null
+				}
+				this.markRoomExited()
+				uni.hideLoading()
+				const data = (result && result.data) || {}
+				uni.showToast({
+					title: data.closed ? '房间已解散' : '已退出房间',
+					icon: 'none'
+				})
+				setTimeout(() => this.handleBackToHall(), 700)
 			},
 			handleShareTap() {
 				uni.showToast({
@@ -2325,6 +2448,11 @@ this.ensureRobotVotes()
 		margin-top: 0;
 	}
 
+	/* 行内主按钮（如结算行的「再来一局」）：适度加宽，层级比同排的次要按钮更清楚 */
+	.uc-op__row .uc-btn--grow {
+		flex: 1.4;
+	}
+
 	/* 房主开局前的「卧底人数」设置条 */
 	.uc-config {
 		display: flex;
@@ -2382,6 +2510,14 @@ this.ensureRobotVotes()
 		text-align: center;
 	}
 
+	/* 结算后的信息行：比普通提示更“实”（暖底 + 细边），一眼看到第几局与累计分 */
+	.uc-op__hint--result {
+		padding: 18rpx 24rpx;
+		background: rgba(255, 241, 235, 0.98);
+		border: 1rpx solid rgba(240, 208, 196, 0.9);
+		margin-bottom: 18rpx;
+	}
+
 	.uc-op__hint-text {
 		font-size: 25rpx;
 		line-height: 1.6;
@@ -2406,18 +2542,28 @@ this.ensureRobotVotes()
 		opacity: 0.5;
 	}
 
-	.uc-btn + .uc-btn {
-		margin-top: 18rpx;
+	/* 非房主在结算行的「等房主开下一局」：与按钮同排同高，但虚线 + 无底色，明显不可点 */
+	.uc-btn--wait {
+		background: rgba(255, 250, 247, 0.6);
+		border: 1rpx dashed rgba(216, 186, 174, 0.95);
 	}
 
 	.uc-btn__text {
 		font-size: 29rpx;
 		font-weight: 600;
 		color: #ffffff;
+		/* 一行多个按钮时不换行（换行会把按钮顶高、破坏整排对齐） */
+		white-space: nowrap;
+		overflow: hidden;
 	}
 
 	.uc-btn__text--ghost {
 		color: #b05b48;
+	}
+
+	.uc-btn__text--muted {
+		font-weight: 500;
+		color: #a68b78;
 	}
 
 	.uc-speak-input {

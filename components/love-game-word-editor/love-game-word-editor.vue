@@ -2,24 +2,21 @@
 	<fui-bottom-popup :show="show" :radius="'32rpx'" :mask-closable="true" :safe-area="true" @close="handleClose">
 		<view class="word-editor">
 			<view class="word-editor__head">
-				<text class="word-editor__title">卧底词库</text>
+				<view class="word-editor__head-row">
+					<text class="word-editor__title">卧底词库</text>
+					<fui-switch
+						@change="handleSourceToggle"
+						color="#e76f51"
+						background="#ffaa7f"
+						:scaleRatio="0.85"
+					>
+						<text class="fui-switch--text">{{source === 'mine'?'我的':'系统'}}</text>
+					</fui-switch>
+				</view>
 				<text class="word-editor__desc">
 					预置词库共 {{ presetTotal }} 组，也可以添加自己的专属词条。
 				</text>
 			</view>
-
-			<fui-segmented-control
-				:values="['系统词库', `我的词库（${mineTotal}）`]"
-				:current="sourceIndex"
-				type="button"
-				color="#ec7558"
-				active-color="#ffffff"
-				:height="68"
-				:size="25"
-				:radius="999"
-				:bold="true"
-				@click="handleSourceChange"
-			></fui-segmented-control>
 
 			<scroll-view class="word-editor__categories" scroll-x>
 				<view class="word-editor__categories-inner">
@@ -166,7 +163,6 @@
 		emits: ['close', 'select', 'change'],
 		data() {
 			return {
-				sourceIndex: 0,
 				source: 'preset',
 				activeCategory: ALL_CATEGORY,
 				categories: [],
@@ -268,13 +264,17 @@
 				this.page += 1
 				this.loadWords()
 			},
-			handleSourceChange(event = {}) {
-				const index = Number(event.index)
-				if (!Number.isInteger(index) || index === this.sourceIndex) {
+			handleSourceToggle() {
+				this.setSource(this.source === 'mine' ? 'preset' : 'mine')
+			},
+			setSource(next) {
+				if (next !== 'preset' && next !== 'mine') {
 					return
 				}
-				this.sourceIndex = index
-				this.source = index === 1 ? 'mine' : 'preset'
+				if (next === this.source) {
+					return
+				}
+				this.source = next
 				this.activeCategory = ALL_CATEGORY
 				this.page = 1
 				this.loadWords({ reset: true })
@@ -340,9 +340,7 @@
 						icon: 'none'
 					})
 					this.handleResetForm()
-					this.sourceIndex = 1
-					this.source = 'mine'
-					this.activeCategory = ALL_CATEGORY
+					this.setSource('mine')
 					await this.loadCategories()
 					this.page = 1
 					await this.loadWords({ reset: true })
@@ -395,12 +393,20 @@
 		padding: 20rpx 4rpx 22rpx;
 	}
 
+	.word-editor__head-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+	}
+
 	.word-editor__title {
-		display: block;
+		flex-shrink: 0;
 		font-size: 38rpx;
 		font-weight: 700;
 		color: #5a3427;
 	}
+
 
 	.word-editor__desc {
 		display: block;
@@ -408,6 +414,11 @@
 		font-size: 24rpx;
 		line-height: 1.6;
 		color: #8b6659;
+	}
+	.fui-switch--text {
+		display: flex;
+		flex-wrap: nowrap;
+		font-size: 24rpx;
 	}
 
 	.word-editor__categories {
@@ -426,6 +437,8 @@
 		margin-right: 14rpx;
 		border-radius: 999rpx;
 		background: rgba(255, 247, 243, 0.98);
+		display: flex;
+		align-items: center;
 	}
 
 	.word-editor__chip--active {
@@ -443,7 +456,7 @@
 	}
 
 	.word-editor__list {
-		max-height: 46vh;
+		height: 35vh;
 		margin-top: 18rpx;
 	}
 

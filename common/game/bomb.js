@@ -11,6 +11,8 @@
 export const RANGE_PRESETS = [100, 200, 500, 1000]
 export const MIN_RANGE_LIMIT = 10
 export const MAX_RANGE_LIMIT = 1000
+/** 范围上限的调节步长：页面上用 uv-slider 选上限，必须和滑块的 step 保持一致 */
+export const RANGE_LIMIT_STEP = 50
 export const DEFAULT_RANGE_LIMIT = 100
 export const MIN_PLAYERS = 1
 export const MAX_PLAYERS = 8
@@ -38,7 +40,10 @@ export function normalizeRangeLimit(value) {
 	if (!Number.isInteger(number)) {
 		return DEFAULT_RANGE_LIMIT
 	}
-	return clamp(number, MIN_RANGE_LIMIT, MAX_RANGE_LIMIT)
+	const clamped = clamp(number, MIN_RANGE_LIMIT, MAX_RANGE_LIMIT)
+	// 上限必须落在步长网格上（页面上由 uv-slider 的 step 保证，这里兜住旧存档等外部输入）
+	const snapped = Math.round(clamped / RANGE_LIMIT_STEP) * RANGE_LIMIT_STEP
+	return clamp(snapped, MIN_RANGE_LIMIT, MAX_RANGE_LIMIT)
 }
 
 export function validateRangeLimit(value) {
@@ -308,7 +313,10 @@ export function deserializeGame(raw) {
 		if (!parsed || parsed.phase !== PHASE_PLAYING) {
 			return null
 		}
-		return Object.assign(createBombGame({ rangeLimit: parsed.rangeLimit }), parsed)
+		const game = Object.assign(createBombGame({ rangeLimit: parsed.rangeLimit }), parsed)
+		// 老存档的上限可能不是步长倍数：只对上限取整，别碰已收窄的 rangeMin/rangeMax
+		game.rangeLimit = normalizeRangeLimit(game.rangeLimit)
+		return game
 	} catch (error) {
 		console.warn('bomb deserializeGame failed', error)
 		return null

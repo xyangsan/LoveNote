@@ -162,7 +162,7 @@
 		z-index: 1;
 		box-sizing: border-box;
 		width: 620rpx;
-		max-height: 84vh;
+		max-height: 80vh;
 		padding: 0 32rpx 32rpx;
 		border-radius: 36rpx;
 		background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(255, 246, 239, 0.98));
@@ -226,9 +226,9 @@
 	}
 
 	.game-result__players {
-		max-height: 40vh;
+		max-height: 32vh;
 		margin-top: 20rpx;
-		overflow: hidden;
+		overflow: auto;
 	}
 
 	.game-result__player {

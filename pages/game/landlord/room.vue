@@ -279,8 +279,14 @@
 
 				<!-- 结算 -->
 				<template v-else-if="phase === 'settled'">
-					<view class="ll-action ll-action--primary" @click="resultVisible = true">
-						<text class="ll-action__text">查看结果</text>
+					<view class="ll-action ll-action--ghost" @click="resultVisible = true">
+						<text class="ll-action__text ll-action__text--ghost">查看结果</text>
+					</view>
+					<view v-if="isHost" class="ll-action ll-action--primary" @click="handleRematch">
+						<text class="ll-action__text">再来一局</text>
+					</view>
+					<view v-else class="ll-action ll-action--ghost ll-action--wide">
+						<text class="ll-action__text ll-action__text--ghost">等待房主开下一局</text>
 					</view>
 					<view v-if="isHost" class="ll-action ll-action--ghost" @click="handleCloseRoom">
 						<text class="ll-action__text ll-action__text--ghost">解散房间</text>
@@ -333,7 +339,7 @@
 			secondary-text="返回大厅"
 			@close="resultVisible = false"
 			@primary="resultVisible = false"
-			@secondary="handleBackToHall"
+			@secondary="leaveRoomAndBack"
 		></love-game-result-dialog>
 
 		<love-game-rules
@@ -395,7 +401,13 @@
 				rulesVisible: false,
 				resultVisible: false,
 				resultShown: false,
-				handMaxWidth: 420
+				handMaxWidth: 420,
+				// 已经不在房间里了（主动退出 / 被移出 / 房间解散）。
+				// 置 true 后 `persistActiveRoom` 只会清缓存、绝不会再写回 ——
+				// 否则 onUnload 会把刚清掉的「继续对局」状态原样写回去。
+				roomExited: false,
+				// 「正在退出」防重入：确认弹窗与顶栏按钮可能被连点
+				leavingRoom: false
 			}
 		},
 		computed: {
@@ -670,6 +682,8 @@
 			this.persistActiveRoom()
 		},
 		onUnload() {
+			// 只写缓存、**不退房**：系统返回 / 侧滑 = 返回大厅（可「继续对局」回来）。
+			// 显式退出过的（roomExited）在这里只会被清掉，不会写回。
 			this.persistActiveRoom()
 			if (this.sync) {
 				this.sync.stop()
@@ -726,7 +740,10 @@
 				if (!uid) {
 					return
 				}
-				if (!this.room || this.room.status === 'settled') {
+				// settled 也保留：一房多局，结算后重进要能回到房间等下一局；
+				// 但「已退出房间」（roomExited）只能清、不能写 —— onUnload 会在退出后紧接着触发，
+				// 不挡住的话会把刚清掉的房间原样写回缓存，大厅又出现一张点不进去的「继续对局」。
+				if (this.roomExited || !this.room) {
 					clearActiveRoom(uid)
 					return
 				}
@@ -737,6 +754,11 @@
 					version: this.room.version,
 					lastSeenSeq: this.lastSeenSeq
 				})
+			},
+			/** 标记「已不在房间」：清活跃房缓存，并阻止 onUnload 把房间写回来 */
+			markRoomExited() {
+				this.roomExited = true
+				clearActiveRoom(this.currentUid)
 			},
 			findSeat(seatIndex) {
 				const seats = this.room && Array.isArray(this.room.seats) ? this.room.seats : []
@@ -788,14 +810,119 @@
 				// 底牌最后归地主，非最后一张不用变灰；这里仅做轻微层次感
 				return index > 0 && this.phase === 'playing'
 			},
+			/**
+			 * 顶栏「‹ 退出」＝ **真正退房**（按钮上写着「退出」，语义明确；
+			 * 与卧底页那个纯返回键 ‹ 不是一回事 —— 那边只返回、不退房）。
+			 * 在房间里：走退房流程（对局中先确认），退完自动回大厅；
+			 * 不在房间（创建 / 加入界面）：维持普通返回。
+			 * ⚠️ 系统返回 / 侧滑不走这里：只返回大厅、保留房间（onUnload 只 persist）。
+			 */
 			handleBack() {
-				this.persistActiveRoom()
+				if (this.room && this.roomId) {
+					this.leaveRoomAndBack()
+					return
+				}
 				const pages = getCurrentPages()
 				if (pages && pages.length > 1) {
 					uni.navigateBack()
 					return
 				}
 				this.handleBackToHall()
+			},
+			/**
+			 * 退房 + 回大厅（顶栏「退出」与结算弹窗「返回大厅」共用）。
+			 * 对局进行中退出后本局交由系统托管，先弹确认防误触；等待中 / 已结算直接退。
+			 */
+			leaveRoomAndBack() {
+				if (this.room && this.room.status === 'playing') {
+					this.confirmLeaveRoom()
+					return
+				}
+				this.doLeaveRoom()
+			},
+			/** 退出房间的二次确认 */
+			confirmLeaveRoom() {
+				uni.showModal({
+					title: '退出房间',
+					content: this.buildLeaveConfirmText(),
+					confirmText: '退出',
+					confirmColor: '#e76f51',
+					success: (res) => {
+						if (res.confirm) {
+							this.doLeaveRoom()
+						}
+					}
+				})
+			},
+			/** 退出确认文案：房主提示可能解散，对局中提示交托管（两条都成立时都要说） */
+			buildLeaveConfirmText() {
+				const playing = Boolean(this.room && this.room.status === 'playing')
+				if (playing) {
+					return this.isHost
+						? '对局进行中，退出后本局将由系统托管代打；退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
+						: '对局进行中，退出后本局将由系统托管代打，确定退出吗？'
+				}
+				if (this.isHost) {
+					return '退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
+				}
+				return '确定要退出房间吗？'
+			},
+			/**
+			 * 真正退出房间（顶栏「退出」/ 返回键 / 结算弹窗「返回大厅」最终都落到这里）。
+			 * 对局进行中服务端会保留座位交托管（三人回合不能缺人），返回里带 transferredToTrustee 标记。
+			 * 已经不在房间里（被移出 / 房间解散）也算退出成功 —— 不能把人卡在房间里出不去。
+			 */
+			async doLeaveRoom() {
+				if (this.leavingRoom) {
+					return
+				}
+				this.leavingRoom = true
+				uni.showLoading({
+					title: '正在退出',
+					mask: true
+				})
+				try {
+					const result = assertGameResult(
+						await getGameApi().leaveRoom({ roomId: this.roomId }),
+						'退出房间失败'
+					)
+					this.finishLeaveRoom(result)
+				} catch (error) {
+					const code = String((error && error.errCode) || '')
+					if (code === 'love-note-game-not-in-room' || code === 'love-note-game-room-not-found') {
+						// 已被移出 / 房间已解散：同样按退出处理，直接回大厅
+						this.finishLeaveRoom(null)
+						return
+					}
+					this.leavingRoom = false
+					uni.hideLoading()
+					uni.showToast({
+						title: (error && error.message) || '退出房间失败',
+						icon: 'none'
+					})
+				}
+			},
+			/** 退房成功后的统一善后：断开同步 → 清缓存（并阻止写回）→ 提示 → 回大厅 */
+			finishLeaveRoom(result) {
+				// 退出后立刻断开房间同步，免得页面还在拉一个自己已经不在的房间
+				if (this.sync) {
+					this.sync.stop()
+					this.sync = null
+				}
+				this.markRoomExited()
+				uni.hideLoading()
+				const data = (result && result.data) || {}
+				let title = '已退出房间'
+				if (data.closed) {
+					title = '房间已解散'
+				} else if (data.transferredToTrustee) {
+					title = '已退出，本局交由托管'
+				}
+				uni.showToast({
+					title,
+					icon: 'none'
+				})
+				setTimeout(() => this.handleBackToHall(), 700)
 			},
 			handleBackToHall() {
 				this.resultVisible = false
@@ -886,11 +1013,17 @@
 					this.applySnapshot(result.data, { source: 'local', changed: true, reset: true })
 					this.startSync()
 				} catch (error) {
+					const code = String((error && error.errCode) || '')
 					uni.showToast({
-						title: error.message || '进入房间失败',
+						title: (error && error.message) || '进入房间失败',
 						icon: 'none'
 					})
-					if (error.errCode === 'love-note-game-room-not-found') {
+					// 房间没了 / 自己已不在房间里：本地缓存里的「继续对局」已经是张死卡片，
+					// 先清掉再回大厅，否则大厅会一直挂着一个点不进去的入口。
+					if (code === 'love-note-game-room-not-found' || code === 'love-note-game-not-in-room') {
+						if (payload.roomId) {
+							this.markRoomExited()
+						}
 						setTimeout(() => this.handleBackToHall(), 1200)
 					}
 				} finally {
@@ -924,7 +1057,7 @@
 						content: error.message || '房间不存在或已关闭',
 						showCancel: false,
 						success: () => {
-							clearActiveRoom(this.currentUid)
+							this.markRoomExited()
 							this.handleBackToHall()
 						}
 					})
@@ -983,7 +1116,7 @@
 				if (this.phase === 'settled' && !this.resultShown) {
 					this.resultShown = true
 					this.resultVisible = true
-					clearActiveRoom(this.currentUid)
+					// 不再清活跃房：一房多局，结算后留在房间，重进也能回来等下一局
 				}
 				if (this.phase !== 'settled') {
 					this.resultShown = false
@@ -1062,6 +1195,10 @@
 					return
 				}
 				this.runRoomAction('landlordStart', {})
+			},
+			/** 结算后房主点「再来一局」：重新发牌，直接开新局 */
+			handleRematch() {
+				this.runRoomAction('rematch', {})
 			},
 			handleBid(score) {
 				this.runRoomAction('landlordBid', { score })
@@ -1142,7 +1279,7 @@
 							return
 						}
 						this.runRoomAction('closeRoom', {}).then(() => {
-							clearActiveRoom(this.currentUid)
+							this.markRoomExited()
 							this.handleBackToHall()
 						})
 					}

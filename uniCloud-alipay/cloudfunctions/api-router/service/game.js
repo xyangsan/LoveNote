@@ -5,6 +5,7 @@ const { checkAuth } = require('../lib/auth')
 const {
 	gameRoomCollection,
 	gameRecordCollection,
+	gameMatchCollection,
 	dbCmd
 } = require('../lib/db')
 const { formatError } = require('../lib/response')
@@ -162,6 +163,59 @@ module.exports = class GameService extends Service {
 	}
 
 	/**
+	 * 归档一局到对局表 love-game-matches（一房一局一条，记录「房间 ↔ 对局」关系）。
+	 *
+	 * 与 writeGameRecord 的边界：
+	 *   - records 面向全局战绩列表（轻量摘要，players.uid 查询）；
+	 *   - matches 面向房内复盘（完整 final_state + final_answer 快照），靠 (room_id, match_index) 关联。
+	 *
+	 * 幂等：love-game-matches 有 (room_id, match_index) 唯一索引，重复 add 会被 DB 拦截，
+	 * 这里 catch 静默吞掉即可（真正保证「一局只归档一次」的是上游 playing→settled 唯一跳变）。
+	 */
+	async writeMatchRecord(room = {}, { createUid = '', now = Date.now() } = {}) {
+		try {
+			const engine = getEngine(room.game_type)
+			if (!engine || typeof engine.buildRecord !== 'function') {
+				return null
+			}
+			const base = await engine.buildRecord(room, { createUid, now })
+			if (!base) {
+				return null
+			}
+			const matchData = {
+				game_type: base.game_type,
+				room_id: base.room_id,
+				room_code: base.room_code,
+				match_index: base.match_index,
+				players: base.players,
+				winner_uids: base.winner_uids,
+				loser_uids: base.loser_uids,
+				winner_camp: base.winner_camp,
+				summary: base.summary,
+				// 完整快照（含操作历史：卧底 speeches/vote_history，斗地主 play_log/history/bids）
+				final_state: room.state || {},
+				// 敏感快照（卧底身份/词、手牌/底牌），复盘接口必须按 uid 裁剪，绝不整体下发
+				final_answer: room.answer || {},
+				create_uid: createUid || '',
+				create_time: now,
+				is_deleted: false
+			}
+			const result = await gameMatchCollection.add(matchData)
+			return result && result.id ? result.id : null
+		} catch (error) {
+			// 唯一索引冲突 = 已归档过，静默吞掉（幂等）
+			console.warn('api-router writeMatchRecord failed', error)
+			return null
+		}
+	}
+
+	/** 结算产物统一入口：战绩 + 对局归档一起写 */
+	async writeSettleArtifacts(room = {}, { createUid = '', now = Date.now() } = {}) {
+		await this.writeGameRecord(room, { createUid, now })
+		await this.writeMatchRecord(room, { createUid, now })
+	}
+
+	/**
 	 * 连续推进超时/机器人，直到无进展或达到上限。
 	 * 每次推进都写入房间并广播，保证所有客户端都能感知。
 	 */
@@ -198,7 +252,7 @@ module.exports = class GameService extends Service {
 			lastVersion = commit.version
 
 			if (patch.status === ROOM_STATUS_SETTLED) {
-				await this.writeGameRecord(current, { createUid: '', now: commit.updateTime })
+				await this.writeSettleArtifacts(current, { createUid: '', now: commit.updateTime })
 				await pushRoomUpdate(current._id, commit.version)
 				return { room: current, changed: true, version: commit.version }
 			}
@@ -252,7 +306,7 @@ module.exports = class GameService extends Service {
 		return resolved.props
 	}
 
-	async runEngineAction({ room, uid, engineAction, params = {} }) {
+	async runEngineAction({ room, uid, engineAction, params = {}, requireStatus = '', incrementRound = false }) {
 		const engine = getEngine(room.game_type)
 		if (!engine || typeof engine.handleAction !== 'function') {
 			throw buildError(ERROR_CODES.paramInvalid, '该游戏暂不支持此操作')
@@ -277,10 +331,20 @@ module.exports = class GameService extends Service {
 		// 不需要额外的迁移脚本
 		const commitPatch = Object.assign({}, patch, { props: healedProps })
 
-		const requireStatus = patch.status === ROOM_STATUS_SETTLED ? ROOM_STATUS_PLAYING : ''
+		// 局序号（第几局）：房间顶层 round 由 service 统一维护，引擎不碰（引擎只碰 state.round）
+		if (incrementRound) {
+			commitPatch.round = Number(room.round || 0) + 1
+		}
+
+		// 显式 requireStatus 优先（rematch 用 settled、start 用 waiting）；
+		// 否则维持「结算 → 约束 playing」的既有逻辑
+		const finalRequireStatus = requireStatus
+			? requireStatus
+			: (patch.status === ROOM_STATUS_SETTLED ? ROOM_STATUS_PLAYING : '')
+
 		const commit = await commitRoomPatch(room, commitPatch, {
 			expectVersion: Number(room.version || 0),
-			requireStatus
+			requireStatus: finalRequireStatus
 		})
 
 		if (!commit.ok) {
@@ -290,7 +354,7 @@ module.exports = class GameService extends Service {
 		const nextRoom = applyPatchToRoom(room, commitPatch, commit)
 
 		if (patch.status === ROOM_STATUS_SETTLED) {
-			await this.writeGameRecord(nextRoom, { createUid: uid, now: commit.updateTime })
+			await this.writeSettleArtifacts(nextRoom, { createUid: uid, now: commit.updateTime })
 		}
 
 		await pushRoomUpdate(nextRoom._id, commit.version)
@@ -315,7 +379,7 @@ module.exports = class GameService extends Service {
 
 		const nextRoom = applyPatchToRoom(room, patch, commit)
 		if (patch.status === ROOM_STATUS_SETTLED) {
-			await this.writeGameRecord(nextRoom, { createUid: uid, now: commit.updateTime })
+			await this.writeSettleArtifacts(nextRoom, { createUid: uid, now: commit.updateTime })
 		}
 		await pushRoomUpdate(nextRoom._id, commit.version)
 
@@ -519,7 +583,7 @@ module.exports = class GameService extends Service {
 		const nextRoom = applyPatchToRoom(room, patch, commit)
 		await pushRoomUpdate(nextRoom._id, commit.version)
 		if (patch.status === ROOM_STATUS_SETTLED) {
-			await this.writeGameRecord(nextRoom, { createUid: '', now: commit.updateTime })
+			await this.writeSettleArtifacts(nextRoom, { createUid: '', now: commit.updateTime })
 		}
 		return { skipped: false, closed: false, room: nextRoom }
 	}
@@ -1029,7 +1093,9 @@ module.exports = class GameService extends Service {
 				room,
 				uid,
 				engineAction: 'start',
-				params
+				params,
+				requireStatus: ROOM_STATUS_WAITING,
+				incrementRound: true
 			})
 
 			return Object.assign({}, authState.response, {
@@ -1096,7 +1162,7 @@ module.exports = class GameService extends Service {
 				if (commit.ok) {
 					const nextRoom = applyPatchToRoom(latest, settlePatch, commit)
 					if (settlePatch.status === ROOM_STATUS_SETTLED) {
-						await this.writeGameRecord(nextRoom, { createUid: uid, now: commit.updateTime })
+						await this.writeSettleArtifacts(nextRoom, { createUid: uid, now: commit.updateTime })
 					}
 					await pushRoomUpdate(nextRoom._id, commit.version)
 					return Object.assign({}, authState.response, {
@@ -1333,7 +1399,9 @@ module.exports = class GameService extends Service {
 				room,
 				uid,
 				engineAction: 'start',
-				params
+				params,
+				requireStatus: ROOM_STATUS_WAITING,
+				incrementRound: true
 			})
 
 			return Object.assign({}, authState.response, {
@@ -1351,6 +1419,45 @@ module.exports = class GameService extends Service {
 
 	async landlordBid(params = {}) {
 		return this.handleLandlordAction('bid', params, '叫分失败', { retryOnConflict: 1 })
+	}
+
+	/**
+	 * 「再来一局」：一局结算后，房主点按钮重新开局（卧底重新分配卧底/抽词，斗地主重新发牌）。
+	 * 卧底 + 斗地主共用，引擎按 game_type 分发到各自的 case 'rematch'。
+	 *
+	 * 幂等关键：`requireStatus = ROOM_STATUS_SETTLED` + 乐观锁 version ——
+	 * 只有那次真正把 settled 改写成 playing 的提交会成功，并发/重复点按钮的第二次会冲突。
+	 */
+	async rematch(params = {}) {
+		try {
+			const { authState, uid } = await this.getAuthUid()
+			const room = await this.loadRoom(params.roomId)
+			this.assertInRoom(room, uid)
+			this.assertHost(room, uid)
+			if (room.status !== ROOM_STATUS_SETTLED) {
+				throw buildError(ERROR_CODES.roomNotWaiting, '当前没有已结算的对局可重开')
+			}
+
+			const result = await this.runEngineAction({
+				room,
+				uid,
+				engineAction: 'rematch',
+				params,
+				requireStatus: ROOM_STATUS_SETTLED,
+				incrementRound: true
+			})
+
+			return Object.assign({}, authState.response, {
+				errCode: 0,
+				errMsg: '新一局已开始',
+				data: await this.buildSnapshot(result.room, uid, {
+					changed: true,
+					version: result.version
+				})
+			})
+		} catch (error) {
+			return formatError(error, '开始下一局失败')
+		}
 	}
 
 	async landlordPlay(params = {}) {

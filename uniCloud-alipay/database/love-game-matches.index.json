@@ -1,0 +1,30 @@
+[
+	{
+		"IndexName": "idx_room_match",
+		"MgoKeySchema": {
+			"MgoIsUnique": true,
+			"MgoIndexKeys": [
+				{
+					"Name": "room_id",
+					"Direction": "1"
+				},
+				{
+					"Name": "match_index",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_is_deleted",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "is_deleted",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

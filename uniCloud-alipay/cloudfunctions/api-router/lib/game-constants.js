@@ -26,7 +26,13 @@ const ROOM_STATUS_PLAYING = 'playing'
 const ROOM_STATUS_SETTLED = 'settled'
 const ROOM_STATUS_CLOSED = 'closed'
 
-const ACTIVE_ROOM_STATUS_LIST = [ROOM_STATUS_WAITING, ROOM_STATUS_PLAYING]
+/**
+ * 「活跃」房间：未关闭、仍可恢复的房间。
+ *
+ * 含 settled —— 一房多局后，结算中的房间房主可点「再来一局」重开，
+ * 「继续对局」入口与重进都要能查到它（见 getActiveRoomByUid / getRoomByCode）。
+ */
+const ACTIVE_ROOM_STATUS_LIST = [ROOM_STATUS_WAITING, ROOM_STATUS_PLAYING, ROOM_STATUS_SETTLED]
 
 /**
  * 移出玩家后，房间内真人玩家少于此值时自动解散。
@@ -55,7 +61,7 @@ const CONNECTION_IDLE_TTL = 5 * 60 * 1000
  * 影响对局的逻辑（尤其机器人推进、props、投票）后**把这个字符串改掉**，
  * 然后在房间页控制台看 `[game] server build` —— 没变就说明云函数没上传成功。
  */
-const GAME_SERVICE_BUILD = '2026-10-08.8'
+const GAME_SERVICE_BUILD = '2026-10-16.2'
 
 /** 在线/离线判定窗口 */
 const SEAT_ONLINE_WINDOW = 20 * 1000
@@ -87,6 +93,14 @@ const MAX_VOTE_HISTORY = 20
 const MAX_AUTO_ACTIONS = 20
 const MAX_PLAYED_HISTORY = 8
 const MAX_LANDLORD_LOG = 40
+/**
+ * 斗地主「全量出牌流水」（state.play_log）上限。
+ *
+ * 与 MAX_PLAYED_HISTORY(=8) 的区别：history 是「最近 8 手」的 UI 展示缓冲，
+ * play_log 是**整局完整流水**，归档进对局表（love-game-matches.final_state）用于复盘。
+ * 一局正常 20~40 手，留 200 上限防极端情况撑爆文档。
+ */
+const MAX_PLAY_LOG = 200
 const MAX_CONNECTIONS_PER_ROOM = 50
 const MAX_AUTO_ACTION_BEFORE_TRUSTEE = 2
 
@@ -339,6 +353,7 @@ module.exports = {
 	MAX_AUTO_ACTIONS,
 	MAX_PLAYED_HISTORY,
 	MAX_LANDLORD_LOG,
+	MAX_PLAY_LOG,
 	MAX_CONNECTIONS_PER_ROOM,
 	MAX_AUTO_ACTION_BEFORE_TRUSTEE,
 	ROOM_CODE_LENGTH,

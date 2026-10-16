@@ -499,6 +499,8 @@ function buildInitialState(gameType) {
 			trustee_meta: {},
 			auto_actions: [],
 			history: [],
+			// 整局完整出牌流水（区别于 history 的「最近 8 手」），归档进对局表用于复盘
+			play_log: [],
 			started_at: 0,
 			settled_at: 0
 		}
@@ -593,6 +595,9 @@ async function createRoomRecord({
  *     之后写子字段时 Mongo 会自动创建中间对象。读侧 `if (!state.last_play)` 语义完全不变。
  *   - 数组 / 标量 / dbCmd 命令 → 原样作为叶子写入（数组是整体覆盖，与 SDK 行为一致）。
  *   - `undefined` → 跳过（等同于「本次不改」）。
+ *
+ * ⚠️ 展平只会写「新对象里有的叶子」，**旧键不会消失** —— 对象的「整替换」语义
+ * 由 `purgeRemovedObjectKeys` 负责补齐，两者必须成对使用（见该函数注释）。
  */
 function flattenStateUpdate(prefix = '', value = {}, out = {}) {
 	if (!value || typeof value !== 'object' || Array.isArray(value) || isDbCommand(value)) {
@@ -615,6 +620,53 @@ function flattenStateUpdate(prefix = '', value = {}, out = {}) {
 	return out
 }
 
+/**
+ * 补上「对象整替换」语义：把 patch 里**已经消失的对象键**从库里删掉。
+ *
+ * 背景：各引擎的 state / answer 都是**完整对象**（`Object.assign({}, 旧值, {...})`，
+ * 全项目没有任何一处传「部分 state」的 patch），语义是「整替换」；
+ * 但写库是点号展平，只会写「新对象里有的叶子」→ 旧键没人删，会一直留在库里。
+ *
+ * 踩过的坑（真实复现）：
+ *   1. 斗地主重开：`buildDealPatch` 的 `bids: {}` 清不掉上一局的叫分，
+ *      机器人一叫分就把「3 个人都叫过」判成 true，直接跳进打牌阶段
+ *      （表现：「再来一局」刚点下去，牌已经自己出了几张）；
+ *   2. 斗地主「恢复操作」：引擎 `delete trustee_meta[seat]` 之后旧键还在，
+ *      前端读 `isTrusteeAuto` 仍认为在托管。
+ *
+ * 规则：
+ *   - 只递归**普通对象**：数组是整体覆盖（叶子写），不按下标做键级删除；
+ *   - `patch` 里值为 `undefined` 的键按既有约定「本次不改」，同样跳过；
+ *   - `patch` 里值为 `null` 的键照常交给 flattenStateUpdate 转成 remove，
+ *     这里不重复处理（否则会同一路径删两次）；
+ *   - **state / answer 的顶层键永远不删**（只下钻）：顶层键是房间骨架，
+ *     各引擎从来都是整份 state 一起写的，不存在「删顶层字段」的合法场景；
+ *     留这道保险是为了万一有人写了只带部分字段的 patch，也不会把房间状态删空。
+ */
+function purgeRemovedObjectKeys(current = {}, next = {}, prefix = '', out = {}, isTopLevel = true) {
+	if (!current || typeof current !== 'object' || Array.isArray(current) || isDbCommand(current)) {
+		return out
+	}
+	if (!next || typeof next !== 'object' || Array.isArray(next) || isDbCommand(next)) {
+		return out
+	}
+	Object.keys(current).forEach((key) => {
+		const path = `${prefix}.${key}`
+		if (!Object.prototype.hasOwnProperty.call(next, key)) {
+			if (!isTopLevel) {
+				out[path] = dbCmd.remove()
+			}
+			return
+		}
+		if (next[key] === undefined) {
+			// undefined = 「本次不改」，保持旧值
+			return
+		}
+		purgeRemovedObjectKeys(current[key], next[key], path, out, false)
+	})
+	return out
+}
+
 function isDbCommand(value) {
 	return Boolean(value && typeof value === 'object' && typeof value.__op === 'string')
 }
@@ -632,11 +684,14 @@ function buildCommitUpdate(room = {}, patch = {}, now = Date.now()) {
 		}
 	})
 
-	// state / answer 走展平写入（见 flattenStateUpdate 的注释）
+	// state / answer 走展平写入（见 flattenStateUpdate 的注释）。
+	// ⚠️ 必须先删「patch 里消失的旧键」再写叶子，两者路径不重叠（删的是旧键、写的是新键）。
 	if (patch.state !== undefined && patch.state !== null) {
+		purgeRemovedObjectKeys(room.state || {}, patch.state, 'state', update)
 		flattenStateUpdate('state', patch.state, update)
 	}
 	if (patch.answer !== undefined && patch.answer !== null) {
+		purgeRemovedObjectKeys(room.answer || {}, patch.answer, 'answer', update)
 		flattenStateUpdate('answer', patch.answer, update)
 	}
 

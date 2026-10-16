@@ -1,0 +1,123 @@
+{
+	"bsonType": "object",
+	"required": [
+		"room_id",
+		"game_type",
+		"match_index",
+		"create_time"
+	],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "对局ID，系统自动生成"
+		},
+		"room_id": {
+			"bsonType": "string",
+			"title": "房间ID",
+			"description": "关联 love-game-rooms._id"
+		},
+		"room_code": {
+			"bsonType": "string",
+			"title": "房间邀请码",
+			"description": "冗余，便于排查",
+			"defaultValue": ""
+		},
+		"game_type": {
+			"bsonType": "string",
+			"title": "游戏类型",
+			"description": "undercover / landlord"
+		},
+		"match_index": {
+			"bsonType": "int",
+			"title": "局序号",
+			"description": "该房间内的第几局（从 1 起），等于房间顶层 round",
+			"defaultValue": 1
+		},
+		"players": {
+			"bsonType": "array",
+			"title": "该局结果摘要",
+			"description": "冗余自 buildRecord.players，供房内复盘列表直接列出，无需展开 final_state",
+			"defaultValue": [],
+			"items": {
+				"bsonType": "object",
+				"properties": {
+					"uid": {
+						"bsonType": "string"
+					},
+					"nickname": {
+						"bsonType": "string"
+					},
+					"avatar_url": {
+						"bsonType": "string"
+					},
+					"seat_index": {
+						"bsonType": "int"
+					},
+					"is_robot": {
+						"bsonType": "bool",
+						"defaultValue": false
+					},
+					"role": {
+						"bsonType": "string"
+					},
+					"score_delta": {
+						"bsonType": "int",
+						"defaultValue": 0
+					},
+					"result": {
+						"bsonType": "string",
+						"description": "win / lose / draw"
+					}
+				}
+			}
+		},
+		"winner_uids": {
+			"bsonType": "array",
+			"title": "获胜方UID列表",
+			"defaultValue": []
+		},
+		"loser_uids": {
+			"bsonType": "array",
+			"title": "失败方UID列表",
+			"defaultValue": []
+		},
+		"winner_camp": {
+			"bsonType": "string",
+			"title": "获胜阵营",
+			"description": "landlord / farmer / civilian / undercover",
+			"defaultValue": ""
+		},
+		"summary": {
+			"bsonType": "string",
+			"title": "结果摘要文案"
+		},
+		"final_state": {
+			"bsonType": "object",
+			"title": "该局最终状态快照",
+			"description": "完整 room.state（含操作历史：卧底 speeches/vote_history、斗地主 play_log/history/bids 等）"
+		},
+		"final_answer": {
+			"bsonType": "object",
+			"title": "该局敏感信息快照",
+			"description": "room.answer（卧底身份/词、他人手牌/底牌）。⚠️ 敏感，复盘接口必须按 uid 裁剪，绝不整体下发"
+		},
+		"create_uid": {
+			"bsonType": "string",
+			"title": "落库触发人UID"
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "归档时间"
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		}
+	}
+}

@@ -77,6 +77,10 @@ module.exports = class GameController extends Controller {
 		return this.service.game.undercoverVote(this.ctx.data || {})
 	}
 
+	async rematch() {
+		return this.service.game.rematch(this.ctx.data || {})
+	}
+
 	async undercoverNextRound() {
 		return this.service.game.undercoverNextRound(this.ctx.data || {})
 	}

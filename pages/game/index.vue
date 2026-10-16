@@ -156,7 +156,9 @@
 					return ''
 				}
 				const room = this.activeRoom
-				const statusText = room.status === 'waiting' ? '等待开局' : '对局进行中'
+				const statusText = room.status === 'waiting'
+					? '等待开局'
+					: (room.status === 'settled' ? '已结算 · 可再来一局' : '对局进行中')
 				const codeText = room.roomCode ? `房间号 ${room.roomCode}` : ''
 				return `${statusText} · ${room.playerCount}/${room.maxPlayers} 人${codeText ? ' · ' + codeText : ''}`
 			},

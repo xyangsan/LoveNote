@@ -26,6 +26,7 @@ const {
 	SEAT_STATUS_PLAYING,
 	SEAT_STATUS_FINISHED,
 	MAX_PLAYED_HISTORY,
+	MAX_PLAY_LOG,
 	MAX_AUTO_ACTIONS,
 	OFFLINE_TRUSTEE_WINDOW,
 	MAX_AUTO_ACTION_BEFORE_TRUSTEE,
@@ -244,6 +245,8 @@ function buildDealPatch(room = {}, now = Date.now()) {
 		winner_camp: '',
 		score_delta: {},
 		history: [],
+		// 整局完整出牌流水（区别于 history 的「最近 8 手」），归档进对局表用于复盘
+		play_log: [],
 		trustee_seats: Array.isArray(previousState.trustee_seats) ? previousState.trustee_seats : [],
 		trustee_meta: previousState.trustee_meta || {},
 		auto_actions: Array.isArray(previousState.auto_actions) ? previousState.auto_actions : [],
@@ -431,6 +434,18 @@ function applyPlay(room = {}, seatIndex = -1, cardIds = [], now = Date.now()) {
 		card_count: cardIds.length
 	}].concat(Array.isArray(state.history) ? state.history : []).slice(0, MAX_PLAYED_HISTORY)
 
+	// 整局完整出牌流水（用于归档复盘），按时间正序追加，cap MAX_PLAY_LOG
+	const playLog = (Array.isArray(state.play_log) ? state.play_log.slice() : []).concat([{
+		seat_index: Number(seatIndex),
+		cards: cardIds.slice(),
+		combo_type: comboInfo.type,
+		card_count: cardIds.length,
+		create_time: now
+	}])
+	while (playLog.length > MAX_PLAY_LOG) {
+		playLog.shift()
+	}
+
 	const nextState = Object.assign({}, state, {
 		last_play: {
 			seat_index: Number(seatIndex),
@@ -443,7 +458,8 @@ function applyPlay(room = {}, seatIndex = -1, cardIds = [], now = Date.now()) {
 		bomb_count: Number(state.bomb_count || 0) + (isBomb ? 1 : 0),
 		cards_left: cardsLeft,
 		played_counts: playedCounts,
-		history
+		history,
+		play_log: playLog
 	})
 
 	const answer = Object.assign({}, room.answer, {
@@ -664,6 +680,22 @@ async function handleAction({ room, uid, action, params = {} }) {
 		const autoPatch = advanceAutoSeats(base, now)
 		return composePatch(room, [dealPatch, autoPatch])
 	}
+	case 'rematch': {
+		assertHost(room, uid)
+		if (room.status !== ROOM_STATUS_SETTLED) {
+			throw buildError(ERROR_CODES.roomNotWaiting, '当前没有已结算的对局')
+		}
+		if (sortedSeats(room).length < LANDLORD_PLAYER_COUNT) {
+			throw buildError(ERROR_CODES.notEnoughPlayers, `斗地主需要 ${LANDLORD_PLAYER_COUNT} 名玩家`)
+		}
+
+		// buildDealPatch 重新 deal() 发牌；清掉上局残留的托管/超时流水
+		const dealPatch = buildDealPatch(room, now)
+		dealPatch.state.auto_actions = []
+		const base = mergePatch(room, dealPatch)
+		const autoPatch = advanceAutoSeats(base, now)
+		return composePatch(room, [dealPatch, autoPatch])
+	}
 	case 'bid': {
 		requireTurn(room, seatIndex)
 		const score = Number(params.score)
@@ -856,6 +888,8 @@ async function buildRecord(room = {}, { createUid = '', now = Date.now() } = {})
 		game_type: 'landlord',
 		room_id: room._id || '',
 		room_code: room.room_code || '',
+		// 第几局（= room.round，与对局表 love-game-matches.match_index 对应）
+		match_index: Number(room.round || 0),
 		players,
 		winner_uids: players.filter((item) => item.result === 'win').map((item) => item.uid).filter(Boolean),
 		loser_uids: players.filter((item) => item.result === 'lose').map((item) => item.uid).filter(Boolean),

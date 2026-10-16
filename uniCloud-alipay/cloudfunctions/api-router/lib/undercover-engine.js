@@ -284,7 +284,8 @@ async function buildStartPatch(room = {}, params = {}, now = Date.now()) {
 		source: params.wordSource === 'mine' ? 'mine' : 'preset',
 		uid: params.uid || '',
 		category: params.category,
-		excludeIds: []
+		// 重开（rematch）时传入上局词对 id，避免连续两局抽到同一个词
+		excludeIds: Array.isArray(params.excludeIds) ? params.excludeIds : []
 	})
 
 	if (!wordPair) {
@@ -922,6 +923,25 @@ async function handleAction({ room, uid, action, params = {} }) {
 		const autoPatch = advanceAutoSeats(base, now)
 		return composePatch(room, [startPatch, autoPatch])
 	}
+	case 'rematch': {
+		if (String(room.host_uid || '') !== String(uid || '')) {
+			throw buildError(ERROR_CODES.notHost, '只有房主可以开始下一局')
+		}
+		if (room.status !== ROOM_STATUS_SETTLED) {
+			throw buildError(ERROR_CODES.roomNotWaiting, '当前没有已结算的对局')
+		}
+		const previousState = room.state || {}
+		// buildStartPatch 内部 shuffle(rings).slice(0, undercoverCount) → 天然重新分配卧底；
+		// pickWordPair 重新抽词（excludeIds 传上局词对 id，避免连抽同词）。
+		const startPatch = await buildStartPatch(room, Object.assign({ uid }, params, {
+			excludeIds: previousState.word_pair_id ? [previousState.word_pair_id] : []
+		}), now)
+		// 清掉上局残留的托管/超时流水，避免混进新局时间线
+		startPatch.state.auto_actions = []
+		const base = mergePatch(room, startPatch)
+		const autoPatch = advanceAutoSeats(base, now)
+		return composePatch(room, [startPatch, autoPatch])
+	}
 	case 'speak': {
 		const patch = applySpeak(room, seatIndex, params.text, now, { skip: false })
 		const base = mergePatch(room, patch)
@@ -1049,6 +1069,8 @@ async function buildRecord(room = {}, { createUid = '', now = Date.now() } = {})
 		game_type: 'undercover',
 		room_id: room._id || '',
 		room_code: room.room_code || '',
+		// 第几局（= room.round，与对局表 love-game-matches.match_index 对应）
+		match_index: Number(room.round || 0),
 		players,
 		winner_uids: players.filter((item) => item.result === 'win').map((item) => item.uid).filter(Boolean),
 		loser_uids: players.filter((item) => item.result === 'lose').map((item) => item.uid).filter(Boolean),

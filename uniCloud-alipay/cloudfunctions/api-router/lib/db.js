@@ -16,6 +16,7 @@ module.exports = {
 	wishPlanCollection: db.collection('love-wish-plans'),
 	gameRoomCollection: db.collection('love-game-rooms'),
 	gameRecordCollection: db.collection('love-game-records'),
+	gameMatchCollection: db.collection('love-game-matches'),
 	gameWordCollection: db.collection('love-game-undercover-words'),
 	gameConnectionCollection: db.collection('love-game-connections')
 }

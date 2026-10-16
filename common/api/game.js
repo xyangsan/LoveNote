@@ -18,6 +18,8 @@ export function getGameApi() {
 			kickPlayer: 'game/kickPlayer',
 			claimHost: 'game/claimHost',
 			closeRoom: 'game/closeRoom',
+			// 一房多局：结算后房主点「再来一局」重开（卧底重新分配卧底/抽词、斗地主重新发牌）
+			rematch: 'game/rematch',
 
 			// 谁是卧底
 			undercoverStart: 'game/undercoverStart',
