@@ -64,7 +64,7 @@
 							@input="onNicknameInput"
 							@blur="onNicknameBlur"
 						></fui-input>
-						<text class="love-field-tip login-editor__tip">昵称可以不填，我们会帮你取一个好听的默认昵称；之后可在「我的 - 编辑资料」里随时修改。</text>
+						<text class="love-field-tip login-editor__tip">首次填写后会自动记住头像和昵称，后续登录可直接回填。</text>
 					</view>
 
 					<view class="love-action-stack login-actions">

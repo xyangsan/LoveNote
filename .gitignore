@@ -23,4 +23,5 @@ package-lock.json
 .codebuddy
 .workbuddy
 .neox
-tmp-cache-check
+/scripts
+/tmp-*
