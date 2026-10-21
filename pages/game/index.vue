@@ -116,6 +116,7 @@
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { hasValidLogin } from '@/common/auth-center.js'
 	import { openLoginModal } from '@/common/auth-modal.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const ROOM_PAGE_MAP = {
 		undercover: '/pages/game/undercover/room',
@@ -183,12 +184,17 @@
 			},
 		},
 		onLoad() {
+			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncLoginState()
 			this.refreshActiveRoom()
 			this.loadRecords()
 		},
 		onShow() {
+			// onLoad 的闸门只负责跳转，onShow 仍会先跑一次（redirectTo 是异步的），
+			// 这里再挡一刀，避免未登录就发对局/战绩请求、在登录页上闪错误 toast。
+			if (!requirePageLogin()) return
 			this.syncLoginState()
 			this.refreshActiveRoom()
 			this.loadRecords()

@@ -20,16 +20,17 @@
 					<text class="avatar-picker__hint">点击选择头像</text>
 				</button>
 				<view class="profile-editor__form">
-					<text class="profile-editor__label">微信昵称</text>
+					<text class="profile-editor__label">昵称（选填）</text>
 					<input
 						class="profile-editor__input"
 						type="nickname"
-						placeholder="请输入你的昵称"
+						placeholder="选填，不填自动帮你取一个"
+						maxlength="20"
 						:value="loginForm.nickname"
 						@input="onNicknameInput"
 						@blur="onNicknameBlur"
 					/>
-					<text class="profile-editor__tip">如果暂时不填写，会默认保存为“微信用户”。</text>
+					<text class="profile-editor__tip">昵称可以不填，不填会帮你自动生成一个；登录后可在资料页随时改。</text>
 				</view>
 			</view>
 

@@ -116,7 +116,8 @@ export const GAME_RULES = {
 				heading: '准备',
 				items: [
 					'房主创建房间，把房间号发给两位朋友，凑满 3 人',
-					'三人都点「准备」后，房主才能开始游戏；人不够时房主可以「添加机器人」补位',
+					'除房主外的玩家都点「准备」后，房主即可开始游戏（房主本人不需要准备）',
+					'人不够时房主可以「添加机器人」补位，机器人视为已准备',
 					'一副牌 54 张，每人 17 张，留 3 张底牌'
 				]
 			},
@@ -213,9 +214,89 @@ export function getGameIconSrc(gameType = '') {
 	return meta && meta.iconSrc ? String(meta.iconSrc) : ''
 }
 
+/* ------------------------------------------------------------------ *
+ * 角色 / 状态角标（人物形象右上角的小图标）
+ * 与游戏图标共用同一套「emoji（默认）/ svg」渲染规则，统一走 love-game-icon，
+ * ⚠️ 角标只显示图标、不显示文字：含义靠 icon + 描边色（tone）区分。
+ * ------------------------------------------------------------------ */
+
+export const BADGE_TYPE_LANDLORD = 'landlord'
+export const BADGE_TYPE_FARMER = 'farmer'
+export const BADGE_TYPE_ROBOT = 'robot'
+export const BADGE_TYPE_TRUSTEE = 'trustee'
+/** 掉线 / 超时后系统自动托管，与玩家主动点的「托管」区分开 */
+export const BADGE_TYPE_TRUSTEE_OFFLINE = 'trustee-offline'
+
+/**
+ * title 只用于无障碍/调试，界面上一律不渲染文字；
+ * 想换成矢量图标：给某项补 `iconType: GAME_ICON_TYPE_SVG` + `iconSrc: '/static/...svg'` 即可，组件不用改。
+ */
+export const BADGE_META = {
+	[BADGE_TYPE_LANDLORD]: {
+		badgeType: BADGE_TYPE_LANDLORD,
+		title: '地主',
+		icon: '👑',
+		iconType: GAME_ICON_TYPE_EMOJI,
+		tone: '#e76f51'
+	},
+	[BADGE_TYPE_FARMER]: {
+		badgeType: BADGE_TYPE_FARMER,
+		title: '农民',
+		icon: '🌾',
+		iconType: GAME_ICON_TYPE_EMOJI,
+		tone: '#8fae6a'
+	},
+	[BADGE_TYPE_ROBOT]: {
+		badgeType: BADGE_TYPE_ROBOT,
+		title: '机器人',
+		icon: '🤖',
+		iconType: GAME_ICON_TYPE_EMOJI,
+		tone: '#6cb8ff'
+	},
+	[BADGE_TYPE_TRUSTEE]: {
+		badgeType: BADGE_TYPE_TRUSTEE,
+		title: '托管中',
+		icon: '🕹️',
+		iconType: GAME_ICON_TYPE_EMOJI,
+		tone: '#f5b544'
+	},
+	[BADGE_TYPE_TRUSTEE_OFFLINE]: {
+		badgeType: BADGE_TYPE_TRUSTEE_OFFLINE,
+		title: '掉线托管',
+		icon: '💤',
+		iconType: GAME_ICON_TYPE_EMOJI,
+		tone: '#f5b544'
+	}
+}
+
+/** 未配置的角标类型兜底图标（不显示文字，所以给个可见的问号而不是空白） */
+export const FALLBACK_BADGE_ICON = '❔'
+
+export function getBadgeMeta(badgeType = '') {
+	return BADGE_META[String(badgeType || '')] || null
+}
+
+/** 该角标用哪种渲染方式（emoji / svg），未知类型按 emoji 兜底 */
+export function getBadgeIconType(badgeType = '') {
+	const meta = getBadgeMeta(badgeType)
+	return meta && meta.iconType ? meta.iconType : GAME_ICON_TYPE_EMOJI
+}
+
+/** svg 角标资源路径；没配置返回空串（调用方回退 emoji） */
+export function getBadgeIconSrc(badgeType = '') {
+	const meta = getBadgeMeta(badgeType)
+	return meta && meta.iconSrc ? String(meta.iconSrc) : ''
+}
+
+/** 角标描边色（区分身份的唯一次要信息，主信息由图标承担） */
+export function getBadgeTone(badgeType = '') {
+	const meta = getBadgeMeta(badgeType)
+	return meta && meta.tone ? String(meta.tone) : 'transparent'
+}
+
 /** 大厅卡片网格数据源 */
 export function getGameCardList() {
-	return [GAME_TYPE_UNDERCOVER, GAME_TYPE_BOMB]
+	return [GAME_TYPE_UNDERCOVER, GAME_TYPE_LANDLORD, GAME_TYPE_BOMB]
 		.map((gameType) => Object.assign({}, GAME_META[gameType], {
 			action: gameType
 		}))

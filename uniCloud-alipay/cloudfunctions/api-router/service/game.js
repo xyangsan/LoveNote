@@ -218,15 +218,21 @@ module.exports = class GameService extends Service {
 	/**
 	 * 连续推进超时/机器人，直到无进展或达到上限。
 	 * 每次推进都写入房间并广播，保证所有客户端都能感知。
+	 *
+	 * @param {Object} options.skipTimeoutSeat 不替这个座位做「超时代打」。
+	 *        动作入口（handleLandlordAction / handleUndercoverAction）会先跑一遍推进再执行动作，
+	 *        玩家在自己回合刚超时的瞬间点按钮时，这一手会被超时代打先用掉，
+	 *        等他自己的动作执行时 current_seat 已经换人 → 报「还没轮到你」。
+	 *        传发起人座位进来即可让「人已经在操作」优先于「超时」。
 	 */
-	async resolveTimersUntilStable(room = {}) {
+	async resolveTimersUntilStable(room = {}, options = {}) {
 		let current = room
 		let changed = false
 		let lastVersion = Number(room.version || 0)
 
 		for (let round = 0; round < MAX_TIMER_ROUNDS; round += 1) {
 			const now = Date.now()
-			const patch = await resolveTimerPatch(current, now)
+			const patch = await resolveTimerPatch(current, now, options)
 			if (!patch) {
 				break
 			}
@@ -711,6 +717,40 @@ module.exports = class GameService extends Service {
 	 * 增量同步：version 未变时零成本返回，变了则返回完整裁剪快照。
 	 * 不做字段级 diff，客户端整体替换，重连/漏推/乱序都被天然覆盖。
 	 */
+	/**
+	 * 版本没变的同步请求，还要不要跑一次懒计时器？
+	 * 只看 syncRoom 已经查出来的 head（不再查库）：
+	 *   · 当前轮到机器人 / 托管座位 —— 他们不会自己发请求，只能靠同步来推；
+	 *   · 回合截止时间已过 —— 真人超时，该自动代打（跟牌就过 / 先手出最小单张）。
+	 * 两者都不成立时才允许走「零成本返回 unchanged」的快路径。
+	 */
+	needsTimerResolution(head = {}, now = Date.now()) {
+		if (!head || head.status !== ROOM_STATUS_PLAYING) {
+			return false
+		}
+		const state = head.state || {}
+		if (state.phase !== 'bidding' && state.phase !== 'playing') {
+			return false
+		}
+		const seatIndex = Number(state.current_seat)
+		if (!Number.isInteger(seatIndex) || seatIndex < 0) {
+			return false
+		}
+		const trustees = Array.isArray(state.trustee_seats)
+			? state.trustee_seats.map(Number)
+			: []
+		if (trustees.includes(seatIndex)) {
+			return true
+		}
+		const seats = Array.isArray(head.seats) ? head.seats : []
+		const seat = seats.find((item) => Number(item.seat_index) === seatIndex)
+		if (seat && seat.is_robot) {
+			return true
+		}
+		const deadline = Number(state.turn_deadline || 0)
+		return deadline > 0 && now > deadline
+	}
+
 	async syncRoom(params = {}) {
 		try {
 			const { authState, uid } = await this.getAuthUid()
@@ -720,7 +760,16 @@ module.exports = class GameService extends Service {
 
 			const headRes = await gameRoomCollection
 				.doc(roomId)
-				.field({ version: true, status: true, is_deleted: true, expire_at: true })
+				.field({
+					version: true,
+					status: true,
+					is_deleted: true,
+					expire_at: true,
+					// 懒计时器判断要用：当前轮到谁、是不是机器人 / 托管、有没有超时。
+					// 只多读这两个字段，仍然是一次单文档查询。
+					seats: true,
+					state: true
+				})
 				.get()
 
 			const head = headRes && headRes.data && headRes.data[0] ? headRes.data[0] : null
@@ -741,15 +790,25 @@ module.exports = class GameService extends Service {
 			// 房间不会永远卡在「真人投完了、机器人一动不动」。
 			const force = params.force === true
 			if (!force && Number.isFinite(sinceVersion) && sinceVersion === serverVersion) {
-				return Object.assign({}, authState.response, {
-					errCode: 0,
-					data: {
-						changed: false,
-						reset: false,
-						version: serverVersion,
-						serverTime
-					}
-				})
+				/*
+				 * ⚠️ 版本没变 ≠ 没事可做。
+				 * 超时代打 / 机器人 / 托管座位全靠**懒计时器**（请求驱动）推进：
+				 * 轮到托管座位时没有任何人会点按钮，如果这里直接返回 unchanged，
+				 * 这个回合就永远等不到 `resolveTimersUntilStable` ——
+				 * 真机现象就是「开托管后自动打了几手，然后一直卡住不动」。
+				 * 只在「当前是自动座位」或「已经超时」时才多跑一次，正常真人回合仍是零成本返回。
+				 */
+				if (!this.needsTimerResolution(head, serverTime)) {
+					return Object.assign({}, authState.response, {
+						errCode: 0,
+						data: {
+							changed: false,
+							reset: false,
+							version: serverVersion,
+							serverTime
+						}
+					})
+				}
 			}
 
 			const room = await this.loadRoom(roomId)
@@ -871,6 +930,8 @@ module.exports = class GameService extends Service {
 					seatIndex,
 					snapshot: buildRobotSnapshot(room._id, seatIndex),
 					isRobot: true,
+					// 机器人直接算已就绪：开局门槛要求「其余玩家都已准备」，机器人不会点准备
+					ready: true,
 					now
 				}))
 			}
@@ -1395,6 +1456,21 @@ module.exports = class GameService extends Service {
 			this.assertHost(room, uid)
 			this.assertWaiting(room)
 
+			// 开局门槛（客户端也会拦，这里是服务端兜底 —— 不然绕过客户端就能 2 人开局）
+			// · 人齐：joined 座位数（含机器人）要够 max_players
+			// · 就绪：**房主不需要准备**，**机器人视为已就绪**，其余真人必须点过准备
+			const seats = getJoinedSeats(room)
+			const maxPlayers = Number(room.max_players || 0)
+			if (maxPlayers > 0 && seats.length < maxPlayers) {
+				throw buildError(ERROR_CODES.notEnoughPlayers, '人数还没凑齐')
+			}
+			const notReady = seats.filter((seat) => (
+				String(seat.uid || '') !== String(room.host_uid || '') && !seat.is_robot && !seat.ready
+			))
+			if (notReady.length) {
+				throw buildError(ERROR_CODES.playersNotReady, '还有玩家没有准备')
+			}
+
 			const result = await this.runEngineAction({
 				room,
 				uid,
@@ -1475,8 +1551,11 @@ module.exports = class GameService extends Service {
 	/**
 	 * 斗地主动作统一入口。
 	 * 与卧底同理：托管/机器人/超时推进会 bump version，真人在推进间隙操作会撞乐观锁，
-	 * 冲突时「重读最新 + 重试」。若重读后发现回合已变（轮到别人），引擎会抛「还没轮到你」，
-	 * 那是正常提示，不是冲突。
+	 * 冲突时「重读最新 + 重试」。若重读后发现回合确实已经流转到别人（例如真被超时代打推完了），
+	 * 引擎会抛「还没轮到你」—— 那是正常提示，不是冲突。
+	 *
+	 * ⚠️ 但「我自己刚超时」不算这种情况：计时器是惰性的，推进就发生在本次请求里，
+	 * 见下面 `skipTimeoutSeat` 的注释。
 	 */
 	async handleLandlordAction(engineAction = '', params = {}, fallbackMessage = '操作失败', options = {}) {
 		try {
@@ -1488,9 +1567,17 @@ module.exports = class GameService extends Service {
 			const maxAttempts = retryOnConflict + 1
 
 			let latest = null
+			/*
+			 * 「本次请求是我在操作」→ 别让超时代打把这一手抢走。
+			 * 计时器是惰性的（只在有请求时推进），玩家在自己回合刚超时的瞬间点「出牌」时：
+			 *   1. 这里先跑推进，`applyTimeout` 替他出了牌，current_seat 换人；
+			 *   2. 紧接着执行他自己的 play → requireTurn 不通过 → 弹「还没轮到你」。
+			 * 把发起人座位传下去，让「人已经在操作」优先于「超时」。
+			 */
+			const skipTimeoutSeat = getSeatIndexByUid(room, uid)
 			for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
 				const base = latest || room
-				const resolved = await this.resolveTimersUntilStable(base)
+				const resolved = await this.resolveTimersUntilStable(base, { skipTimeoutSeat })
 				latest = await getRoomById(room._id) || resolved.room
 
 				try {

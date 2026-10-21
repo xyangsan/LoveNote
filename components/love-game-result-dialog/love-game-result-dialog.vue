@@ -1,54 +1,59 @@
 <template>
-	<view v-if="show" class="game-result">
+	<view v-if="show" class="game-result" :class="{ 'game-result--landscape': landscape }">
 		<view class="game-result__mask" @click="handleMask"></view>
 		<view class="game-result__panel">
-			<view class="game-result__hero" :class="'game-result__hero--' + tone">
-				<text class="game-result__emoji">{{ emoji }}</text>
-				<text class="game-result__title">{{ title }}</text>
-				<text v-if="subtitle" class="game-result__subtitle">{{ subtitle }}</text>
-			</view>
-
-			<view v-if="lines.length" class="game-result__lines">
-				<view v-for="(item, index) in lines" :key="index" class="game-result__line">
-					<text class="game-result__line-label">{{ item.label }}</text>
-					<text
-						class="game-result__line-value"
-						:class="{ 'game-result__line-value--highlight': item.highlight }"
-					>{{ item.value }}</text>
+			<!-- 内容区整体滚动，底部按钮常驻。
+			     ⚠️ 必须用 scroll-view：小程序的 <view> 是原生节点，`overflow: auto` 不会产生滚动，
+			     横屏 375px 高放不下「标题 + 4 行信息 + 3 人列表 + 提示」时会被直接裁掉。 -->
+			<scroll-view class="game-result__scroll" scroll-y>
+				<view class="game-result__hero" :class="'game-result__hero--' + tone">
+					<text class="game-result__emoji">{{ emoji }}</text>
+					<text class="game-result__title">{{ title }}</text>
+					<text v-if="subtitle" class="game-result__subtitle">{{ subtitle }}</text>
 				</view>
-			</view>
 
-			<view v-if="players.length" class="game-result__players">
-				<view
-					v-for="(item, index) in players"
-					:key="index"
-					class="game-result__player"
-					:class="{ 'game-result__player--self': item.isSelf }"
-				>
-					<view class="game-result__avatar">
-						<image v-if="item.avatarUrl" class="game-result__avatar-img" :src="item.avatarUrl" mode="aspectFill"></image>
-						<text v-else class="game-result__avatar-text">{{ shortName(item.nickname) }}</text>
+				<view v-if="lines.length" class="game-result__lines">
+					<view v-for="(item, index) in lines" :key="index" class="game-result__line">
+						<text class="game-result__line-label">{{ item.label }}</text>
+						<text
+							class="game-result__line-value"
+							:class="{ 'game-result__line-value--highlight': item.highlight }"
+						>{{ item.value }}</text>
 					</view>
-					<view class="game-result__player-body">
-						<text class="game-result__player-name">
-							{{ item.nickname || '玩家' }}<text v-if="item.isSelf" class="game-result__self-flag">（我）</text>
-						</text>
-						<text v-if="item.roleText" class="game-result__player-role">{{ item.roleText }}</text>
-					</view>
-					<text
-						v-if="item.scoreText"
-						class="game-result__player-score"
-						:class="{
-							'game-result__player-score--win': item.result === 'win',
-							'game-result__player-score--lose': item.result === 'lose'
-						}"
-					>{{ item.scoreText }}</text>
 				</view>
-			</view>
 
-			<view v-if="tips" class="game-result__tips">
-				<text class="game-result__tips-text">{{ tips }}</text>
-			</view>
+				<view v-if="players.length" class="game-result__players">
+					<view
+						v-for="(item, index) in players"
+						:key="index"
+						class="game-result__player"
+						:class="{ 'game-result__player--self': item.isSelf }"
+					>
+						<view class="game-result__avatar">
+							<image v-if="item.avatarUrl" class="game-result__avatar-img" :src="item.avatarUrl" mode="aspectFill"></image>
+							<text v-else class="game-result__avatar-text">{{ shortName(item.nickname) }}</text>
+						</view>
+						<view class="game-result__player-body">
+							<text class="game-result__player-name">
+								{{ item.nickname || '玩家' }}<text v-if="item.isSelf" class="game-result__self-flag">（我）</text>
+							</text>
+							<text v-if="item.roleText" class="game-result__player-role">{{ item.roleText }}</text>
+						</view>
+						<text
+							v-if="item.scoreText"
+							class="game-result__player-score"
+							:class="{
+								'game-result__player-score--win': item.result === 'win',
+								'game-result__player-score--lose': item.result === 'lose'
+							}"
+						>{{ item.scoreText }}</text>
+					</view>
+				</view>
+
+				<view v-if="tips" class="game-result__tips">
+					<text class="game-result__tips-text">{{ tips }}</text>
+				</view>
+			</scroll-view>
 
 			<view class="game-result__actions">
 				<view v-if="secondaryText" class="game-result__action" @click="handleSecondary">
@@ -112,10 +117,39 @@
 			maskClosable: {
 				type: Boolean,
 				default: false
+			},
+			/**
+			 * 横屏页面（斗地主房间页 pageOrientation: landscape）必须传 true：
+			 * rpx 按屏宽换算，横屏下整体尺寸会放大 2 倍以上，而竖向只有 ~375px，
+			 * 结果面板会超出屏幕、按钮被 `overflow: hidden` 裁掉。传 true 后改用 px 尺寸。
+			 */
+			landscape: {
+				type: Boolean,
+				default: false
 			}
 		},
 		emits: ['close', 'primary', 'secondary'],
+		mounted() {
+			this.warnIfLandscapeMissed()
+		},
 		methods: {
+			/**
+			 * 兜底提醒：横屏页面忘了传 `landscape` 时，rpx 会把面板放大 2 倍以上
+			 * —— 按钮会被 `overflow: hidden` 裁掉，但不会报错，所以给一条 warn。
+			 */
+			warnIfLandscapeMissed() {
+				if (this.landscape) {
+					return
+				}
+				try {
+					const info = uni.getSystemInfoSync()
+					if (Number(info.windowWidth) > Number(info.windowHeight)) {
+						console.warn('[love-game-result-dialog] 当前屏幕是横屏，请在调用处传 :landscape="true"')
+					}
+				} catch (error) {
+					// 取不到屏幕信息就算了，不影响功能
+				}
+			},
 			shortName(name = '') {
 				const text = String(name || '').trim()
 				return text ? text.slice(0, 1) : '玩'
@@ -160,6 +194,8 @@
 	.game-result__panel {
 		position: relative;
 		z-index: 1;
+		display: flex;
+		flex-direction: column;
 		box-sizing: border-box;
 		width: 620rpx;
 		max-height: 80vh;
@@ -168,6 +204,13 @@
 		background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(255, 246, 239, 0.98));
 		box-shadow: 0 24rpx 60rpx rgba(120, 70, 50, 0.22);
 		overflow: hidden;
+	}
+
+	/* 内容区（标题 / 信息行 / 玩家列表 / 提示）统一在这里滚。
+	   ⚠️ 只有 scroll-view 能滚：小程序里 `<view>` 的 `overflow: auto` 是死代码。 */
+	.game-result__scroll {
+		flex: 1;
+		min-height: 0;
 	}
 
 	.game-result__hero {
@@ -226,9 +269,7 @@
 	}
 
 	.game-result__players {
-		max-height: 32vh;
 		margin-top: 20rpx;
-		overflow: auto;
 	}
 
 	.game-result__player {
@@ -324,6 +365,7 @@
 
 	.game-result__actions {
 		display: flex;
+		flex-shrink: 0;
 		gap: 18rpx;
 		margin-top: 26rpx;
 	}
@@ -351,5 +393,117 @@
 
 	.game-result__action-text--ghost {
 		color: #b05b48;
+	}
+
+	/* ---------------- 横屏（斗地主房间页）----------------
+	   全换 px：横屏 rpx 按屏宽放大 2 倍以上，而竖向可用高度只有 ~375px。
+	   三条策略：① 面板上下各留 7vh，避开刘海 / Home Indicator；
+	            ② 尺寸整体压一遍（375px 高要装下标题 + 4 行信息 + 3 人 + 提示 + 按钮）；
+	            ③ 内容交给 scroll-view 滚，底部按钮 flex-shrink:0 常驻。 */
+	.game-result--landscape .game-result__panel {
+		display: flex;
+		flex-direction: column;
+		width: 460px;
+		max-width: 88vw;
+		max-height: 86vh;
+		padding: 0 18px 14px;
+		border-radius: 18px;
+		box-shadow: 0 12px 30px rgba(120, 70, 50, 0.22);
+	}
+
+	.game-result--landscape .game-result__hero {
+		padding: 11px 0 8px;
+	}
+
+	.game-result--landscape .game-result__emoji {
+		font-size: 26px;
+	}
+
+	.game-result--landscape .game-result__title {
+		margin-top: 6px;
+		font-size: 18px;
+	}
+
+	.game-result--landscape .game-result__subtitle {
+		margin-top: 4px;
+		font-size: 12px;
+	}
+
+	.game-result--landscape .game-result__lines {
+		padding: 7px 10px;
+		border-radius: 14px;
+	}
+
+	.game-result--landscape .game-result__line {
+		padding: 4px 0;
+	}
+
+	.game-result--landscape .game-result__line-label,
+	.game-result--landscape .game-result__line-value {
+		font-size: 12px;
+	}
+
+	/* 玩家列表不再自己滚（小程序 <view> 滚不动、嵌套滚动也难用）—— 整块交给外层 scroll-view */
+	.game-result--landscape .game-result__players {
+		margin-top: 9px;
+	}
+
+	.game-result--landscape .game-result__player {
+		gap: 8px;
+		padding: 6px 10px;
+		border-radius: 12px;
+	}
+
+	.game-result--landscape .game-result__player + .game-result__player {
+		margin-top: 6px;
+	}
+
+	.game-result--landscape .game-result__avatar {
+		width: 28px;
+		height: 28px;
+	}
+
+	.game-result--landscape .game-result__avatar-text {
+		font-size: 12px;
+	}
+
+	.game-result--landscape .game-result__player-name,
+	.game-result--landscape .game-result__player-score {
+		font-size: 13px;
+	}
+
+	.game-result--landscape .game-result__self-flag,
+	.game-result--landscape .game-result__player-role {
+		font-size: 11px;
+	}
+
+	.game-result--landscape .game-result__tips {
+		margin-top: 7px;
+		padding: 7px 10px;
+		border-radius: 10px;
+	}
+
+	.game-result--landscape .game-result__tips-text {
+		font-size: 12px;
+	}
+
+	.game-result--landscape .game-result__actions {
+		flex-shrink: 0;
+		gap: 9px;
+		margin-top: 10px;
+	}
+
+	.game-result--landscape .game-result__action {
+		height: 40px;
+		border-radius: 999px;
+		box-shadow: none;
+	}
+
+	.game-result--landscape .game-result__action--primary {
+		box-shadow: 0 7px 13px rgba(231, 111, 81, 0.26);
+	}
+
+	.game-result--landscape .game-result__action-text {
+		font-size: 14px;
 	}
 </style>

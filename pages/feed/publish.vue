@@ -71,6 +71,7 @@
 		uploadFileWithModule
 	} from '../../common/utils/file-upload.js'
 	import glyph from '../../components/love-editor/glyph.json'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const MAX_FILE_SIZE = 100 * 1024 * 1024
 	const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
@@ -173,6 +174,8 @@
 			}
 		},
 		onLoad(options = {}) {
+			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+			if (!requirePageLogin()) return
 			const type = String(options.type || '').trim()
 			this.mediaMode = type === 'video' ? 'video' : 'image'
 		},

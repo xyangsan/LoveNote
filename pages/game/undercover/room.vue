@@ -239,7 +239,9 @@
 				<!-- 房间设置（卧底人数 / 聚会模式）：
 				     留在内容流里，**不放进悬浮栏** —— 它们是开局前的配置项而非「操作」，
 				     塞进 fixed 底栏会让栏高接近半屏、把席位和对局记录全挡住。 -->
-				<template v-if="room.status === 'waiting'">
+				<!-- ⚠️ `room &&` 不能省：小程序编译器会把 v-if / v-else-if 的条件提到 render 顶层求值，
+				     首屏 room 还是 null 时裸写 `room.status` 就是 TypeError（斗地主页真实踩过） -->
+				<template v-if="room && room.status === 'waiting'">
 					<!-- 卧底人数：房主开局前可手动调整（4-6 人只能 1 个，7-10 人最多 2 个） -->
 					<view v-if="isHost" class="uc-config">
 						<text class="uc-config__label">卧底人数</text>
@@ -262,16 +264,18 @@
 						</text>
 					</view>
 
-					<!-- 聚会模式：开启（默认）时开局直接投票，不用轮流发言 -->
+					<!-- 聚会模式：开启（默认）时开局直接投票，不用轮流发言。
+					     ⚠️ 仅房主可改：房主看到开关，其他人只看只读状态（服务端 setPartyMode 也会 assertHost） -->
 					<view class="uc-config uc-config--spread">
 						<text class="uc-config__label">聚会模式</text>
 						<switch
+							v-if="isHost"
 							class="uc-switch"
 							:checked="partyModeInput"
-							:disabled="!isHost"
 							color="#e76f51"
 							@change="handlePartyModeChange"
 						/>
+						<text v-else class="uc-config__value">{{ partyModeOn ? '已开启' : '已关闭' }}</text>
 						<text class="uc-config__tip">
 							{{ partyModeInput
 								? '已开启：开局直接投票，不用轮流发言'
@@ -290,9 +294,11 @@
 		<view v-if="room" class="uc-op-bar">
 			<!-- 操作区 -->
 			<view class="uc-op">
-					<!-- 房主：等待开局 -->
-					<template v-if="room.status === 'waiting'">
-						<view class="uc-op__row">
+					<!-- 房主：等待开局（条件同样带上 room 守卫，见上方注释） -->
+					<template v-if="room && room.status === 'waiting'">
+						<!-- 本行全是房主操作（加机器人 / 解散房间）：非房主不渲染，
+						     避免出现「点了才发现没权限」——服务端 closeRoom 也会 assertHost 兜底 -->
+						<view v-if="isHost" class="uc-op__row">
 							<!-- 加机器人只在测试环境开放（正式版连入口都不显示，服务端也会拒绝） -->
 							<view
 								v-if="isTestEnv"
@@ -347,8 +353,8 @@
 						</template>
 						<view v-else class="uc-op__hint">
 							<text class="uc-op__hint-text">
-								{{ state.current_speaker_seat >= 0
-									? `等待 ${seatName(state.current_speaker_seat)} 描述…`
+								{{ speakerSeat >= 0
+									? `等待 ${seatName(speakerSeat)} 描述…`
 									: '正在整理发言顺序…' }}
 							</text>
 						</view>
@@ -453,15 +459,18 @@
 	import LoveGameWordEditor from '@/components/love-game-word-editor/love-game-word-editor.vue'
 	import { getGameApi, assertGameResult } from '@/common/api/game.js'
 	import { createRoomSync } from '@/common/game/room-sync.js'
-	import { saveActiveRoom, clearActiveRoom, getActiveRoom, hasSeenRules, markRulesSeen } from '@/common/game/active-room.js'
+	import { saveActiveRoom, clearActiveRoom, getActiveRoom, hasSeenRules, markRulesSeen, resolveUnfinishedRoom } from '@/common/game/active-room.js'
 	import { pickNewAutoActions } from '@/store/modules/game.js'
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { hasValidLogin } from '@/common/auth-center.js'
 	import { openLoginModal } from '@/common/auth-modal.js'
 	import { getNavBarMetrics } from '@/common/utils/nav-bar.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
 	import { IS_TEST_ENV, ENV_VERSION } from '@/common/utils/env.js'
 
 	const GAME_TYPE = 'undercover'
+	// 房间页路由：onLoad 的登录闸门与 onShareAppMessage 共用，别写成两份字符串
+	const ROOM_PATH = '/pages/game/undercover/room'
 	const MIN_PLAYERS = 4
 	const MAX_PLAYERS = 10
 	const MIN_PLAYERS_FOR_TWO = 7
@@ -528,6 +537,8 @@
 				// 置 true 后 `persistActiveRoom` 只会清缓存、绝不会再写回 ——
 				// 否则 onUnload 会把刚清掉的「继续对局」状态原样写回去。
 				roomExited: false,
+				// 自动续局防重入（onLoad 重跑 / 手动进房并发）
+				autoEntering: false,
 				// 「正在退出」防重入：确认弹窗与悬浮栏按钮可能被连点
 				leavingRoom: false,
 				wordEditorVisible: false,
@@ -625,7 +636,11 @@
 			myVoteTarget() {
 				const votes = Array.isArray(this.state.votes) ? this.state.votes : []
 				const mine = votes.find((item) => Number(item.voter_seat) === this.mySeat)
-				return mine ? Number(mine.target_seat) : -1
+				return mine ? this.toSeatIndex(mine.target_seat) : -1
+			},
+			/** 当前发言座位（归一后；-1 = 还没轮到任何人）——别用 `>= 0` 裸判 null */
+			speakerSeat() {
+				return this.toSeatIndex(this.state.current_speaker_seat)
 			},
 			playerCount() {
 				return this.room ? Number(this.room.playerCount || 0) : 0
@@ -1017,6 +1032,23 @@
 		},
 		onLoad(options = {}) {
 			this.ensureAppStateStore()
+
+			// 分享卡片 / 外部链接直接落地本页时，微信**不经过** uni 路由 API，
+			// hh-router-guard 与 auth-guard 的 addInterceptor 都拦不到（冷启动入口）。
+			// 所以这里自己判断一次：未登录 → redirectTo 登录页并带上回跳地址，
+			// 登录成功后登录页会 redirect 回本页（roomCode / roomId 原样保留），
+			// onLoad 再跑一遍 —— 此时已登录，正常进房。
+			// ⚠️ 必须放在「规则弹窗」之前：否则未登录访客也会被 markRulesSeen，登录回来就看不到玩法说明了。
+			// ⚠️ onlyWithEntryParams：从大厅点进来（无房号）时不抢跳转，保留页面原有的就地登录弹窗。
+			if (!requirePageLogin({
+				route: ROOM_PATH,
+				options,
+				isLoggedIn: this.isLoggedIn,
+				onlyWithEntryParams: true
+			})) {
+				return
+			}
+
 			this.refreshNavBar()
 			this.loadLocalLastSeenSeq()
 
@@ -1034,7 +1066,13 @@
 			}
 			if (roomCode) {
 				this.enterRoom({ roomCode })
+				return
 			}
+
+			// 没带房号（冷启动 / 大厅点玩法名）：这个账号还有没结束的房间就直接续上。
+			// ⚠️ 必须排在两个 return 之后：enterRoom 是异步的，上面分支此刻 `this.roomId` 还是空的，
+			// 不提前 return 会并发再去 join 另一间房。
+			this.autoEnterUnfinishedRoom()
 		},
 		onReady() {
 			// 首帧：进房分支的 DOM 还没稳定，主动量一次悬浮栏高度
@@ -1079,7 +1117,7 @@
 					? `谁是卧底｜房间号 ${roomCode}，快来一起玩`
 					: '恋人手札｜谁是卧底',
 				path: roomCode
-					? `/pages/game/undercover/room?roomCode=${roomCode}`
+					? `${ROOM_PATH}?roomCode=${roomCode}`
 					: '/pages/game/index'
 			}
 		},
@@ -1167,10 +1205,26 @@
 				this.roomExited = true
 				clearActiveRoom(this.currentUid)
 			},
+			/**
+			 * 座位号归一：非数字 / NaN / 负数 / 空值 一律回 -1。
+			 * ⚠️ 别用 `Number(x) < 0` 当守卫（`NaN < 0` 恒 false）；
+			 * ⚠️ `Number(null)`/`Number('')`/`Number(false)` 都是 **0** → 必须显式挡掉「没有值」。
+			 */
+			toSeatIndex(value) {
+				if (value === null || value === undefined || value === '' || typeof value === 'boolean') {
+					return -1
+				}
+				const num = Number(value)
+				return Number.isFinite(num) && num >= 0 ? Math.floor(num) : -1
+			},
 			seatName(seatIndex) {
+				const target = this.toSeatIndex(seatIndex)
 				const seats = Array.isArray(this.room && this.room.seats) ? this.room.seats : []
-				const seat = seats.find((item) => Number(item.seatIndex) === Number(seatIndex))
-				return seat ? seat.nickname || `座位${seatIndex + 1}` : `座位${Number(seatIndex) + 1}`
+				const seat = seats.find((item) => this.toSeatIndex(item.seatIndex) === target)
+				if (seat) {
+					return seat.nickname || `座位${target + 1}`
+				}
+				return target >= 0 ? `座位${target + 1}` : '其他玩家'
 			},
 			/** 该座位是不是机器人（服务端已按 uid 前缀兜底，这里只读下发字段） */
 			seatIsRobot(seatIndex) {
@@ -1328,14 +1382,54 @@
 				}
 				await this.enterRoom({ roomCode })
 			},
-			async enterRoom(payload = {}) {
+			/**
+			 * 没带房号进来（冷启动、从大厅点玩法名、从别的页面返回）时：
+			 * **这个账号要是有没结束的房间，就直接进去**，不用再去大厅点一次「继续对局」。
+			 *
+			 * 判定交给 `resolveUnfinishedRoom`（服务端为准 + 本地缓存兜底），
+			 * 只认当前玩法（拿着斗地主的房间进卧底页没有意义）。
+			 * 进房用 silent 模式：房间已被回收时安静地清缓存留在本页，不弹错、也不把人踢回大厅。
+			 */
+			async autoEnterUnfinishedRoom() {
+				if (!this.isLoggedIn || this.room || this.roomId || this.autoEntering) {
+					return
+				}
+				this.autoEntering = true
+				try {
+					const brief = await resolveUnfinishedRoom({
+						gameType: GAME_TYPE,
+						uid: this.currentUid,
+						fetchRemote: async () => {
+							const result = await getGameApi().getActiveRoom()
+							if (!result || (result.errCode && result.errCode !== 0)) {
+								throw new Error((result && result.errMsg) || '获取进行中的对局失败')
+							}
+							return (result.data && result.data.room) || null
+						}
+					})
+					if (!brief || !brief.roomId || this.room || this.roomId) {
+						return
+					}
+					await this.enterRoom({ roomId: brief.roomId }, { silent: true })
+				} finally {
+					this.autoEntering = false
+				}
+			},
+			/**
+			 * 进房。`options.silent = true` 用于「自动续局」：
+			 * 不弹 loading、失败也不弹 toast / 不踢回大厅（房间已被回收时只是清掉本地缓存）。
+			 */
+			async enterRoom(payload = {}, options = {}) {
 				if (!this.requireLogin()) {
 					return
 				}
-				uni.showLoading({
-					title: '进入房间',
-					mask: true
-				})
+				const silent = options.silent === true
+				if (!silent) {
+					uni.showLoading({
+						title: '进入房间',
+						mask: true
+					})
+				}
 				try {
 					const result = assertGameResult(
 						await getGameApi().joinRoom(payload),
@@ -1345,6 +1439,13 @@
 					this.startSync()
 				} catch (error) {
 					const code = String((error && error.errCode) || '')
+					if (silent) {
+						// 自动续局失败（房间已结束 / 已解散 / 自己已被移出）：清掉死缓存，安静留在本页
+						if (payload.roomId) {
+							this.markRoomExited()
+						}
+						return
+					}
 					uni.showToast({
 						title: (error && error.message) || '进入房间失败',
 						icon: 'none'
@@ -1358,7 +1459,9 @@
 						setTimeout(() => this.handleBackToHall(), 1200)
 					}
 				} finally {
-					uni.hideLoading()
+					if (!silent) {
+						uni.hideLoading()
+					}
 				}
 			},
 			startSync() {
@@ -1664,6 +1767,7 @@ this.ensureRobotVotes()
 			 * 聚会模式开关（原生 switch，change 回传 { value: Boolean }）。
 			 * 和卧底人数同理：switch 会先自己切过去，服务端拒绝时必须回滚，
 			 * 所以用 `partyModeInput` 做镜像，并以房间的 `partyModeOn` 为权威值。
+			 * ⚠️ 仅房主可改：控件只给房主渲染（模板 v-if="isHost"），这里再兜一层。
 			 */
 			async handlePartyModeChange(event = {}) {
 				const detail = event.detail || event
@@ -1671,7 +1775,15 @@ this.ensureRobotVotes()
 				const fallback = this.partyModeOn
 				this.partyModeInput = next
 
-				if (!this.isHost || !this.room || this.room.status !== 'waiting') {
+				if (!this.isHost) {
+					this.partyModeInput = fallback
+					uni.showToast({
+						title: '只有房主可以修改聚会模式',
+						icon: 'none'
+					})
+					return
+				}
+				if (!this.room || this.room.status !== 'waiting') {
 					this.partyModeInput = fallback
 					return
 				}
@@ -1773,6 +1885,14 @@ this.ensureRobotVotes()
 				this.runRoomAction('claimHost', {}, { successText: '你已成为房主' })
 			},
 			handleCloseRoom() {
+				// 只有房主能解散（服务端 closeRoom 里有 assertHost，这里先挡一道，别让人点了才发现）
+				if (!this.isHost) {
+					uni.showToast({
+						title: '只有房主可以解散房间',
+						icon: 'none'
+					})
+					return
+				}
 				uni.showModal({
 					title: '解散房间',
 					content: '房间会被关闭，所有人都会退出，确定吗？',
@@ -2480,6 +2600,13 @@ this.ensureRobotVotes()
 	/* 聚会模式那行：标签靠左、开关靠右（提示文案 width:100% 会自己落到下一行） */
 	.uc-config--spread {
 		justify-content: space-between;
+	}
+
+	/* 非房主：聚会模式只读状态（控件只给房主渲染） */
+	.uc-config__value {
+		font-size: 24rpx;
+		font-weight: 600;
+		color: #b05b48;
 	}
 
 	/* 原生 switch 只能靠 transform 缩一点；用 right 原点保证它仍贴着右边 */

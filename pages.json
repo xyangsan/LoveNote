@@ -30,6 +30,12 @@
 			}
 		},
 		{
+			"path": "pages/profile/avatar",
+			"style": {
+				"navigationBarTitleText": "更换头像"
+			}
+		},
+		{
 			"path": "pages/public/image-cropper",
 			"style": {
 				"navigationStyle": "custom",

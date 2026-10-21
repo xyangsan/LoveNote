@@ -125,7 +125,14 @@ function isAutoSeat(room = {}, seatIndex = -1) {
 	if (!seat) {
 		return false
 	}
-	if (seat.is_robot) {
+	/*
+	 * 机器人：以 `is_robot` 标记为准，**用 uid 的 `robot_` 前缀兜底** ——
+	 * 与 `game-room.isRobotSeat` / `undercover-engine.isAutoSeat` 同口径。
+	 * 只认 `is_robot` 太脆：任何一次丢了该字段的座位写入（老数据、手工改库、别处按
+	 * 公开结构回写 seats）都会让机器人被判成真人 → 它的回合永远没人推进 →
+	 * 房间卡在那个座位，其它人点任何按钮都只会收到「还没轮到你」。
+	 */
+	if (seat.is_robot || /^robot_/.test(String(seat.uid || ''))) {
 		return true
 	}
 	const trusteeSeats = Array.isArray(room.state && room.state.trustee_seats)
@@ -537,17 +544,25 @@ function withAutoAction(room = {}, patch = null, seatIndex = -1, action = '', de
 	})
 }
 
-/** 掉线自动托管：连续 N 次自动操作后接管；离线超过窗口也直接接管 */
+/**
+ * 自动托管：掉线超窗 / 连续 N 次自动操作 / **倒计时结束未操作（immediate）** 时接管。
+ *
+ * `immediate=true` 是「倒计时结束」专用入口：玩家明确错过了整轮操作时间，
+ * 这一次就立刻托管（不再等凑够 MAX_AUTO_ACTION_BEFORE_TRUSTEE 次超时），
+ * 之后由 `advanceAutoSeats` 按 AI 策略继续打，直到玩家自己点「取消托管」。
+ */
 function applyAutoTrustee(room = {}, patch = null, seatIndex = -1, {
 	offline = false,
-	autoCount = 0
+	autoCount = 0,
+	immediate = false,
+	detail = ''
 } = {}, now = Date.now()) {
 	const state = patch && patch.state ? patch.state : (room.state || {})
 	const trusteeSeats = Array.isArray(state.trustee_seats) ? state.trustee_seats.map(Number) : []
 	if (trusteeSeats.includes(Number(seatIndex))) {
 		return patch
 	}
-	if (!offline && autoCount < MAX_AUTO_ACTION_BEFORE_TRUSTEE) {
+	if (!immediate && !offline && autoCount < MAX_AUTO_ACTION_BEFORE_TRUSTEE) {
 		return patch
 	}
 
@@ -566,7 +581,7 @@ function applyAutoTrustee(room = {}, patch = null, seatIndex = -1, {
 			auto_actions: appendAutoAction(state, {
 				seat_index: Number(seatIndex),
 				action: 'auto_trustee',
-				detail: offline ? '掉线超过 30 秒，已自动托管' : '连续超时，已自动托管',
+				detail: detail || (offline ? '掉线超过 30 秒，已自动托管' : '连续超时，已自动托管'),
 				create_time: now
 			}, now)
 		})
@@ -730,6 +745,7 @@ async function handleAction({ room, uid, action, params = {} }) {
 			: Boolean(params.enabled)
 
 		let nextTrusteeSeats = trusteeSeats
+		const wasTrustee = trusteeSeats.includes(seatIndex)
 		if (enabled && !trusteeSeats.includes(seatIndex)) {
 			nextTrusteeSeats = trusteeSeats.concat(seatIndex)
 			trusteeMeta[String(seatIndex)] = { auto: false, since: now }
@@ -739,13 +755,24 @@ async function handleAction({ room, uid, action, params = {} }) {
 			delete trusteeMeta[String(seatIndex)]
 		}
 
-		const patch = {
-			state: Object.assign({}, state, {
-				trustee_seats: nextTrusteeSeats,
-				trustee_meta: trusteeMeta
-			})
-		}
+		const nextState = Object.assign({}, state, {
+			trustee_seats: nextTrusteeSeats,
+			trustee_meta: trusteeMeta
+		})
+		const patch = { state: nextState }
 		if (!enabled) {
+			/*
+			 * 取消托管 = 玩家重新接管。如果**正好轮到自己**，必须给一整轮新的操作时间：
+			 * 否则 `turn_deadline` 还是那个已经过期的值，下一次定时推进会立刻
+			 * 「deadline 已过 + 已不是托管」把人重新托管回去 —— 取消按钮等于白点。
+			 */
+			if (wasTrustee && Number(state.current_seat) === seatIndex) {
+				const total = state.phase === BID_PHASE ? LANDLORD_BID_MS : LANDLORD_TURN_MS
+				patch.state = Object.assign({}, nextState, {
+					turn_deadline: now + total,
+					timer_seq: Number(state.timer_seq || 0) + 1
+				})
+			}
 			return patch
 		}
 		// 开启托管后如果正好轮到自己，立即代打
@@ -761,8 +788,16 @@ async function handleAction({ room, uid, action, params = {} }) {
 /**
  * 定时器推进：超时自动操作 + 掉线自动托管 + 机器人连续代打
  * @param {Object} options.onlineUidSet 由房间层传入的在线用户集合
+ * @param {Number} options.skipTimeoutSeat 本次请求的发起人座位：**不为这个座位做「超时代打」**。
+ *        原因见 game.js 的 handleLandlordAction：动作入口会先跑一遍定时推进，
+ *        玩家在自己回合刚超时的瞬间点「出牌」，会先被超时代打吃掉这一手，
+ *        再执行他自己的动作时 current_seat 已经换人 → 报「还没轮到你」。
+ *        真人正在操作 = 他没掉线，优先执行他的动作。
  */
-async function computeTimerPatch(room = {}, now = Date.now(), { onlineUidSet = null } = {}) {
+async function computeTimerPatch(room = {}, now = Date.now(), {
+	onlineUidSet = null,
+	skipTimeoutSeat = -1
+} = {}) {
 	if (!room || room.status !== ROOM_STATUS_PLAYING) {
 		return null
 	}
@@ -774,25 +809,37 @@ async function computeTimerPatch(room = {}, now = Date.now(), { onlineUidSet = n
 	const patches = []
 	const seatIndex = Number(state.current_seat)
 	const deadline = Number(state.turn_deadline || 0)
+	const skipSeat = Number(skipTimeoutSeat)
+	const skipThisSeat = Number.isInteger(skipSeat) && skipSeat >= 0 && skipSeat === seatIndex
 
-	if (seatIndex >= 0 && deadline > 0 && now > deadline && !isAutoSeat(room, seatIndex)) {
-		const timeoutPatch = applyTimeout(room, seatIndex, now)
-		if (timeoutPatch) {
-			// 掉线判定：无活跃连接
-			const seat = getSeatByIndex(room, seatIndex)
-			const offline = Boolean(
-				seat
-				&& !seat.is_robot
-				&& onlineUidSet
-				&& typeof onlineUidSet.has === 'function'
-				&& !onlineUidSet.has(String(seat.uid || ''))
-			)
-			// 连续超时次数：从 auto_actions 里统计该座位的自动操作条数
-			const autoCount = (Array.isArray(state.auto_actions) ? state.auto_actions : [])
-				.filter((item) => Number(item.seat_index) === seatIndex && item.action !== 'auto_trustee')
-				.length
-
-			patches.push(applyAutoTrustee(room, timeoutPatch, seatIndex, { offline, autoCount }, now))
+	if (seatIndex >= 0 && deadline > 0 && now > deadline && !skipThisSeat && !isAutoSeat(room, seatIndex)) {
+		/*
+		 * 倒计时结束且玩家一直没操作 → **立刻进入托管，本回合就交给 AI 打**。
+		 *
+		 * 不再用 `applyTimeout` 的「跟牌就过、先手出最小单张」先顶一手：
+		 *   · 玩家错过整轮操作 = 人不在，这一次就托管（不必等凑够 2 次超时）；
+		 *   · 托管是**持续状态**，之后每一手都按机器人策略打，直到玩家自己点
+		 *     「取消托管」（trustee action, enabled=false）重新接管；
+		 *   · AI 万一推不动（牌型校验失败 / 手牌脏），下面还有 `applyTimeout` 兜底，
+		 *     绝不会把房间卡死在一个自动座位上。
+		 */
+		const seat = getSeatByIndex(room, seatIndex)
+		const offline = Boolean(
+			seat
+			&& !seat.is_robot
+			&& onlineUidSet
+			&& typeof onlineUidSet.has === 'function'
+			&& !onlineUidSet.has(String(seat.uid || ''))
+		)
+		const trusteePatch = applyAutoTrustee(room, null, seatIndex, {
+			offline,
+			immediate: true,
+			detail: offline
+				? '掉线且倒计时结束，已自动托管'
+				: '倒计时结束未操作，已自动托管'
+		}, now)
+		if (trusteePatch) {
+			patches.push(trusteePatch)
 		}
 	}
 
@@ -800,6 +847,19 @@ async function computeTimerPatch(room = {}, now = Date.now(), { onlineUidSet = n
 	const autoPatch = advanceAutoSeats(base, now)
 	if (autoPatch) {
 		patches.push(autoPatch)
+	} else if (seatIndex >= 0 && deadline > 0 && now > deadline && isAutoSeat(base, seatIndex)) {
+		/*
+		 * 兜底：轮到机器人 / 托管座位，但 `advanceAutoSeats` 一步都没推起来
+		 * （AI 判定过牌却被引擎拒、手牌数据脏、牌型校验不通过 …）。
+		 * 上面那个超时分支**明确跳过了自动座位**（`!isAutoSeat`），
+		 * 所以这里不兜的话，房间会永久卡在一个自动座位上 ——
+		 * 这个座位永远没人来点按钮，定时器每次 tick 也只会做同样的无用功。
+		 * 用超时代打（跟牌就过、先手出最小单张）保证一定往前走一步。
+		 */
+		const fallback = applyTimeout(base, seatIndex, now)
+		if (fallback) {
+			patches.push(fallback)
+		}
 	}
 
 	return composePatch(room, patches)
@@ -948,6 +1008,7 @@ module.exports = {
 	// 导出内部工具便于调试与复用
 	getSeatIndexByUid,
 	getHand,
+	isAutoSeat,
 	applyBid,
 	applyPlay,
 	applyPass,

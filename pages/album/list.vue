@@ -110,6 +110,7 @@
 
 <script>
 import { getAlbumApi } from '../../common/api/album.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 export default {
 	data() {
@@ -149,7 +150,14 @@ export default {
 			return this.loading && this.albumList.length === 0
 		}
 	},
+	onLoad() {
+		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+		if (!requirePageLogin()) return
+	},
 	onShow() {
+		// onLoad 的闸门只负责跳转，onShow 仍会先跑一次（redirectTo 是异步的），
+		// 这里再挡一刀，避免未登录就发列表请求、在登录页上闪一个错误 toast。
+		if (!requirePageLogin()) return
 		this.loadAlbumList(true)
 	},
 	onReachBottom() {

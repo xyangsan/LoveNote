@@ -11,10 +11,14 @@ const ALL_GAME_TYPE_SET = new Set([GAME_TYPE_UNDERCOVER, GAME_TYPE_LANDLORD, GAM
 
 /* ---------------- 机器人（测试环境专用能力） ---------------- */
 
-/** 允许「添加机器人」的玩法。斗地主本来就是单人可练，卧底只在测试环境开放 */
+/** 允许「添加机器人」的玩法：斗地主 + 卧底（数字炸弹纯本地，不需要） */
 const ROBOT_ALLOWED_GAME_TYPES = [GAME_TYPE_LANDLORD, GAME_TYPE_UNDERCOVER]
-/** 其中**只在测试环境**开放的玩法：正式环境不显示入口，服务端也直接拒绝 */
-const ROBOT_TEST_ONLY_GAME_TYPES = [GAME_TYPE_UNDERCOVER]
+/**
+ * 其中**只在测试环境**开放的玩法：正式环境不显示入口，服务端也直接拒绝。
+ * 用户明确要求：加机器人仅开发环境可用 —— 斗地主和卧底都限制在此，
+ * 避免正式环境凑不齐人数时靠机器人开局（产品上希望真人参与）。
+ */
+const ROBOT_TEST_ONLY_GAME_TYPES = [GAME_TYPE_LANDLORD, GAME_TYPE_UNDERCOVER]
 /**
  * 测试环境对应的服务空间 ID。
  * 填了就以**服务空间**为准（最可靠，客户端伪造不了）；留空则退回客户端上报的 envVersion（软校验）。
@@ -61,7 +65,7 @@ const CONNECTION_IDLE_TTL = 5 * 60 * 1000
  * 影响对局的逻辑（尤其机器人推进、props、投票）后**把这个字符串改掉**，
  * 然后在房间页控制台看 `[game] server build` —— 没变就说明云函数没上传成功。
  */
-const GAME_SERVICE_BUILD = '2026-10-16.2'
+const GAME_SERVICE_BUILD = '2026-10-16.3'
 
 /** 在线/离线判定窗口 */
 const SEAT_ONLINE_WINDOW = 20 * 1000
@@ -147,6 +151,7 @@ const ERROR_CODES = {
 	notHost: 'love-note-game-not-host',
 	hostOnline: 'love-note-game-host-online',
 	notEnoughPlayers: 'love-note-game-not-enough-players',
+	playersNotReady: 'love-note-game-players-not-ready',
 	tooManyPlayers: 'love-note-game-too-many-players',
 	notYourTurn: 'love-note-game-not-your-turn',
 	invalidCards: 'love-note-game-invalid-cards',

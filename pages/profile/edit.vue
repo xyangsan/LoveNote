@@ -45,14 +45,19 @@
 					:header-line="false"
 				>
 					<view class="editor-card__hero">
-						<love-avatar-picker
-							:src="displayProfileAvatar"
-							fallback="/static/user-empty.png"
-							label="点击更换头像"
-							:width="136"
-							:height="136"
-							@chooseavatar="onChooseProfileAvatar"
-						></love-avatar-picker>
+						<view class="editor-avatar" @tap="goToAvatarPage">
+							<view class="editor-avatar__frame">
+								<fui-avatar
+									class="editor-avatar__img"
+									:src="displayProfileAvatar"
+									error-src="/static/user-empty.png"
+									:width="136"
+									:height="136"
+									background="#fff1eb"
+								></fui-avatar>
+							</view>
+							<text class="editor-avatar__label">点击更换头像</text>
+						</view>
 
 						<view class="editor-card__hero-body">
 							<view class="editor-card__hero-top">
@@ -226,6 +231,7 @@
 	} from '../../common/auth-center.js'
 	import { getUserApi } from '../../common/api/user.js'
 	import { useAppStateStore } from '../../store/app-state.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const NICKNAME_MAX_LENGTH = 20
@@ -328,6 +334,8 @@
 			}
 		},
 		onLoad() {
+			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncUserFromStore()
 			this.removeAuthListener = subscribeAuthChanged(() => {
@@ -510,13 +518,14 @@
 				}
 			},
 			goToLoginPage() {
-				uni.navigateTo({
+				uni.redirectTo({
 					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/profile/edit')
 				})
 			},
-			onChooseProfileAvatar(event) {
-				this.profileForm.avatarUrl = event.detail && event.detail.avatarUrl ? event.detail.avatarUrl : ''
-				this.profileForm.avatarFileId = ''
+			goToAvatarPage() {
+				uni.navigateTo({
+					url: '/pages/profile/avatar'
+				})
 			},
 			onProfileNicknameInput(value) {
 				this.profileForm.nickname = `${value || ''}`.slice(0, NICKNAME_MAX_LENGTH)
@@ -687,6 +696,30 @@
 		display: flex;
 		align-items: flex-start;
 		padding: 34rpx 32rpx 28rpx;
+	}
+
+	.editor-avatar {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0;
+	}
+
+	.editor-avatar__frame {
+		padding: 6rpx;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.56);
+		box-shadow: 0 14rpx 26rpx rgba(177, 114, 83, 0.14);
+	}
+
+	.editor-avatar__img {
+		display: block;
+	}
+
+	.editor-avatar__label {
+		margin-top: 16rpx;
+		font-size: 22rpx;
+		color: #a17567;
 	}
 
 	.editor-card__hero-body {

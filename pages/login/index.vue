@@ -49,11 +49,12 @@
 					</view>
 
 					<view class="login-editor__body">
-						<text class="love-field-label login-editor__label">微信昵称</text>
+						<text class="love-field-label login-editor__label">昵称（选填）</text>
 						<fui-input
 							:value="loginForm.nickname"
 							type="nickname"
-							placeholder="请输入你的昵称"
+							placeholder="选填，不填自动帮你取一个"
+							maxlength="20"
 							background-color="rgba(255, 255, 255, 0.94)"
 							:border-bottom="false"
 							:padding="['28rpx', '24rpx']"
@@ -63,7 +64,7 @@
 							@input="onNicknameInput"
 							@blur="onNicknameBlur"
 						></fui-input>
-						<text class="love-field-tip login-editor__tip">首次填写后会自动记住头像和昵称，后续登录可直接回填。</text>
+						<text class="love-field-tip login-editor__tip">昵称可以不填，我们会帮你取一个好听的默认昵称；之后可在「我的 - 编辑资料」里随时修改。</text>
 					</view>
 
 					<view class="love-action-stack login-actions">

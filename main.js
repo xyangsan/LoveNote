@@ -2,9 +2,21 @@ import App from './App'
 import fui from './components/firstui/common/fui-app'
 import routerGuard from '@/uni_modules/hh-router-guard/src/index'
 import { hasValidLogin } from './common/auth-center.js'
+import { PUBLIC_PAGE_PATHS, PUBLIC_PAGE_PREFIXES } from './common/auth-entry.js'
 
 import uvUI from '@/uni_modules/uv-ui-tools'
 import shareMixin from './common/mixins/share.js'
+
+/**
+ * 无需登录即可访问的页面白名单（hh-router-guard 认 `*` 后缀通配）。
+ *
+ * 与 `common/auth-entry.js` 共用同一份来源 —— 页面级闸门、这里、以及
+ * `common/auth-guard.js` 必须口径一致，否则会出现「这层放行、那层拦截」的怪现象
+ * （历史 bug：这里放行 /pages/public/*，auth-guard 却把它拦下来弹登录框）。
+ */
+const AUTH_WHITE_LIST = PUBLIC_PAGE_PATHS.concat(
+	PUBLIC_PAGE_PREFIXES.map((prefix) => `${prefix}*`)
+)
 
 // #ifndef VUE3
 import Vue from 'vue'
@@ -26,13 +38,8 @@ const app = new Vue({
 })
 
 app.use(routerGuard, {
-// 白名单：无需登录即可访问的页面路径
-whiteList: [
-  '/pages/index/index',      // 首页
-  '/pages/login/index',      // 登录页
-  '/pages/profile/index',    // 个人中心
-  '/pages/public/*',         // 所有公共页面
-],
+// 白名单：无需登录即可访问的页面路径（源头见 common/auth-entry.js）
+whiteList: AUTH_WHITE_LIST,
 
 // 自定义登录检查函数（返回 true 表示已登录）
 checkLogin: () => {
@@ -76,13 +83,8 @@ export function createApp() {
   app.use(uvUI);
   
   app.use(routerGuard, {
-    // 白名单：无需登录即可访问的页面路径
-    whiteList: [
-      '/pages/index/index',      // 首页
-      '/pages/login/index',      // 登录页
-      '/pages/profile/index',    // 个人中心
-      '/pages/public/*',         // 所有公共页面
-    ],
+    // 白名单：无需登录即可访问的页面路径（源头见 common/auth-entry.js）
+    whiteList: AUTH_WHITE_LIST,
   
     // 自定义登录检查函数（返回 true 表示已登录）
     checkLogin: () => {

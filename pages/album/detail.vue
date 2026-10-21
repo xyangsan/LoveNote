@@ -95,6 +95,7 @@
 <script>
 import { getAlbumApi } from '../../common/api/album.js'
 import { getPhotoApi } from '../../common/api/photo.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 export default {
 	data() {
@@ -129,6 +130,8 @@ export default {
 		}
 	},
 	onLoad(options) {
+		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+		if (!requirePageLogin()) return
 		this.albumId = options.albumId || ''
 		if (!this.albumId) {
 			uni.showToast({

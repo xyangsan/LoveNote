@@ -9,6 +9,7 @@ const {
 	COMBO,
 	analyze,
 	canBeat,
+	normalizeCombo,
 	canFinishInOneMove,
 	findHints,
 	findLeadHints
@@ -23,6 +24,13 @@ const BID_THRESHOLD_3 = 30
 const BID_THRESHOLD_2 = 22
 const BID_THRESHOLD_1 = 15
 const DANGER_CARDS_LEFT = 2
+/**
+ * 队友出牌时「接管牌权」的门槛：自己手牌 ≤ 这个张数才考虑压队友。
+ * ⚠️ 别调太松 —— 中局频繁压队友会把队友的牌拆掉，两个农民互相消耗。
+ */
+const TAKEOVER_HAND_LIMIT = 4
+/** 队友只剩这么多张时绝不压（让他走完） */
+const TAKEOVER_TEAMMATE_MIN_CARDS = 3
 
 function isJokerPairLeader(groups = {}) {
 	return Boolean(groups[16] && groups[17])
@@ -117,10 +125,49 @@ function getMinOpponentCards(cardsLeft = {}, mySeat = -1, landlordSeat = -1) {
 	if (!opponents.length) {
 		return 99
 	}
-	return Math.min(...opponents.map((seat) => {
-		const value = cardsLeft[seat]
-		return value === undefined || value === null ? 99 : Number(value)
-	}))
+	return Math.min(...opponents.map((seat) => getSeatCardsLeft(cardsLeft, seat)))
+}
+
+/** 读某座位剩余手牌数；未知（老数据 / 字段缺失）当作「还有很多牌」 */
+function getSeatCardsLeft(cardsLeft = {}, seatIndex = -1) {
+	const value = cardsLeft[seatIndex]
+	return value === undefined || value === null ? 99 : Number(value)
+}
+
+/**
+ * 队友刚出牌时，我到底该不该压？
+ *
+ * 默认**不压** —— 让队友用较小的牌拿住牌权，把出牌压力丢给地主，这是斗地主的标准配合。
+ * 但一味不压会走到另一个极端：两个机器人当农民时，坐在**队友下家**的那台
+ * 整局一张牌都出不去（实测 96 局人类当地主的对局：有 25 局它 0 张、平均只出 5.5 张，
+ * 而紧邻地主的那台平均 15 张），观感就是「只有一个机器人在出牌」。
+ * 所以补了下面几条规则：
+ *   1) 队友快走完了（≤ 2 张）→ **仍然不压**，让他收尾（别去抢队友的胜利）；
+ *   2) 压上去这把就赢（一手走完全部手牌）→ 必须压；
+ *   3) 我也快走完了（≤ TAKEOVER_HAND_LIMIT 张）且牌比队友少 → 抢牌权自己收尾。
+ */
+function shouldTakeOverFromTeammate({
+	hand = [],
+	lastPlay = null,
+	cardsLeft = {},
+	lastSeat = -1
+} = {}) {
+	if (!hand.length || !lastPlay) {
+		return false
+	}
+	const teammateCards = getSeatCardsLeft(cardsLeft, lastSeat)
+	if (teammateCards <= TAKEOVER_TEAMMATE_MIN_CARDS - 1) {
+		return false
+	}
+	const finish = canFinishInOneMove(hand)
+	if (finish && canBeat(analyze(finish), normalizeCombo(lastPlay))) {
+		return true
+	}
+	const myCards = hand.length
+	if (myCards <= TAKEOVER_HAND_LIMIT && myCards < teammateCards) {
+		return true
+	}
+	return false
 }
 
 function isBombLike(comboInfo = null) {
@@ -198,7 +245,11 @@ function choosePlay({
 	const finish = canFinishInOneMove(hand)
 	if (finish) {
 		const finishCombo = analyze(finish)
-		if (!lastPlay || canBeat(finishCombo, lastPlay)) {
+		// ⚠️ 必须先把 last_play 归一化：房间里的 `state.last_play` 是
+		//    { combo_type, main_rank, card_count }，而 canBeat 读的是 { type, mainRank, count }。
+		//    直接传原始对象 → target.type 为 undefined → 牌型恒不相等 → canBeat 永远 false，
+		//    结果「能一把走完」这个分支从来没生效过（机器人手里只剩一手牌也继续过牌）。
+		if (!lastPlay || canBeat(finishCombo, normalizeCombo(lastPlay))) {
 			return { type: 'play', cardIds: finish }
 		}
 	}
@@ -210,9 +261,13 @@ function choosePlay({
 		return lead ? { type: 'play', cardIds: lead } : { type: 'pass' }
 	}
 
-	// 队友出的牌默认不压
+	// 队友出的牌默认不压（少数「必须接管」的例外见 shouldTakeOverFromTeammate）
 	if (isTeammate(mySeat, lastSeat, landlordSeat)) {
-		return { type: 'pass' }
+		if (!shouldTakeOverFromTeammate({ hand, lastPlay, cardsLeft, lastSeat })) {
+			return { type: 'pass' }
+		}
+		const takeOver = findHints(hand, lastPlay)
+		return takeOver.length ? { type: 'play', cardIds: takeOver[0] } : { type: 'pass' }
 	}
 
 	const hints = findHints(hand, lastPlay)
@@ -240,15 +295,19 @@ module.exports = {
 	BID_THRESHOLD_2,
 	BID_THRESHOLD_3,
 	DANGER_CARDS_LEFT,
+	TAKEOVER_HAND_LIMIT,
+	TAKEOVER_TEAMMATE_MIN_CARDS,
 	evaluateHand,
 	getLongestRun,
 	chooseBid,
 	getLastSeat,
+	getSeatCardsLeft,
 	isTeammate,
 	getOpponentSeats,
 	getMinOpponentCards,
 	isBombLike,
 	shouldBomb,
+	shouldTakeOverFromTeammate,
 	chooseLead,
 	choosePlay
 }

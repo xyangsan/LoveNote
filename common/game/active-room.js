@@ -139,3 +139,49 @@ export function getBombProgress(uid = '') {
 export function clearBombProgress(uid = '') {
 	return removeStorage(scopedKey(BOMB_PROGRESS_PREFIX, uid))
 }
+
+/**
+ * 「这个账号还有没有没结束的房间」统一判定 —— 各玩法房间页 onLoad 没带房号时都走这里。
+ *
+ * 优先级：**服务端为准**（换设备、清过缓存都能续上）；服务端请求失败时退回本地缓存
+ * （断网 / 云函数偶发 5xx 也不至于丢掉「继续对局」）。
+ *
+ * @param {Object} options
+ * @param {String} options.gameType 只认这个玩法（不同玩法的房间不能混进对方页面）
+ * @param {String} options.uid 本地缓存的作用域
+ * @param {Function} options.fetchRemote 返回 Promise<brief|null>，brief 形如
+ *        `{ roomId, roomCode, gameType, status, ... }`（服务端 buildActiveRoomBrief 的字段）
+ * @returns {Promise<Object|null>} 可直接进房的房间摘要
+ */
+export async function resolveUnfinishedRoom({
+	gameType = '',
+	uid = '',
+	fetchRemote = null
+} = {}) {
+	const localBrief = uid ? getActiveRoom(uid) : null
+	let brief = null
+
+	if (typeof fetchRemote === 'function') {
+		try {
+			brief = await fetchRemote()
+			if (!brief && uid) {
+				// 服务端明确说「没有进行中的对局」→ 本地那条是过期缓存，清掉
+				// （别反过来：请求失败时不能清，那只是网络问题）
+				clearActiveRoom(uid)
+			}
+		} catch (error) {
+			console.warn('resolveUnfinishedRoom remote failed, fallback to local cache', error)
+			brief = localBrief
+		}
+	} else {
+		brief = localBrief
+	}
+
+	if (!brief || !brief.roomId) {
+		return null
+	}
+	if (gameType && String(brief.gameType || '') !== String(gameType)) {
+		return null
+	}
+	return brief
+}

@@ -382,6 +382,7 @@ import {
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
 import { computeAnniversaryCountdown } from '../../common/utils/anniversary-countdown.js'
 import LoveAnniversaryCard from './love-anniversary-card.vue'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 const DATE_TYPE_OPTIONS = ['solar', 'lunar']
 const DATE_TYPE_TEXT_MAP = {
@@ -802,6 +803,8 @@ export default {
 		}
 	},
 	onLoad(options) {
+		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+		if (!requirePageLogin()) return
 		const id = String((options && options.anniversaryId) || '').trim()
 		this.anniversaryId = id
 		this.syncLoginState()
@@ -1180,7 +1183,7 @@ export default {
 			const redirect = this.isEditMode
 				? `/pages/anniversary/edit?anniversaryId=${this.anniversaryId}`
 				: '/pages/anniversary/edit'
-			uni.navigateTo({
+			uni.redirectTo({
 				url: '/pages/login/index?redirect=' + encodeURIComponent(redirect)
 			})
 		},

@@ -494,9 +494,11 @@
 					}
 				}
 			},
-			goToLoginPage() {
-				uni.navigateTo({
-					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/profile/index')
+		goToLoginPage() {
+			// 本页是 tabBar 页：不能 redirectTo（tabBar 页关不掉），
+			// 登录页登录成功后走 switchTab 回来，会清掉栈里的登录页，不会留重复实例
+			uni.navigateTo({
+				url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/profile/index')
 				})
 			},
 			goToEdit() {

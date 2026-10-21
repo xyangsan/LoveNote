@@ -39,6 +39,11 @@ const state = {
 	attempts: 0,
 	everConnected: false,
 	joined: false,
+	// SocketTask 是否已 OPEN（onOpen 触发过、且未 onClose/onError）。
+	// ⚠️ 不能只看 state.task 是否存在 —— connectWebSocket 返回 task 后到 onOpen 之间，readyState 还是
+	// 0(CONNECTING)，此时 task.send 会抛 "SocketTask.readyState is not OPEN"。
+	// 用这个标志做预检，避免在 CONNECTING/CLOSING/CLOSED 态发包。
+	socketOpen: false,
 	retryTimer: null,
 	heartbeatTimer: null,
 	connectTimer: null,
@@ -157,12 +162,34 @@ function resetSocket() {
 		}
 	}
 	state.task = null
+	state.socketOpen = false
 	state.joined = false
 	clearTimer('connectTimer')
 }
 
+/**
+ * 是否可以往 SocketTask 上发包。
+ * 微信 SocketTask.readyState：0 CONNECTING / 1 OPEN / 2 CLOSING / 3 CLOSED。
+ * 只在 OPEN 才发；其它状态发会被 SDK 同步抛 "SocketTask.readyState is not OPEN"。
+ *
+ * 双重判据：
+ *   · `state.socketOpen`（onOpen 触发过、未 onClose/onError）—— 这是主判据；
+ *   · `task.readyState === 1` —— 兜底：万一 onOpen 回调没注册上 / 状态机漏设，至少 readyState 还能挡一道。
+ *     拿不到 readyState（非微信端 / uniCloud 包装未透传）时退化为只看 socketOpen。
+ */
+function isSocketSendable() {
+	const task = state.task
+	if (!task || !state.socketOpen) {
+		return false
+	}
+	if (typeof task.readyState === 'number') {
+		return task.readyState === 1
+	}
+	return true
+}
+
 function sendRaw(payload = {}) {
-	if (!state.task) {
+	if (!isSocketSendable()) {
 		return false
 	}
 	try {
@@ -306,11 +333,13 @@ async function openSocket(reason = '') {
 
 	task.onOpen(() => {
 		log('socket open')
+		state.socketOpen = true
 		state.lastPongAt = Date.now()
 	})
 
 	task.onClose((event = {}) => {
 		log('socket close', event.code, event.reason)
+		state.socketOpen = false
 		if (state.manualClose) {
 			setStatus(STATUS.CLOSED)
 			return
@@ -320,6 +349,7 @@ async function openSocket(reason = '') {
 
 	task.onError((event = {}) => {
 		console.warn('game-ws socket error', event.errMsg || event)
+		state.socketOpen = false
 		if (state.manualClose) {
 			return
 		}

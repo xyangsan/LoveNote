@@ -141,6 +141,7 @@
 <script>
 import { getAlbumApi } from '../../common/api/album.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 export default {
 	data() {
@@ -163,6 +164,8 @@ export default {
 		}
 	},
 	onLoad(options) {
+		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+		if (!requirePageLogin()) return
 		const albumId = String(options && options.albumId || '').trim()
 		if (!albumId) {
 			uni.showToast({

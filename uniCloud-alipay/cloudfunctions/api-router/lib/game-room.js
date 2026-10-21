@@ -245,6 +245,8 @@ function buildSeat({
 	seatIndex = 0,
 	snapshot = {},
 	isRobot = false,
+	/** 机器人可以传 true：它不会点「准备」，直接算已就绪（否则加了机器人就开不了局） */
+	ready = false,
 	now = Date.now()
 } = {}) {
 	return {
@@ -254,7 +256,7 @@ function buildSeat({
 		avatar_url: snapshot.avatar_url || '',
 		avatar_file_id: snapshot.avatar_file_id || '',
 		is_robot: Boolean(isRobot),
-		ready: false,
+		ready: Boolean(ready),
 		score: 0,
 		status: SEAT_STATUS_WAITING,
 		last_seen: now
@@ -889,7 +891,7 @@ function appendSpeech(room = {}, speech = {}) {
  * 懒计时器：把超时自动推进交给各引擎计算，房间层负责派发与提交
  * ------------------------------------------------------------------ */
 
-async function resolveTimerPatch(room = {}, now = Date.now()) {
+async function resolveTimerPatch(room = {}, now = Date.now(), options = {}) {
 	if (!room || room.status !== ROOM_STATUS_PLAYING) {
 		return null
 	}
@@ -898,9 +900,10 @@ async function resolveTimerPatch(room = {}, now = Date.now()) {
 		return null
 	}
 	try {
-		// 在线状态由房间层统一查询后注入，引擎不直接依赖连接表
+		// 在线状态由房间层统一查询后注入，引擎不直接依赖连接表。
+		// options 里的其余字段（如 skipTimeoutSeat：不替本次请求的发起人超时代打）原样透传给引擎。
 		const onlineUidSet = await getOnlineUidSet(room._id, now)
-		return await engine.computeTimerPatch(room, now, { onlineUidSet })
+		return await engine.computeTimerPatch(room, now, Object.assign({}, options, { onlineUidSet }))
 	} catch (error) {
 		console.warn('api-router resolveTimerPatch failed', error)
 		return null

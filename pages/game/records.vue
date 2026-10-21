@@ -181,6 +181,7 @@
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { hasValidLogin } from '@/common/auth-center.js'
 	import { openLoginModal } from '@/common/auth-modal.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const FILTERS = [
 		{ label: '全部', value: '' },
@@ -265,6 +266,8 @@
 			}
 		},
 		onLoad() {
+			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncLoginState()
 			this.reload()

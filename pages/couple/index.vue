@@ -379,6 +379,7 @@
 	import { getCoupleApi } from '../../common/api/couple.js'
 	import { useAppStateStore } from '../../store/app-state.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const TAB_KEYS = ['incoming', 'outgoing', 'history']
 
@@ -649,6 +650,8 @@
 			}
 		},
 		onLoad() {
+			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncCenterDataFromStore()
 			this.removeAuthListener = subscribeAuthChanged(() => {
@@ -820,7 +823,7 @@
 				}
 			},
 			goToLoginPage() {
-				uni.navigateTo({
+				uni.redirectTo({
 					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/couple/index')
 				})
 			},

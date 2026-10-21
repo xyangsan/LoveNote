@@ -231,6 +231,7 @@ import { getDailyApi } from '../../common/api/daily.js'
 import { getUserApi } from '../../common/api/user.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 import { useAppStateStore } from '../../store/app-state.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
 
@@ -340,6 +341,8 @@ export default {
 		}
 	},
 	onLoad() {
+		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+		if (!requirePageLogin()) return
 		this.setupNavBar()
 		this.syncHeaderProfile()
 		this.loadPostList(true)

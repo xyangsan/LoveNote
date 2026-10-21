@@ -120,6 +120,7 @@ import {
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
 import { normalizeAnniversaryCountdownItem } from '../../common/utils/anniversary-countdown.js'
 import LoveAnniversaryCard from './love-anniversary-card.vue'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 const DATE_TYPE_TEXT_MAP = {
 	solar: '公历',
@@ -156,6 +157,10 @@ export default {
 			dateTypeTextMap: DATE_TYPE_TEXT_MAP,
 			repeatTypeTextMap: REPEAT_TYPE_TEXT_MAP
 		}
+	},
+	onLoad() {
+		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+		if (!requirePageLogin()) return
 	},
 	onShow() {
 		this.syncLoginState()
@@ -361,7 +366,7 @@ export default {
 			}
 		},
 		goToLoginPage() {
-			uni.navigateTo({
+			uni.redirectTo({
 				url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/anniversary/list')
 			})
 		},

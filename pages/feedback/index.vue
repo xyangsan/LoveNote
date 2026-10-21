@@ -142,6 +142,7 @@
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getFeedbackApi } from '../../common/api/feedback.js'
+import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const CATEGORY_OPTIONS = [{
 		name: '功能异常',
@@ -188,6 +189,8 @@
 			}
 		},
 		onLoad() {
+			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
+			if (!requirePageLogin()) return
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
 			})
@@ -218,7 +221,7 @@
 				this.loggedIn = true
 			},
 			goToLoginPage() {
-				uni.navigateTo({
+				uni.redirectTo({
 					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/feedback/index')
 				})
 			},

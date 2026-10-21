@@ -4,6 +4,8 @@ const { Service } = require('uni-cloud-router')
 const { createUniIdCo } = require('../lib/uni-id-co')
 const { ensureDefaultRole } = require('../lib/auth')
 const { updateUserProfile, formatUserInfo } = require('../lib/profile')
+const { ensureUserNickname } = require('../lib/nickname')
+const { ensureUserAvatar } = require('../lib/avatar-pool')
 const { getUserById } = require('../lib/user-base')
 const { formatError } = require('../lib/response')
 
@@ -40,8 +42,22 @@ module.exports = class AuthService extends Service {
 				params.avatarUrl
 			)
 
+			// ① 先落用户本次提交的资料：填了昵称/头像就以用户为准
 			if (hasProfilePayload) {
 				userRecord = await updateUserProfile(loginResult.uid, params)
+			}
+
+			// ② 幂等兜底：仍无有效昵称 → 生成；仍无任何头像 → 随机分配。
+			//    两者都只在「缺失」时写库，已有值原样返回，保证二次登录零写库。
+			//    判断源必须是库里的记录，不能是入参，否则每次登录都会重新生成。
+			const nicknameRecord = await ensureUserNickname(loginResult.uid, userRecord)
+			if (nicknameRecord) {
+				userRecord = nicknameRecord
+			}
+
+			const avatarRecord = await ensureUserAvatar(loginResult.uid, userRecord)
+			if (avatarRecord) {
+				userRecord = avatarRecord
 			}
 
 			if (!userRecord) {

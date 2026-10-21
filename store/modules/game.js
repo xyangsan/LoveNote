@@ -96,7 +96,7 @@ export function buildAutoActionMessage(items = []) {
 
 	const hasTrustee = list.some((item) => item.action === 'auto_trustee')
 	if (hasTrustee) {
-		return '你掉线或连续超时，已被自动托管，点「恢复操作」即可接手'
+		return '倒计时结束未操作，已自动托管；点右上角图标即可取消'
 	}
 
 	const counters = {

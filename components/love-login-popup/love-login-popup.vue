@@ -19,16 +19,17 @@
 					<text class="avatar-button__hint">选择头像</text>
 				</button>
 				<view class="editor-card__body">
-					<text class="field-label">微信昵称</text>
+					<text class="field-label">昵称（选填）</text>
 					<input
 						class="text-input"
 						type="nickname"
-						placeholder="请输入你的昵称"
+						placeholder="选填，不填自动帮你取一个"
+						maxlength="20"
 						:value="loginForm.nickname"
 						@input="onNicknameInput"
 						@blur="onNicknameBlur"
 					/>
-					<text class="field-tip">登录后会同步保存你的头像和昵称，后续可在资料页继续完善。</text>
+					<text class="field-tip">昵称选填，不填会自动生成一个；登录后可在资料页继续完善。</text>
 				</view>
 			</view>
 

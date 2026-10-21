@@ -26,8 +26,30 @@ function isValidBirthday(value = '') {
 	return `${date.getFullYear()}-${padDateUnit(date.getMonth() + 1)}-${padDateUnit(date.getDate())}` === value
 }
 
-async function resolveMomentsCover(record = {}) {
-	const momentsCoverFileId = String(record.moments_cover_file_id || '').trim()
+/**
+ * 小程序 chooseAvatar / chooseImage 回传的临时路径（`http(s)://tmp/xxx.jpeg`、`wxfile://…`）
+ * 不能当头像地址入库：那是本机临时文件，换台设备就失效。客户端必须先上传云存储再提交。
+ * 与 client 侧 common/utils/file-upload.js 的 isTempFilePath 保持同一口径。
+ */
+function isTempAvatarUrl(value = '') {
+	const raw = String(value || '').trim()
+	if (!raw) {
+		return false
+	}
+	if (/^cloud:\/\//i.test(raw) || /^data:/i.test(raw)) {
+		return false
+	}
+	if (/^(wxfile|blob|file|filesystem|content|absolute|ms-appx):/i.test(raw)) {
+		return true
+	}
+	const httpMatch = raw.match(/^https?:\/\/([^/?#:]+)/i)
+	if (httpMatch) {
+		return !httpMatch[1].includes('.')
+	}
+	return true
+}
+
+async function resolveMomentsCover(record = {}) {	const momentsCoverFileId = String(record.moments_cover_file_id || '').trim()
 	const momentsCoverUrl = String(record.moments_cover_url || '').trim()
 
 	if (momentsCoverFileId) {
@@ -79,7 +101,9 @@ function buildProfileUpdateData(params = {}) {
 				errMsg: '昵称长度不能超过 100 个字符'
 			}
 		}
-		if (nickname) {
+		// 占位昵称（'微信用户'）一律不落库：它只是读时兜底，
+		// 一旦被写进来就会被当成真实昵称，导致两个用户同名且再也补不上默认昵称。
+		if (nickname && nickname !== DEFAULT_NICKNAME) {
 			updateData.nickname = nickname
 		}
 	}
@@ -167,6 +191,12 @@ function buildProfileUpdateData(params = {}) {
 			url: avatarFileId
 		}
 	} else if (avatarUrl) {
+		if (isTempAvatarUrl(avatarUrl)) {
+			throw {
+				errCode: 'love-note-invalid-avatar',
+				errMsg: '头像地址无效，请先上传到云存储再提交'
+			}
+		}
 		updateData.avatar = avatarUrl
 		updateData.avatar_file_id = dbCmd.remove()
 		updateData.avatar_file = dbCmd.remove()
