@@ -238,8 +238,9 @@
 				></ll-actions>
 			</view>
 
-			<!-- 手牌行：容器宽度交给 ll-hand 自己算偏移，**完全居中**（不给左侧人物栏让位）。
-			     id 供 computeHandWidth 实测真实行宽（安全区 / padding 都算在内）。 -->
+			<!-- 手牌行：**完全居中**（不给左侧人物栏让位），水平位置由 ll-hand 的 CSS auto margin 决定，
+			     这里只提供一整行的容器；id 供 computeHandWidth 实测真实行宽（安全区 / padding 都算在内），
+			     实测值只用来定 20 张牌的可用铺开宽度（handMaxWidth），不再参与居中偏移。 -->
 			<view id="ll-hand-row" class="ll-hand">
 				<!-- ⚠️ animSeq 只给「整局重建」用（开局 / 新一局）：+1 → 每张牌的 key 全变 → 逐张发牌。
 				     底牌并入 / 出牌**不要**动它：ll-hand 内部用 handSeq 做静默重建，
@@ -250,7 +251,6 @@
 					:card-width="48"
 					:card-height="70"
 					:max-width="handMaxWidth"
-					:container-width="handContainerWidth"
 					:selectable="canSelectCards"
 					:disabled="!canSelectCards"
 					:enter="handEnter"
@@ -427,8 +427,16 @@
 				handMaxWidth: 420,
 				// 自动续局防重入（onLoad 重跑 / 手动进房并发）
 				autoEntering: false,
-				/** 手牌行所在的容器宽度（屏宽 - 底栏左右 padding）；ll-hand 用它算居中偏移 */
+				/**
+				 * 手牌行的实测宽度（屏宽 - 安全区 - 底栏左右 padding）。
+				 * ⚠️ 只用来定 `handMaxWidth`（20 张牌的铺开宽度），**不再参与居中偏移** ——
+				 *   牌行的水平居中由 ll-hand 的 CSS auto margin 负责。
+				 */
 				handContainerWidth: 0,
+				/** 手牌行是否已经量到过真实宽度（没量到就一直用兜底值，room 到达后补测） */
+				handRowMeasured: false,
+				/** 手牌行宽度补测的定时器 */
+				handMeasureTimer: null,
 				// ---- 动画状态（全部由状态变化驱动，见下方 watch）----
 				// 炸弹全屏特效开关：触发后 700ms 自动关闭
 				bombOn: false,
@@ -901,6 +909,10 @@
 			// 只写缓存、**不退房**：系统返回 / 侧滑 = 返回大厅（可「继续对局」回来）。
 			// 显式退出过的（roomExited）在这里只会被清掉，不会写回。
 			this.clearAutoNoticeTimer()
+			if (this.handMeasureTimer) {
+				clearTimeout(this.handMeasureTimer)
+				this.handMeasureTimer = null
+			}
 			this.persistActiveRoom()
 			if (this.sync) {
 				this.sync.stop()
@@ -990,6 +1002,20 @@
 					this.handEnter = 'deal'
 					this.dealSeq += 1
 				}
+			},
+			/**
+			 * 房间数据到了 → `.ll-bottom`（含 `#ll-hand-row`）这一刻才真正渲染出来。
+			 * onLoad / onReady / onShow 测量时它还不存在（v-if="room"），只能拿到兜底宽度；
+			 * 兜底值是「屏宽 - 32」，**没扣横屏安全区**（iPhone 左右各 44px），
+			 * 用它算 20 张牌的铺开宽度会让整行超出屏幕。所以这里补测一次。
+			 */
+			room(next) {
+				if (!next || this.handRowMeasured) {
+					return
+				}
+				this.$nextTick(() => {
+					this.measureHandRowWidth()
+				})
 			}
 			// ⚠️ 不要再监听 myHand 去 +dealSeq：底牌并入（17 → 20）的「插入动画」
 			// 由 ll-hand 内部 diff 新增牌来完成（老牌不重建，只让位）。
@@ -1064,11 +1090,15 @@
 				return this.appStateStore
 			},
 			computeHandWidth() {
-				// 先用「屏宽 - 底栏左右 padding」兜底一个可用值（首帧就有数，不会挤成一坨）
-				this.applyHandWidth(this.resolveHandFallbackWidth())
+				// 还没有实测值时先用「屏宽 - 底栏左右 padding」兜底（首帧就有数，不会挤成一坨）。
+				// ⚠️ 已有实测值就不要再用兜底值覆盖：横屏带安全区的机型兜底值比真实行宽大 88px，
+				//    每次 onShow 都盖一次的话，牌行会跟着「变宽又变窄」跳一下。
+				if (!this.handContainerWidth) {
+					this.applyHandWidth(this.resolveHandFallbackWidth())
+				}
 				// 再实测手牌行真实宽度：横屏安全区（iPhone 左右各 44px）、
 				// 页面 padding、左右两侧的人物栏都不参与这个宽度，
-				// 用实测值算偏移，牌行中心才会与屏幕中心重合。
+				// 用实测值算 20 张牌的铺开宽度，牌行中心才会与屏幕中心重合。
 				this.$nextTick(() => {
 					this.measureHandRowWidth()
 				})
@@ -1089,17 +1119,26 @@
 					return 420
 				}
 			},
-			/** 实测 `#ll-hand-row` 的真实宽度（拿不到就继续用兜底值，绝不抛错） */
-			measureHandRowWidth() {
+			/**
+			 * 实测 `#ll-hand-row` 的真实宽度（拿不到就继续用兜底值，绝不抛错）。
+			 *
+			 * ⚠️ 手牌行挂在 `v-if="room"` 的 `.ll-bottom` 里：onLoad / onReady / onShow
+			 *   跑的时候房间数据常常还没到 → 节点根本不存在，`boundingClientRect` 拿不到尺寸。
+			 *   所以这里带**有限次重试**，并由 `watch.room` 在房间数据到达后再补测一次
+			 *   （见 `measureHandRowWidth` 的调用点），否则会一直停在兜底值上。
+			 */
+			measureHandRowWidth(retry = 0) {
 				try {
 					uni.createSelectorQuery()
 						.select('#ll-hand-row')
 						.boundingClientRect((rect) => {
 							const width = rect && Number(rect.width)
-							// 横屏下正常都在 500+；明显偏小说明量到了未布局的节点，忽略
+							// 横屏下正常都在 500+；明显偏小说明量到了未布局的节点
 							if (!width || width < 240) {
+								this.retryMeasureHandRow(retry)
 								return
 							}
+							this.handRowMeasured = true
 							this.applyHandWidth(width)
 						})
 						.exec()
@@ -1107,7 +1146,23 @@
 					// 部分端不支持 select / boundingClientRect，保留兜底宽度
 				}
 			},
-			/** 落地手牌行宽度：容器宽度 === 牌行可用宽度，偏移恒为 (container - total) / 2 */
+			/** 节点还没排好版时 120ms 后再测，最多 3 次（进房首帧 / 刚切横屏） */
+			retryMeasureHandRow(retry) {
+				if (retry >= 3) {
+					return
+				}
+				if (this.handMeasureTimer) {
+					clearTimeout(this.handMeasureTimer)
+				}
+				this.handMeasureTimer = setTimeout(() => {
+					this.handMeasureTimer = null
+					this.measureHandRowWidth(retry + 1)
+				}, 120)
+			},
+			/**
+			 * 落地手牌行宽度：`handMaxWidth` = 牌行真实可用宽度（20 张牌要在这里排开）。
+			 * ⚠️ 这个宽度只决定「牌摊多开」，**不参与居中** —— 居中由 ll-hand 的 CSS auto margin 负责。
+			 */
 			applyHandWidth(width) {
 				const container = Math.max(280, Math.round(Number(width) || 0))
 				if (container === this.handContainerWidth) {

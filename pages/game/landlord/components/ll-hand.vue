@@ -56,6 +56,13 @@
 	 *   · 位置只由数据下标决定 → 无论节点物理顺序如何，牌面顺序永远正确；
 	 *   · 手牌一变就整手重建（见下面「动画」），所以位置不需要靠过渡去「让位」。
 	 *
+	 * 居中：整行的水平位置**交给 CSS**（`.ll-hand__inner { margin: 0 auto }` +
+	 *   父级 `justify-content: center`），组件不再接收“容器宽度”去算偏移。
+	 *   ⚠️ 别改回「页面上报容器宽度 → 算 marginLeft」：手牌行是 `v-if="room"` 才渲染的，
+	 *      页面在 onLoad / onReady / onShow 里测 `#ll-hand-row` 时节点**还不存在**，
+	 *      拿到的永远是「屏宽 - 32」的兜底值；横屏带安全区的机型（左右各 44px）兜底值
+	 *      比真实行宽大 88px → 整行右移 44px。20 张时几乎填满看不出来，**出牌后就明显没居中**。
+	 *
 	 * 动画（两种重建，视觉完全不同）：
 	 *   · 整局重建（开局 / 新一局）：页面把 `animSeq` +1 → key 全变 → 每张牌 enter='deal'，逐张发牌；
 	 *   · 手牌变化（底牌并入 / 出牌）：组件把 `handSeq` +1 → key 全变 → **静默重建**：
@@ -95,13 +102,7 @@
 			 * 页面把它 +1 → 每张牌的 key 都变 → 全部重新创建 → 发牌动画重播。
 			 * ⚠️ 底牌并入**不要**再加它 —— 那会把整手牌推翻重建，要的是插入动画。
 			 */
-			animSeq: { type: Number, default: 0 },
-			/**
-			 * 牌行所在容器的实际宽度（px）。
-			 * 给了它就按「容器宽度」精确居中（不依赖父级 justify-content 的算法差异）；
-			 * 不给则退回 CSS 居中（老行为，用于单测/其他场景）。
-			 */
-			containerWidth: { type: Number, default: 0 }
+			animSeq: { type: Number, default: 0 }
 		},
 		emits: ['change'],
 		data() {
@@ -194,9 +195,14 @@
 				return Math.max(this.cardWidth * 0.16, Math.min(desired, fit))
 			},
 			/**
-			 * 牌行定位：**永远居中**（牌剩得越少越要正对桌面中线，不再给任何最小偏移/让位）。
-			 * ⚠️ 用 `marginRight: auto` 让容器的 `justify-content` 失效，位置完全由 marginLeft 决定
-			 *   （否则 center/space-between 会和 margin 叠加，偏移算不准）。
+			 * 牌行尺寸：宽度 / 高度只按「张数 × 步长」算，**水平居中完全交给 CSS**。
+			 *
+			 * ⚠️ 不要再用“容器宽度”算 `marginLeft = (container - total) / 2`：
+			 *   手牌行是 `v-if="room"` 才渲染的，页面第一次测宽度时节点还不存在，
+			 *   上报的是「屏宽 - 32」的兜底值（带横屏安全区的机型比真实行宽大 88px）→
+			 *   整行右移 44px，牌越少越明显（20 张时几乎填满，出牌后就看出「没居中」）。
+			 *   `.ll-hand__inner { margin: 0 auto }` 跟着容器**真实**宽度走，
+			 *   出牌、横竖屏切换、PC 窗口拉伸都不用重新测量。
 			 */
 			innerStyle() {
 				const count = this.sortedCards.length
@@ -204,16 +210,10 @@
 					return {}
 				}
 				const total = this.cardWidth + this.step * (count - 1)
-				const style = {
+				return {
 					width: `${total}px`,
 					height: `${this.cardHeight + 16}px`
 				}
-				const container = Number(this.containerWidth) || 0
-				if (container > 0) {
-					style.marginLeft = `${Math.round((container - total) / 2)}px`
-					style.marginRight = 'auto'
-				}
-				return style
 			},
 			/** 能不能选牌：不是我的回合 / 手牌为空时，拖和点都不该有反应 */
 			canSelect() {
@@ -502,8 +502,13 @@
 		display: flex;
 		align-items: flex-end;
 		justify-content: center;
-		/* ⚠️ 不要给 margin-left 加过渡：出牌后整行要**立刻**重新居中。
+		/* 左右 auto 平分剩余空间 = 精确居中，跟着容器**真实**宽度走（不依赖任何测量值）。
+		   父级 `.ll-hand` 的 justify-content: center 是第二层保险：
+		   万一某些端把 auto 当 0 处理，内容仍然是居中的。
+		   宽度由 innerStyle 按张数给出（index × step 绝对定位，DOM 顺序不影响牌面）。
+		   ⚠️ 不要给 margin 加过渡：出牌后整行要**立刻**重新居中。
 		   有过渡时，牌已经按新下标瞬移到位、整行却还在慢慢滑，看着就是「没居中」。 */
+		margin: 0 auto;
 	}
 
 	.ll-hand__item {
