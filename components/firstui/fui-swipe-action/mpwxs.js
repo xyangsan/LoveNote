@@ -48,17 +48,27 @@ export default {
 				this.isShow = e.open
 			}
 		},
+		/**
+		 * 是否 PC 浏览器（H5 专用）：靠 UA 里有没有**移动端标记**来判断。
+		 *
+		 * ⚠️ 鸿蒙必须算移动端：
+		 *   · HarmonyOS 4 及更早的 UA 里带 "Android" → 本来就能命中；
+		 *   · **HarmonyOS NEXT**（OpenHarmony / ArkWeb）的 UA 既没有 "Android" 也没有 "iPhone"，
+		 *     漏掉就会被判成 PC → `appTouchStart/appTouchEnd` 直接 return、`handleClick` 反而接管，
+		 *     鸿蒙手机上滑动手势 / 点击都会错乱。
+		 * 顺手修两个老 bug：原来 `v < Agents.length - 1` 漏掉最后一个标记、
+		 * `indexOf(...) > 0` 也漏掉「标记正好在 UA 开头」的情况。
+		 */
 		isPC() {
-			var userAgentInfo = navigator.userAgent;
-			var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
-			var flag = true;
-			for (let v = 0; v < Agents.length - 1; v++) {
-				if (userAgentInfo.indexOf(Agents[v]) > 0) {
-					flag = false;
-					break;
+			if (typeof navigator !== 'object' || !navigator) return false
+			var userAgentInfo = String(navigator.userAgent || '');
+			var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod", "HarmonyOS", "OpenHarmony", "ArkWeb"];
+			for (let v = 0; v < Agents.length; v++) {
+				if (userAgentInfo.indexOf(Agents[v]) >= 0) {
+					return false;
 				}
 			}
-			return flag;
+			return true;
 		},
 		//解决 ios 13 点击区域错位的问题
 		appTouchStart(e) {

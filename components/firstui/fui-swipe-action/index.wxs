@@ -1,18 +1,22 @@
 var MIN_DISTANCE = 10
 var app = false;
 
+/**
+ * 是否 PC（靠 UA 里的移动端标记判断）。
+ * ⚠️ 鸿蒙 NEXT（HarmonyOS / OpenHarmony / ArkWeb）的 UA 不含 "Android"，漏掉会被判成 PC，
+ *    滑动的宽度测量会走 `$el` 分支（小程序里没有 $el）→ 右侧按钮宽度算成 0。
+ *    WXS 只能用 ES5 语法，别引入箭头函数 / let。
+ */
 function isPC() {
-	if (typeof navigator !== 'object') return false;
-	var userAgentInfo = navigator.userAgent;
-	var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
-	var flag = true;
-	for (var v = 0; v < Agents.length - 1; v++) {
-		if (userAgentInfo.indexOf(Agents[v]) > 0) {
-			flag = false;
-			break;
+	if (typeof navigator !== 'object' || !navigator) return false;
+	var userAgentInfo = navigator.userAgent ? navigator.userAgent : '';
+	var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod", "HarmonyOS", "OpenHarmony", "ArkWeb"];
+	for (var v = 0; v < Agents.length; v += 1) {
+		if (userAgentInfo.indexOf(Agents[v]) >= 0) {
+			return false;
 		}
 	}
-	return flag;
+	return true;
 }
 var isH5 = false
 if (typeof window === 'object') isH5 = true

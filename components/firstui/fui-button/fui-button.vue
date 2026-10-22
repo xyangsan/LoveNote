@@ -373,18 +373,22 @@
 				this.time = 0;
 			},
 			// #ifdef H5
+			/**
+			 * 是否 PC 浏览器：靠 UA 里有没有**移动端标记**来判断。
+			 * ⚠️ 鸿蒙（HarmonyOS NEXT / OpenHarmony / ArkWeb）的 UA 不含 "Android"，
+			 *    漏掉会被判成 PC → 按钮改用鼠标事件，鸿蒙手机上点不动。
+			 * 顺手修掉原来 `length - 1` 漏最后一个标记、`indexOf > 0` 漏 UA 开头的两个老 bug。
+			 */
 			isPC() {
-				if (typeof navigator !== 'object') return false;
-				var userAgentInfo = navigator.userAgent;
-				var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod"];
-				var flag = true;
-				for (var v = 0; v < Agents.length - 1; v++) {
-					if (userAgentInfo.indexOf(Agents[v]) > 0) {
-						flag = false;
-						break;
+				if (typeof navigator !== 'object' || !navigator) return false;
+				var userAgentInfo = String(navigator.userAgent || '');
+				var Agents = ["Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod", "HarmonyOS", "OpenHarmony", "ArkWeb"];
+				for (var v = 0; v < Agents.length; v += 1) {
+					if (userAgentInfo.indexOf(Agents[v]) >= 0) {
+						return false;
 					}
 				}
-				return flag;
+				return true;
 			},
 			// #endif
 			handleTap() {

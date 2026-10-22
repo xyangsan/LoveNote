@@ -63,7 +63,14 @@
 			// #ifdef APP-NVUE
 			isNvue = true;
 			const res = uni.getSystemInfoSync();
-			isAndroid = res.platform.toLocaleLowerCase() == "android"
+			/*
+			 * 是否是「Android 同源」平台：决定弹出动画用 20ms 还是 250ms。
+			 * ⚠️ 鸿蒙（HarmonyOS / OpenHarmony）的 platform 是 `ohos`，不是 `android`，
+			 *    漏掉会掉进 iOS 的慢动画分支 —— 这里按「平台名包含关系」判断，
+			 *    android / ohos / harmonyos / openharmony 都算。
+			 */
+			const platform = String((res && res.platform) || '').toLowerCase()
+			isAndroid = ['android', 'ohos', 'harmonyos', 'openharmony'].some((name) => platform.indexOf(name) >= 0)
 			// #endif
 			return {
 				iphoneX: false,
