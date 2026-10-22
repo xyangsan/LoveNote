@@ -89,8 +89,20 @@
 				     ⚠️ 占位区**定高 42px + 内部绝对定位**：牌行往下长也不会撑高这一列，
 				        座位 / 分数一动不动；多行用 row-overlap 叠起来（每行只露 22px）。 -->
 				<view class="ll-side__play">
-					<view v-if="playedOf(leftSeatIndex).length" class="ll-side__play-inner">
+					<!-- 「要不起」：该座位最近一次动作是过牌 → 出牌区显示贴图（不再显示他上一手的牌） -->
+					<view
+						v-if="hasSeatAction(leftSeatIndex)"
+						class="ll-side__play-inner"
+						:class="{ 'll-side__play-inner--pass': hasSeatPassed(leftSeatIndex) }"
+					>
+						<image
+							v-if="hasSeatPassed(leftSeatIndex)"
+							class="ll-side__pass"
+							src="/static/icons/game/pass.png"
+							mode="widthFix"
+						></image>
 						<ll-played
+							v-else
 							:cards="playedOf(leftSeatIndex)"
 							:card-width="30"
 							:card-height="42"
@@ -112,8 +124,10 @@
 
 				<template v-else>
 					<view class="ll-center__timer">
+						<!-- 倒计时只给「真人回合」：托管 / 机器人回合服务端会直接代打，
+						     再挂一个 20s 倒计时只会让人看到「20s → 推进中」的假等待（托管卡住的观感来源）。 -->
 						<ll-timer
-							v-if="state.turn_deadline"
+							v-if="showTurnTimer"
 							:key="'ll-timer-' + state.timer_seq"
 							:deadline="state.turn_deadline"
 							:server-offset="serverOffset"
@@ -121,10 +135,17 @@
 							:show-bar="true"
 							expired-text="推进中"
 						></ll-timer>
+						<!-- 自己的托管回合：不显示倒计时，改成一枚「自动出牌」状态胶囊 -->
+						<view v-else-if="autoTurnTip" class="ll-center__auto">
+							<view class="ll-center__auto-dot"></view>
+							<text class="ll-center__auto-text">{{ autoTurnTip }}</text>
+						</view>
 					</view>
 
 					<!-- 中央出牌区：同样叠着摆（同 ll-hand），一行放不下换行继续叠。
-					     宽度上限跟着屏幕算，窄屏不会把左右两家挤出去 -->
+					     宽度上限跟着屏幕算，窄屏不会把左右两家挤出去。
+					     ⚠️ 中央**永远显示最近一手出的牌**，过牌（要不起）不改写这里 ——
+					        要不起贴图只出现在左右两家各自的出牌区（见 .ll-side__pass）。 -->
 					<view class="ll-center__play" :style="{ maxWidth: centerPlayMaxWidth + 16 + 'px' }">
 						<template v-if="centerPlay.cards.length">
 							<ll-played
@@ -177,8 +198,19 @@
 				></ll-seat>
 				<text v-if="rightSeat" class="ll-side__score">{{ seatScoreText(rightSeat) }}</text>
 				<view class="ll-side__play">
-					<view v-if="playedOf(rightSeatIndex).length" class="ll-side__play-inner">
+					<view
+						v-if="hasSeatAction(rightSeatIndex)"
+						class="ll-side__play-inner"
+						:class="{ 'll-side__play-inner--pass': hasSeatPassed(rightSeatIndex) }"
+					>
+						<image
+							v-if="hasSeatPassed(rightSeatIndex)"
+							class="ll-side__pass"
+							src="/static/icons/game/pass.png"
+							mode="widthFix"
+						></image>
 						<ll-played
+							v-else
 							:cards="playedOf(rightSeatIndex)"
 							:card-width="30"
 							:card-height="42"
@@ -214,6 +246,7 @@
 					:phase="actionPhase"
 					:is-host="isHost"
 					:is-my-turn="isMyTurn"
+					:is-trustee="isTrusteeSeat(mySeat)"
 					:self-ready="selfSeat && selfSeat.ready"
 					:can-start="canStart"
 					:start-block-reason="startBlockReason"
@@ -388,6 +421,43 @@
 	const TURN_MS = 20 * 1000
 	/** 自动操作提示在 ll-mybar__notice 里停留的时长（ms） */
 	const AUTO_NOTICE_MS = 3600
+	/*
+	 * 自动座位（机器人 / 托管）回合的「客户端补推」参数 —— 为什么需要它：
+	 * 服务端的超时 / 托管 / 机器人推进是**懒计时器**（只在有请求进来时才跑），
+	 * 而推送模式下客户端没有轮询。一旦服务端在同一次请求里把步数用尽（AUTO_STEP_LIMIT=12）
+	 * 或 AI 这一手没推起来，最后一张落在自动座位上的牌就**没有任何人会去推**了 ——
+	 * 现象就是手牌区一直停在倒计时走完后的「推进中」，托管再也动不了。
+	 * 这里由客户端补一脚 `syncRoom({ force: true })`（服务端 force 会跳过版本早退去推进），
+	 * 状态一变就重新计数；同一状态连续推不动则按下面的退避慢慢试，不会刷爆云函数。
+	 */
+	const AUTO_DRIVE_FIRST_DELAY = 120
+	const AUTO_DRIVE_MAX_DELAY = 10000
+	/**
+	 * 同一状态最多「密集补推」8 次（退避 0.24s / 0.48s … 累计 ≈ 25s）。
+	 * ⚠️ 必须跨过 20s 的回合时限：万一 AI 这一手真的推不动，超时后服务端的
+	 * `applyTimeout` 兜底（跟牌就过 / 先手出最小单张）才会接手。
+	 * 8 次之后**不放弃**，转 `AUTO_DRIVE_HEARTBEAT` 低频心跳 —— 放弃 = 房间永久卡在自动座位上。
+	 */
+	const AUTO_DRIVE_MAX_TRIES = 8
+	/**
+	 * 自动座位（机器人 / 托管）的「思考时间」—— **必须与云函数一致**
+	 * （`uniCloud-alipay/cloudfunctions/api-router/lib/landlord-engine.js` 的
+	 * `AUTO_PLAY_DELAY_MS`）。服务端在回合开始后 1 秒内拒绝代打，
+	 * 客户端就按这个时间点发补推：早了白跑一次云函数，晚了机器人干坐着不动。
+	 */
+	const AUTO_PLAY_DELAY_MS = 1000
+	/** 补推最早延迟 / 在思考时间上的余量（吃掉两端时钟偏差） */
+	const AUTO_DRIVE_MIN_DELAY = 60
+	const AUTO_DRIVE_GRACE = 160
+	/**
+	 * 非「推进负责人」的客户端：只在自动座位**明显卡住**后才补一脚（ms）。
+	 * 房间里有几个人就有几个客户端，如果每台都按 1 秒节奏推，一次自动出牌会打 3 次云函数
+	 * （只有一次成功，另外两次白跑 + 白提交冲突）。所以选一个负责人按 1 秒推，
+	 * 其他人退到 2.4 秒兜底 —— 负责人正常时它的定时器会在状态变化时被取消，根本不会发请求。
+	 */
+	const AUTO_DRIVE_FALLBACK_DELAY = 2400
+	/** 退避用尽后的低频心跳（ms）：不放弃，直到状态变化 / 页面隐藏。 */
+	const AUTO_DRIVE_HEARTBEAT = 5000
 
 	export default {
 		components: {
@@ -416,6 +486,15 @@
 				autoActionMessage: '',
 				/** 自动操作提示的收起定时器（只在 notice 里显示，不弹 toast） */
 				autoNoticeTimer: null,
+				/**
+				 * 自动座位回合的补推定时器（见 AUTO_DRIVE_* 常量注释）。
+				 * ⚠️ 只在「当前座位是机器人 / 托管」时才会排；状态一变（version 变了）就重新计数。
+				 */
+				autoDriveTimer: null,
+				/** 上次补推对应的「房间版本|座位|计时序号」——用来区分「同一状态」和「状态变了」 */
+				autoDriveKey: '',
+				/** 同一状态连续补推次数（退避 + 上限） */
+				autoDriveTries: 0,
 				connMode: 'push',
 				connStatus: 'connecting',
 				selectedCards: [],
@@ -588,6 +667,44 @@
 				const phase = this.actionPhase
 				return phase === 'bidding' || phase === 'playing'
 			},
+			/**
+			 * 当前回合的座位是不是「自动座位」（机器人 / 托管中的真人）。
+			 * 这类座位不会有人来点按钮 —— 服务端按 AI 策略直接代打，所以牌桌上不该出现倒计时。
+			 */
+			currentTurnAutoSeat() {
+				const seat = this.toSeatIndex(this.state.current_seat)
+				return seat >= 0 && this.isAutoSeat(seat)
+			},
+			/**
+			 * 是否显示中央倒计时：**自动座位（托管 / 机器人）回合一律不显示**。
+			 * 否则轮到托管座位时会先看到「20s」一路走完、再变成「推进中」并且永远停在那里，
+			 * 看起来就是「托管卡死了」。真人回合维持原来的服务端权威倒计时。
+			 */
+			showTurnTimer() {
+				if (!Number(this.state.turn_deadline || 0)) {
+					return false
+				}
+				if (this.phase !== 'bidding' && this.phase !== 'playing') {
+					return false
+				}
+				return !this.currentTurnAutoSeat
+			},
+			/**
+			 * 自动座位回合的中央胶囊文案：**只给自己的托管回合看**（别人的回合本来就不等人，
+			 * 弹一句话反而吵）。倒计时被让出来时它就是那格的替代品。
+			 */
+			autoTurnTip() {
+				if (!this.currentTurnAutoSeat) {
+					return ''
+				}
+				if (this.toSeatIndex(this.state.current_seat) !== this.mySeat) {
+					return ''
+				}
+				if (!this.isTrusteeSeat(this.mySeat)) {
+					return ''
+				}
+				return this.phase === 'bidding' ? '托管 · 自动叫分' : '托管 · 自动出牌'
+			},
 			myHand() {
 				return Array.isArray(this.answer.myHand) ? this.answer.myHand : []
 			},
@@ -676,6 +793,19 @@
 				}
 				return null
 			},
+			/**
+			 * 「该座位最近一次动作是过牌（要不起）」的座位表，服务端 `state.passed_seats` 维护：
+			 * 过牌时加入、**该座位自己**出牌时移除（别人出牌不影响）→ 侧边出牌区据此换成贴图。
+			 * ⚠️ 只用于左右两家的出牌区；**中央永远显示最近一手出的牌**，不显示要不起。
+			 * ⚠️ `history` 只记出牌、不记「不出」，所以过牌只能读这个字段；
+			 *   老房间没有该字段 → 空数组（退化成老行为，不显示要不起）。
+			 */
+			passedSeats() {
+				const list = Array.isArray(this.state.passed_seats) ? this.state.passed_seats : []
+				return list
+					.map((seat) => this.toSeatIndex(seat))
+					.filter((seat, index, all) => seat >= 0 && all.indexOf(seat) === index)
+			},
 			centerPlay() {
 				const last = this.latestPlay
 				if (!last) {
@@ -731,6 +861,10 @@
 					return ''
 				}
 				if (this.isMyTurn) {
+					// 托管中：不提示「轮到你出牌」（自己点不了），中央的「托管 · 自动出牌」胶囊已经说明情况
+					if (this.isTrusteeSeat(this.mySeat)) {
+						return ''
+					}
 					return this.phase === 'bidding' ? '轮到你叫分' : '轮到你出牌'
 				}
 				// current_seat 缺失 / 非法 → 不显示「等待谁操作」，绝不让 NaN 冒到文案里
@@ -903,12 +1037,15 @@
 			if (this.sync) {
 				this.sync.pause()
 			}
+			// 页面不可见 → 停掉补推（定时器在后台也不该发请求），onShow 里 resume 后会自然重排
+			this.clearAutoDrive()
 			this.persistActiveRoom()
 		},
 		onUnload() {
 			// 只写缓存、**不退房**：系统返回 / 侧滑 = 返回大厅（可「继续对局」回来）。
 			// 显式退出过的（roomExited）在这里只会被清掉，不会写回。
 			this.clearAutoNoticeTimer()
+			this.clearAutoDrive()
 			if (this.handMeasureTimer) {
 				clearTimeout(this.handMeasureTimer)
 				this.handMeasureTimer = null
@@ -1285,6 +1422,163 @@
 				const item = meta[String(seatIndex)]
 				return Boolean(item && item.auto)
 			},
+			/**
+			 * 是不是「自动座位」：机器人 或 托管中的真人。
+			 * 两者在服务端同口径（见 lib/landlord-engine.js 的 isAutoSeat），
+			 * 都不会有人来点按钮 —— 由 `advanceAutoSeats` 直接代打。
+			 */
+			isAutoSeat(seatIndex) {
+				const target = this.toSeatIndex(seatIndex)
+				if (target < 0) {
+					return false
+				}
+				const seat = this.findSeat(target)
+				if (seat && seat.isRobot) {
+					return true
+				}
+				return this.isTrusteeSeat(target)
+			},
+			/**
+			 * 需要补推的「自动座位回合」签名：不需要补推时返回空串。
+			 * 用 版本 + 座位 + 计时序号 三段，任何一个变了就算「状态变了」，补推计数重新开始。
+			 */
+			autoDriveKeyOf() {
+				if (!this.room || this.room.status !== 'playing') {
+					return ''
+				}
+				if (this.phase !== 'bidding' && this.phase !== 'playing') {
+					return ''
+				}
+				const seat = this.toSeatIndex(this.state.current_seat)
+				if (seat < 0 || !this.isAutoSeat(seat)) {
+					return ''
+				}
+				return [
+					Number(this.room.version || 0),
+					seat,
+					Number(this.state.timer_seq || 0)
+				].join('|')
+			},
+			/** 停掉补推并清空计数（页面隐藏 / 退房 / 回合回到真人时用） */
+			clearAutoDrive() {
+				if (this.autoDriveTimer) {
+					clearTimeout(this.autoDriveTimer)
+					this.autoDriveTimer = null
+				}
+				this.autoDriveKey = ''
+				this.autoDriveTries = 0
+			},
+			/**
+			 * 第一次补推该等多久：**等自动座位「想」完这 1 秒再发**。
+			 *
+			 * 服务端闸门：回合开始未满 `AUTO_PLAY_DELAY_MS` 时拒绝代打（见 landlord-engine 的同名常量）。
+			 * 客户端算 turn_start = turn_deadline - 本阶段总时长（叫分 15s / 出牌 20s），
+			 * 在 turn_start + 1s 再补一点点余量发请求 —— 早了只会白跑一次云函数。
+			 * 已经过了思考时间（别人的请求没推起来 / 刚进房看到半局的旧回合）→ 立刻补。
+			 */
+			autoDriveFirstDelay() {
+				const deadline = Number(this.state.turn_deadline || 0)
+				const total = Number(this.timerTotal || 0)
+				if (!deadline || !total) {
+					return AUTO_DRIVE_FIRST_DELAY
+				}
+				const turnStart = deadline - total
+				const now = Date.now() + Number(this.serverOffset || 0)
+				const wait = turnStart + AUTO_PLAY_DELAY_MS - now
+				if (!Number.isFinite(wait)) {
+					return AUTO_DRIVE_FIRST_DELAY
+				}
+				// 上限压在 MAX_DELAY / 本回合总时长：时钟偏差再大也不干等 20 秒
+				return Math.max(AUTO_DRIVE_MIN_DELAY, Math.min(AUTO_DRIVE_MAX_DELAY, total, wait + AUTO_DRIVE_GRACE))
+			},
+			/**
+			 * 本房间的「推进负责人」座位号：所有真人座位里**最小的那个**。
+			 *
+			 * 为什么要选：每台客户端都在跑同一套补推，几个人就几份请求 —— 只有一份能提交成功，
+			 * 其余全是白跑的云函数调用 + 乐观锁冲突。用一个所有客户端都能算出同样结果的确定性规则
+			 * （座位号最小的真人）选主，正常情况下一手自动牌只打一次云函数；
+			 * 负责人掉线 / 退后台时，其他人的兜底定时器（2.4s）会接手。
+			 *
+			 * @returns {number} 座位号；没有真人（或还没进房）时 -1
+			 */
+			autoDriveLeaderSeat() {
+				const seats = this.room && Array.isArray(this.room.seats) ? this.room.seats : []
+				const humans = seats
+					.filter((seat) => seat && !seat.isRobot && this.toSeatIndex(seat.seatIndex) >= 0)
+					.map((seat) => this.toSeatIndex(seat.seatIndex))
+				return humans.length ? Math.min.apply(null, humans) : -1
+			},
+			/** 我是不是推进负责人（不是也不影响玩，只是退到低频兜底） */
+			isAutoDriveLeader() {
+				return this.mySeat >= 0 && this.mySeat === this.autoDriveLeaderSeat()
+			},
+			/**
+			 * 下一次补推该等多久（纯计算，方便单测 / 排查）。
+			 * 负责人：思考时间走完就发；其他人：至少等兜底延迟；退避用尽后统一转心跳。
+			 */
+			nextAutoDriveDelay() {
+				const leader = this.isAutoDriveLeader()
+				const thinkDelay = this.autoDriveFirstDelay()
+				const firstDelay = leader ? thinkDelay : Math.max(AUTO_DRIVE_FALLBACK_DELAY, thinkDelay)
+				if (this.autoDriveTries <= 0) {
+					return firstDelay
+				}
+				if (this.autoDriveTries >= AUTO_DRIVE_MAX_TRIES) {
+					return AUTO_DRIVE_HEARTBEAT
+				}
+				const backoff = Math.min(
+					AUTO_DRIVE_MAX_DELAY,
+					AUTO_DRIVE_FIRST_DELAY * Math.pow(2, this.autoDriveTries)
+				)
+				return leader ? backoff : Math.max(AUTO_DRIVE_FALLBACK_DELAY, backoff)
+			},
+			/**
+			 * 自动座位（机器人 / 托管）回合的客户端补推。
+			 *
+			 * 为什么必须有：
+			 *   服务端推进是**懒计时器**（超时 / 托管 / 机器人只在收到请求时才跑），
+			 *   推送模式下客户端没有轮询。服务端一旦把这一手让给「1 秒思考时间」而没人再发请求，
+			 *   玩家看到的就是「倒计时走完 → 推进中」永远停在那儿。
+			 *
+			 * 做法：`syncRoom({ force: true })`（服务端 force 会跳过「版本没变」早退去推进）。
+			 *   · 状态一变（version / 座位 / timer_seq 任一变化）就重新计时，并**取消旧定时器**
+			 *     （否则旧定时器会带着上一回合的时间点乱入）；
+			 *   · **负责人**按 turn_start + 1s 发第一次，失败按 0.24s 起指数退避；
+			 *   · **其他人**只在 2.4s 后兜底（正常情况下那一手早就打完了，定时器会被取消）；
+			 *   · 退避用尽也**不放弃**：转成 5s 心跳，直到状态变化或页面隐藏。
+			 */
+			ensureAutoSeatAdvance() {
+				const key = this.autoDriveKeyOf()
+				if (!key) {
+					this.clearAutoDrive()
+					return
+				}
+				if (!this.sync) {
+					return
+				}
+				if (key !== this.autoDriveKey) {
+					this.autoDriveKey = key
+					this.autoDriveTries = 0
+					// 回合已经换了：上一回合排的定时器立刻作废，按新回合的时间点重排
+					if (this.autoDriveTimer) {
+						clearTimeout(this.autoDriveTimer)
+						this.autoDriveTimer = null
+					}
+				}
+				// 已经排了一次在等回包 → 不重复排
+				if (this.autoDriveTimer) {
+					return
+				}
+				const delay = this.nextAutoDriveDelay()
+				this.autoDriveTries += 1
+				this.autoDriveTimer = setTimeout(() => {
+					this.autoDriveTimer = null
+					if (!this.sync) {
+						return
+					}
+					this.sync.syncNow({ force: true })
+				}, delay)
+			},
 			isCurrentSeat(seatIndex) {
 				const target = this.toSeatIndex(seatIndex)
 				const current = this.toSeatIndex(this.state.current_seat)
@@ -1299,6 +1593,15 @@
 				const history = Array.isArray(this.state.history) ? this.state.history : []
 				const entry = history.find((item) => Number(item.seat_index) === Number(seatIndex))
 				return entry && Array.isArray(entry.cards) ? entry.cards : []
+			},
+			/** 该座位最近一次动作是过牌 → 出牌区显示「要不起」贴图 */
+			hasSeatPassed(seatIndex) {
+				const target = this.toSeatIndex(seatIndex)
+				return target >= 0 && this.passedSeats.indexOf(target) >= 0
+			},
+			/** 该座位的出牌区有没有东西可显示：要不起 或 他最后一手牌 */
+			hasSeatAction(seatIndex) {
+				return this.hasSeatPassed(seatIndex) || this.playedOf(seatIndex).length > 0
 			},
 			/**
 			 * 顶栏「‹ 退出」＝ **真正退房**（按钮上写着「退出」，语义明确；
@@ -1345,16 +1648,22 @@
 					}
 				})
 			},
-			/** 退出确认文案：房主提示可能解散，对局中提示交托管（两条都成立时都要说） */
+			/**
+			 * 退出确认文案。
+			 *
+			 * 「退出」= **真的离开房间**（不是留在房间交托管）：对局进行中服务端会把座位换成机器人
+			 * 继续把这一局打完（三人局不能缺人），本人立刻不在房间 —— 房主顺移、只剩 1 个人时解散
+			 * 都按普通退房那套走。文案必须把「座位交给机器人 / 房主移交」说清楚。
+			 */
 			buildLeaveConfirmText() {
 				const playing = Boolean(this.room && this.room.status === 'playing')
 				if (playing) {
 					return this.isHost
-						? '对局进行中，退出后本局将由系统托管代打；退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
-						: '对局进行中，退出后本局将由系统托管代打，确定退出吗？'
+						? '对局进行中：退出后你的座位交给机器人继续打，房主顺移给下一位玩家。确定退出吗？'
+						: '对局进行中：退出后你的座位交给机器人继续打，本局仍会打完。确定退出吗？'
 				}
 				if (this.isHost) {
-					return '退出后房间里若只剩机器人或只有 1 个人，房间会自动解散。确定退出吗？'
+					return '退出后若房间里只剩 1 个人或只有机器人，房间会自动解散。确定退出吗？'
 				}
 				return '确定要退出房间吗？'
 			},
@@ -1400,14 +1709,18 @@
 					this.sync.stop()
 					this.sync = null
 				}
+				this.clearAutoDrive()
 				this.markRoomExited()
 				uni.hideLoading()
 				const data = (result && result.data) || {}
+				// 文案优先级：房间解散 > 房主移交 > 座位交给机器人 > 普通退出
 				let title = '已退出房间'
 				if (data.closed) {
 					title = '房间已解散'
-				} else if (data.transferredToTrustee) {
-					title = '已退出，本局交由托管'
+				} else if (data.nextHostUid) {
+					title = '已退出，房主已移交'
+				} else if (data.seatHandedOff || data.transferredToTrustee) {
+					title = '已退出，座位交给机器人'
 				}
 				uni.showToast({
 					title,
@@ -1593,8 +1906,10 @@
 			},
 			handleSyncError(error = {}, info = {}) {
 				if (info.fatal) {
+					// 房间被解散 / 自己已被移出：标题按服务端给的原因说清楚（别一律叫「对局已结束」）
+					const dismissed = /解散|关闭/.test(String(error.message || ''))
 					uni.showModal({
-						title: '对局已结束',
+						title: dismissed ? '房间已解散' : '对局已结束',
 						content: error.message || '房间不存在或已关闭',
 						showCancel: false,
 						success: () => {
@@ -1630,10 +1945,6 @@
 					this.selectedCards = []
 				}
 
-				if (!payload.changed && nextVersion === previousVersion) {
-					return
-				}
-
 				/*
 				 * 首帧快照（进房 / 自动续局 / 重连后的第一份数据）只负责「把牌局铺出来」：
 				 * watcher 里所有入场动画（发牌、落牌、炸弹）都要跳过 ——
@@ -1642,12 +1953,27 @@
 				 */
 				const firstSnapshot = !this.snapshotReady
 
+				/*
+				 * ⚠️ 数据落地要排在「changed / version 相同 → 早退」**之前**：
+				 * force 同步（自动座位补推）在服务端推不动时会回一份
+				 * 「内容一样、version 一样」的完整快照，早退在前就再也盯不住这个卡住的回合了。
+				 * 同内容重赋值对渲染没有副作用（watcher 全按内容签名判定，不会重播动画）。
+				 */
+				const quietOnly = !payload.changed && nextVersion === previousVersion
+
 				const room = payload.room
 				this.room = room
 				this.answer = room.answer || {}
 				this.state = room.state || {}
 				if (this.sync) {
 					this.sync.setVersion(nextVersion)
+				}
+
+				// 自动座位（托管 / 机器人）回合：排一次客户端补推（早退前也要排，见上面注释）
+				this.ensureAutoSeatAdvance()
+
+				if (quietOnly) {
+					return
 				}
 
 				if (firstSnapshot) {
@@ -1852,10 +2178,36 @@
 					})
 				}
 			},
+			/**
+			 * 顶栏 🕹️ 按钮：托管 / 取消托管。
+			 *
+			 * · **开启托管**要先弹确认（用户明确要求）：托管是「把这一局交出去」的动作，
+			 *   误触一次就整局都不受控，必须先问一句；
+			 * · **取消托管**直接生效：恢复操作是安全方向，再弹一次确认只会让人多点一下。
+			 */
 			handleToggleTrustee() {
-				const enabled = !this.isTrusteeSeat(this.mySeat)
-				this.runRoomAction('landlordTrustee', { enabled }, {
-					successText: enabled ? '已开启托管' : '已恢复操作'
+				if (this.isTrusteeSeat(this.mySeat)) {
+					this.runRoomAction('landlordTrustee', { enabled: false }, {
+						successText: '已取消托管'
+					})
+					return
+				}
+				uni.showModal({
+					title: '开启托管',
+					content: '开启后本局由系统自动叫分、自动出牌，直到你点右上角 🕹️ 取消托管。确定开启吗？',
+					confirmText: '开启托管',
+					cancelText: '再想想',
+					confirmColor: '#e76f51',
+					success: (res) => {
+						if (!res.confirm) {
+							return
+						}
+						// 确认后立刻进托管：服务端会在同一个请求里把属于我的这一手直接代打掉
+						// （见 lib/landlord-engine.js case 'trustee' → advanceAutoSeats）
+						this.runRoomAction('landlordTrustee', { enabled: true }, {
+							successText: '已开启托管'
+						})
+					}
 				})
 			},
 			handleClaimHost() {
@@ -2218,6 +2570,19 @@
 		transform: translateX(-50%);
 	}
 
+	/* 「要不起」贴图（左右两家）：128 宽的列里放 88 宽，高度自动（贴图 264×92，约 31px 高）。
+	   图是透明底的金橙字，直接压在牌桌上，不需要底板。 */
+	.ll-side__pass {
+		display: block;
+		width: 88px;
+	}
+
+	/* 贴图比牌矮（31 vs 42），垂直居中才对得上牌行的中线 */
+	.ll-side__play-inner--pass {
+		top: 50%;
+		transform: translate(-50%, -50%);
+	}
+
 	/* 出牌区的叠牌排版收在 ll-played 组件里（负 margin 叠放 + 超宽换行），
 	   这里只保留页面级容器样式，别再往这里写 gap / flex-wrap 去跟组件抢布局。 */
 
@@ -2257,6 +2622,38 @@
 
 	.ll-center__timer {
 		min-height: 26px;
+	}
+
+	/* 托管回合的替代胶囊（倒计时被让出来）：暖金底 + 呼吸的小圆点，
+	   一眼能看出「这一手是系统在打，不用等」 */
+	.ll-center__auto {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		border-radius: 999px;
+		background: rgba(255, 236, 168, 0.96);
+		box-shadow: 0 2px 6px rgba(12, 36, 22, 0.28);
+	}
+
+	.ll-center__auto-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: #e07a2c;
+		animation: ll-auto-pulse 1s ease-in-out infinite;
+	}
+
+	.ll-center__auto-text {
+		font-size: 12px;
+		font-weight: 700;
+		color: #8a4715;
+		white-space: nowrap;
+	}
+
+	@keyframes ll-auto-pulse {
+		0%, 100% { opacity: 1; transform: scale(1); }
+		50% { opacity: 0.35; transform: scale(0.7); }
 	}
 
 	/* 出牌区底盘：内容（ll-played）自己算宽度，这里只做居中和留白。

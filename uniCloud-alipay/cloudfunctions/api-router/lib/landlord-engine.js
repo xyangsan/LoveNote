@@ -245,6 +245,8 @@ function buildDealPatch(room = {}, now = Date.now()) {
 		bids: {},
 		last_play: null,
 		pass_count: 0,
+		/** 上一手之后过牌的座位（开新局清空）：过牌加入、该座位自己出牌时移除 */
+		passed_seats: [],
 		bomb_count: 0,
 		cards_left: cardsLeft,
 		played_counts: playedCounts,
@@ -294,6 +296,8 @@ function buildLandlordPatch(room = {}, landlordSeat = -1, baseScore = 1, bids = 
 			current_seat: Number(landlordSeat),
 			last_play: null,
 			pass_count: 0,
+			// 叫分结束 → 新的出牌轮：清掉叫分阶段残留的过牌标记
+			passed_seats: [],
 			cards_left: cardsLeft,
 			turn_deadline: now + LANDLORD_TURN_MS
 		}),
@@ -453,6 +457,10 @@ function applyPlay(room = {}, seatIndex = -1, cardIds = [], now = Date.now()) {
 		playLog.shift()
 	}
 
+	// 该座位出牌了 → 把它从「最近一次动作是不出」的表里摘掉（别人的过牌标记不动）
+	const passedSeatsAfterPlay = (Array.isArray(state.passed_seats) ? state.passed_seats : [])
+		.filter((seat) => Number(seat) !== Number(seatIndex))
+
 	const nextState = Object.assign({}, state, {
 		last_play: {
 			seat_index: Number(seatIndex),
@@ -462,6 +470,7 @@ function applyPlay(room = {}, seatIndex = -1, cardIds = [], now = Date.now()) {
 			card_count: cardIds.length
 		},
 		pass_count: 0,
+		passed_seats: passedSeatsAfterPlay,
 		bomb_count: Number(state.bomb_count || 0) + (isBomb ? 1 : 0),
 		cards_left: cardsLeft,
 		played_counts: playedCounts,
@@ -502,6 +511,17 @@ function applyPass(room = {}, seatIndex = -1, now = Date.now()) {
 	let nextPassCount = passCount
 	let nextSeat = nextSeatInRing(room, seatIndex)
 
+	// 过牌座位表（前端据此在出牌区显示「要不起」）：这里只负责加入自己，
+	// 该座位下次出牌时会由 applyPlay 把自己摘掉。
+	// ⚠️ 先挡 null / undefined / '' / 布尔再 Number()：`Number(null) === 0` 会把空值算成 0 号座位。
+	const passedSeats = (Array.isArray(state.passed_seats) ? state.passed_seats : [])
+		.filter((seat) => seat !== null && seat !== undefined && seat !== '' && typeof seat !== 'boolean')
+		.map(Number)
+		.filter((seat, index, list) => Number.isFinite(seat) && seat >= 0 && list.indexOf(seat) === index)
+	if (passedSeats.indexOf(Number(seatIndex)) < 0) {
+		passedSeats.push(Number(seatIndex))
+	}
+
 	// 其余所有还在场的玩家都过牌 → 上一手的出牌者重新先手
 	if (passCount >= ring.length - 1) {
 		lastPlay = null
@@ -513,6 +533,7 @@ function applyPass(room = {}, seatIndex = -1, now = Date.now()) {
 		state: Object.assign({}, bumpTimerSeq(state), {
 			last_play: lastPlay,
 			pass_count: nextPassCount,
+			passed_seats: passedSeats,
 			current_seat: nextSeat,
 			turn_deadline: now + LANDLORD_TURN_MS
 		})
@@ -588,7 +609,47 @@ function applyAutoTrustee(room = {}, patch = null, seatIndex = -1, {
 	})
 }
 
-/** 机器人 / 托管座位连续推进，直到轮到真人或分出胜负 */
+/**
+ * 自动座位（机器人 / 托管）的「思考时间」：一个回合开始后，至少要停顿这么久才允许代打。
+ *
+ * 为什么要有：`advanceAutoSeats` 原来会把连着几个自动座位**在同一个请求里**全部打完，
+ * 一次推送就把两三手牌一起拍到桌上 —— 玩家根本看不出「是谁出的、什么时候出的」。
+ * 加了这道闸之后，服务端每次请求最多替一个自动座位出一手，剩下的交给客户端按节奏补推
+ * （`room.vue` 的 `ensureAutoSeatAdvance`，延迟按 turn_start + AUTO_PLAY_DELAY_MS 算）。
+ *
+ * ⚠️ 这个常量前端有一份镜像（`pages/game/landlord/room.vue` 的 `AUTO_PLAY_DELAY_MS`），
+ *    两边必须一致，否则客户端要么早发请求（白跑一次云函数），要么等太久。
+ */
+const AUTO_PLAY_DELAY_MS = 1000
+
+/** 本回合的起始时间（= turn_deadline - 该阶段总时长）；拿不到就返回 0（视为已思考完） */
+function turnStartedAt(state = {}) {
+	const deadline = Number(state.turn_deadline || 0)
+	if (deadline <= 0) {
+		return 0
+	}
+	const total = state.phase === BID_PHASE ? LANDLORD_BID_MS : LANDLORD_TURN_MS
+	const start = deadline - total
+	return start > 0 ? start : 0
+}
+
+/** 自动座位是否已经「想」够了（够 AUTO_PLAY_DELAY_MS 才允许代打） */
+function autoSeatThoughtEnough(state = {}, now = Date.now()) {
+	const start = turnStartedAt(state)
+	if (!start) {
+		return true
+	}
+	return Number(now) - start >= AUTO_PLAY_DELAY_MS
+}
+
+/**
+ * 自动座位（机器人 / 托管）推进，直到轮到真人、分出胜负、或**下一个自动座位还没「想」够 1 秒**。
+ *
+ * ⚠️ 因为思考时间闸门，**一次调用最多替一个自动座位出一手**（每次出牌都会把下一家的
+ *    turn_deadline 重置成 now + 总时长，于是下一家在同一时刻的 elapsed = 0）。
+ *    连续的自动座位由客户端按 `turn_start + 1s` 的节奏补推（`room.vue#ensureAutoSeatAdvance`）。
+ *    `limit` 只是防御性上限。
+ */
 function advanceAutoSeats(room = {}, now = Date.now(), limit = AUTO_STEP_LIMIT) {
 	const patchList = []
 	let virtualRoom = room
@@ -600,6 +661,14 @@ function advanceAutoSeats(room = {}, now = Date.now(), limit = AUTO_STEP_LIMIT) 
 		}
 		const seatIndex = Number(state.current_seat)
 		if (seatIndex < 0 || !isAutoSeat(virtualRoom, seatIndex)) {
+			break
+		}
+		/*
+		 * 刚轮到它 → 先别动手：让所有人（包括托管本人）都看清「轮到谁了」，
+		 * 1 秒后由下一次请求 / 客户端补推再出牌。
+		 * ⚠️ 注意副作用：一个请求最多只推**一手**自动牌，连续自动座位的局靠客户端按秒补推推进。
+		 */
+		if (!autoSeatThoughtEnough(state, now)) {
 			break
 		}
 
@@ -1006,6 +1075,8 @@ module.exports = {
 	buildRecord,
 	buildHint,
 	// 导出内部工具便于调试与复用
+	AUTO_PLAY_DELAY_MS,
+	autoSeatThoughtEnough,
 	getSeatIndexByUid,
 	getHand,
 	isAutoSeat,

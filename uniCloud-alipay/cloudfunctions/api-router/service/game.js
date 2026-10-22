@@ -549,19 +549,22 @@ module.exports = class GameService extends Service {
 	 *        now        当前时间
 	 *        statePatch 可选 `{ state, status }`，由引擎基于「已移除该座位」的房间算出，
 	 *                   与座位变更一起提交（中途退出时把对局修正到可继续 / 已结算）
+	 *        nextSeats  可选：替换掉默认的「按座位移除」结果。斗地主中途退出用得上 ——
+	 *                   座位不是删掉，而是**换成机器人**继续打（见 handOffSeatToRobot）；
+	 *                   解散 / 房主顺移 / 广播 这套善后逻辑完全复用。
 	 * @returns {{ skipped:boolean, closed:boolean, room:object|null, conflict?:boolean }}
 	 */
-	async removeUserFromRoom(room = {}, uid = '', { now = Date.now(), statePatch = null } = {}) {
+	async removeUserFromRoom(room = {}, uid = '', { now = Date.now(), statePatch = null, nextSeats = null } = {}) {
 		const seatIndex = getSeatIndexByUid(room, uid)
 		if (seatIndex < 0) {
 			return { skipped: true, closed: false, room }
 		}
 
-		const nextSeats = removeSeatByIndex(room, seatIndex)
+		const seats = Array.isArray(nextSeats) ? nextSeats : removeSeatByIndex(room, seatIndex)
 
-		if (shouldDissolveRoom(nextSeats)) {
+		if (shouldDissolveRoom(seats)) {
 			const closed = await commitRoomPatch(room, {
-				seats: nextSeats,
+				seats,
 				status: ROOM_STATUS_CLOSED,
 				is_deleted: true,
 				now
@@ -572,12 +575,14 @@ module.exports = class GameService extends Service {
 			return { skipped: false, closed: true, room: null }
 		}
 
-		const patch = Object.assign({ seats: nextSeats }, statePatch || {})
+		const patch = Object.assign({ seats }, statePatch || {})
+		let nextHostUid = ''
 		// 房主离开 → 把房主交给剩余的第一位真人（没有真人则给第一个座位）
 		if (String(room.host_uid || '') === String(uid || '')) {
-			const nextHost = pickNextHost(nextSeats)
+			const nextHost = pickNextHost(seats)
 			if (nextHost) {
 				patch.host_uid = nextHost.uid
+				nextHostUid = String(nextHost.uid || '')
 			}
 		}
 
@@ -591,7 +596,59 @@ module.exports = class GameService extends Service {
 		if (patch.status === ROOM_STATUS_SETTLED) {
 			await this.writeSettleArtifacts(nextRoom, { createUid: '', now: commit.updateTime })
 		}
-		return { skipped: false, closed: false, room: nextRoom }
+		return { skipped: false, closed: false, room: nextRoom, nextHostUid }
+	}
+
+	/**
+	 * 斗地主「对局进行中」的退出：**座位不删，换成机器人继续打**，玩家本人真正离开房间。
+	 *
+	 * 为什么不是直接删座位：三人斗地主少一个人，剩下的人这一局就打不下去了。
+	 * 为什么不是「留在房间交托管」（旧实现）：那样「退出」等于没退 ——
+	 *   `getActiveRoom` 还能查到这个房、点「继续对局」会回到牌桌、房主顺移 / 解散永远不会发生。
+	 *
+	 * 做法：把该座位的 uid 换成机器人 uid（`robot_<roomId>_<seat>`）+ `is_robot: true`，
+	 * 昵称 / 头像 / 分数 / 手牌全部保留（剩下的人看得见「这是谁的位置，现在由机器人打」）。
+	 * 之后：
+	 *   · `countHumanSeats` 不再把他算成人 → 房主顺移、只剩 1 个真人时自动解散都自然生效；
+	 *   · 引擎侧的 `isAutoSeat` / 客户端补推都按机器人处理，本局继续打到结算。
+	 */
+	async handOffSeatToRobot(room = {}, uid = '', now = Date.now()) {
+		const seatIndex = getSeatIndexByUid(room, uid)
+		if (seatIndex < 0) {
+			return { skipped: true, closed: false, room }
+		}
+		const robot = buildRobotSnapshot(room._id, seatIndex)
+		const seats = (Array.isArray(room.seats) ? room.seats : []).map((seat) => (
+			Number(seat.seat_index) === seatIndex
+				? Object.assign({}, seat, {
+					uid: robot.uid,
+					is_robot: true,
+					ready: true,
+					last_seen: now
+				})
+				: seat
+		))
+
+		/*
+		 * 座位角标：把该座位移进 trustee_seats（+ auto 标记），牌桌上显示「托管中」——
+		 * 否则剩下的人看到的就是一个还能出牌、却永远不会再操作的「本人」。
+		 * 引擎侧不会因此多做事（is_robot 已经是自动座位），只是 UI 语义。
+		 */
+		const state = room.state || {}
+		const trusteeSeats = (Array.isArray(state.trustee_seats) ? state.trustee_seats : [])
+			.map(Number)
+			.filter((seat) => seat !== seatIndex)
+		trusteeSeats.push(seatIndex)
+		const statePatch = {
+			state: Object.assign({}, state, {
+				trustee_seats: trusteeSeats,
+				trustee_meta: Object.assign({}, state.trustee_meta || {}, {
+					[String(seatIndex)]: { auto: true, offline: true, since: now }
+				})
+			})
+		}
+
+		return this.removeUserFromRoom(room, uid, { now, nextSeats: seats, statePatch })
 	}
 
 	/**
@@ -620,9 +677,13 @@ module.exports = class GameService extends Service {
 	}
 
 	/**
-	 * 能否「干净地」把人从房间移出（用于创建 / 加入新房间时自动退出原房间）。
+	 * 能否「按删座位」的方式把人移出（用于创建 / 加入新房间时的**自动**退出原房间）。
 	 * 等待中、已结算：座位只是候场或战绩展示，随时可退；
-	 * 进行中：只有引擎支持 `buildLeavePatch` 的玩法（卧底）可退，斗地主保留座位交托管。
+	 * 进行中：只有引擎支持 `buildLeavePatch` 的玩法（卧底）可退。
+	 *
+	 * ⚠️ 斗地主进行中这里是 false —— 但**用户主动点退出**走的是 `leaveRoom` 里的
+	 *    `handOffSeatToRobot`（座位换机器人、本人离开），不再等于「留在房间交托管」。
+	 *    自动退房（用户没点退出、只是想开新房）仍保持保守：不替他放弃进行中的对局。
 	 */
 	canLeaveRoomCleanly(room = {}) {
 		if (!room) {
@@ -642,16 +703,56 @@ module.exports = class GameService extends Service {
 			this.assertInRoom(room, uid)
 			const now = Date.now()
 
-			// 斗地主进行中「离开」等同于掉线：保留座位交由托管代打，
-			// 避免破坏三人回合顺序与结算参与人（卧底没有托管，见下）。
+			/*
+			 * 斗地主进行中「退出」= **真的离开房间**，但座位不删：换成机器人继续打这一局。
+			 * 删座位会让剩下的人打不下去（三人局少一个人），「留在房间交托管」又等于没退出
+			 * （继续对局还能回到牌桌、房主永远不顺移）。两种坑都由 handOffSeatToRobot 规避：
+			 * 座位 uid 换成机器人 → 本人立刻不在房间，房主顺移 / 只剩 1 个真人自动解散全部生效。
+			 */
 			if (!this.canLeaveRoomCleanly(room)) {
-				await touchRoom(room._id, now)
+				/*
+				 * 对局进行中有自动座位在推进（懒计时器 / 客户端 1 秒补推），
+				 * 退出这一步很可能撞上刚提交的那一手 → 冲突时重读一次再交座位。
+				 * 重读后发现座位已经不在了（别人抢先移交 / 房间已解散）→ 当作已退出。
+				 */
+				let handed = await this.handOffSeatToRobot(room, uid, now)
+				if (handed.conflict) {
+					const fresh = await getRoomById(room._id)
+					if (!fresh) {
+						handed = { skipped: true, closed: true, room: null }
+					} else if (getSeatIndexByUid(fresh, uid) < 0) {
+						handed = { skipped: true, closed: false, room: fresh }
+					} else {
+						handed = await this.handOffSeatToRobot(fresh, uid, Date.now())
+					}
+				}
+				if (handed.conflict) {
+					throw buildError(ERROR_CODES.versionConflict, '操作冲突，请重试')
+				}
+				if (handed.skipped) {
+					return Object.assign({}, authState.response, {
+						errCode: 0,
+						errMsg: '已退出房间',
+						data: { closed: Boolean(handed.closed) }
+					})
+				}
+				if (handed.closed) {
+					return Object.assign({}, authState.response, {
+						errCode: 0,
+						errMsg: '已退出，房间已解散',
+						data: { closed: true }
+					})
+				}
 				return Object.assign({}, authState.response, {
 					errCode: 0,
-					errMsg: '对局进行中，已交由托管代打',
+					errMsg: '已退出，座位交由机器人接管',
 					data: {
 						closed: false,
-						transferredToTrustee: true
+						// 座位交给了机器人（本局继续打）
+						seatHandedOff: true,
+						// 房主顺移给了谁（自己不是房主时为空）
+						nextHostUid: handed.nextHostUid || '',
+						version: Number(handed.room && handed.room.version) || 0
 					}
 				})
 			}

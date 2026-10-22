@@ -38,7 +38,13 @@
 
 		<!-- 叫分 -->
 		<template v-else-if="phase === 'bidding'">
-			<template v-if="isMyTurn">
+			<!-- 托管中：**常驻**一条状态条（不再只在轮到自己时才出现）——
+			     托管是持续状态，玩家任何时候都要能看见「这一局不是我打的」。
+			     轮到自己才是「自动叫分」，否则说明在等别人。 -->
+			<view v-if="isTrustee" class="ll-action ll-action--ghost ll-action--wide">
+				<text class="ll-action__text ll-action__text--ghost">{{ isMyTurn ? '托管中 · 自动叫分…' : '托管中 · 等待轮到你' }}</text>
+			</view>
+			<template v-else-if="isMyTurn">
 				<view class="ll-action ll-action--ghost" @click="$emit('bid', 0)">
 					<text class="ll-action__text ll-action__text--ghost">不叫</text>
 				</view>
@@ -59,9 +65,16 @@
 
 		<!-- 出牌：**只有轮到自己才出按钮**。
 		     不是自己回合时工具栏整行留白（连「提醒」也不放了，避免一排点不动的灰按钮挡在牌前）；
-		     托管 / 取消托管已经挪到顶栏右上角（图标按钮），这里不再重复。 -->
+		     托管 / 取消托管已经挪到顶栏右上角（图标按钮），这里不再重复。
+		     ⚠️ 托管中是例外：常驻一条状态条（见下面的分支），不再留白。 -->
 		<template v-else-if="phase === 'playing'">
-			<template v-if="isMyTurn">
+			<!-- 托管中：**常驻**状态条（无论是否轮到自己）。
+			     轮到自己 → 系统正在代打；不是自己回合 → 明确告诉你「在等别人」，不再是整行留白
+			     （留白会让人以为托管掉了 / 界面卡住）。 -->
+			<view v-if="isTrustee" class="ll-action ll-action--ghost ll-action--wide">
+				<text class="ll-action__text ll-action__text--ghost">{{ isMyTurn ? '托管中 · 自动出牌…' : '托管中 · 等待轮到你' }}</text>
+			</view>
+			<template v-else-if="isMyTurn">
 				<view
 					class="ll-action ll-action--ghost"
 					:class="{ 'll-action--disabled': !canPass }"
@@ -120,8 +133,12 @@
 	 * ⚠️ waiting 的「准备 / 邀请」与房主视图互斥；叫分轮到别人才用 wide 占位条保持版式。
 	 * ⚠️ playing 阶段**只有 isMyTurn 才渲染按钮**（不出 / 提示 / 出牌）。不是自己回合时整行留白 ——
 	 *    一排点不动的灰按钮既误导又挡视线；「提醒」按钮已按需求删除。
+	 *    （唯一例外：托管中的常驻状态条，见下一条）
 	 * ⚠️ 托管 / 取消托管不在本组件：它是顶栏 `.ll-top__right` 的图标按钮（见 room.vue），
 	 *    任何时候都能点，不受 isMyTurn 限制。
+	 * ⚠️ 托管中（isTrustee）：叫分 / 出牌都由服务端按 AI 代打，本组件给一条**常驻**状态条
+	 *    （不再受 isMyTurn 限制）：轮到自己显示「自动出牌…」，否则显示「等待轮到你」。
+	 *    不能再摆一排「点不动」的按钮（点了还会弹「还没轮到你」）。
 	 */
 	export default {
 		name: 'LlActions',
@@ -129,6 +146,8 @@
 			phase: { type: String, default: '' },
 			isHost: { type: Boolean, default: false },
 			isMyTurn: { type: Boolean, default: false },
+			/** 自己是否处于托管（托管中 → 叫分/出牌按钮换成状态条） */
+			isTrustee: { type: Boolean, default: false },
 			selfReady: { type: Boolean, default: false },
 			canStart: { type: Boolean, default: false },
 			startBlockReason: { type: String, default: '' },
