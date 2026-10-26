@@ -315,7 +315,7 @@ function normalizeStepRecord(step = {}) {
 	}
 }
 
-function normalizeWishPlanRecord(record = {}) {
+function normalizeWishPlanRecord(record = {}, uid = '') {
 	const steps = Array.isArray(record.steps) ? record.steps.map(normalizeStepRecord) : []
 	const derivedState = derivePlanState({
 		type: record.type,
@@ -356,6 +356,7 @@ function normalizeWishPlanRecord(record = {}) {
 		final_action_uid: String(record.final_action_uid || ''),
 		final_action_time: Number(record.final_action_time || 0),
 		create_uid: String(record.create_uid || ''),
+		is_self: Boolean(uid && String(record.create_uid || '') === String(uid)),
 		create_time: Number(record.create_time || 0),
 		update_time: Number(record.update_time || 0),
 		completed_time: Number(record.completed_time || 0)
@@ -382,17 +383,24 @@ function ensureCoupleMember(ownerUid = '', coupleRecord = {}, currentUid = '') {
 		: Array.from(validUids)[0]
 }
 
-async function getWishPlanById(itemId = '', coupleId = '') {
-	if (!itemId || !coupleId) {
+async function getWishPlanById(itemId = '', uid = '', activeCouple = null) {
+	if (!itemId || !uid) {
 		return null
 	}
 
+	// 按可见性取单条：未绑定情侣时也能操作自己创建的清单
 	const res = await wishPlanCollection
-		.where({
-			_id: itemId,
-			couple_id: coupleId,
-			is_deleted: false
-		})
+		.where(andWhereConditions(
+			buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'create_uid'
+			}),
+			{
+				_id: itemId,
+				is_deleted: false
+			}
+		))
 		.limit(1)
 		.get()
 
@@ -486,7 +494,7 @@ module.exports = class PlanService extends Service {
 			])
 
 			const total = Number(totalRes.total || 0)
-			const list = Array.isArray(listRes.data) ? listRes.data.map((item) => normalizeWishPlanRecord(item)) : []
+			const list = Array.isArray(listRes.data) ? listRes.data.map((item) => normalizeWishPlanRecord(item, uid)) : []
 
 			return {
 				errCode: 0,
@@ -494,6 +502,8 @@ module.exports = class PlanService extends Service {
 					list,
 					stats,
 					recommendations,
+					// 未绑定时仍可查看自己创建过的清单，但不能再新建
+					hasCouple: Boolean(activeCouple && activeCouple._id),
 					pagination: {
 						page,
 						pageSize,
@@ -512,13 +522,6 @@ module.exports = class PlanService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const recommendation = getRecommendationByKey(params.recommendationKey || params.recommendation_key)
 			const type = normalizeItemType(params.type || (recommendation && recommendation.type) || ITEM_TYPE_WISH)
@@ -543,7 +546,8 @@ module.exports = class PlanService extends Service {
 				}
 			}
 
-			const ownerUid = ensureCoupleMember(params.ownerUid || params.owner_uid, activeCouple, uid)
+			// 未绑定时 activeCouple 为 null，归属人回落到当前用户
+			const ownerUid = ensureCoupleMember(params.ownerUid || params.owner_uid, activeCouple || {}, uid)
 			const ownerSnapshot = await buildUserSnapshot(ownerUid)
 
 			const now = Date.now()
@@ -555,7 +559,8 @@ module.exports = class PlanService extends Service {
 			})
 
 			const record = {
-				couple_id: activeCouple._id,
+				// 未绑定情侣时也能创建，couple_id 先留空
+				couple_id: activeCouple ? activeCouple._id : '',
 				type,
 				category,
 				title,
@@ -590,7 +595,7 @@ module.exports = class PlanService extends Service {
 			return {
 				errCode: 0,
 				data: {
-					item: normalizeWishPlanRecord(created)
+					item: normalizeWishPlanRecord(created, uid)
 				}
 			}
 		} catch (error) {
@@ -603,13 +608,6 @@ module.exports = class PlanService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const itemId = String(params.itemId || '').trim()
 			if (!itemId) {
 				return {
@@ -627,7 +625,7 @@ module.exports = class PlanService extends Service {
 				}
 			}
 
-			const record = await getWishPlanById(itemId, activeCouple._id)
+			const record = await getWishPlanById(itemId, uid, activeCouple)
 			if (!record) {
 				return {
 					errCode: 'love-note-plan-not-found',
@@ -695,7 +693,7 @@ module.exports = class PlanService extends Service {
 				data: {
 					item: normalizeWishPlanRecord(Object.assign({}, record, updateData, {
 						_id: itemId
-					}))
+					}), uid)
 				}
 			}
 		} catch (error) {
@@ -708,13 +706,6 @@ module.exports = class PlanService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const itemId = String(params.itemId || '').trim()
 			const stepId = String(params.stepId || '').trim()
 			const action = String(params.action || '').trim().toLowerCase()
@@ -731,7 +722,7 @@ module.exports = class PlanService extends Service {
 				}
 			}
 
-			const record = await getWishPlanById(itemId, activeCouple._id)
+			const record = await getWishPlanById(itemId, uid, activeCouple)
 			if (!record) {
 				return {
 					errCode: 'love-note-plan-not-found',
@@ -807,7 +798,7 @@ module.exports = class PlanService extends Service {
 				data: {
 					item: normalizeWishPlanRecord(Object.assign({}, record, updateData, {
 						_id: itemId
-					}))
+					}), uid)
 				}
 			}
 		} catch (error) {
@@ -820,13 +811,6 @@ module.exports = class PlanService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const itemId = String(params.itemId || '').trim()
 			const stepId = String(params.stepId || '').trim()
 			const content = normalizeText(params.content, MAX_COMMENT_LENGTH)
@@ -837,7 +821,7 @@ module.exports = class PlanService extends Service {
 				}
 			}
 
-			const record = await getWishPlanById(itemId, activeCouple._id)
+			const record = await getWishPlanById(itemId, uid, activeCouple)
 			if (!record) {
 				return {
 					errCode: 'love-note-plan-not-found',
@@ -884,7 +868,7 @@ module.exports = class PlanService extends Service {
 						_id: itemId,
 						steps,
 						update_time: now
-					}))
+					}), uid)
 				}
 			}
 		} catch (error) {
@@ -897,13 +881,6 @@ module.exports = class PlanService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const itemId = String(params.itemId || '').trim()
 			const action = String(params.action || STEP_ACTION_DIRECT_COMPLETE).trim().toLowerCase()
 			if (!itemId) {
@@ -919,7 +896,7 @@ module.exports = class PlanService extends Service {
 				}
 			}
 
-			const record = await getWishPlanById(itemId, activeCouple._id)
+			const record = await getWishPlanById(itemId, uid, activeCouple)
 			if (!record) {
 				return {
 					errCode: 'love-note-plan-not-found',
@@ -978,7 +955,7 @@ module.exports = class PlanService extends Service {
 				data: {
 					item: normalizeWishPlanRecord(Object.assign({}, record, updateData, {
 						_id: itemId
-					}))
+					}), uid)
 				}
 			}
 		} catch (error) {
@@ -991,13 +968,6 @@ module.exports = class PlanService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const itemId = String(params.itemId || '').trim()
 			if (!itemId) {
 				return {
@@ -1006,11 +976,19 @@ module.exports = class PlanService extends Service {
 				}
 			}
 
-			const record = await getWishPlanById(itemId, activeCouple._id)
+			const record = await getWishPlanById(itemId, uid, activeCouple)
 			if (!record) {
 				return {
 					errCode: 'love-note-plan-not-found',
 					errMsg: '清单不存在或无权限访问'
+				}
+			}
+
+			// 编辑 / 勾选进度保持共享（一起完成愿望），删除只允许创建者
+			if (String(record.create_uid || '') !== String(uid)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '仅创建者可以删除该清单'
 				}
 			}
 

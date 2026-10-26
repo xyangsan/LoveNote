@@ -21,6 +21,10 @@ const {
 	COUPLE_STATUS_TEXT
 } = require('./constants')
 const { getUserById, resolveAvatar } = require('./user-base')
+const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('./content-scope')
 
 function getCoupleStatusText(status) {
 	return COUPLE_STATUS_TEXT[Number(status)] || '未知状态'
@@ -444,7 +448,7 @@ function getRelationWishCount(relation = {}) {
 	)
 }
 
-async function buildBoundCoupleStats(relation = null) {
+async function buildBoundCoupleStats(relation = null, uid = '') {
 	if (!relation || !relation._id) {
 		return {
 			anniversaryCount: 0,
@@ -455,22 +459,35 @@ async function buildBoundCoupleStats(relation = null) {
 
 	const relationWishCount = getRelationWishCount(relation)
 	const fallbackMetrics = normalizeMetrics(relation.metrics)
+	const currentUid = String(uid || '').trim()
+
+	// ⚠️ 计数口径必须和列表完全一致：自己创建的全量 + 对方在绑定时间之后创建的。
+	// 否则情侣中心的「纪念日/日常/愿望」数字会比点进去看到的条目多。
+	// 拿不到 uid 时退回旧的「整对关系」口径，避免历史调用方拿到 0。
+	const buildScopeCondition = (creatorField) => {
+		if (!currentUid) {
+			return {
+				couple_id: relation._id,
+				is_deleted: false
+			}
+		}
+		return andWhereConditions(
+			buildCreatorVisibilityCondition({
+				uid: currentUid,
+				activeCouple: relation,
+				creatorField
+			}),
+			{ is_deleted: false }
+		)
+	}
 
 	try {
 		const [anniversaryTotalRes, momentTotalRes, wishTotalRes] = await Promise.all([
-			anniversaryCollection.where({
-				couple_id: relation._id,
-				is_deleted: false
-			}).count(),
-			dailyPostCollection.where({
-				couple_id: relation._id,
-				is_deleted: false
-			}).count(),
-			wishPlanCollection.where({
-				couple_id: relation._id,
-				type: 'wish',
-				is_deleted: false
-			}).count()
+			anniversaryCollection.where(buildScopeCondition('creator_uid')).count(),
+			dailyPostCollection.where(buildScopeCondition('author_uid')).count(),
+			wishPlanCollection.where(andWhereConditions(buildScopeCondition('create_uid'), {
+				type: 'wish'
+			})).count()
 		])
 
 		return {
@@ -488,12 +505,12 @@ async function buildBoundCoupleStats(relation = null) {
 	}
 }
 
-async function enrichActiveCoupleWithStats(relation = null) {
+async function enrichActiveCoupleWithStats(relation = null, uid = '') {
 	if (!relation || Number(relation.status || 0) !== COUPLE_STATUS_BOUND) {
 		return relation
 	}
 
-	const stats = await buildBoundCoupleStats(relation)
+	const stats = await buildBoundCoupleStats(relation, uid)
 	const nextMetrics = Object.assign({}, relation.metrics || {}, {
 		anniversaryCount: stats.anniversaryCount,
 		anniversary_count: stats.anniversaryCount,
@@ -630,7 +647,7 @@ async function buildCoupleSummary(uid) {
 		getIncomingPendingCouples(uid),
 		getOutgoingPendingCouples(uid)
 	])
-	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord)
+	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord, uid)
 
 	const pendingIncomingCount = incomingRequests.length
 	const pendingOutgoingCount = outgoingRequests.length
@@ -672,7 +689,7 @@ async function buildCoupleCenterPayload(uid) {
 		getOutgoingPendingCouples(uid),
 		getCoupleHistoryByUid(uid)
 	])
-	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord)
+	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord, uid)
 
 	const historyList = await Promise.all(
 		historyRelations

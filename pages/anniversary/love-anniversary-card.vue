@@ -35,6 +35,7 @@
 
 			<view class="anniversary-card__meta">
 				<view class="anniversary-card__meta-main">
+					<text v-if="ownerTag" class="anniversary-card__owner">{{ ownerTag }}</text>
 					<template v-if="metaText">
 						<text class="anniversary-card__meta-text">{{ metaText }}</text>
 					</template>
@@ -138,6 +139,10 @@ export default {
 		radius: {
 			type: String,
 			default: '30rpx'
+		},
+		ownerTag: {
+			type: String,
+			default: ''
 		}
 	},
 	computed: {
@@ -222,6 +227,16 @@ export default {
 		font-size: 22rpx;
 		line-height: 1.2;
 		opacity: 0.94;
+	}
+
+	.anniversary-card__owner {
+		flex: none;
+		padding: 2rpx 12rpx;
+		border-radius: 999rpx;
+		background: rgba(255, 255, 255, 0.22);
+		font-size: 20rpx;
+		line-height: 1.5;
+		white-space: nowrap;
 	}
 
 	.anniversary-card__meta {

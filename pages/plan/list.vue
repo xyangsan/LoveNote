@@ -16,13 +16,6 @@
 			<love-auth-required v-if="!isLoggedIn" desc="请先登录后查看并管理愿望清单"
 				secondary-text="返回个人中心" @login="goToLoginPage" @secondary="goToProfile"></love-auth-required>
 
-			<view v-else-if="noCouple" class="empty-wrap">
-				<fui-empty title="暂未绑定情侣关系" descr="请先去情侣页完成绑定" :size="30" descr-size="22"></fui-empty>
-				<fui-button text="去绑定" :margin="['18rpx', '80rpx', '0', '80rpx']" height="78rpx" :size="24"
-					radius="999rpx" background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)" color="#fff"
-					@click="goToCouplePage"></fui-button>
-			</view>
-
 			<view v-else>
 				<love-glass-card :margin="['0','0','0','0']" :header-line="false" :padding="['18rpx','22rpx']">
 					<view class="stats">
@@ -60,6 +53,7 @@
 					<view class="plan-item">
 						<view class="plan-item__head">
 							<text class="plan-item__title">{{ item.title }}</text>
+							<text v-if="item.is_self === false" class="plan-item__owner">TA 的</text>
 							<text class="plan-item__status">{{ item.status_text }}</text>
 						</view>
 						<text class="plan-item__meta">{{ item.type_text }} · {{ item.category || '未分类' }} · 负责人 {{ ownerText(item) }}</text>
@@ -234,18 +228,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					})
 					const coupleData = appStateStore.coupleCenterData || {}
 					this.activeCouple = coupleData.activeCouple || null
+					// 未绑定时也可以创建和查看，noCouple 仅用于文案提示，不再阻止加载
 					this.noCouple = !this.activeCouple
-
-					if (this.noCouple) {
-						this.list = []
-						this.recommendations = []
-						this.stats = {
-							wish_total: 0,
-							plan_total: 0,
-							completed_total: 0
-						}
-						return
-					}
 
 					const planRes = await getPlanApi().getList({
 						page: 1,
@@ -375,14 +359,6 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				})
 			},
 			async openCreateDialog() {
-				if (this.noCouple) {
-					uni.showToast({
-						title: '请先绑定情侣关系',
-						icon: 'none'
-					})
-					return
-				}
-
 				uni.showActionSheet({
 					itemList: ['创建愿望', '创建计划'],
 					success: async (res = {}) => {
@@ -722,6 +698,17 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	.plan-item__status {
 		font-size: 22rpx;
 		color: #bf6f5a;
+	}
+
+	.plan-item__owner {
+		flex: none;
+		padding: 2rpx 10rpx;
+		border-radius: 999rpx;
+		background: rgba(231, 111, 81, 0.12);
+		font-size: 20rpx;
+		line-height: 1.5;
+		color: #bf6f5a;
+		white-space: nowrap;
 	}
 
 	.plan-item__meta {

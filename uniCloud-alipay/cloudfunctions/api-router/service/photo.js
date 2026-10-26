@@ -6,6 +6,10 @@ const { albumCollection, photoCollection, dbCmd, database } = require('../lib/db
 const { getActiveCoupleByUid } = require('../lib/couple')
 const { getUserById } = require('../lib/user-base')
 const {
+	andWhereConditions,
+	buildCreatorVisibilityCondition
+} = require('../lib/content-scope')
+const {
 	ensureHttpsUrl,
 	isCloudFileId,
 	getMediaTypeByMimeType,
@@ -146,33 +150,31 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const page = Math.max(1, parseInt(params.page) || 1)
 			const pageSize = Math.min(50, Math.max(1, parseInt(params.pageSize) || 20))
 
-			const whereCondition = {
-				couple_id: activeCouple._id
-			}
+			const visibilityCondition = buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'uploader_uid'
+			})
+			const extraCondition = {}
 
 			if (params.albumId) {
-				whereCondition.album_id = params.albumId
+				extraCondition.album_id = params.albumId
 			}
 
 			const isFavorite = parseBooleanInput(params.isFavorite)
 			if (isFavorite !== undefined) {
-				whereCondition.is_favorite = isFavorite
+				extraCondition.is_favorite = isFavorite
 			}
 
 			const mediaType = parseMediaTypeInput(params.mediaType || params.media_type)
 			if (mediaType) {
-				whereCondition.media_type = mediaType
+				extraCondition.media_type = mediaType
 			}
+
+			const whereCondition = andWhereConditions(visibilityCondition, extraCondition)
 
 			const totalRes = await photoCollection.where(whereCondition).count()
 			const total = totalRes.total || 0
@@ -185,7 +187,7 @@ module.exports = class PhotoService extends Service {
 				.get()
 			const rawList = listRes.data || []
 			const fileUrlMap = await getTempFileUrlMap(collectFileIdsFromPhotos(rawList))
-			const list = normalizePhotoList(rawList, fileUrlMap)
+			const list = normalizePhotoList(rawList, fileUrlMap, uid)
 
 			return {
 				errCode: 0,
@@ -210,13 +212,6 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const photoId = String(params.photoId || '').trim()
 			if (!photoId) {
 				return {
@@ -226,10 +221,16 @@ module.exports = class PhotoService extends Service {
 			}
 
 			const photoRes = await photoCollection
-				.where({
-					_id: photoId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'uploader_uid'
+					}),
+					{
+						_id: photoId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -241,7 +242,7 @@ module.exports = class PhotoService extends Service {
 			}
 			const rawPhoto = photoRes.data[0]
 			const fileUrlMap = await getTempFileUrlMap(collectFileIdsFromPhotos([rawPhoto]))
-			const photo = normalizePhotoRecord(rawPhoto, fileUrlMap)
+			const photo = normalizePhotoRecord(rawPhoto, fileUrlMap, uid)
 
 			return {
 				errCode: 0,
@@ -260,13 +261,6 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const albumId = String(params.albumId || '').trim()
 			if (!albumId) {
 				return {
@@ -275,11 +269,18 @@ module.exports = class PhotoService extends Service {
 				}
 			}
 
+			// 相册按可见性校验：未绑定情侣时也能往自己创建的相册里传照片
 			const albumRes = await albumCollection
-				.where({
-					_id: albumId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'create_uid'
+					}),
+					{
+						_id: albumId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -381,7 +382,8 @@ module.exports = class PhotoService extends Service {
 				}
 
 				const doc = {
-					couple_id: activeCouple._id,
+					// 照片跟随相册归属：未绑定情侣时创建的相册 couple_id 为空，照片也为空
+					couple_id: String((albumRes.data[0] && albumRes.data[0].couple_id) || (activeCouple ? activeCouple._id : '')),
 					album_id: albumId,
 					url: mediaUrl,
 					file_id: fileId,
@@ -477,13 +479,6 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const photoId = String(params.photoId || '').trim()
 			if (!photoId) {
 				return {
@@ -493,10 +488,16 @@ module.exports = class PhotoService extends Service {
 			}
 
 			const photoRes = await photoCollection
-				.where({
-					_id: photoId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'uploader_uid'
+					}),
+					{
+						_id: photoId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -563,13 +564,6 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const photoId = String(params.photoId || '').trim()
 			if (!photoId) {
 				return {
@@ -579,10 +573,16 @@ module.exports = class PhotoService extends Service {
 			}
 
 			const photoRes = await photoCollection
-				.where({
-					_id: photoId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'uploader_uid'
+					}),
+					{
+						_id: photoId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -594,6 +594,13 @@ module.exports = class PhotoService extends Service {
 			}
 
 			const photo = photoRes.data[0]
+			// 照片删除会连带清理云存储文件，不可逆，只允许上传者操作
+			if (String(photo.uploader_uid || '') !== String(uid)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '仅上传者可以删除该照片'
+				}
+			}
 			const albumId = photo.album_id
 
 			const transaction = await database().startTransaction()
@@ -662,13 +669,6 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const photoId = String(params.photoId || '').trim()
 			if (!photoId) {
 				return {
@@ -678,10 +678,16 @@ module.exports = class PhotoService extends Service {
 			}
 
 			const photoRes = await photoCollection
-				.where({
-					_id: photoId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'uploader_uid'
+					}),
+					{
+						_id: photoId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -718,13 +724,6 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const photoId = String(params.photoId || '').trim()
 			const targetAlbumId = String(params.targetAlbumId || '').trim()
 
@@ -736,14 +735,26 @@ module.exports = class PhotoService extends Service {
 			}
 
 			const [photoRes, targetAlbumRes] = await Promise.all([
-				photoCollection.where({
-					_id: photoId,
-					couple_id: activeCouple._id
-				}).limit(1).get(),
-				albumCollection.where({
-					_id: targetAlbumId,
-					couple_id: activeCouple._id
-				}).limit(1).get()
+				photoCollection.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'uploader_uid'
+					}),
+					{
+						_id: photoId
+					}
+				)).limit(1).get(),
+				albumCollection.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'create_uid'
+					}),
+					{
+						_id: targetAlbumId
+					}
+				)).limit(1).get()
 			])
 
 			if (!photoRes.data || photoRes.data.length === 0) {

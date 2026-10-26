@@ -76,9 +76,16 @@ function buildCreatorVisibilityCondition({
 		return ownCondition
 	}
 
+	// ⚠️ 绑定时间取不到时保守处理：只返回自己的条件。
+	// 早期情侣记录可能缺 bind_date/created_at，若兜底成 0 会让 `create_time >= 0` 放行对方全部历史内容。
+	const bindTimestamp = getCoupleBindTimestamp(activeCouple)
+	if (!bindTimestamp) {
+		return ownCondition
+	}
+
 	const partnerCondition = {
 		[safeCreatorField]: partnerUid,
-		create_time: dbCmd.gte(getCoupleBindTimestamp(activeCouple))
+		create_time: dbCmd.gte(bindTimestamp)
 	}
 
 	const coupleId = String((activeCouple && activeCouple._id) || '').trim()

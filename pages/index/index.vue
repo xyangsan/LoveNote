@@ -389,6 +389,7 @@
 			return {
 				loveDays,
 				startDateText: formatDate(startDate),
+				interstitialAdShow: true,
 				isLoggingIn: false,
 				appStateStore: null,
 				userInfo: null,

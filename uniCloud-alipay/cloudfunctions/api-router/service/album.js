@@ -71,12 +71,15 @@ module.exports = class AlbumService extends Service {
 				.get()
 			const rawList = listRes.data || []
 			const fileUrlMap = await getTempFileUrlMap(collectFileIdsFromAlbums(rawList))
-			const list = normalizeAlbumList(rawList, fileUrlMap)
+			const list = normalizeAlbumList(rawList, fileUrlMap, uid)
 
 			return {
 				errCode: 0,
 				data: {
 					list,
+					// 列表本身不要求绑定（未绑定时仍能看到自己创建的内容），
+					// 但创建需要情侣关系，前端据此决定是否引导去绑定。
+					hasCouple: Boolean(activeCouple && activeCouple._id),
 					pagination: {
 						page,
 						pageSize,
@@ -154,8 +157,8 @@ module.exports = class AlbumService extends Service {
 				...collectFileIdsFromPhotos(rawPhotos)
 			]
 			const fileUrlMap = await getTempFileUrlMap(fileIds)
-			const normalizedAlbum = normalizeAlbumRecord(album, fileUrlMap)
-			const normalizedPhotos = normalizePhotoList(rawPhotos, fileUrlMap)
+			const normalizedAlbum = normalizeAlbumRecord(album, fileUrlMap, uid)
+			const normalizedPhotos = normalizePhotoList(rawPhotos, fileUrlMap, uid)
 
 			return {
 				errCode: 0,
@@ -181,13 +184,6 @@ module.exports = class AlbumService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const title = String(params.title || '').trim()
 			if (!title) {
 				return {
@@ -212,7 +208,8 @@ module.exports = class AlbumService extends Service {
 			}
 
 			const albumData = {
-				couple_id: activeCouple._id,
+				// 未绑定情侣时也能创建，couple_id 先留空，绑定后是否可见由可见性条件决定
+				couple_id: activeCouple ? activeCouple._id : '',
 				title,
 				description,
 				photo_count: 0,
@@ -234,7 +231,7 @@ module.exports = class AlbumService extends Service {
 			const normalizedAlbum = normalizeAlbumRecord({
 				_id: result.id,
 				...albumData
-			})
+			}, {}, uid)
 
 			return {
 				errCode: 0,
@@ -254,13 +251,6 @@ module.exports = class AlbumService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const albumId = String(params.albumId || '').trim()
 			if (!albumId) {
 				return {
@@ -269,11 +259,18 @@ module.exports = class AlbumService extends Service {
 				}
 			}
 
+			// 用可见性条件代替 couple_id 精确匹配：未绑定情侣时也能编辑自己创建的相册
 			const albumRes = await albumCollection
-				.where({
-					_id: albumId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'create_uid'
+					}),
+					{
+						_id: albumId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -353,13 +350,6 @@ module.exports = class AlbumService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const albumId = String(params.albumId || '').trim()
 			if (!albumId) {
 				return {
@@ -369,10 +359,16 @@ module.exports = class AlbumService extends Service {
 			}
 
 			const albumRes = await albumCollection
-				.where({
-					_id: albumId,
-					couple_id: activeCouple._id
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'create_uid'
+					}),
+					{
+						_id: albumId
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -391,10 +387,18 @@ module.exports = class AlbumService extends Service {
 				}
 			}
 
+			// 编辑保持共享（情侣协作），删除只允许创建者，避免误删对方整理的内容
+			if (String(album.create_uid || '') !== String(uid)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '仅相册创建者可以删除该相册'
+				}
+			}
+
+			// 相册已通过可见性 + 创建者校验，其下照片（含对方上传的）一并清理
 			await photoCollection
 				.where({
-					album_id: albumId,
-					couple_id: activeCouple._id
+					album_id: albumId
 				})
 				.remove()
 

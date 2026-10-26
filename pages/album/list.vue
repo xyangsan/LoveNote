@@ -45,6 +45,7 @@
 					<view v-else class="album-card__cover-placeholder"></view>
 					<view class="album-card__overlay"></view>
 					<view class="album-card__info">
+						<text v-if="album.is_self === false" class="album-card__owner">TA 的</text>
 						<text class="album-card__title">{{ album.title }}</text>
 						<text class="album-card__count">{{ album.photo_count || 0 }} 个媒体</text>
 					</view>
@@ -67,7 +68,7 @@
 		<view v-else-if="!loading && albumList.length === 0" class="empty-state">
 			<image class="empty-icon" src="/static/user-empty.png" mode="aspectFit" />
 			<text class="empty-title">还没有相册</text>
-			<text class="empty-desc">创建一个相册，开始记录你们的回忆吧</text>
+			<text class="empty-desc">{{ noCouple ? '先建一个属于自己的相册，绑定情侣后就能一起记录。' : '创建一个相册，开始记录你们的回忆吧' }}</text>
 			<button class="empty-action" @click="handleCreateAlbum">创建第一个相册</button>
 		</view>
 
@@ -116,6 +117,7 @@ export default {
 	data() {
 		return {
 			albumList: [],
+			noCouple: false,
 			loading: false,
 			skeletonList: [1, 2, 3, 4, 5],
 			pagination: {
@@ -127,8 +129,8 @@ export default {
 			actionSheet: {
 				show: false,
 				items: [
-					{ text: '编辑相册', color: '#5a3427' },
-					{ text: '删除相册', color: '#e76f51' }
+					{ key: 'edit', text: '编辑相册', color: '#5a3427' },
+					{ key: 'delete', text: '删除相册', color: '#e76f51' }
 				],
 				currentAlbum: null
 			},
@@ -193,6 +195,9 @@ export default {
 				const list = data.list || []
 				const pagination = data.pagination || {}
 
+				// 未绑定时列表仍可看自己创建的内容，只是不能新建
+				this.noCouple = data.hasCouple === false
+
 				if (reset) {
 					this.albumList = list
 				} else {
@@ -234,6 +239,12 @@ export default {
 			this.createDialog.show = true
 		},
 
+		goToCouplePage() {
+			uni.navigateTo({
+				url: '/pages/couple/index'
+			})
+		},
+
 		closeCreateDialog() {
 			this.createDialog.show = false
 		},
@@ -256,10 +267,19 @@ export default {
 			uni.showLoading({ title: '创建中...', mask: true })
 
 			try {
-				await getAlbumApi().create({
+				const result = await getAlbumApi().create({
 					title,
 					description: this.createDialog.form.description.trim()
 				})
+
+				// ⚠️ callApiRouter 业务失败不抛异常，只返回 { errCode, errMsg }，
+				// 不判断就会被当成成功（历史 bug：未绑定情侣时提示「创建成功」但列表没变化）
+				if (result && result.errCode && result.errCode !== 0) {
+					if (result.errCode === 'love-note-no-couple') {
+						this.noCouple = true
+					}
+					throw new Error(result.errMsg || '创建失败')
+				}
 
 				uni.showToast({
 					title: '创建成功',
@@ -280,6 +300,12 @@ export default {
 		},
 
 		showAlbumMenu(album) {
+			// 删除只对创建者开放（后端也会拦），避免点了才报错
+			const items = [{ key: 'edit', text: '编辑相册', color: '#5a3427' }]
+			if (album.is_self === true) {
+				items.push({ key: 'delete', text: '删除相册', color: '#e76f51' })
+			}
+			this.actionSheet.items = items
 			this.actionSheet.currentAlbum = album
 			this.actionSheet.show = true
 		},
@@ -293,9 +319,11 @@ export default {
 			const album = this.actionSheet.currentAlbum
 			if (!album) return
 
-			if (e.index === 0) {
+			const item = this.actionSheet.items[e.index]
+			const actionKey = item && item.key
+			if (actionKey === 'edit') {
 				this.handleEditAlbum(album)
-			} else if (e.index === 1) {
+			} else if (actionKey === 'delete') {
 				this.handleDeleteAlbum(album)
 			}
 
@@ -464,6 +492,17 @@ export default {
 	left: 0;
 	right: 0;
 	padding: 20rpx;
+}
+
+.album-card__owner {
+	display: inline-block;
+	margin-bottom: 8rpx;
+	padding: 2rpx 12rpx;
+	border-radius: 999rpx;
+	background: rgba(255, 255, 255, 0.22);
+	font-size: 20rpx;
+	line-height: 1.5;
+	color: #fff;
 }
 
 .album-card__title {

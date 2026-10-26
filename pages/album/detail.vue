@@ -123,8 +123,8 @@ export default {
 			albumActionSheet: {
 				show: false,
 				items: [
-					{ text: '编辑相册信息', color: '#5a3427' },
-					{ text: '删除相册', color: '#e76f51' }
+					{ key: 'edit', text: '编辑相册信息', color: '#5a3427' },
+					{ key: 'delete', text: '删除相册', color: '#e76f51' }
 				]
 			}
 		}
@@ -405,8 +405,11 @@ export default {
 			actionKeys.push('save')
 			items.push({ text: '移动到相册', color: '#5a3427' })
 			actionKeys.push('move')
-			items.push({ text: '删除', color: '#999' })
-			actionKeys.push('delete')
+			// 删除会清理云存储文件，只对上传者开放（后端也会拦）
+			if (photo.is_self === true) {
+				items.push({ text: '删除', color: '#999' })
+				actionKeys.push('delete')
+			}
 
 			this.photoActionSheet.items = items
 			this.photoActionSheet.actionKeys = actionKeys
@@ -549,6 +552,12 @@ export default {
 		},
 
 		showAlbumMenu() {
+			// 删除只对创建者开放（后端也会拦）
+			const items = [{ key: 'edit', text: '编辑相册信息', color: '#5a3427' }]
+			if (this.album && this.album.is_self === true) {
+				items.push({ key: 'delete', text: '删除相册', color: '#e76f51' })
+			}
+			this.albumActionSheet.items = items
 			this.albumActionSheet.show = true
 		},
 
@@ -557,13 +566,12 @@ export default {
 		},
 
 		handleAlbumAction(e) {
-			switch (e.index) {
-				case 0:
-					this.editAlbum()
-					break
-				case 1:
-					this.confirmDeleteAlbum()
-					break
+			const item = this.albumActionSheet.items[e.index]
+			const actionKey = item && item.key
+			if (actionKey === 'edit') {
+				this.editAlbum()
+			} else if (actionKey === 'delete') {
+				this.confirmDeleteAlbum()
 			}
 			this.closeAlbumActionSheet()
 		},

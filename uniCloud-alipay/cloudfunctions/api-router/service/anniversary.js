@@ -450,7 +450,7 @@ function readStyleFromRecord(record = {}) {
 	}
 }
 
-function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}) {
+function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}, uid = '') {
 	const bgImage = record.background_image && typeof record.background_image === 'object'
 		? record.background_image
 		: {}
@@ -507,7 +507,8 @@ function normalizeAnniversaryRecord(record = {}, fileUrlMap = {}) {
 		next_date_timestamp: countdown.nextDateTimestamp,
 		next_date_value: countdown.nextDate,
 		next_date_refresh_date: record.next_date_refresh_date || '',
-		countdown_text: buildCountdownText(countdown.countdownDays, countdown.isPassed)
+		countdown_text: buildCountdownText(countdown.countdownDays, countdown.isPassed),
+		is_self: Boolean(uid && String(record.creator_uid || '') === String(uid))
 	})
 }
 
@@ -545,12 +546,14 @@ module.exports = class AnniversaryService extends Service {
 
 			const rawList = Array.isArray(listRes.data) ? listRes.data : []
 			const fileUrlMap = await getTempFileUrlMap(collectFileIdsFromAnniversaryList(rawList))
-			const list = rawList.map((item) => normalizeAnniversaryRecord(item, fileUrlMap))
+			const list = rawList.map((item) => normalizeAnniversaryRecord(item, fileUrlMap, uid))
 
 			return withAuthResponse(authState, {
 				errCode: 0,
 				data: {
 					list,
+					// 未绑定时仍可查看自己创建过的纪念日，但不能再新增
+					hasCouple: Boolean(activeCouple && activeCouple._id),
 					pagination: {
 						page,
 						pageSize,
@@ -602,7 +605,7 @@ module.exports = class AnniversaryService extends Service {
 
 			const rawRecord = detailRes.data[0]
 			const fileUrlMap = await getTempFileUrlMap(collectFileIdsFromAnniversaryList([rawRecord]))
-			const anniversary = normalizeAnniversaryRecord(rawRecord, fileUrlMap)
+			const anniversary = normalizeAnniversaryRecord(rawRecord, fileUrlMap, uid)
 
 			return withAuthResponse(authState, {
 				errCode: 0,
@@ -621,13 +624,6 @@ module.exports = class AnniversaryService extends Service {
 			authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-
-			if (!activeCouple) {
-				return withAuthResponse(authState, {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				})
-			}
 
 			const title = String(params.title || '').trim()
 			if (!title) {
@@ -670,7 +666,8 @@ module.exports = class AnniversaryService extends Service {
 
 			const now = Date.now()
 			const record = {
-				couple_id: activeCouple._id,
+				// 未绑定情侣时也能创建，couple_id 先留空
+				couple_id: activeCouple ? activeCouple._id : '',
 				title,
 				date_type: dateType,
 				date_value: dateFields.dateValue,
@@ -716,13 +713,6 @@ module.exports = class AnniversaryService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return withAuthResponse(authState, {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				})
-			}
-
 			const anniversaryId = String(params.anniversaryId || params.id || '').trim()
 			if (!anniversaryId) {
 				return withAuthResponse(authState, {
@@ -731,12 +721,19 @@ module.exports = class AnniversaryService extends Service {
 				})
 			}
 
+			// 用可见性条件代替 couple_id 精确匹配：未绑定情侣时也能操作自己创建的纪念日
 			const detailRes = await anniversaryCollection
-				.where({
-					_id: anniversaryId,
-					couple_id: activeCouple._id,
-					is_deleted: false
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'creator_uid'
+					}),
+					{
+						_id: anniversaryId,
+						is_deleted: false
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -869,13 +866,6 @@ module.exports = class AnniversaryService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return withAuthResponse(authState, {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				})
-			}
-
 			const anniversaryId = String(params.anniversaryId || params.id || '').trim()
 			if (!anniversaryId) {
 				return withAuthResponse(authState, {
@@ -884,12 +874,19 @@ module.exports = class AnniversaryService extends Service {
 				})
 			}
 
+			// 用可见性条件代替 couple_id 精确匹配：未绑定情侣时也能操作自己创建的纪念日
 			const detailRes = await anniversaryCollection
-				.where({
-					_id: anniversaryId,
-					couple_id: activeCouple._id,
-					is_deleted: false
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'creator_uid'
+					}),
+					{
+						_id: anniversaryId,
+						is_deleted: false
+					}
+				))
 				.limit(1)
 				.get()
 
@@ -897,6 +894,15 @@ module.exports = class AnniversaryService extends Service {
 				return withAuthResponse(authState, {
 					errCode: 'love-note-anniversary-not-found',
 					errMsg: '纪念日不存在或无权访问'
+				})
+			}
+
+			// 编辑保持共享（一起维护纪念日），删除只允许创建者
+			const anniversaryRecord = detailRes.data[0]
+			if (String(anniversaryRecord.creator_uid || '') !== String(uid)) {
+				return withAuthResponse(authState, {
+					errCode: 'love-note-no-permission',
+					errMsg: '仅创建者可以删除该纪念日'
 				})
 			}
 

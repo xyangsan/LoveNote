@@ -364,16 +364,23 @@ async function buildAuthorSnapshot(uid = '') {
 	}
 }
 
-async function getPostRecord(postId = '', coupleId = '') {
-	if (!postId || !coupleId) {
+async function getPostRecord(postId = '', uid = '', activeCouple = null) {
+	if (!postId || !uid) {
 		return null
 	}
+	// 按可见性取单条：未绑定情侣时也能操作自己发布的动态
 	const postRes = await dailyPostCollection
-		.where({
-			_id: postId,
-			couple_id: coupleId,
-			is_deleted: false
-		})
+		.where(andWhereConditions(
+			buildCreatorVisibilityCondition({
+				uid,
+				activeCouple,
+				creatorField: 'author_uid'
+			}),
+			{
+				_id: postId,
+				is_deleted: false
+			}
+		))
 		.limit(1)
 		.get()
 	return postRes && Array.isArray(postRes.data) && postRes.data[0]
@@ -418,6 +425,8 @@ module.exports = class DailyService extends Service {
 				errCode: 0,
 				data: {
 					list,
+					// 未绑定时仍可查看自己发布过的内容，但不能再发布
+					hasCouple: Boolean(activeCouple && activeCouple._id),
 					pagination: {
 						page,
 						pageSize,
@@ -436,13 +445,6 @@ module.exports = class DailyService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
-
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const content = String(params.content || '').trim()
 			if (content.length > MAX_CONTENT_LENGTH) {
@@ -569,7 +571,8 @@ module.exports = class DailyService extends Service {
 				longitude: null
 			}
 			const postData = {
-				couple_id: activeCouple._id,
+				// 未绑定情侣时也能发布，couple_id 先留空
+				couple_id: activeCouple ? activeCouple._id : '',
 				author_uid: uid,
 				author_snapshot: authorSnapshot,
 				content,
@@ -603,12 +606,6 @@ module.exports = class DailyService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = String(authState.authResult.uid || '').trim()
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const postId = String(params.postId || '').trim()
 			if (!postId) {
@@ -618,7 +615,7 @@ module.exports = class DailyService extends Service {
 				}
 			}
 
-			const post = await getPostRecord(postId, activeCouple._id)
+			const post = await getPostRecord(postId, uid, activeCouple)
 			if (!post) {
 				return {
 					errCode: 'love-note-post-not-found',
@@ -671,12 +668,6 @@ module.exports = class DailyService extends Service {
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
 			const uid = String(authState.authResult.uid || '').trim()
 			const activeCouple = await getActiveCoupleByUid(uid)
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
 
 			const postId = String(params.postId || '').trim()
 			if (!postId) {
@@ -700,7 +691,7 @@ module.exports = class DailyService extends Service {
 				}
 			}
 
-			const post = await getPostRecord(postId, activeCouple._id)
+			const post = await getPostRecord(postId, uid, activeCouple)
 			if (!post) {
 				return {
 					errCode: 'love-note-post-not-found',
@@ -773,13 +764,6 @@ module.exports = class DailyService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			if (!activeCouple) {
-				return {
-					errCode: 'love-note-no-couple',
-					errMsg: '请先绑定情侣关系'
-				}
-			}
-
 			const postId = String(params.postId || '').trim()
 			if (!postId) {
 				return {
@@ -788,12 +772,19 @@ module.exports = class DailyService extends Service {
 				}
 			}
 
+			// 用可见性条件代替 couple_id 精确匹配：未绑定情侣时也能删除自己发布的动态
 			const postRes = await dailyPostCollection
-				.where({
-					_id: postId,
-					couple_id: activeCouple._id,
-					is_deleted: false
-				})
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'author_uid'
+					}),
+					{
+						_id: postId,
+						is_deleted: false
+					}
+				))
 				.limit(1)
 				.get()
 

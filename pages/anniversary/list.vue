@@ -33,36 +33,7 @@
 			></love-auth-required>
 
 			<view v-else>
-				<love-glass-card
-					v-if="noCouple"
-					:margin="['0', '0', '0', '0']"
-					:header-line="false"
-				>
-					<fui-empty
-						title="未绑定情侣关系"
-						descr="请先完成情侣绑定，再创建和查看纪念日。"
-						:size="28"
-						descr-size="22"
-						color="#6e4a3f"
-						descr-color="#9a766c"
-						:margin-top="0"
-					></fui-empty>
-					<view class="empty-actions">
-						<fui-button
-							text="去绑定"
-							background="rgba(255, 241, 235, 0.98)"
-							color="#b05b48"
-							border-color="rgba(214, 145, 122, 0.24)"
-							radius="999rpx"
-							height="82rpx"
-							:size="24"
-							:bold="true"
-							@click="goToCouplePage"
-						></fui-button>
-					</view>
-				</love-glass-card>
-
-				<view v-else-if="loading && !anniversaryList.length" class="loading-block">
+				<view v-if="loading && !anniversaryList.length" class="loading-block">
 					<fui-loading type="rotate" size="48" color="#e76f51"></fui-loading>
 					<text class="loading-block__text">加载中...</text>
 				</view>
@@ -98,6 +69,7 @@
 						:mask-style="buildCardMaskStyle(item)"
 						:text-style="buildCardTextStyle(item)"
 						:mask-enabled="item.mask_enabled"
+						:owner-tag="item.is_self === false ? 'TA 的' : ''"
 						:show-delete="false"
 						:clickable="false"
 						@longpress="handleCardLongPress(item)"
@@ -179,7 +151,7 @@ export default {
 		})
 	},
 	onReachBottom() {
-		if (!this.isLoggedIn || this.loading || !this.pagination.hasMore || this.noCouple) {
+		if (!this.isLoggedIn || this.loading || !this.pagination.hasMore) {
 			return
 		}
 		this.loadList(false)
@@ -234,6 +206,8 @@ export default {
 				}
 
 				const data = result && result.data ? result.data : {}
+				// 未绑定时仍能看自己创建过的纪念日，只是不能新增
+				this.noCouple = data.hasCouple === false
 				const list = Array.isArray(data.list)
 					? data.list.map(item => normalizeAnniversaryCountdownItem(item))
 					: []
@@ -300,14 +274,20 @@ export default {
 			if (!anniversaryId) {
 				return
 			}
+			// 编辑保持共享（一起维护纪念日），删除只对创建者开放（后端也会拦）
+			const actionList = ['编辑']
+			if (item.is_self === true) {
+				actionList.push('删除')
+			}
 			uni.showActionSheet({
-				itemList: ['编辑', '删除'],
+				itemList: actionList,
 				success: (res) => {
-					if (res.tapIndex === 0) {
+					const actionText = actionList[res.tapIndex]
+					if (actionText === '编辑') {
 						this.goToEdit(item)
 						return
 					}
-					if (res.tapIndex === 1) {
+					if (actionText === '删除') {
 						this.handleDelete(item)
 					}
 				}

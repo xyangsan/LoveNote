@@ -28,7 +28,7 @@
 					<view class="feed-navbar__cover-action" :class="{ 'feed-navbar__cover-action--opaque': navBarOpaque }" @click.stop="openCoverActionSheet">
 						<text class="feed-navbar__cover-text" :style="{ color: navTextColor }">{{ '编辑封面' }}</text>
 					</view>
-					<view class="feed-navbar__publish" :class="{ 'feed-navbar__publish--opaque': navBarOpaque }" @click.stop="noCouple ? goCouplePage() : goPublish()">
+					<view class="feed-navbar__publish" :class="{ 'feed-navbar__publish--opaque': navBarOpaque }" @click.stop="goPublish()">
 						<uv-icon name="camera-fill" size="48" :color="navTextColor"></uv-icon>
 					</view>
 				</view>
@@ -63,8 +63,8 @@
 
 			<view v-else-if="postList.length === 0" class="state-block">
 				<image class="state-block__icon" src="/static/user-empty.png" mode="aspectFit" />
-				<text class="state-block__title">{{ noCouple ? '还未绑定情侣关系' : '还没有双人日常' }}</text>
-				<text class="state-block__text">{{ noCouple ? '请先完成情侣绑定，再发布双人日常。' : '发布第一条日常，记录你们的今天。' }}</text>
+				<text class="state-block__title">还没有双人日常</text>
+				<text class="state-block__text">{{ noCouple ? '发布第一条日常，绑定情侣后 TA 也能看到。' : '发布第一条日常，记录你们的今天。' }}</text>
 			</view>
 
 			<view v-else class="moments-list">
@@ -1079,7 +1079,8 @@ export default {
 				const list = Array.isArray(data.list) ? data.list.map((item) => this.normalizePostItem(item)) : []
 				const pageInfo = data.pagination || {}
 
-				this.noCouple = false
+				// 未绑定时仍能看自己发过的内容，只是不能再发布
+				this.noCouple = data.hasCouple === false
 				if (reset) {
 					this.postList = list
 				} else {

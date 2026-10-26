@@ -137,7 +137,7 @@ async function getTempFileUrlMap(fileIds = []) {
 	return fileUrlMap
 }
 
-function normalizePhotoRecord(record = {}, fileUrlMap = {}) {
+function normalizePhotoRecord(record = {}, fileUrlMap = {}, uid = '') {
 	const rawFileId = String(record.file_id || '').trim()
 	const rawThumbnailFileId = String(record.thumbnail_file_id || '').trim()
 	const fileId = rawFileId || (isCloudFileId(record.url) ? String(record.url || '').trim() : '')
@@ -161,15 +161,16 @@ function normalizePhotoRecord(record = {}, fileUrlMap = {}) {
 		file_id: fileId,
 		url,
 		thumbnail_url: thumbnailUrl,
-		media_type: mediaType
+		media_type: mediaType,
+		is_self: Boolean(uid && String(record.uploader_uid || '') === String(uid))
 	})
 }
 
-function normalizePhotoList(list = [], fileUrlMap = {}) {
-	return list.map((item) => normalizePhotoRecord(item, fileUrlMap))
+function normalizePhotoList(list = [], fileUrlMap = {}, uid = '') {
+	return list.map((item) => normalizePhotoRecord(item, fileUrlMap, uid))
 }
 
-function normalizeAlbumRecord(record = {}, fileUrlMap = {}) {
+function normalizeAlbumRecord(record = {}, fileUrlMap = {}, uid = '') {
 	const coverImage = record.cover_image && typeof record.cover_image === 'object' ? record.cover_image : {}
 	const rawCoverFileId = String(coverImage.file_id || record.cover_file_id || '').trim()
 	const coverFileId = rawCoverFileId || (isCloudFileId(coverImage.url || record.cover_url) ? String(coverImage.url || record.cover_url || '').trim() : '')
@@ -184,12 +185,13 @@ function normalizeAlbumRecord(record = {}, fileUrlMap = {}) {
 		cover_image: {
 			url: coverUrl,
 			file_id: coverFileId
-		}
+		},
+		is_self: Boolean(uid && String(record.create_uid || '') === String(uid))
 	})
 }
 
-function normalizeAlbumList(list = [], fileUrlMap = {}) {
-	return list.map((item) => normalizeAlbumRecord(item, fileUrlMap))
+function normalizeAlbumList(list = [], fileUrlMap = {}, uid = '') {
+	return list.map((item) => normalizeAlbumRecord(item, fileUrlMap, uid))
 }
 
 module.exports = {
