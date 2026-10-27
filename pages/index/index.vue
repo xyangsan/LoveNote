@@ -669,7 +669,10 @@
 				this.moments = getDefaultMomentPreviewList()
 			},
 			async fetchAnniversaryReminders({ silent = true } = {}) {
-				if (!this.isLoggedIn || !this.activeCouple) {
+				// ⚠️ 不要加 `!this.activeCouple` 前置判断：未绑定情侣也能创建纪念日，
+				// 后端 getList 只按创建者可见性返回（自己创建的全量 + 对方绑定后的），
+				// 加了这道门会让未绑定用户首页永远显示「暂无纪念日提醒」。
+				if (!this.isLoggedIn) {
 					this.anniversaries = getDefaultAnniversaryReminderList()
 					return
 				}
@@ -700,7 +703,8 @@
 				}
 			},
 			async fetchMomentPreview({ silent = true } = {}) {
-				if (!this.isLoggedIn || !this.activeCouple) {
+				// 同上：未绑定也能发双人日常，别用 activeCouple 挡请求
+				if (!this.isLoggedIn) {
 					this.moments = getDefaultMomentPreviewList()
 					return
 				}
@@ -731,7 +735,7 @@
 				}
 			},
 			async loadHomeSections({ silent = true } = {}) {
-				if (!this.isLoggedIn || !this.activeCouple) {
+				if (!this.isLoggedIn) {
 					this.resetHomeSections()
 					return
 				}

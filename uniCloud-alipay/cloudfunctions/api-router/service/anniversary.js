@@ -17,7 +17,7 @@ const { formatError } = require('../lib/response')
 const {
 	buildNextDateFields,
 	computeAnniversaryCountdown
-} = require('../../common/anniversary-next-date')
+} = require('anniversary-next-date')
 
 const DATE_TYPE_SET = new Set(['solar', 'lunar'])
 const REPEAT_TYPE_SET = new Set(['none', 'weekly', 'monthly', 'yearly'])

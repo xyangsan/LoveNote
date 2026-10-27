@@ -1086,6 +1086,17 @@ export default {
 				title: '保存中...',
 				mask: true
 			})
+			// ⚠️ 微信小程序 showLoading / showToast 共用同一个提示槽：hideLoading 会把刚弹出的 toast
+			// 一起关掉。原来放在 finally 里，成功和失败的提示都会被瞬间吞掉（失败时用户以为保存成功，
+			// 回到列表又看不到新数据）。改成：弹 toast 之前先关 loading，且只关一次。
+			let savingLoadingVisible = true
+			const hideSavingLoading = () => {
+				if (!savingLoadingVisible) {
+					return
+				}
+				savingLoadingVisible = false
+				uni.hideLoading()
+			}
 
 			try {
 				let backgroundImage = this.form.backgroundImage
@@ -1160,6 +1171,7 @@ export default {
 					throw new Error(result.errMsg || '保存失败')
 				}
 
+				hideSavingLoading()
 				uni.showToast({
 					title: this.isEditMode ? '保存成功' : '创建成功',
 					icon: 'success'
@@ -1170,13 +1182,13 @@ export default {
 				}, 380)
 			} catch (error) {
 				console.error('anniversary save failed', error)
+				hideSavingLoading()
 				uni.showToast({
 					title: error.message || '保存失败',
 					icon: 'none'
 				})
 			} finally {
 				this.saving = false
-				uni.hideLoading()
 			}
 		},
 		goToLoginPage() {

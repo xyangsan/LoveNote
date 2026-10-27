@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"description": "Refresh anniversary next date sort fields",
 	"main": "index.js",
+	"dependencies": {
+		"anniversary-next-date": "file:../common/anniversary-next-date"
+	},
 	"cloudfunction-config": {
 		"timeout": 600,
 		"triggers": [

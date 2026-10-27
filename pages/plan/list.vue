@@ -123,6 +123,8 @@
 				</love-glass-card>
 			</view>
 		</view>
+
+		<love-couple-guide scene="plan" :active="noCouple" />
 	</view>
 </template>
 
@@ -131,6 +133,7 @@
 	import { getPlanApi } from '../../common/api/plan.js'
 	import { useAppStateStore } from '../../store/app-state.js'
 import { requirePageLogin } from '@/common/auth-entry.js'
+import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
 	function formatDateTime(timestamp) {
 		if (!timestamp) {
@@ -146,6 +149,9 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	}
 
 	export default {
+		components: {
+			LoveCoupleGuide
+		},
 		data() {
 			return {
 				appStateStore: null,

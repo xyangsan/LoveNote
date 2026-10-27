@@ -4,6 +4,7 @@
 	"description": "恋人手札统一云函数路由",
 	"main": "index.js",
 	"dependencies": {
+		"anniversary-next-date": "file:../common/anniversary-next-date",
 		"uni-captcha": "file:../../../uni_modules/uni-captcha/uniCloud/cloudfunctions/common/uni-captcha",
 		"uni-cloud-router": "^0.0.11",
 		"uni-cloud-s2s": "file:../../../uni_modules/uni-cloud-s2s/uniCloud/cloudfunctions/common/uni-cloud-s2s",

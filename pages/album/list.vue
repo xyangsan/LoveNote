@@ -83,6 +83,8 @@
 			@click="handleActionSheetClick"
 		/>
 
+		<love-couple-guide scene="album" :active="noCouple" />
+
 		<fui-dialog
 			:show="createDialog.show"
 			title="新建相册"
@@ -112,8 +114,12 @@
 <script>
 import { getAlbumApi } from '../../common/api/album.js'
 import { requirePageLogin } from '@/common/auth-entry.js'
+import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
 export default {
+	components: {
+		LoveCoupleGuide
+	},
 	data() {
 		return {
 			albumList: [],

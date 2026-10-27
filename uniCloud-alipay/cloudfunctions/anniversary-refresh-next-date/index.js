@@ -3,7 +3,7 @@
 const {
 	buildNextDateFields,
 	getChinaTodayDateValue
-} = require('../common/anniversary-next-date')
+} = require('anniversary-next-date')
 
 const db = uniCloud.database()
 const dbCmd = db.command

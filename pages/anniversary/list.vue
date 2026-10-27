@@ -81,6 +81,8 @@
 				</view>
 			</view>
 		</view>
+
+		<love-couple-guide scene="anniversary" :active="noCouple" />
 	</view>
 </template>
 
@@ -92,6 +94,7 @@ import {
 import { getAnniversaryApi } from '../../common/api/anniversary.js'
 import { normalizeAnniversaryCountdownItem } from '../../common/utils/anniversary-countdown.js'
 import LoveAnniversaryCard from './love-anniversary-card.vue'
+import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 import { requirePageLogin } from '@/common/auth-entry.js'
 
 const DATE_TYPE_TEXT_MAP = {
@@ -117,12 +120,15 @@ function getDefaultPagination() {
 
 export default {
 	components: {
-		LoveAnniversaryCard
+		LoveAnniversaryCard,
+		LoveCoupleGuide
 	},
 	data() {
 		return {
 			isLoggedIn: false,
 			loading: false,
+			// 本次请求在飞期间又被要求刷新的标记（见 loadList）
+			refreshPending: false,
 			noCouple: false,
 			anniversaryList: [],
 			pagination: getDefaultPagination(),
@@ -174,7 +180,13 @@ export default {
 			}
 		},
 		async loadList(reset = false) {
+			// 请求在飞时又要求刷新（从编辑页返回 / 下拉 / 删除后）：以前直接 return，
+			// 这次刷新就被静默吞掉，列表停在旧数据上（新建的纪念日看不到）。
+			// 记一个 pending，本次请求结束后补拉一次。
 			if (this.loading) {
+				if (reset) {
+					this.refreshPending = true
+				}
 				return
 			}
 
@@ -217,7 +229,6 @@ export default {
 					? Boolean(pageInfo.hasMore)
 					: requestPage * requestPageSize < total
 
-				this.noCouple = false
 				this.anniversaryList = reset ? list : [...this.anniversaryList, ...list]
 				this.pagination = {
 					page: requestPage + 1,
@@ -233,6 +244,10 @@ export default {
 				})
 			} finally {
 				this.loading = false
+				if (this.refreshPending) {
+					this.refreshPending = false
+					this.loadList(true)
+				}
 			}
 		},
 		buildCardBackgroundStyle(item = {}) {
@@ -321,6 +336,15 @@ export default {
 				title: '删除中...',
 				mask: true
 			})
+			// 同上：先关 loading 再弹 toast，否则提示会被 hideLoading 一起关掉
+			let deleteLoadingVisible = true
+			const hideDeleteLoading = () => {
+				if (!deleteLoadingVisible) {
+					return
+				}
+				deleteLoadingVisible = false
+				uni.hideLoading()
+			}
 
 			try {
 				const result = await getAnniversaryApi().delete({
@@ -330,6 +354,7 @@ export default {
 					throw new Error(result.errMsg || '删除失败')
 				}
 
+				hideDeleteLoading()
 				uni.showToast({
 					title: '删除成功',
 					icon: 'success'
@@ -337,12 +362,11 @@ export default {
 				this.loadList(true)
 			} catch (error) {
 				console.error('anniversary delete failed', error)
+				hideDeleteLoading()
 				uni.showToast({
 					title: error.message || '删除失败',
 					icon: 'none'
 				})
-			} finally {
-				uni.hideLoading()
 			}
 		},
 		goToLoginPage() {

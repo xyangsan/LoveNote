@@ -1,0 +1,6 @@
+{
+	"name": "anniversary-next-date",
+	"version": "1.0.0",
+	"description": "纪念日下一次日期计算（含 1900-2100 农历换算）",
+	"main": "index.js"
+}

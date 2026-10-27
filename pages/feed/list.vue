@@ -105,7 +105,7 @@
 							class="moment-image--single"
 							:style="singleMediaBoxStyle(post)"
 							:src="getPostMediaThumbnailUrl(post.media_list[0])"
-							mode="aspectFit"
+							mode="aspectFill"
 							@click.stop="previewImages(post, 0)"
 						/>
 
@@ -222,6 +222,8 @@
 		>
 			<view class="cover-cropper__cancel" @click="cancelCoverCropper">{{ '取消' }}</view>
 		</qf-image-cropper>
+
+		<love-couple-guide scene="feed" :active="noCouple" />
 	</view>
 </template>
 
@@ -232,8 +234,12 @@ import { getUserApi } from '../../common/api/user.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 import { useAppStateStore } from '../../store/app-state.js'
 import { requirePageLogin } from '@/common/auth-entry.js'
+import { consumePageRefresh } from '@/common/utils/page-refresh.js'
+import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
 const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
+// 发布页保存成功后会打这个标记，列表页在 onShow 里消费并重拉首屏
+const FEED_REFRESH_KEY = 'feed'
 
 function formatDateTime(timestamp) {
 	if (!timestamp) {
@@ -294,6 +300,9 @@ function getChooseResultFilePath(result = {}) {
 }
 
 export default {
+	components: {
+		LoveCoupleGuide
+	},
 	data() {
 		return {
 			loading: false,
@@ -377,6 +386,12 @@ export default {
 		}
 	},
 	onShow() {
+		// 从发布页返回时重拉首屏，否则新发布的日常不会出现在列表里。
+		// 只在「本页刚发过内容」时刷新（发布页打标记），避免从图片预览等地方回来也整页重载、视频被反复暂停。
+		// ⚠️ 先判断 loading 再 consume：否则首屏请求还在跑时标记会被白白吃掉，这次刷新就丢了。
+		if (!this.loading && consumePageRefresh(FEED_REFRESH_KEY)) {
+			this.loadPostList(true)
+		}
 		this.syncHeaderProfile()
 		this.$nextTick(() => {
 			this.initVideoObserver()

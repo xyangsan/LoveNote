@@ -91,6 +91,9 @@ import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif']
 const VIDEO_EXTS = ['mp4', 'mov', 'm4v', 'avi', 'wmv', 'flv', 'mkv', 'webm']
 const DEFAULT_COMPRESS_OVER_SIZE = 10 * 1024 * 1024
+// 缩略图画布边长（px）。短边固定缩放到 thumbnail 短边（默认 200），长边按原比例算，
+// 画布要能装下长边，所以留 4 倍余量：200 短边 → 最长可到 800（≈4:1 的图）。
+const THUMBNAIL_CANVAS_MAX_EDGE = 800
 
 function toUniqueArray(value = [], fallback = []) {
 	const list = Array.isArray(value) ? value : fallback
@@ -443,10 +446,19 @@ export default {
 				height: this.getThumbnailOptionSize('height', 'thumbnailHeight')
 			}
 		},
+		// 缩略图的「短边像素」：宽高两个配置里取小的那个，默认 200
+		thumbnailShortEdge() {
+			const size = this.thumbnailSize
+			return Math.max(1, Math.min(size.width, size.height))
+		},
+		// 画布要装得下按原比例算出来的长边（短边 200 时，4:1 的图长边会到 800）
+		thumbnailCanvasEdge() {
+			return Math.max(THUMBNAIL_CANVAS_MAX_EDGE, this.thumbnailShortEdge * 4)
+		},
 		thumbnailCanvasStyle() {
 			return {
-				width: `${this.thumbnailSize.width}px`,
-				height: `${this.thumbnailSize.height}px`
+				width: `${this.thumbnailCanvasEdge}px`,
+				height: `${this.thumbnailCanvasEdge}px`
 			}
 		}
 	},
@@ -934,10 +946,6 @@ export default {
 			}
 			return Math.round(value)
 		},
-		getThumbnailBackgroundColor() {
-			const value = String(this.normalizedThumbnailOptions.backgroundColor || '').trim()
-			return value || '#ffffff'
-		},
 		getThumbnailFileType() {
 			const value = String(this.normalizedThumbnailOptions.fileType || '').trim().toLowerCase()
 			return ['jpg', 'jpeg', 'png'].includes(value) ? (value === 'jpeg' ? 'jpg' : value) : 'jpg'
@@ -990,24 +998,42 @@ export default {
 				}
 				const sourceWidth = Number(imageInfo.width || 0)
 				const sourceHeight = Number(imageInfo.height || 0)
-				const targetWidth = this.thumbnailSize.width
-				const targetHeight = this.thumbnailSize.height
-				if (!sourcePath || sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0) {
+				const shortEdge = this.thumbnailShortEdge
+				const canvasEdge = this.thumbnailCanvasEdge
+				if (!sourcePath || sourceWidth <= 0 || sourceHeight <= 0 || shortEdge <= 0) {
 					reject(new Error('缩略图尺寸无效'))
 					return
 				}
 
-				const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight)
-				const drawWidth = Math.max(1, Math.round(sourceWidth * scale))
-				const drawHeight = Math.max(1, Math.round(sourceHeight * scale))
-				const drawX = Math.round((targetWidth - drawWidth) / 2)
-				const drawY = Math.round((targetHeight - drawHeight) / 2)
+				// ⚠️ 统一按「短边对齐」算尺寸：短边固定缩放到 thumbnail 短边（默认 200），
+				// 长边按原图比例算出来。画面不裁剪、不补边、不改比例。
+				// 列表用 aspectFill 展示，短边决定清晰度；只让长边 ≤ 200 会让竖图/截图变糊。
+				// 原图短边不足目标值时保持原尺寸，避免把小图放大成糊图（体积反而更大）。
+				const minSide = Math.min(sourceWidth, sourceHeight)
+				let scale = shortEdge / minSide
+				if (scale > 1) {
+					scale = 1
+				}
+				let targetWidth = Math.max(1, Math.round(sourceWidth * scale))
+				let targetHeight = Math.max(1, Math.round(sourceHeight * scale))
+				// 极端比例（长边超出画布）等比回缩到画布内，保证能完整画出来
+				const longEdge = Math.max(targetWidth, targetHeight)
+				if (longEdge > canvasEdge) {
+					const shrink = canvasEdge / longEdge
+					targetWidth = Math.max(1, Math.round(targetWidth * shrink))
+					targetHeight = Math.max(1, Math.round(targetHeight * shrink))
+				}
+				const fileType = this.getThumbnailFileType()
 				const context = uni.createCanvasContext(this.thumbnailCanvasId, this)
 
-				context.clearRect(0, 0, targetWidth, targetHeight)
-				context.setFillStyle(this.getThumbnailBackgroundColor())
-				context.fillRect(0, 0, targetWidth, targetHeight)
-				context.drawImage(sourcePath, drawX, drawY, drawWidth, drawHeight)
+				context.clearRect(0, 0, canvasEdge, canvasEdge)
+				// jpg 不支持透明通道，透明 png 直接导出会变黑块：先只把「内容区域」铺白，
+				// 不铺整块画布，所以不会多出白边。
+				if (fileType !== 'png') {
+					context.setFillStyle('#ffffff')
+					context.fillRect(0, 0, targetWidth, targetHeight)
+				}
+				context.drawImage(sourcePath, 0, 0, targetWidth, targetHeight)
 				let exported = false
 				const exportCanvas = () => {
 					if (exported) {
@@ -1016,11 +1042,13 @@ export default {
 					exported = true
 					uni.canvasToTempFilePath({
 						canvasId: this.thumbnailCanvasId,
+						x: 0,
+						y: 0,
 						width: targetWidth,
 						height: targetHeight,
 						destWidth: targetWidth,
 						destHeight: targetHeight,
-						fileType: this.getThumbnailFileType(),
+						fileType,
 						quality: this.getThumbnailImageQuality() / 100,
 						success: (res) => {
 							const nextPath = String(res && (res.tempFilePath || res.filePath) || '').trim()

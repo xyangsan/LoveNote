@@ -72,11 +72,14 @@
 	} from '../../common/utils/file-upload.js'
 	import glyph from '../../components/love-editor/glyph.json'
 import { requirePageLogin } from '@/common/auth-entry.js'
+import { markPageRefresh } from '@/common/utils/page-refresh.js'
 
 	const MAX_FILE_SIZE = 100 * 1024 * 1024
 	const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
 	const DAILY_IMAGE_COMPRESS_QUALITY = 86
 	const THUMBNAIL_IMAGE_QUALITY = 45
+	// 与 pages/feed/list.vue 的 FEED_REFRESH_KEY 保持一致
+	const FEED_REFRESH_KEY = 'feed'
 
 	export default {
 		data() {
@@ -443,6 +446,16 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					title: '发布中...',
 					mask: true
 				})
+				// ⚠️ 微信小程序 showLoading / showToast 共用同一个提示槽，hideLoading 会把刚弹的 toast
+				// 一起关掉（失败的提示也会被吞）。改成弹 toast 之前先关 loading，且只关一次。
+				let submitLoadingVisible = true
+				const hideSubmitLoading = () => {
+					if (!submitLoadingVisible) {
+						return
+					}
+					submitLoadingVisible = false
+					uni.hideLoading()
+				}
 
 				try {
 					let uploadedFiles = []
@@ -468,6 +481,10 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 						throw new Error(result.errMsg || '发布失败')
 					}
 
+					// 通知日常列表页：下次 onShow 时重拉首屏（否则刚发的这条不显示）
+					markPageRefresh(FEED_REFRESH_KEY)
+
+					hideSubmitLoading()
 					uni.showToast({
 						title: '发布成功',
 						icon: 'success'
@@ -486,13 +503,13 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					}, 350)
 				} catch (error) {
 					console.error('publish daily failed', error)
+					hideSubmitLoading()
 					uni.showToast({
 						title: error.message || '发布失败',
 						icon: 'none'
 					})
 				} finally {
 					this.submitting = false
-					uni.hideLoading()
 				}
 			},
 			goBack() {
