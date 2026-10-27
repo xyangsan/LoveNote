@@ -224,6 +224,13 @@
 		</qf-image-cropper>
 
 		<love-couple-guide scene="feed" :active="noCouple" />
+
+		<love-image-preview
+			:visible="previewVisible"
+			:images="previewImageList"
+			:current="previewCurrentIndex"
+			@close="closeImagePreview"
+		/>
 	</view>
 </template>
 
@@ -236,6 +243,7 @@ import { useAppStateStore } from '../../store/app-state.js'
 import { requirePageLogin } from '@/common/auth-entry.js'
 import { consumePageRefresh } from '@/common/utils/page-refresh.js'
 import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
+import LoveImagePreview from '@/components/love-image-preview/love-image-preview.vue'
 
 const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
 // 发布页保存成功后会打这个标记，列表页在 onShow 里消费并重拉首屏
@@ -301,13 +309,18 @@ function getChooseResultFilePath(result = {}) {
 
 export default {
 	components: {
-		LoveCoupleGuide
+		LoveCoupleGuide,
+		LoveImagePreview
 	},
 	data() {
 		return {
 			loading: false,
 			noCouple: false,
 			postList: [],
+			// 图片预览（默认只加载缩略图，点「查看原图」才拉原图）
+			previewVisible: false,
+			previewImageList: [],
+			previewCurrentIndex: 0,
 			pagination: {
 				page: 1,
 				pageSize: 10,
@@ -1045,20 +1058,26 @@ export default {
 				.map((item, index) => ({
 					index,
 					type: String(item.media_type || '').toLowerCase(),
-					url: this.getPostMediaOriginalUrl(item)
+					// 预览默认只用缩略图，原图等用户点「查看原图」再按张加载
+					thumbnailUrl: this.getPostMediaThumbnailUrl(item),
+					originalUrl: this.getPostMediaOriginalUrl(item)
 				}))
-				.filter(item => item.type === 'image' && item.url)
-			const urls = imageList.map(item => item.url)
-			const currentIndex = imageList.findIndex(item => item.index === current)
+				.filter(item => item.type === 'image' && (item.thumbnailUrl || item.originalUrl))
 
-			if (!urls.length) {
+			if (!imageList.length) {
 				return
 			}
 
-			uni.previewImage({
-				urls,
-				current: currentIndex >= 0 ? currentIndex : 0
-			})
+			const currentIndex = imageList.findIndex(item => item.index === current)
+			this.previewImageList = imageList.map(item => ({
+				thumbnailUrl: item.thumbnailUrl,
+				originalUrl: item.originalUrl
+			}))
+			this.previewCurrentIndex = currentIndex >= 0 ? currentIndex : 0
+			this.previewVisible = true
+		},
+		closeImagePreview() {
+			this.previewVisible = false
 		},
 		async loadPostList(reset = false) {
 			if (this.loading) {
