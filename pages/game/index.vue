@@ -42,12 +42,21 @@
 					<text class="game-card__meta">{{ item.playerText }} · {{ item.durationText }}</text>
 				</view>
 			</view>
+			<view class="ad-view ad-grid">
+				<ad unit-id="adunit-38461899baf8b875"></ad>
+			</view>
+			<view class="ad-view">
+				<ad unit-id="adunit-7da35bd90c83c292"></ad>
+			</view>
 
 			<!-- 最近战绩 -->
 			<view class="game-section">
 				<view class="game-section__header">
 					<text class="game-section__title">最近战绩</text>
 					<text class="game-section__more" @click="handleOpenRecords">全部 ›</text>
+				</view>
+				<view v-if="!isLoggedIn || loadingRecords || !records.length" class="ad-view ad-grid">
+					<ad unit-id="adunit-7a1e5e50b619b450"></ad>
 				</view>
 
 				<view v-if="!isLoggedIn" class="game-empty" @click="handleRequireLogin">

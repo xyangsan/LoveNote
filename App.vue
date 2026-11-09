@@ -23,6 +23,9 @@
 		hideLoginModal,
 		subscribeLoginModal
 	} from './common/auth-modal.js'
+	import {
+		resetInterstitialAdState
+	} from './common/utils/interstitial-ad.js'
 
 	export default {
 		components: {
@@ -47,6 +50,8 @@
 			}
 		},
 		onLaunch() {
+			// 插屏广告每次冷启动重置「已展示」状态：一次 App 运行内最多弹一次
+			resetInterstitialAdState()
 			installRouteAuthGuard()
 			this.ensureAppStateStore().initAppBaseInfo()
 			uni.loadFontFace({
@@ -99,5 +104,8 @@
 	.app-root {
 		position: relative;
 		z-index: 0;
+	}
+	.ad-view {
+		margin-top: 15px;
 	}
 </style>

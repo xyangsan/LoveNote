@@ -109,6 +109,11 @@
 				<view class="uc-link" @click="rulesVisible = true">
 					<text class="uc-link__text">查看玩法说明</text>
 				</view>
+
+				<!-- 广告位：放页尾，不挤占「创建 / 加入」这两个主操作 -->
+				<view class="ad-view">
+					<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+				</view>
 			</template>
 
 			<!-- ============ 房间内 ============ -->
@@ -283,6 +288,12 @@
 						</text>
 					</view>
 				</template>
+
+				<!-- 广告位：只在等待开局 / 已结算时露出 ——
+				     对局中（发言 / 投票）整块留白会挪动席位与投票按钮的位置，容易误触 -->
+				<view v-if="showRoomAd" class="ad-view">
+					<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+				</view>
 
 				<!-- 内容区底部留白：把悬浮操作栏的高度让出来，
 				     否则最后一条对局记录会被压在栏下面看不见（值由 JS 按实际栏高写入） -->
@@ -898,6 +909,17 @@
 					return '战绩已保存，累计分保留到下一局'
 				}
 				return '准备好了，马上开始'
+			},
+			/**
+			 * 房间内是否露出广告位：只在对局未进行时显示。
+			 * 发言 / 投票阶段内容区是操作区（点席位、确认投票），
+			 * 多一块广告会把按钮推走，容易误触，所以整段对局中都隐藏。
+			 */
+			showRoomAd() {
+				if (!this.room) {
+					return false
+				}
+				return this.room.status === 'waiting' || this.state.phase === 'settled'
 			},
 			connText() {
 				if (this.connMode === 'push') {

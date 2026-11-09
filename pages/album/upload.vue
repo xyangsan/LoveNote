@@ -67,6 +67,10 @@
 				/>
 			</view>
 		</view>
+		
+		<view class="ad-view">
+			<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+		</view>
 
 		<view class="footer">
 			<button class="upload-btn" :disabled="!canUpload || uploading" :loading="uploading" @click="handleUpload">

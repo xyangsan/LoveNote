@@ -93,6 +93,9 @@
 			</view>
 		</view>
 
+		<view class="ad-view ad-banner">
+			<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+		</view>
 		<view class="section">
 			<view class="section__header">
 				<text class="section__title">今天想先做什么</text>
@@ -112,6 +115,13 @@
 					<text class="quick-grid__desc">{{ item.desc }}</text>
 				</view>
 			</view>
+		</view>
+
+		<view class="ad-view ad-grid">
+			<ad unit-id="adunit-7a1e5e50b619b450"></ad>
+		</view>
+		<view class="ad-view ad">
+			<ad unit-id="adunit-38461899baf8b875"></ad>
 		</view>
 
 		<view class="section">
@@ -208,7 +218,12 @@
 	import { getAnniversaryApi } from '../../common/api/anniversary.js'
 	import { getDailyApi } from '../../common/api/daily.js'
 	import { useAppStateStore } from '../../store/app-state.js'
+	import { tryShowInterstitialAd } from '../../common/utils/interstitial-ad.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
+
+	// 插屏广告展示概率：onLoad / 回到首页的 onShow 各抽一次，抽中才弹；
+	// 全 App 生命周期内最多弹一次（状态由 common/utils/interstitial-ad.js 维护，App 启动时重置）
+	const INTERSTITIAL_AD_SHOW_RATE = 1 / 3
 
 	function getDefaultCoupleCenterData() {
 		return {
@@ -390,6 +405,9 @@
 				loveDays,
 				startDateText: formatDate(startDate),
 				interstitialAdShow: true,
+				// onShow 只在「页面被盖住 / App 退到后台后再回来」时抽插屏广告，
+				// 首次 onShow（紧跟 onLoad）不抽，否则相当于 onLoad 连抽两次
+				allowInterstitialAdOnShow: false,
 				isLoggingIn: false,
 				appStateStore: null,
 				userInfo: null,
@@ -619,10 +637,23 @@
 				withShareTicket: true,
 				menus: ['shareAppMessage', 'shareTimeline']
 			})
+			
+			// 首屏抽一次：1/3 概率弹插屏（没抽中连实例都不创建，省一次素材请求）
+			// 全 App 生命周期内只弹一次，状态在 utils/interstitial-ad.js 里
+			tryShowInterstitialAd({ chance: INTERSTITIAL_AD_SHOW_RATE })
 			// #endif
 		},
 		onShow() {
 			this.restoreLoginState()
+			// 首次 onShow 紧跟 onLoad，已经抽过一次了，这里跳过；
+			// 之后每次「回到首页」（从别的页面返回 / App 切回前台）再随机抽一次
+			if (this.allowInterstitialAdOnShow) {
+				tryShowInterstitialAd({ chance: INTERSTITIAL_AD_SHOW_RATE })
+			}
+		},
+		onHide() {
+			// 页面被盖住或 App 退到后台：下一次 onShow 说明是「回来」，才允许再抽
+			this.allowInterstitialAdOnShow = true
 		},
 		onShareAppMessage() {
 			return {

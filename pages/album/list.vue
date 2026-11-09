@@ -76,6 +76,10 @@
 			<text class="load-more__text">已经到底了</text>
 		</view>
 
+		<view class="ad-view">
+			<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+		</view>
+		
 		<fui-actionsheet
 			:show="actionSheet.show"
 			:item-list="actionSheet.items"

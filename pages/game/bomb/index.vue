@@ -93,6 +93,7 @@
 					<view class="bomb-actions__link" @click="handleShowRules">
 						<text class="bomb-actions__link-text">查看玩法说明</text>
 					</view>
+					
 				</view>
 			</template>
 
@@ -165,6 +166,10 @@
 					</view>
 				</view>
 			</template>
+		
+			<view class="ad-view">
+				<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+			</view>
 		</view>
 
 		<!-- 爆炸动画层 -->

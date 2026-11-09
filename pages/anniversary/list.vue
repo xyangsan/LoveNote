@@ -81,7 +81,9 @@
 				</view>
 			</view>
 		</view>
-
+		<view class="ad-view">
+			<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+		</view>
 		<love-couple-guide scene="anniversary" :active="noCouple" />
 	</view>
 </template>

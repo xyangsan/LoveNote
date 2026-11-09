@@ -343,6 +343,10 @@
 							</view>
 						</view>
 					</view>
+					
+					<view class="ad-view">
+						<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+					</view>
 
 					<uni-calendar
 						v-if="calendarPopupVisible"

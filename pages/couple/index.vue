@@ -101,6 +101,10 @@
 					></fui-button>
 				</love-glass-card>
 
+				<view class="ad-view">
+					<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+				</view>
+			
 				<love-glass-card
 					v-if="!activeCouple"
 					title="发起绑定"

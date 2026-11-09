@@ -68,125 +68,132 @@
 			</view>
 
 			<view v-else class="moments-list">
-				<view v-for="post in postList" :key="post._id" class="moment-item" @click.stop>
-					<fui-avatar
-						:src="post.author_snapshot && post.author_snapshot.avatar_url"
-						error-src="/static/user-empty.png"
-						width="84"
-						height="84"
-						background="#f3f3f3"
-						radius="12"
-					></fui-avatar>
+				<template v-for="item in displayList">
+					<view v-if="item.type === 'ad'" :key="item.key" class="ad-view">
+						<!-- #ifdef MP-WEIXIN -->
+						<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+						<!-- #endif -->
+					</view>
+					<view v-else :key="item.key" class="moment-item" @click.stop>
+						<fui-avatar
+							:src="item.post.author_snapshot && item.post.author_snapshot.avatar_url"
+							error-src="/static/user-empty.png"
+							width="84"
+							height="84"
+							background="#f3f3f3"
+							radius="12"
+						></fui-avatar>
 
-					<view class="moment-item__main">
-						<text class="moment-item__nickname">{{ post.author_snapshot && post.author_snapshot.nickname || '恋人' }}</text>
+						<view class="moment-item__main">
+							<text class="moment-item__nickname">{{ item.post.author_snapshot && item.post.author_snapshot.nickname || '恋人' }}</text>
 
-						<text v-if="post.content" class="moment-item__content" selectable>{{ post.content }}</text>
-
-						<view
-							v-if="isVideoPost(post)"
-							class="moment-video-wrap feed-video-observer"
-							:data-video-id="getFeedVideoId(post)"
-						>
-							<love-auto-video
-								:ref="getFeedVideoRef(post)"
-								:video-id="getFeedVideoId(post)"
-								:custom-style="singleMediaBoxStyle(post)"
-								:src="getPostMediaOriginalUrl(post.media_list[0])"
-								:poster="getPostMediaThumbnailUrl(post.media_list[0])"
-								object-fit="contain"
-								inline-loop
-								@fullscreenclose="handleVideoFullscreenClose(post)"
-							></love-auto-video>
-						</view>
-
-						<image
-							v-else-if="isImagePost(post) && post.media_list.length === 1"
-							class="moment-image--single"
-							:style="singleMediaBoxStyle(post)"
-							:src="getPostMediaThumbnailUrl(post.media_list[0])"
-							mode="aspectFill"
-							@click.stop="previewImages(post, 0)"
-						/>
-
-						<view v-else-if="isImagePost(post)" class="moment-images">
-							<image
-								v-for="(media, index) in post.media_list"
-								:key="`${post._id}_${index}`"
-								class="moment-images__item"
-								:src="getPostMediaThumbnailUrl(media)"
-								mode="aspectFill"
-								@click.stop="previewImages(post, index)"
-							/>
-						</view>
-
-						<text v-if="locationText(post)" class="moment-item__location">{{ locationText(post) }}</text>
-
-						<view class="moment-item__meta-row">
-							<view class="moment-item__meta-left">
-								<text class="moment-item__time">{{ formatTime(post.create_time) }}</text>
-								<text
-									v-if="post.is_self"
-									class="moment-item__delete"
-									@click.stop="handleDelete(post)"
-								>{{ '删除' }}</text>
-							</view>
-
-							<view class="moment-actions">
-								<view
-									v-if="activeActionPostId === post._id"
-									class="moment-action-panel"
-									@click.stop
-								>
-									<text class="moment-action-panel__item" @click.stop="toggleLike(post)">{{ post.is_liked ? '取消赞' : '赞' }}</text>
-									<view class="moment-action-panel__divider"></view>
-									<text class="moment-action-panel__item" @click.stop="openCommentInput(post)">{{ '评论' }}</text>
-								</view>
-								<view class="moment-action-trigger" @click.stop="toggleActionPanel(post)">
-									<view class="moment-action-trigger__dot"></view>
-									<view class="moment-action-trigger__dot"></view>
-								</view>
-							</view>
-						</view>
-
-						<view v-if="hasInteractions(post)" class="moment-interactions">
-							<view class="moment-interactions__triangle"></view>
-
-							<view v-if="Number(post.like_count || 0) > 0" class="moment-like-row">
-								<text class="moment-like-row__icon">{{ '♥' }}</text>
-								<text class="moment-like-row__text">{{ likeSummary(post) }}</text>
-							</view>
+							<text v-if="item.post.content" class="moment-item__content" selectable>{{ item.post.content }}</text>
 
 							<view
-								v-if="Array.isArray(post.comment_list) && post.comment_list.length"
-								class="moment-comment-list"
-								:class="{ 'moment-comment-list--with-like': Number(post.like_count || 0) > 0 }"
+								v-if="isVideoPost(item.post)"
+								class="moment-video-wrap feed-video-observer"
+								:data-video-id="getFeedVideoId(item.post)"
 							>
-								<view v-for="comment in post.comment_list" :key="comment.comment_id" class="moment-comment-item">
-									<fui-avatar
-										:src="comment.avatar_url"
-										error-src="/static/user-empty.png"
-										width="44"
-										height="44"
-										background="#f4f4f4"
-										radius="8"
-									></fui-avatar>
+								<love-auto-video
+									:ref="getFeedVideoRef(item.post)"
+									:video-id="getFeedVideoId(item.post)"
+									:custom-style="singleMediaBoxStyle(item.post)"
+									:src="getPostMediaOriginalUrl(item.post.media_list[0])"
+									:poster="getPostMediaThumbnailUrl(item.post.media_list[0])"
+									object-fit="contain"
+									inline-loop
+									@fullscreenclose="handleVideoFullscreenClose(item.post)"
+								></love-auto-video>
+							</view>
 
-									<view class="moment-comment-item__main">
-										<view class="moment-comment-item__head">
-											<text class="moment-comment-item__name">{{ comment.nickname || '用户' }}</text>
-											<text class="moment-comment-item__time">{{ formatCommentTime(comment.create_time) }}</text>
+							<image
+								v-else-if="isImagePost(item.post) && item.post.media_list.length === 1"
+								class="moment-image--single"
+								:style="singleMediaBoxStyle(item.post)"
+								:src="getPostMediaThumbnailUrl(item.post.media_list[0])"
+								mode="aspectFill"
+								@click.stop="previewImages(item.post, 0)"
+							/>
+
+							<view v-else-if="isImagePost(item.post)" class="moment-images">
+								<image
+									v-for="(media, index) in item.post.media_list"
+									:key="`${item.post._id}_${index}`"
+									class="moment-images__item"
+									:src="getPostMediaThumbnailUrl(media)"
+									mode="aspectFill"
+									@click.stop="previewImages(item.post, index)"
+								/>
+							</view>
+
+							<text v-if="locationText(item.post)" class="moment-item__location">{{ locationText(item.post) }}</text>
+
+							<view class="moment-item__meta-row">
+								<view class="moment-item__meta-left">
+									<text class="moment-item__time">{{ formatTime(item.post.create_time) }}</text>
+									<text
+										v-if="item.post.is_self"
+										class="moment-item__delete"
+										@click.stop="handleDelete(item.post)"
+									>{{ '删除' }}</text>
+								</view>
+
+								<view class="moment-actions">
+									<view
+										v-if="activeActionPostId === item.post._id"
+										class="moment-action-panel"
+										@click.stop
+									>
+										<text class="moment-action-panel__item" @click.stop="toggleLike(item.post)">{{ item.post.is_liked ? '取消赞' : '赞' }}</text>
+										<view class="moment-action-panel__divider"></view>
+										<text class="moment-action-panel__item" @click.stop="openCommentInput(item.post)">{{ '评论' }}</text>
+									</view>
+									<view class="moment-action-trigger" @click.stop="toggleActionPanel(item.post)">
+										<view class="moment-action-trigger__dot"></view>
+										<view class="moment-action-trigger__dot"></view>
+									</view>
+								</view>
+							</view>
+
+							<view v-if="hasInteractions(item.post)" class="moment-interactions">
+								<view class="moment-interactions__triangle"></view>
+
+								<view v-if="Number(item.post.like_count || 0) > 0" class="moment-like-row">
+									<text class="moment-like-row__icon">{{ '♥' }}</text>
+									<text class="moment-like-row__text">{{ likeSummary(item.post) }}</text>
+								</view>
+
+								<view
+									v-if="Array.isArray(item.post.comment_list) && item.post.comment_list.length"
+									class="moment-comment-list"
+									:class="{ 'moment-comment-list--with-like': Number(item.post.like_count || 0) > 0 }"
+								>
+									<view v-for="comment in item.post.comment_list" :key="comment.comment_id" class="moment-comment-item">
+										<fui-avatar
+											:src="comment.avatar_url"
+											error-src="/static/user-empty.png"
+											width="44"
+											height="44"
+											background="#f4f4f4"
+											radius="8"
+										></fui-avatar>
+
+										<view class="moment-comment-item__main">
+											<view class="moment-comment-item__head">
+												<text class="moment-comment-item__name">{{ comment.nickname || '用户' }}</text>
+												<text class="moment-comment-item__time">{{ formatCommentTime(comment.create_time) }}</text>
+											</view>
+											<text
+												class="moment-comment-item__content"
+												@click.stop="openCommentInput(item.post, comment)"
+											>{{ commentDisplayContent(comment) }}</text>
 										</view>
-										<text
-											class="moment-comment-item__content"
-											@click.stop="openCommentInput(post, comment)"
-										>{{ commentDisplayContent(comment) }}</text>
 									</view>
 								</view>
 							</view>
 						</view>
 					</view>
-				</view>
+				</template>
 			</view>
 
 			<view v-if="!loading && postList.length > 0 && !pagination.hasMore" class="load-more">
@@ -248,6 +255,32 @@ import LoveImagePreview from '@/components/love-image-preview/love-image-preview
 const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
 // 发布页保存成功后会打这个标记，列表页在 onShow 里消费并重拉首屏
 const FEED_REFRESH_KEY = 'feed'
+
+// 广告插入：每 10~20 条动态之间随机插入一条广告；总数不足 10 条时在末尾补一条
+// 用 adSeed 做伪随机，保证同一次加载内插入位置稳定（点赞/评论更新列表时广告不跳动）
+const AD_SEED_MAX = 2147483647
+const AD_MIN_THRESHOLD = 10
+
+function buildAdPositions(total = 0, seed = 0) {
+	if (total <= 0) {
+		return []
+	}
+	if (total < AD_MIN_THRESHOLD) {
+		return [total]
+	}
+	let state = Math.floor(Math.abs(Number(seed) || 0)) % AD_SEED_MAX || 1
+	const random = () => {
+		state = (state * 48271) % AD_SEED_MAX
+		return state / AD_SEED_MAX
+	}
+	const positions = []
+	let cursor = AD_MIN_THRESHOLD + Math.floor(random() * 11) // 10~20
+	while (cursor <= total) {
+		positions.push(cursor)
+		cursor += AD_MIN_THRESHOLD + Math.floor(random() * 11)
+	}
+	return positions
+}
 
 function formatDateTime(timestamp) {
 	if (!timestamp) {
@@ -317,6 +350,7 @@ export default {
 			loading: false,
 			noCouple: false,
 			postList: [],
+			adSeed: 0,
 			// 图片预览（默认只加载缩略图，点「查看原图」才拉原图）
 			previewVisible: false,
 			previewImageList: [],
@@ -390,6 +424,21 @@ export default {
 		commentPlaceholder() {
 			const nickname = String(this.commentReplyNickname || '').trim()
 			return nickname ? `回复 ${nickname}` : '评论'
+		},
+		displayList() {
+			const posts = this.postList
+			if (!posts.length) {
+				return []
+			}
+			const adPositions = buildAdPositions(posts.length, this.adSeed)
+			const list = []
+			posts.forEach((post, index) => {
+				list.push({ type: 'post', key: `post_${post._id}`, post })
+				if (adPositions.includes(index + 1)) {
+					list.push({ type: 'ad', key: `ad_${index + 1}` })
+				}
+			})
+			return list
 		},
 		navBarBgColor() {
 			return this.navBarOpaque ? 'rgba(255, 247, 241, 0.98)' : 'rgba(255, 247, 241, 0)'
@@ -1090,6 +1139,7 @@ export default {
 					this.pagination.page = 1
 					this.postList = []
 					this.noCouple = false
+					this.adSeed = Math.floor(Math.random() * AD_SEED_MAX)
 					this.pauseAllFeedVideos()
 					this.destroyVideoObserver()
 				}
@@ -1393,6 +1443,11 @@ export default {
 	padding: 26rpx 24rpx 24rpx;
 	border-bottom: 1rpx solid #f1f1f1;
 	background: transparent;
+}
+
+.ad-view {
+	padding: 0 24rpx;
+	border-bottom: 1rpx solid #f1f1f1;
 }
 
 .moment-item__main {
