@@ -7,6 +7,7 @@ const { updateUserProfile, formatUserInfo } = require('../lib/profile')
 const { ensureUserNickname } = require('../lib/nickname')
 const { ensureUserAvatar } = require('../lib/avatar-pool')
 const { getUserById } = require('../lib/user-base')
+const { recordLoginLog } = require('../lib/login-log')
 const { formatError } = require('../lib/response')
 
 module.exports = class AuthService extends Service {
@@ -30,6 +31,17 @@ module.exports = class AuthService extends Service {
 			if (loginResult.errCode) {
 				return loginResult
 			}
+
+			// 登录流水：uni-id 只覆盖写 last_login_date，跨天就查不到「昨天多少人登录」。
+			// 这里补一条不可变记录，运营后台的每日登录数才有历史。
+			// recordLoginLog 内部吞异常，写失败不影响登录。
+			await recordLoginLog({
+				uid: loginResult.uid,
+				ip: this.ctx.CLIENTIP,
+				ua: this.ctx.CLIENTUA,
+				appid: this.ctx.APPID,
+				deviceId: params.deviceId
+			})
 
 			let userRecord = await ensureDefaultRole(loginResult.uid)
 			const hasProfilePayload = (

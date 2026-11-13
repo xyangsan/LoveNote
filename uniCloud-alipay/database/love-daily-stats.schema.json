@@ -1,0 +1,64 @@
+{
+	"bsonType": "object",
+	"required": ["date_key"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "快照ID，系统自动生成"
+		},
+		"date_key": {
+			"bsonType": "string",
+			"title": "日期",
+			"description": "东八区自然日 YYYY-MM-DD，唯一"
+		},
+		"new_users": {
+			"bsonType": "int",
+			"title": "当日新增用户"
+		},
+		"total_users": {
+			"bsonType": "int",
+			"title": "累计用户数",
+			"description": "截至当日 23:59:59 的注册用户总数"
+		},
+		"visits_uv": {
+			"bsonType": "int",
+			"title": "进入小程序人数",
+			"description": "当日 love-visits 去重访客数"
+		},
+		"visits_pv": {
+			"bsonType": "int",
+			"title": "进入次数"
+		},
+		"logins_uv": {
+			"bsonType": "int",
+			"title": "登录人数"
+		},
+		"login_source": {
+			"bsonType": "string",
+			"title": "登录数据来源",
+			"description": "log（uni-id-log 流水）/ last_login_date（旧数据兜底）/ empty"
+		},
+		"new_bindings": {
+			"bsonType": "int",
+			"title": "当日新增绑定对数"
+		},
+		"bound_total": {
+			"bsonType": "int",
+			"title": "累计绑定对数",
+			"description": "截至当日、当前仍处于已绑定状态的关系数（历史解绑无法还原）"
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

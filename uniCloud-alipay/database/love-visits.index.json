@@ -1,0 +1,46 @@
+[
+	{
+		"IndexName": "idx_date_key",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "date_key",
+					"Direction": "-1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_date_visitor",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "date_key",
+					"Direction": "1"
+				},
+				{
+					"Name": "visitor_key",
+					"Direction": "1"
+				}
+			]
+		}
+	},
+	{
+		"IndexName": "idx_uid_create_time",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "uid",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
+	}
+]

@@ -1,0 +1,63 @@
+{
+	"bsonType": "object",
+	"required": ["visitor_key", "date_key", "create_time"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "访问记录ID，系统自动生成"
+		},
+		"visitor_key": {
+			"bsonType": "string",
+			"title": "访客标识",
+			"description": "登录用户取 uid，游客取本地 device_id（guest:xxx），用于按天去重算 UV"
+		},
+		"uid": {
+			"bsonType": "string",
+			"title": "用户ID",
+			"description": "未登录时为空"
+		},
+		"openid": {
+			"bsonType": "string",
+			"title": "微信 openid",
+			"description": "登录用户从 uni-id-users.wx_openid 冗余一份，便于和微信后台对账"
+		},
+		"device_id": {
+			"bsonType": "string",
+			"title": "设备标识",
+			"description": "客户端本地生成并持久化，用于识别未登录访客"
+		},
+		"date_key": {
+			"bsonType": "string",
+			"title": "日期",
+			"description": "东八区自然日 YYYY-MM-DD"
+		},
+		"scene": {
+			"bsonType": "string",
+			"title": "场景值",
+			"description": "小程序启动场景值，如 1001 / 1007 / 1044"
+		},
+		"enter_path": {
+			"bsonType": "string",
+			"title": "进入页面",
+			"description": "启动时的页面路径，含 query"
+		},
+		"uni_platform": {
+			"bsonType": "string",
+			"title": "运行平台",
+			"description": "mp-weixin / app / h5 等"
+		},
+		"app_version": {
+			"bsonType": "string",
+			"title": "版本号"
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		}
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"name": "platform-daily-stats",
+	"version": "1.0.0",
+	"description": "运营管理：每日数据快照与访问流水清理",
+	"main": "index.js",
+	"cloudfunction-config": {
+		"timeout": 600,
+		"triggers": [
+			{
+				"name": "platformDailyStats",
+				"type": "timer",
+				"config": "0 10 0 * * * *"
+			}
+		]
+	}
+}

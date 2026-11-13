@@ -1,0 +1,69 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"description": "数据推送日志（仅云对象写入，客户端不可直接访问）",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "存储文档 ID，系统自动生成"
+		},
+		"sync_date": {
+			"bsonType": "int",
+			"description": "收益推送日期，格式：yyyymmdd，例:20240415"
+		},
+		"appid": {
+			"bsonType": "string",
+			"description": "应用ID"
+		},
+		"ad_region": {
+			"bsonType": "int",
+			"description": "数据来源，1国内广告，2国际广告",
+			"default": 1,
+			"enum": [{
+					"text": "国内广告",
+					"value": 1
+				},
+				{
+					"text": "国际广告",
+					"value": 2
+				}
+			]
+		},
+		"status": {
+			"bsonType": "int",
+			"description": "推送状态",
+			"enum": [{
+					"text": "未推送",
+					"value": 0
+				},
+				{
+					"text": "推送完成",
+					"value": 1
+				},
+				{
+					"text": "正在推送",
+					"value": 2
+				},
+				{
+					"text": "推送失败",
+					"value": 3
+				}
+			]
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "创建时间"
+		},
+		"update_time": {
+			"bsontype": "timestamp",
+			"description": "更新时间"
+		}
+	},
+	"version": "0.0.1"
+}

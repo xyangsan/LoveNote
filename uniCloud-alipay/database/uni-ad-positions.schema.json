@@ -1,0 +1,93 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"description": "应用广告位（仅云函数 / 云对象读写，客户端不可直接访问）",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "存储文档 ID，系统自动生成"
+		},
+		"appid": {
+			"bsonType": "string",
+			"description": "应用ID"
+		},
+		"ad_region": {
+			"bsonType": "int",
+			"description": "数据来源，1 国内广告，2 国际广告",
+			"default": 1,
+			"enum": [{
+					"text": "国内广告",
+					"value": 1
+				},
+				{
+					"text": "国际广告",
+					"value": 2
+				}
+			]
+		},
+		"adp_id": {
+			"bsonType": "string",
+			"description": "广告位ID"
+		},
+		"adp_name": {
+			"bsonType": "string",
+			"description": "广告位名称"
+		},
+		"adp_type": {
+			"bsonType": "int",
+			"description": "广告位类型",
+			"enum": [{
+					"text": "开屏",
+					"value": 1
+				},
+				{
+					"text": "信息流",
+					"value": 4
+				},
+				{
+					"text": "全屏视频",
+					"value": 7
+				},
+				{
+					"text": "激励视频",
+					"value": 9
+				},
+				{
+					"text": "Draw视频广告",
+					"value": 10
+				},
+				{
+					"text": "互动游戏",
+					"value": 13
+				},
+				{
+					"text": "内容联盟",
+					"value": 14
+				},
+				{
+					"text": "插屏广告",
+					"value": 15
+				},
+				{
+					"text": "小程序格子广告",
+					"value": 17
+				},
+				{
+					"text": "互动红包",
+					"value": 18
+				}
+			]
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "创建时间"
+		}
+	},
+	"version": "0.0.1"
+}

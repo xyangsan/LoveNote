@@ -1,0 +1,160 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"description": "广告位基础收益数据表（仅云函数 / 云对象读写，客户端不可直接访问）",
+	"required": [],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "存储文档 ID，系统自动生成"
+		},
+		"ad_region": {
+			"bsonType": "int",
+			"description": "数据来源，1 国内广告，2国际广告",
+			"default": 1,
+			"enum": [{
+					"text": "国内广告",
+					"value": 1
+				},
+				{
+					"text": "国际广告",
+					"value": 2
+				}
+			]
+		},
+		"revenue_date": {
+			"bsonType": "int",
+			"description": "收益日期，格式：yyyymmdd，例:20240415"
+		},
+		"appid": {
+			"bsonType": "string",
+			"description": "应用ID",
+			"foreignKey": "opendb-app-list.appid"
+		},
+		"adp_id": {
+			"bsonType": "string",
+			"description": "广告位ID",
+			"foreignKey": "uni-ad-positions.adp_id"
+		},
+		"ad_platform": {
+			"bsonType": "int",
+			"description": "平台 1：APP-Dcloud快捷广告 2：APP-渠道SDK广告 3：Web 4：小程序",
+			"enum": [{
+					"text": "APP-Dcloud快捷广告",
+					"value": 1
+				},
+				{
+					"text": "APP-渠道SDK广告",
+					"value": 2
+				},
+				{
+					"text": "Web广告",
+					"value": 3
+				},
+				{
+					"text": "小程序广告",
+					"value": 4
+				}
+			]
+		},
+		"show_count": {
+			"bsonType": "int",
+			"description": "展示量"
+		},
+		"click_count": {
+			"bsonType": "int",
+			"description": "点击量"
+		},
+		"click_rate": {
+			"bsonType": "double",
+			"description": "点击率"
+		},
+		"revenue": {
+			"bsonType": "int",
+			"description": "预估收益，单位: 厘"
+		},
+		"cpc": {
+			"bsonType": "double",
+			"description": "每次点击收益（单位：元，如：1.25）"
+		},
+		"cpm": {
+			"bsonType": "double",
+			"description": "千次展现收益（单位：元，如：5.25）"
+		},
+		"ad_type": {
+			"bsonType": "int",
+			"description": "广告类型",
+			"enum": [{
+					"text": "DCloud快捷广告-开屏",
+					"value": 91
+				},
+				{
+					"text": "DCloud快捷广告-红包",
+					"value": 92
+				},
+				{
+					"text": "DCloud快捷广告-PUSH",
+					"value": 93
+				},
+				{
+					"text": "DCloud快捷广告-uniMP"
+				},
+				{
+					"text": "开屏",
+					"value": 1
+				},
+				{
+					"text": "信息流",
+					"value": 4
+				},
+				{
+					"text": "全屏视频",
+					"value": 7
+				},
+				{
+					"text": "激励视频",
+					"value": 9
+				},
+				{
+					"text": "Draw视频广告",
+					"value": 10
+				},
+				{
+					"text": "互动游戏",
+					"value": 13
+				},
+				{
+					"text": "内容联盟",
+					"value": 14
+				},
+				{
+					"text": "插屏广告",
+					"value": 15
+				},
+				{
+					"text": "小程序格子广告",
+					"value": 17
+				},
+				{
+					"text": "互动红包",
+					"value": 18
+				}
+			]
+		},
+		"os": {
+			"bsonType": "string",
+			"defaultValue": "",
+			"description": "系统类型 android 或 ios  只有platform_id=2（渠道SDK广告）时才有该字段"
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "创建时间"
+		}
+	},
+	"version": "0.0.1"
+}

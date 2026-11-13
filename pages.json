@@ -185,6 +185,21 @@
 				"pageOrientation": "landscape"
 			}
 		}
+],
+	"subPackages": [
+		{
+			"root": "pages-operations",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "dark"
+					}
+				}
+			]
+		}
 	],
 	"tabBar": {
 		"color": "#707070",

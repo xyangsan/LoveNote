@@ -26,6 +26,37 @@
 	import {
 		resetInterstitialAdState
 	} from './common/utils/interstitial-ad.js'
+	import { getPlatformApi } from './common/api/platform.js'
+
+	const DEVICE_ID_KEY = 'love_device_id'
+
+	function resolveDeviceId() {
+		try {
+			let deviceId = uni.getStorageSync(DEVICE_ID_KEY)
+			if (!deviceId) {
+				deviceId = `d_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+				uni.setStorageSync(DEVICE_ID_KEY, deviceId)
+			}
+			return deviceId
+		} catch (error) {
+			return ''
+		}
+	}
+
+	function readLaunchOptions() {
+		try {
+			if (typeof uni.getLaunchOptionsSync === 'function') {
+				const options = uni.getLaunchOptionsSync() || {}
+				return {
+					scene: options.scene === undefined ? '' : options.scene,
+					path: options.path || ''
+				}
+			}
+		} catch (error) {
+			// 非小程序环境没有这个 API
+		}
+		return { scene: '', path: '' }
+	}
 
 	export default {
 		components: {
@@ -53,6 +84,7 @@
 			// 插屏广告每次冷启动重置「已展示」状态：一次 App 运行内最多弹一次
 			resetInterstitialAdState()
 			installRouteAuthGuard()
+			this.reportVisit()
 			this.ensureAppStateStore().initAppBaseInfo()
 			uni.loadFontFace({
 				global: true,
@@ -71,7 +103,40 @@
 				if (!this.appStateStore) {
 					this.appStateStore = useAppStateStore()
 				}
+
 				return this.appStateStore
+			},
+			/**
+			 * 上报「进入小程序」：每次冷启动一条，用于运营后台算每日 UV / 打开次数。
+			 * 任何异常都不能影响启动，所以整段包在 try 里，Promise 也吞掉。
+			 */
+			reportVisit() {
+				try {
+					const launch = readLaunchOptions()
+					const deviceId = resolveDeviceId()
+					let platform = ''
+					let version = ''
+
+					try {
+						const systemInfo = uni.getSystemInfoSync() || {}
+						platform = systemInfo.uniPlatform || ''
+						version = systemInfo.appVersion || ''
+					} catch (error) {
+						// 拿不到就不传
+					}
+
+					getPlatformApi()
+						.reportVisit({
+							deviceId,
+							scene: String(launch.scene === undefined ? '' : launch.scene),
+							path: launch.path || '',
+							platform,
+							version
+						})
+						.catch(() => {})
+				} catch (error) {
+					console.warn('reportVisit failed', error)
+				}
 			},
 			handleCloseLoginModal() {
 				closeLoginModal()

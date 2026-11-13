@@ -1,0 +1,14 @@
+[
+	{
+		"IndexName": "idx_date_key_unique",
+		"MgoKeySchema": {
+			"MgoIsUnique": true,
+			"MgoIndexKeys": [
+				{
+					"Name": "date_key",
+					"Direction": "1"
+				}
+			]
+		}
+	}
+]

@@ -1,0 +1,14 @@
+{
+    "name": "uni-ad-admin-receiver",
+    "dependencies": {},
+    "extensions": {
+        "uni-cloud-jql": {}
+    },
+    "cloudfunction-config": {
+        "path": "\/uni-ad-admin-receiver"
+    },
+    "origin-plugin-dev-name": "uni-ad-admin",
+    "origin-plugin-version": "1.0.3",
+    "plugin-dev-name": "uni-ad-admin",
+    "plugin-version": "1.0.3"
+}

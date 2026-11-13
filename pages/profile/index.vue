@@ -359,24 +359,38 @@
 				]
 			},
 			supportCards() {
-				return [
-					{
-						key: 'feedback',
-						title: '反馈&帮助',
-						desc: '遇到问题或有建议都可以告诉我们',
-						value: '',
-						iconText: '助',
-						iconBg: 'linear-gradient(135deg, #d7e8ff 0%, #afcfff 100%)'
-					},
-					{
-						key: 'version',
-						title: '版本信息',
-						desc: '查看当前应用版本和更新状态',
-						value: VERSION_TEXT,
-						iconText: '版',
-						iconBg: 'linear-gradient(135deg, #f6ddc3 0%, #eac6a3 100%)'
-					}
-				]
+				const cards = []
+
+				// 运营管理：仅 admin 角色可见（role 数组含 admin）
+				if (this.isAdmin) {
+					cards.push({
+						key: 'operations',
+						title: '运营管理',
+						desc: '用户、模块与广告收益数据',
+						value: 'ADMIN',
+						iconText: '运',
+						iconBg: 'linear-gradient(135deg, #f0d3a8 0%, #d9a86c 100%)'
+					})
+				}
+
+				cards.push({
+					key: 'feedback',
+					title: '反馈&帮助',
+					desc: '遇到问题或有建议都可以告诉我们',
+					value: '',
+					iconText: '助',
+					iconBg: 'linear-gradient(135deg, #d7e8ff 0%, #afcfff 100%)'
+				})
+				cards.push({
+					key: 'version',
+					title: '版本信息',
+					desc: '查看当前应用版本和更新状态',
+					value: VERSION_TEXT,
+					iconText: '版',
+					iconBg: 'linear-gradient(135deg, #f6ddc3 0%, #eac6a3 100%)'
+				})
+
+				return cards
 			},
 			menuGroups() {
 				return [
@@ -543,6 +557,11 @@
 					case 'plan':
 						uni.navigateTo({
 							url: '/pages/plan/list'
+						})
+						break
+					case 'operations':
+						uni.navigateTo({
+							url: '/pages-operations/index'
 						})
 						break
 					case 'feedback':

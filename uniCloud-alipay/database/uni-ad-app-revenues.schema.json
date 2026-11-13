@@ -1,0 +1,48 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": [],
+	"description": "按应用汇总日收益（仅云函数 / 云对象读写，客户端不可直接访问）",
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"ad_region": {
+			"bsonType": "int",
+			"description": "数据来源，1 国内广告，2国际广告",
+			"default": 1,
+			"enum": [{
+					"text": "国内广告",
+					"value": 1
+				},
+				{
+					"text": "国际广告",
+					"value": 2
+				}
+			]
+		},
+		"revenue_date": {
+			"bsonType": "int",
+			"description": "收益日期，格式：yyyymmdd，例:20240415"
+		},
+		"appid": {
+			"bsonType": "string",
+			"description": "应用ID",
+			"foreignKey": "opendb-app-list.appid"
+		},
+		"revenue": {
+			"bsonType": "int",
+			"description": "预估收益，单位: 厘"
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "创建时间"
+		}
+	}
+}

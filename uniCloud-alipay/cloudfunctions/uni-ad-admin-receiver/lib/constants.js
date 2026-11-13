@@ -1,0 +1,41 @@
+const STATUS = {
+	NORMAL: 0,
+	COMPLETE: 1,
+	PEDDING: 2,
+	FAILED: 3
+}
+
+const AD_REGION = {
+	CHINA: 1,
+	GLOBAL: 2
+}
+
+const AD_PLATFORM = {
+	APP_DCLOUD: 1,
+	APP_CHANNEL: 2,
+	WEB: 3,
+	MP: 4
+}
+
+const AD_TYPE = {
+	SPLASH: 1,
+	MESSAGE: 4,
+	FULL_VIDEO: 7,
+	VIDEO: 9,
+	DRAW: 10,
+	GAME: 13,
+	CONTENT: 14,
+	PLUG: 15,
+	GRID: 17,
+	RED_PACKET: 18,
+	DCLOUD_SPLASH: 91,
+	DCLOUD_RED_PACKET: 92,
+	DCLOUD_PUSH: 93
+}
+
+module.exports = {
+	STATUS,
+	AD_REGION,
+	AD_PLATFORM,
+	AD_TYPE
+}
