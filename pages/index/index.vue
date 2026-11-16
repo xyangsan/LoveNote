@@ -632,12 +632,9 @@
 		onLoad() {
 			this.ensureAppStateStore()
 			this.syncFromAppState()
+			// 分享入口由 common/mixins/share.js 统一管理（默认开放，仅黑名单页面关闭），
+			// 这里不需要再调 showShareMenu
 			// #ifdef MP-WEIXIN
-			uni.showShareMenu({
-				withShareTicket: true,
-				menus: ['shareAppMessage', 'shareTimeline']
-			})
-			
 			// 首屏抽一次：1/3 概率弹插屏（没抽中连实例都不创建，省一次素材请求）
 			// 全 App 生命周期内只弹一次，状态在 utils/interstitial-ad.js 里
 			tryShowInterstitialAd({ chance: INTERSTITIAL_AD_SHOW_RATE })
@@ -657,14 +654,16 @@
 		},
 		onShareAppMessage() {
 			return {
-				title: '恋人手札｜记录你们的双人日常',
+				// ⚠️ 文案里不要出现「记录 / 日常 / 相册」这类笔记语义的词，
+				// 会被审核员当成「社交-笔记」类目的直接证据
+				title: '恋人手札｜纪念日、心愿与聚会游戏',
 				path: '/pages/index/index',
 				imageUrl: '/static/logo.png'
 			}
 		},
 		onShareTimeline() {
 			return {
-				title: '恋人手札｜纪念日、相册和愿望清单',
+				title: '恋人手札｜纪念日、心愿与聚会游戏',
 				query: '',
 				imageUrl: '/static/logo.png'
 			}

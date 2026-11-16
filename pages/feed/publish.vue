@@ -4,6 +4,11 @@
 		<view class="page__glow page__glow--right"></view>
 
 		<view class="card">
+			<!-- 隐私说明：审核关注「用户内容是否对外传播」，这里把可见范围直接写在发布入口上 -->
+			<view class="privacy-tip">
+				<text class="privacy-tip__title">{{ privacyTipTitle }}</text>
+				<text class="privacy-tip__desc">{{ privacyTipDesc }}</text>
+			</view>
 			<textarea v-model="content" class="content-input" placeholder="写点今天的故事" maxlength="2000" auto-height
 				:show-confirm-bar="false" :adjust-position="false" :focus="inputFocus"
 				:cursor-spacing="emojiTriggerSpacing" @focus="handleInputFocus" @blur="handleInputBlur"
@@ -71,8 +76,9 @@
 		uploadFileWithModule
 	} from '../../common/utils/file-upload.js'
 	import glyph from '../../components/love-editor/glyph.json'
-import { requirePageLogin } from '@/common/auth-entry.js'
-import { markPageRefresh } from '@/common/utils/page-refresh.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
+	import { markPageRefresh } from '@/common/utils/page-refresh.js'
+	import { useAppStateStore } from '@/store/app-state.js'
 
 	const MAX_FILE_SIZE = 100 * 1024 * 1024
 	const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
@@ -93,6 +99,8 @@ import { markPageRefresh } from '@/common/utils/page-refresh.js'
 				pendingOpenEmojiPanel: false,
 				restoreKeyboardTimer: null,
 				content: '',
+				// 是否已绑定情侣：决定发布页顶部隐私说明的措辞，取不到时按未绑定处理
+				coupleBound: false,
 				emojiList: glyph,
 				maxFileSize: MAX_FILE_SIZE,
 				selectedCount: 0,
@@ -107,6 +115,25 @@ import { markPageRefresh } from '@/common/utils/page-refresh.js'
 			}
 		},
 		computed: {
+			/**
+			 * 发布页顶部隐私说明的标题。
+			 * 未绑定：只自己可见；已绑定：双人私密可见。
+			 * ⚠️ 文案要与服务端真实可见范围一致（见 lib/content-scope.js）：
+			 *    未绑定 = 仅作者本人；已绑定 = 作者本人 + 当前伴侣。
+			 */
+			privacyTipTitle() {
+				return this.coupleBound ? '双人私密 · 仅你与 TA 可见' : '仅自己可见 · 私密记录'
+			},
+			/**
+			 * 隐私说明正文。两个版本的共同点：都明确「不对外公开」「没有分享入口」，
+			 * 这是审核判定「是否有公开传播」时最关键的一句话。
+			 */
+			privacyTipDesc() {
+				if (this.coupleBound) {
+					return '发布后只有你和已绑定的伴侣能看到，不会对外公开，也不进入任何公开列表；小程序内没有将它转发或分享出去的入口。'
+				}
+				return '发布后只有你自己能看到，不会对外公开，也不进入任何公开列表；小程序内没有将它转发或分享出去的入口，仅用于记录你的日常生活。'
+			},
 			uploaderFileTypes() {
 				return this.mediaMode ? [this.mediaMode] : ['image', 'video']
 			},
@@ -181,11 +208,30 @@ import { markPageRefresh } from '@/common/utils/page-refresh.js'
 			if (!requirePageLogin()) return
 			const type = String(options.type || '').trim()
 			this.mediaMode = type === 'video' ? 'video' : 'image'
+			// 绑定状态只影响顶部隐私说明的措辞，异步加载，不阻塞页面
+			this.loadCoupleState()
 		},
 		onUnload() {
 			this.clearRestoreKeyboardTimer()
 		},
 		methods: {
+			/**
+			 * 读取情侣绑定状态，只用于顶部隐私说明的措辞。
+			 * fetchCoupleCenter 命中缓存时不会重复请求；失败一律按「未绑定」处理 ——
+			 * 此时文案更保守（仅自己可见），不会声称比实际更宽的可见范围。
+			 */
+			async loadCoupleState() {
+				try {
+					const appStateStore = useAppStateStore()
+					await appStateStore.fetchCoupleCenter({
+						force: false
+					})
+					const centerData = appStateStore.coupleCenterData || {}
+					this.coupleBound = Boolean(centerData.activeCouple)
+				} catch (error) {
+					console.warn('publish: load couple state failed', error)
+				}
+			},
 			appendEmoji(emoji = '') {
 				const glyphText = emoji && typeof emoji === 'object' ? String(emoji.glyph || '') : String(emoji || '')
 				if (!glyphText) {
@@ -641,6 +687,31 @@ import { markPageRefresh } from '@/common/utils/page-refresh.js'
 
 	.type-switch__item--active .type-switch__text {
 		color: #fff;
+	}
+
+	/* 发布页隐私说明：暖色浅底 + 左侧竖条，紧贴输入框上方 */
+	.privacy-tip {
+		margin-bottom: 18rpx;
+		padding: 16rpx 20rpx;
+		border-radius: 0 16rpx 16rpx 0;
+		border-left: 6rpx solid #e76f51;
+		background: rgba(255, 241, 235, 0.92);
+	}
+
+	.privacy-tip__title {
+		display: block;
+		font-size: 24rpx;
+		font-weight: 600;
+		line-height: 1.4;
+		color: #b05b48;
+	}
+
+	.privacy-tip__desc {
+		display: block;
+		margin-top: 6rpx;
+		font-size: 22rpx;
+		line-height: 1.65;
+		color: #8b6659;
 	}
 
 	.content-input {

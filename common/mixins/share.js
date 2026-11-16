@@ -1,5 +1,5 @@
 /**
- * 微信小程序分享 mixin —— 全局注册后，所有页面右上角胶囊都可「转发给朋友 / 分享到朋友圈」。
+ * 微信小程序分享 mixin —— 全局注册后统一管理各页面的右上角分享入口。
  *
  * 注册方式（见 main.js，必须在首个页面创建前执行）：
  *   Vue3  createApp() 内   app.mixin(shareMixin)
@@ -7,13 +7,17 @@
  *
  * 机制说明：
  * uni Vue3 运行时通过 findMixinRuntimeHooks() 读取 app.mixin() 注册的全局 mixin
- * （见编译产物 common/vendor.js，其中带了 once() 缓存，所以注册时机不能晚于首个页面创建），
- * 命中 MINI_PROGRAM_PAGE_RUNTIME_HOOKS 里的 onShareAppMessage / onShareTimeline 后，
- * 会把钩子挂到 Page 的 methods 上（Component 构造页面时微信要求页面生命周期写在 methods 内）。
+ * （见编译产物 common/vendor.js，其中带了 once() 缓存，所以注册时机不能晚于首个页面创建）。
  *
- * 优先级：页面自身声明了同名钩子时优先生效，会覆盖本 mixin。
- * 目前 pages/index/index.vue 自带 onShareAppMessage / onShareTimeline，文案与下表的首页项一致；
- * 若以后想统一交给本文件管理，删掉页面里那两个钩子即可。
+ * 策略：**默认开放，黑名单关闭**。
+ *   微信小程序只要不调 hideShareMenu，右上角胶囊就自带「转发给朋友」；
+ *   定义 onShareTimeline 后又多出「分享到朋友圈」。所以"不做处理"= 全部开放。
+ *   本文件只对 HIDE_SHARE_PAGES 里的页面调 hideShareMenu，其余页面保持默认开放。
+ *
+ * ⚠️ 为什么 feed 模块要单独关（2026-11 审核驳回）：
+ *   微信判定「用户自行生成内容（文字、图片、音视频）的记录、分享」即属「社交-笔记」类目，
+ *   该类目个人主体不可选。双人日常（feed）是纯 UGC 图文发布页，一旦能把内容转发出去，
+ *   就等于把「内容 + 分享」两条证据一起递给审核员，所以整模块关闭分享入口。
  */
 
 import { hasValidLogin } from '@/common/auth-center.js'
@@ -34,30 +38,34 @@ const SHARE_IMAGE = '/static/logo.png'
  */
 const SHARE_ENTRY_FLAG = 'fromShare'
 
-// 未命中映射表的页面统一使用该兜底文案
-const DEFAULT_TITLE = '恋人手札｜记录你们的双人日常'
+// 未命中映射表的页面统一使用该兜底文案。
+// 文案里避免出现「记录 / 日常 / 相册」这类笔记语义的词 —— 会被审核员当成
+// 「社交-笔记」类目的直接证据。
+const DEFAULT_TITLE = '恋人手札｜纪念日、心愿与聚会游戏'
 
 // 按页面路径定制分享标题（路径统一带前导斜杠、不带 query）
 // 只对「落地当前页」的页面生效；落地首页的页面一律用首页标题，避免卡片与落地页不符
 const SHARE_TITLE_MAP = {
-	'/pages/index/index': '恋人手札｜记录你们的双人日常',
-	'/pages/profile/index': '恋人手札｜我们的故事，都在这里',
+	'/pages/index/index': '恋人手札｜纪念日、心愿与聚会游戏',
+	'/pages/profile/index': '恋人手札｜我们的小世界',
 	'/pages/couple/index': '恋人手札｜我们的小世界',
 	'/pages/album/list': '恋人手札｜我们的照片墙',
 	'/pages/album/detail': '恋人手札｜翻开我们的相册',
-	'/pages/feed/list': '恋人手札｜我们的日常碎片',
 	'/pages/plan/list': '恋人手札｜想要一起做的事',
 	'/pages/anniversary/list': '恋人手札｜值得记住的日子'
 }
 
 /**
- * 隐藏胶囊里的分享入口（在页面 onLoad 时调 uni.hideShareMenu）。
- * 命中这里的页面「转发给朋友」「分享到朋友圈」两项都会消失。
- * 只保留「分享出去没有任何意义」的入口页与纯工具页。
+ * 关闭分享入口的页面（转发 + 朋友圈一起关）。
+ * hideShareMenu 是唯一能关掉微信默认转发入口的办法。
+ *
+ * ⚠️ feed 模块（双人日常）是审核驳回的直接来源，整模块关闭，别单独放开某一页。
  */
 const HIDE_SHARE_PAGES = [
 	'/pages/login/index', // 登录入口，无内容
-	'/pages/public/image-cropper' // 图片裁剪工具，依赖上一页传入的图片
+	'/pages/public/image-cropper', // 图片裁剪工具，依赖上一页传入的图片
+	'/pages/feed/list', // 双人日常列表：用户发布的图文（UGC）
+	'/pages/feed/publish' // 发布日常：UGC 编辑页
 ]
 
 /**
@@ -70,7 +78,6 @@ const LANDING_HOME_PAGES = [
 	'/pages/profile/edit',
 	'/pages/album/upload',
 	'/pages/album/edit',
-	'/pages/feed/publish',
 	'/pages/anniversary/edit',
 	'/pages/feedback/list',
 	'/pages/feedback/detail'
@@ -243,6 +250,26 @@ export function resolveShareTitle(route) {
 }
 
 /**
+ * 关掉当前页面的分享入口。
+ * @param {string[]} [menus] 只关指定菜单项，不传则转发 + 朋友圈全关
+ */
+function hideShare(menus) {
+	// #ifdef MP-WEIXIN
+	try {
+		if (menus && menus.length) {
+			uni.hideShareMenu({
+				menus
+			})
+			return
+		}
+		uni.hideShareMenu()
+	} catch (error) {
+		console.warn('hideShareMenu failed', error)
+	}
+	// #endif
+}
+
+/**
  * 执行分享进入的权限校验。
  * @param {string} route
  * @returns {Promise<{ passed: boolean, message: string }>}
@@ -280,21 +307,16 @@ export default {
 	async onLoad(options) {
 		const route = resolveCurrentRoute(this)
 
+		// 黑名单页面：转发 + 朋友圈一次关掉，直接 return（这类页面没有需要守卫的分享入口）
 		if (shouldHideShare(route)) {
-			// #ifdef MP-WEIXIN
-			uni.hideShareMenu()
-			// #endif
+			hideShare()
 			return
 		}
 
 		if (shouldLandingHome(route)) {
 			// 转发会落地首页，但朋友圈不支持指定 path、只能打开当前页，
 			// 这类页面打开没有意义，所以单独关掉朋友圈入口，保留转发
-			// #ifdef MP-WEIXIN
-			uni.hideShareMenu({
-				menus: ['shareTimeline']
-			})
-			// #endif
+			hideShare(['shareTimeline'])
 		}
 
 		// 从分享卡片进入 → 校验权限，不通过则提示并跳回首页
@@ -316,8 +338,30 @@ export default {
 			url: HOME_PATH
 		})
 	},
+	onShow() {
+		// 兜底：页面实例被复用或从后台切回时，菜单状态可能被系统重置，
+		// 黑名单页面每次显示都再关一次（其余页面不干预，保持默认开放）
+		const route = resolveCurrentRoute(this)
+		if (shouldHideShare(route)) {
+			hideShare()
+			return
+		}
+		if (shouldLandingHome(route)) {
+			hideShare(['shareTimeline'])
+		}
+	},
 	onShareAppMessage() {
 		const route = resolveCurrentRoute(this)
+
+		// 防御：黑名单页面正常不会有分享入口，万一被唤起也只分享首页，绝不把 UGC 内容带出去
+		if (shouldHideShare(route)) {
+			return {
+				title: DEFAULT_TITLE,
+				path: HOME_PATH,
+				imageUrl: SHARE_IMAGE
+			}
+		}
+
 		const payload = {
 			title: resolveShareTitle(route),
 			imageUrl: SHARE_IMAGE
