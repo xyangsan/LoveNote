@@ -115,10 +115,10 @@
 	} from '../../common/auth-center.js'
 	import { getAuthApi } from '../../common/api/auth.js'
 	import { useAppStateStore } from '../../store/app-state.js'
+	import { APP_VERSION_TEXT } from '../../common/version.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const PROFILE_DEFAULT_AVATAR = '/static/user-empty.png'
-	const VERSION_TEXT = 'v1.0.0'
 
 	function formatDate(timestamp) {
 		if (!timestamp) {
@@ -385,7 +385,7 @@
 					key: 'version',
 					title: '版本信息',
 					desc: '查看当前应用版本和更新状态',
-					value: VERSION_TEXT,
+					value: APP_VERSION_TEXT,
 					iconText: '版',
 					iconBg: 'linear-gradient(135deg, #f6ddc3 0%, #eac6a3 100%)'
 				})
@@ -590,7 +590,7 @@
 						break
 					case 'version':
 						uni.showToast({
-							title: `当前版本 ${VERSION_TEXT}`,
+							title: `当前版本 ${APP_VERSION_TEXT}`,
 							icon: 'none'
 						})
 						break
