@@ -103,7 +103,7 @@
 			</view>
 			<view class="quick-grid">
 				<view
-					v-for="item in quickActions"
+					v-for="item in visibleQuickActions"
 					:key="item.title"
 					class="quick-grid__item"
 					@click="handleAction(item.action || item.title)"
@@ -148,7 +148,8 @@
 			</view>
 		</view>
 
-		<view class="section">
+		<!-- 双人日常：受运营管理「权限」tab 的 feed 显示开关控制，默认关闭 -->
+		<view v-if="feedVisible" class="section">
 			<view class="section__header">
 				<text class="section__title">最近双人动态</text>
 				<text class="section__hint">{{ momentHint }}</text>
@@ -217,6 +218,7 @@
 	import { getAuthApi } from '../../common/api/auth.js'
 	import { getAnniversaryApi } from '../../common/api/anniversary.js'
 	import { getDailyApi } from '../../common/api/daily.js'
+	import { getPlatformApi } from '../../common/api/platform.js'
 	import { useAppStateStore } from '../../store/app-state.js'
 	import { tryShowInterstitialAd } from '../../common/utils/interstitial-ad.js'
 	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
@@ -224,6 +226,49 @@
 	// 插屏广告展示概率：onLoad / 回到首页的 onShow 各抽一次，抽中才弹；
 	// 全 App 生命周期内最多弹一次（状态由 common/utils/interstitial-ad.js 维护，App 启动时重置）
 	const INTERSTITIAL_AD_SHOW_RATE = 1 / 3
+
+	// 首页模块显示开关的本地缓存：先用上次结果渲染，避免每次进首页都闪一下。
+	// 存一个对象而不是每个模块一个 key，后续加模块只要在 DEFAULT_MODULE_VISIBILITY 里加一行
+	const MODULE_VISIBILITY_CACHE_KEY = 'love_module_visibility'
+	const DEFAULT_MODULE_VISIBILITY = {
+		feedVisible: false, // 双人日常：权限类开关，默认关闭
+		gameVisible: true // 聚会游戏：功能类开关，默认开启
+	}
+	// 首页是 tabBar 页，onShow 触发很密（从任何页面返回都算），配置最多 30 秒对齐一次
+	const MODULE_VISIBILITY_FETCH_INTERVAL = 30 * 1000
+	let lastModuleVisibilityFetchAt = 0
+
+	/** 缓存缺失 / 读失败一律用默认值（feed 关、game 开），别把异常带进首屏 */
+	function readModuleVisibilityCache() {
+		try {
+			const cached = uni.getStorageSync(MODULE_VISIBILITY_CACHE_KEY)
+			if (!cached || typeof cached !== 'object') {
+				// 兼容上一版单独存的 feed 布尔值（love_feed_visible），读到就接着用，避免升级后闪一下
+				const legacyFeed = uni.getStorageSync('love_feed_visible')
+				return {
+					feedVisible: legacyFeed === true || legacyFeed === 'true' || legacyFeed === 1,
+					gameVisible: DEFAULT_MODULE_VISIBILITY.gameVisible
+				}
+			}
+			return {
+				feedVisible: cached.feedVisible === true,
+				gameVisible: cached.gameVisible !== false
+			}
+		} catch (error) {
+			return Object.assign({}, DEFAULT_MODULE_VISIBILITY)
+		}
+	}
+
+	function writeModuleVisibilityCache(visibility = {}) {
+		try {
+			uni.setStorageSync(MODULE_VISIBILITY_CACHE_KEY, {
+				feedVisible: visibility.feedVisible === true,
+				gameVisible: visibility.gameVisible !== false
+			})
+		} catch (error) {
+			// 缓存写失败不影响本次渲染，下次进首页重新拉服务端配置
+		}
+	}
 
 	function getDefaultCoupleCenterData() {
 		return {
@@ -400,6 +445,9 @@
 			const today = new Date()
 			const oneDay = 24 * 60 * 60 * 1000
 			const loveDays = Math.max(1, Math.floor((today.getTime() - startDate.getTime()) / oneDay) + 1)
+			// 模块开关先按上次结果渲染（feed 默认关、game 默认开），onShow 再对齐服务端配置。
+			// 放在 data 里而不是 onLoad：首屏就按缓存画，省掉一次「先全显示再收起」的跳动
+			const visibility = readModuleVisibilityCache()
 
 			return {
 				loveDays,
@@ -408,6 +456,10 @@
 				// onShow 只在「页面被盖住 / App 退到后台后再回来」时抽插屏广告，
 				// 首次 onShow（紧跟 onLoad）不抽，否则相当于 onLoad 连抽两次
 				allowInterstitialAdOnShow: false,
+				// 双人日常：权限类开关，默认关闭
+				feedVisible: visibility.feedVisible,
+				// 聚会游戏：功能类开关，默认开启
+				gameVisible: visibility.gameVisible,
 				isLoggingIn: false,
 				appStateStore: null,
 				userInfo: null,
@@ -461,6 +513,18 @@
 			}
 		},
 		computed: {
+			// 关掉的模块不在快捷入口里留格子（关 feed 剩 4 个，两个都关剩 3 个，flex 自动均分）
+			visibleQuickActions() {
+				return this.quickActions.filter((item) => {
+					if (item.action === 'feed') {
+						return this.feedVisible
+					}
+					if (item.action === 'game') {
+						return this.gameVisible
+					}
+					return true
+				})
+			},
 			isLoggedIn() {
 				return Boolean(this.userInfo && this.userInfo._id)
 			},
@@ -642,6 +706,8 @@
 		},
 		onShow() {
 			this.restoreLoginState()
+			// 运营侧刚改过开关时，回到首页要立刻按新配置渲染
+			this.fetchModuleVisibility()
 			// 首次 onShow 紧跟 onLoad，已经抽过一次了，这里跳过；
 			// 之后每次「回到首页」（从别的页面返回 / App 切回前台）再随机抽一次
 			if (this.allowInterstitialAdOnShow) {
@@ -733,6 +799,11 @@
 				}
 			},
 			async fetchMomentPreview({ silent = true } = {}) {
+				// 双人日常被运营关掉后，首页连这份列表都不该请求
+				if (!this.feedVisible) {
+					this.moments = getDefaultMomentPreviewList()
+					return
+				}
 				// 同上：未绑定也能发双人日常，别用 activeCouple 挡请求
 				if (!this.isLoggedIn) {
 					this.moments = getDefaultMomentPreviewList()
@@ -764,6 +835,47 @@
 					}
 				}
 			},
+			// 运营管理「权限」tab 的模块开关：游客也按同一口径渲染，读不到就用默认值
+			async fetchModuleVisibility() {
+				const now = Date.now()
+				if (now - lastModuleVisibilityFetchAt < MODULE_VISIBILITY_FETCH_INTERVAL) {
+					return
+				}
+				lastModuleVisibilityFetchAt = now
+				try {
+					const result = await getPlatformApi().getModuleVisibility()
+					if (!result || (result.errCode && result.errCode !== 0)) {
+						return
+					}
+					this.applyModuleVisibility(result.data || {})
+				} catch (error) {
+					// 配置接口失败就沿用缓存值，不影响首页其它模块
+					console.warn('fetchModuleVisibility failed', error)
+				}
+			},
+			applyModuleVisibility(visibility = {}) {
+				const feedVisible = visibility.feedVisible === true
+				const gameVisible = visibility.gameVisible !== false
+				const feedChanged = this.feedVisible !== feedVisible
+				this.feedVisible = feedVisible
+				this.gameVisible = gameVisible
+				writeModuleVisibilityCache({
+					feedVisible,
+					gameVisible
+				})
+
+				if (!feedVisible) {
+					this.moments = getDefaultMomentPreviewList()
+					return
+				}
+
+				// 缓存里是「关」、服务端刚打开：补一次列表请求，否则这次进首页要等下次才有内容
+				if (feedChanged && this.isLoggedIn && !this.moments.length) {
+					this.fetchMomentPreview({
+						silent: true
+					})
+				}
+			},
 			async loadHomeSections({ silent = true } = {}) {
 				if (!this.isLoggedIn) {
 					this.resetHomeSections()
@@ -784,45 +896,54 @@
 			},
 			relationshipStats() {
 				const stats = this.overviewStats || {}
-				if (!stats.isBound) {
-					return [
+				const list = stats.isBound
+					? [
 						{
+							key: 'anniversary',
+							label: '共同纪念日',
+							value: `${this.safeCount(stats.anniversaryTotal)}`
+						},
+						{
+							key: 'feed',
+							label: '双人动态',
+							value: `${this.safeCount(stats.dailyTotal)}`
+						},
+						{
+							key: 'plan',
+							label: '共同计划',
+							value: `${this.safeCount(stats.planTotal)}`
+						},
+						{
+							key: 'album',
+							label: '相册',
+							value: `${this.safeCount(stats.albumTotal)}`
+						}
+					]
+					: [
+						{
+							key: 'anniversary',
 							label: '共同纪念日',
 							value: '--'
 						},
 						{
+							key: 'feed',
 							label: '双人动态',
 							value: '--'
 						},
 						{
+							key: 'plan',
 							label: '共同计划',
 							value: '--'
 						},
 						{
+							key: 'album',
 							label: '相册',
 							value: '--'
 						}
 					]
-				}
 
-				return [
-					{
-						label: '共同纪念日',
-						value: `${this.safeCount(stats.anniversaryTotal)}`
-					},
-					{
-						label: '双人动态',
-						value: `${this.safeCount(stats.dailyTotal)}`
-					},
-					{
-						label: '共同计划',
-						value: `${this.safeCount(stats.planTotal)}`
-					},
-					{
-						label: '相册',
-						value: `${this.safeCount(stats.albumTotal)}`
-					}
-				]
+				// 双人日常关掉后，统计里也不留「双人动态」—— 看得到数字却找不到入口更奇怪
+				return this.feedVisible ? list : list.filter((item) => item.key !== 'feed')
 			},
 			async restoreLoginState() {
 				const appStateStore = this.ensureAppStateStore()

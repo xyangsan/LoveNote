@@ -45,6 +45,15 @@
 			}
 		},
 		{
+			"path": "pages/public/image-viewer",
+			"style": {
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false,
+				"disableScroll": true,
+				"backgroundColor": "#000000"
+			}
+		},
+		{
 			"path": "pages/couple/index",
 			"style": {
 				"navigationBarTitleText": "情侣信息",

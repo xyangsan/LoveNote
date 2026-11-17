@@ -9,6 +9,11 @@ export function getPlatformApi() {
 			getModuleStats: 'platform/getModuleStats',
 			getAdStats: 'platform/getAdStats',
 			getAdDiag: 'platform/getAdDiag',
+			getPermissionSettings: 'platform/getPermissionSettings',
+			updatePermissionSettings: 'platform/updatePermissionSettings',
+			getMediaCleanupStats: 'platform/getMediaCleanupStats',
+			cleanupDailyMedia: 'platform/cleanupDailyMedia',
+			getModuleVisibility: 'platform/getModuleVisibility',
 			reportVisit: 'platform/reportVisit'
 		})
 	}

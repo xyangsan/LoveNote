@@ -1,0 +1,40 @@
+{
+	"bsonType": "object",
+	"required": ["key"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "配置ID，系统自动生成"
+		},
+		"key": {
+			"bsonType": "string",
+			"title": "配置键",
+			"description": "全局开关的唯一键，如 feed_visible（双人日常是否在首页展示）"
+		},
+		"value": {
+			"description": "配置值，布尔 / 字符串 / 数字；记录不存在时由服务端给默认值（权限类开关默认关闭）"
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "说明",
+			"description": "运营侧备注，便于后续排查是谁为什么要这个开关"
+		},
+		"update_uid": {
+			"bsonType": "string",
+			"title": "最后修改人"
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"update_time": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

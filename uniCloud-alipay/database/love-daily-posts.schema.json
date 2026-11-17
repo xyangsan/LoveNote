@@ -182,6 +182,11 @@
 			"title": "是否删除",
 			"defaultValue": false
 		},
+		"media_cleaned_at": {
+			"bsonType": "long",
+			"title": "云文件清理时间",
+			"description": "运营在「权限 → 云存储清理」里回收原图/缩略图后写入；有该字段的记录不会再被扫描"
+		},
 		"create_time": {
 			"bsonType": "long",
 			"title": "创建时间"

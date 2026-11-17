@@ -68,13 +68,13 @@
 			</view>
 
 			<view v-else class="moments-list">
-				<template v-for="item in displayList">
-					<view v-if="item.type === 'ad'" :key="item.key" class="ad-view">
+				<template v-for="item in displayList" :key="item.key">
+					<view v-if="item.type === 'ad'" class="ad-view">
 						<!-- #ifdef MP-WEIXIN -->
 						<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
 						<!-- #endif -->
 					</view>
-					<view v-else :key="item.key" class="moment-item" @click.stop>
+					<view v-else class="moment-item" @click.stop>
 						<fui-avatar
 							:src="item.post.author_snapshot && item.post.author_snapshot.avatar_url"
 							error-src="/static/user-empty.png"
@@ -231,13 +231,6 @@
 		</qf-image-cropper>
 
 		<love-couple-guide scene="feed" :active="noCouple" />
-
-		<love-image-preview
-			:visible="previewVisible"
-			:images="previewImageList"
-			:current="previewCurrentIndex"
-			@close="closeImagePreview"
-		/>
 	</view>
 </template>
 
@@ -246,11 +239,11 @@ import { DEFAULT_AVATAR, getCachedUserProfile } from '../../common/auth-center.j
 import { getDailyApi } from '../../common/api/daily.js'
 import { getUserApi } from '../../common/api/user.js'
 import { uploadFileWithModule } from '../../common/utils/file-upload.js'
+import { openImageViewer } from '../../common/utils/image-viewer.js'
 import { useAppStateStore } from '../../store/app-state.js'
 import { requirePageLogin } from '@/common/auth-entry.js'
 import { consumePageRefresh } from '@/common/utils/page-refresh.js'
 import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
-import LoveImagePreview from '@/components/love-image-preview/love-image-preview.vue'
 
 const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
 // 发布页保存成功后会打这个标记，列表页在 onShow 里消费并重拉首屏
@@ -342,8 +335,7 @@ function getChooseResultFilePath(result = {}) {
 
 export default {
 	components: {
-		LoveCoupleGuide,
-		LoveImagePreview
+		LoveCoupleGuide
 	},
 	data() {
 		return {
@@ -351,10 +343,6 @@ export default {
 			noCouple: false,
 			postList: [],
 			adSeed: 0,
-			// 图片预览（默认只加载缩略图，点「查看原图」才拉原图）
-			previewVisible: false,
-			previewImageList: [],
-			previewCurrentIndex: 0,
 			pagination: {
 				page: 1,
 				pageSize: 10,
@@ -1103,30 +1091,23 @@ export default {
 		},
 		previewImages(post = {}, current = 0) {
 			const mediaList = Array.isArray(post.media_list) ? post.media_list : []
+			// 列表里铺的是缩略图；点击后跳 image-viewer 页看原图（原图有多张就支持左右滑）
 			const imageList = mediaList
+				.filter((item) => item && typeof item === 'object')
 				.map((item, index) => ({
 					index,
 					type: String(item.media_type || '').toLowerCase(),
-					// 预览默认只用缩略图，原图等用户点「查看原图」再按张加载
 					thumbnailUrl: this.getPostMediaThumbnailUrl(item),
 					originalUrl: this.getPostMediaOriginalUrl(item)
 				}))
-				.filter(item => item.type === 'image' && (item.thumbnailUrl || item.originalUrl))
+				.filter(item => (!item.type || item.type === 'image') && item.originalUrl)
 
 			if (!imageList.length) {
 				return
 			}
 
 			const currentIndex = imageList.findIndex(item => item.index === current)
-			this.previewImageList = imageList.map(item => ({
-				thumbnailUrl: item.thumbnailUrl,
-				originalUrl: item.originalUrl
-			}))
-			this.previewCurrentIndex = currentIndex >= 0 ? currentIndex : 0
-			this.previewVisible = true
-		},
-		closeImagePreview() {
-			this.previewVisible = false
+			openImageViewer(imageList, currentIndex >= 0 ? currentIndex : 0)
 		},
 		async loadPostList(reset = false) {
 			if (this.loading) {

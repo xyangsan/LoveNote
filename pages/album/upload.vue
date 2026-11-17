@@ -29,6 +29,7 @@
 				:max-file-size="maxFileSize"
 				:compressed="compressed"
 				:enable-compression="enableCompression"
+				:compress-over-size="imageCompressOverSize"
 				:enable-thumbnail="true"
 				:thumbnail-options="thumbnailOptions"
 				:save-path="savePath"
@@ -87,6 +88,9 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 
 const MAX_COUNT = 20
 const MAX_FILE_SIZE = 20 * 1024 * 1024
+// 超过这个体积的图片才压：和日常发布同口径，配合 maxImageEdge（组件默认长边 2560）
+// 一起降质量 + 缩分辨率，否则 5MB 的 4000×3000 原图只会降质量，体积几乎不动
+const ALBUM_IMAGE_COMPRESS_OVER_SIZE = 2 * 1024 * 1024
 
 export default {
 	data() {
@@ -100,6 +104,7 @@ export default {
 			savePath: 'album/media',
 			compressed: true,
 			enableCompression: true,
+			imageCompressOverSize: ALBUM_IMAGE_COMPRESS_OVER_SIZE,
 			showUploaderTips: true,
 			sourceType: ['album', 'camera'],
 			commonDescription: '',

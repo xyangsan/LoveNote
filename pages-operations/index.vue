@@ -32,8 +32,8 @@
 				</view>
 			</view>
 
-			<!-- 时间筛选（广告 tab 有自己的预设区间，这里只服务总览 / 模块） -->
-			<view v-if="currentTabKey !== 'ads'" class="ops-filter">
+			<!-- 时间筛选（广告 / 权限 tab 不需要，这里只服务总览与模块） -->
+			<view v-if="currentTabKey === 'overview' || currentTabKey === 'modules'" class="ops-filter">
 				<view class="ops-filter__chips">
 					<view
 						v-for="item in rangeOptions"
@@ -67,7 +67,7 @@
 
 			<template v-else>
 				<!-- ============ 总览 ============ -->
-				<view v-if="activeTab === 0" class="ops-body">
+				<view v-if="currentTabKey === 'overview'" class="ops-body">
 					<view v-if="loading.overview && !overview.summary" class="ops-loading">
 						<text class="ops-loading__text">加载中…</text>
 					</view>
@@ -207,7 +207,7 @@
 				</view>
 
 				<!-- ============ 模块 ============ -->
-				<view v-else-if="activeTab === 1" class="ops-body">
+				<view v-else-if="currentTabKey === 'modules'" class="ops-body">
 					<view v-if="loading.modules && !moduleStats.modules" class="ops-loading">
 						<text class="ops-loading__text">加载中…</text>
 					</view>
@@ -280,7 +280,7 @@
 				</view>
 
 				<!-- ============ 广告 ============ -->
-				<view v-else class="ops-body">
+				<view v-else-if="currentTabKey === 'ads'" class="ops-body">
 					<view v-if="loading.ads && !adStats.summary" class="ops-loading">
 						<text class="ops-loading__text">加载中…</text>
 					</view>
@@ -632,6 +632,128 @@
 						</text>
 					</template>
 				</view>
+
+				<!-- ============ 权限 ============ -->
+				<view v-else class="ops-body">
+					<view v-if="loading.permissions && !permission.loaded" class="ops-loading">
+						<text class="ops-loading__text">加载中…</text>
+					</view>
+
+					<template v-else>
+						<view v-if="permission.error" class="ops-warn">
+							<text class="ops-warn__text">{{ permission.error }}，当前按默认值（关闭）显示，请点右上角刷新重试</text>
+						</view>
+
+						<view class="ops-card">
+							<view class="ops-card__head">
+								<text class="ops-card__title">首页显示权限</text>
+								<text class="ops-card__hint">对全部用户生效</text>
+							</view>
+
+							<view class="ops-perm">
+								<view
+									v-for="item in permissionItems"
+									:key="item.key"
+									class="ops-perm__group"
+								>
+									<view class="ops-perm__item">
+										<view class="ops-perm__main">
+											<view class="ops-perm__title-row">
+												<text class="ops-perm__name">{{ item.name }}</text>
+												<text class="ops-perm__state" :class="{ 'ops-perm__state--on': item.value }">{{ item.value ? '已开启' : '已关闭' }}</text>
+											</view>
+											<text class="ops-perm__desc">{{ item.desc }}</text>
+										</view>
+										<!-- key 里带版本号：保存失败回滚时靠它重建组件，否则原生 switch 视觉停在切换后的状态 -->
+										<fui-switch
+											:key="`perm-${item.key}-${permission.version}`"
+											:checked="item.value"
+											color="#ec7558"
+											scale-ratio="0.9"
+											@change="onPermissionSwitch(item, $event)"
+										></fui-switch>
+									</view>
+
+									<!-- 子开关：父开关关闭时禁用但保留配置，重新打开不用重配 -->
+									<view
+										v-if="item.children && item.children.length"
+										class="ops-perm__children"
+										:class="{ 'ops-perm__children--muted': !item.value }"
+									>
+										<view
+											v-for="child in item.children"
+											:key="child.key"
+											class="ops-perm__item ops-perm__item--child"
+										>
+											<view class="ops-perm__main">
+												<view class="ops-perm__title-row">
+													<text class="ops-perm__name ops-perm__name--child">{{ child.name }}</text>
+													<text
+														class="ops-perm__state"
+														:class="{ 'ops-perm__state--on': child.value && item.value }"
+													>{{ child.value ? '已开启' : '已关闭' }}</text>
+												</view>
+												<text class="ops-perm__desc">{{ child.desc }}</text>
+											</view>
+											<fui-switch
+												:key="`perm-${child.key}-${permission.version}`"
+												:checked="child.value"
+												:disabled="!item.value"
+												color="#ec7558"
+												scale-ratio="0.9"
+												@change="onPermissionSwitch(child, $event)"
+											></fui-switch>
+										</view>
+									</view>
+								</view>
+							</view>
+						</view>
+
+						<!-- 云存储清理：删除日常只软删记录，原图/缩略图在这里手动回收 -->
+						<view class="ops-card">
+							<view class="ops-card__head">
+								<text class="ops-card__title">云存储清理</text>
+								<text class="ops-card__hint">仅管理员</text>
+							</view>
+
+							<view class="ops-cleanup__stats">
+								<view class="ops-cleanup__stat">
+									<text class="ops-cleanup__value">{{ mediaCleanup.deletedPosts }}</text>
+									<text class="ops-cleanup__label">已删除动态</text>
+								</view>
+								<view class="ops-cleanup__stat">
+									<text class="ops-cleanup__value ops-cleanup__value--warn">{{ mediaCleanup.pendingPosts }}</text>
+									<text class="ops-cleanup__label">待清理动态</text>
+								</view>
+								<view class="ops-cleanup__stat">
+									<text class="ops-cleanup__value">{{ mediaCleanup.pendingFiles }}{{ mediaCleanup.sampled ? '+' : '' }}</text>
+									<text class="ops-cleanup__label">待清理文件</text>
+								</view>
+							</view>
+
+							<text class="ops-cleanup__desc">
+								删除双人日常只做软删、不会自动删云端文件（误删可找回，也便于排查）。这里回收已删除动态的原图与缩略图，每次最多 {{ mediaCleanup.batch }} 条，文件删除后不可恢复。
+							</text>
+
+							<view
+								class="ops-cleanup__btn"
+								:class="{ 'ops-cleanup__btn--disabled': !mediaCleanup.pendingPosts || mediaCleanup.loading || mediaCleanup.cleaning }"
+								@click="handleCleanupMedia"
+							>
+								<text class="ops-cleanup__btn-text">{{ cleanupButtonText }}</text>
+							</view>
+
+							<text v-if="mediaCleanup.lastResult" class="ops-cleanup__result">{{ mediaCleanup.lastResult }}</text>
+						</view>
+
+						<text class="ops-foot-note">
+							开关改动即时保存，用户端下次进入首页 / 游戏大厅即按新配置渲染；未设置时按各自默认值（双人日常关闭，聚会游戏与各小游戏开启）。
+						</text>
+						<text class="ops-foot-note">
+							配置存放在 love-app-settings 集合，首次使用需先在 uniCloud 控制台创建该集合（可上传 database 目录下的 schema）。
+						</text>
+					</template>
+				</view>
 			</template>
 		</view>
 	</view>
@@ -652,8 +774,25 @@
 	const TABS = [
 		{ key: 'overview', label: '总览' },
 		{ key: 'modules', label: '模块' },
-		{ key: 'ads', label: '广告' }
+		{ key: 'ads', label: '广告' },
+		{ key: 'permissions', label: '权限' }
 	]
+
+	// 小游戏子开关：field 对应服务端 gameItems 里的键，必须和 common/game/rules.js 的 GAME_TYPE_* 一致
+	const GAME_ITEM_FIELDS = ['undercover', 'landlord', 'bomb']
+
+	// 云存储清理一次处理多少条动态：与服务端 MEDIA_CLEANUP_BATCH_LIMIT 保持一致
+	const MEDIA_CLEANUP_BATCH = 20
+
+	/** 服务端可能缺字段（老版本云函数），一律按「默认开启」补齐 */
+	function normalizeGameItems(items) {
+		const source = items && typeof items === 'object' ? items : {}
+		const normalized = {}
+		GAME_ITEM_FIELDS.forEach((field) => {
+			normalized[field] = source[field] !== false
+		})
+		return normalized
+	}
 
 	const RANGE_OPTIONS = [
 		{ key: 'today', label: '今日' },
@@ -740,12 +879,14 @@
 				loading: {
 					overview: false,
 					modules: false,
-					ads: false
+					ads: false,
+					permissions: false
 				},
 				loaded: {
 					overview: false,
 					modules: false,
-					ads: false
+					ads: false,
+					permissions: false
 				},
 				overview: {
 					summary: null,
@@ -777,6 +918,34 @@
 				adPendingReload: false,
 				adDiag: null,
 				adDiagLoading: false,
+				// 权限 tab：首页 / 游戏大厅的模块显示开关（服务端 love-app-settings）
+				// feed 默认关闭、game 与小游戏默认开启，两边默认值方向相反，别再共用一个常量
+				permission: {
+					feedVisible: false,
+					gameVisible: true,
+					// 小游戏子开关：父开关关闭时值保留（只是不生效），重新打开不用重配
+					gameItems: normalizeGameItems(),
+					loaded: false,
+					saving: false,
+					error: '',
+					// 版本号驱动 switch 重建，保存失败回滚视觉
+					version: 0
+				},
+				// 云存储清理：删除日常只软删记录，文件在这里手动回收
+				mediaCleanup: {
+					loaded: false,
+					loading: false,
+					cleaning: false,
+					deletedPosts: 0,
+					pendingPosts: 0,
+					cleanedPosts: 0,
+					pendingFiles: 0,
+					// 待清理文件数是抽样累加的，true 时页面上加「+」
+					sampled: false,
+					lastResult: '',
+					// 单次清理条数，模板里要显示，所以挂在 data 上
+					batch: MEDIA_CLEANUP_BATCH
+				},
 				pageReady: false,
 				loginPassed: false,
 				chartHeights: CHART_HEIGHTS,
@@ -804,6 +973,19 @@
 		computed: {
 			currentTabKey() {
 				return (TABS[this.activeTab] || TABS[0]).key
+			},
+			cleanupButtonText() {
+				const cleanup = this.mediaCleanup
+				if (cleanup.cleaning) {
+					return '清理中…'
+				}
+				if (cleanup.loading && !cleanup.loaded) {
+					return '统计中…'
+				}
+				if (!cleanup.pendingPosts) {
+					return '没有待清理的动态'
+				}
+				return `清理 ${Math.min(cleanup.pendingPosts, MEDIA_CLEANUP_BATCH)} 条动态的文件`
 			},
 			funnelRows() {
 				const funnel = this.overview.funnel
@@ -1096,6 +1278,55 @@
 					return ''
 				}
 				return `收益取自 uni-ad 应用日报；其中 ¥${money(coverage.revenueGap)} 没有广告位明细（占比图仅覆盖有明细的部分），点击率、eCPM、CPC 显示「—」`
+			},
+			// 权限 tab 的开关列表：feed 独立一项，game 带三个小游戏子开关。
+			// item.parent 决定值存在 permission 的哪一层：'' → permission[field]，'gameItems' → permission.gameItems[field]
+			permissionItems() {
+				const gameItems = this.permission.gameItems
+				return [
+					{
+						key: 'feed',
+						parent: '',
+						field: 'feedVisible',
+						name: '双人日常',
+						desc: '关闭后首页不显示双人日常入口、最近双人动态与动态统计',
+						value: this.permission.feedVisible
+					},
+					{
+						key: 'game',
+						parent: '',
+						field: 'gameVisible',
+						name: '聚会游戏',
+						desc: '关闭后首页不显示聚会游戏入口；下面的子开关控制游戏大厅里开放哪些游戏',
+						value: this.permission.gameVisible,
+						children: [
+							{
+								key: 'game.undercover',
+								parent: 'gameItems',
+								field: 'undercover',
+								name: '谁是卧底',
+								desc: '4-10 人 · 语言推理',
+								value: gameItems.undercover
+							},
+							{
+								key: 'game.landlord',
+								parent: 'gameItems',
+								field: 'landlord',
+								name: '三人斗地主',
+								desc: '3 人 · 策略对局',
+								value: gameItems.landlord
+							},
+							{
+								key: 'game.bomb',
+								parent: 'gameItems',
+								field: 'bomb',
+								name: '数字炸弹',
+								desc: '1-8 人 · 运气与心理',
+								value: gameItems.bomb
+							}
+						]
+					}
+				]
 			}
 		},
 		onLoad() {
@@ -1192,6 +1423,7 @@
 				this.loaded.overview = false
 				this.loaded.modules = false
 				this.loaded.ads = false
+				this.loaded.permissions = false
 				this.loadCurrentTab(true)
 			},
 			refreshCurrentTab() {
@@ -1211,6 +1443,9 @@
 				}
 				if (key === 'modules') {
 					return this.loadModules()
+				}
+				if (key === 'permissions') {
+					return this.loadPermissions()
 				}
 				return this.loadAds()
 			},
@@ -1452,6 +1687,205 @@
 				uni.navigateTo({
 					url: '/pages/feedback/list'
 				})
+			},
+			/* ---------------- 权限 ---------------- */
+			async loadPermissions() {
+				if (!this.pageReady || this.currentTabKey !== 'permissions') {
+					return Promise.resolve()
+				}
+				if (this.loading.permissions) {
+					return Promise.resolve()
+				}
+				this.loading.permissions = true
+				try {
+					const result = await getPlatformApi().getPermissionSettings()
+					const parsed = this.handleResult(result, '获取权限设置失败')
+					if (!parsed.ok) {
+						// 读失败也要退出 loading，并明说「现在看到的是默认值」
+						this.permission.loaded = true
+						this.permission.error = parsed.message || '读取权限设置失败'
+						if (!parsed.silent) {
+							uni.showToast({ title: parsed.message, icon: 'none' })
+						}
+						return
+					}
+					this.permission.feedVisible = parsed.data.feedVisible === true
+					this.permission.gameVisible = parsed.data.gameVisible !== false
+					this.permission.gameItems = normalizeGameItems(parsed.data.gameItems)
+					this.permission.error = ''
+					this.permission.loaded = true
+					this.permission.version += 1
+					this.loaded.permissions = true
+					// 清理统计独立请求：读失败不该拖住权限开关的展示
+					this.loadMediaCleanup()
+				} catch (error) {
+					console.warn('loadPermissions failed', error)
+					this.permission.loaded = true
+					this.permission.error = '网络异常，请稍后重试'
+					uni.showToast({ title: '网络异常，请稍后重试', icon: 'none' })
+				} finally {
+					this.loading.permissions = false
+				}
+			},
+			/* ---------------- 云存储清理 ---------------- */
+			async loadMediaCleanup() {
+				if (!this.pageReady || this.currentTabKey !== 'permissions') {
+					return
+				}
+				if (this.mediaCleanup.loading) {
+					return
+				}
+				this.mediaCleanup.loading = true
+				try {
+					const result = await getPlatformApi().getMediaCleanupStats()
+					const parsed = this.handleResult(result, '获取清理统计失败')
+					if (!parsed.ok) {
+						if (!parsed.silent) {
+							uni.showToast({ title: parsed.message, icon: 'none' })
+						}
+						return
+					}
+					const data = parsed.data || {}
+					this.mediaCleanup.deletedPosts = Number(data.deletedPosts || 0)
+					this.mediaCleanup.pendingPosts = Number(data.pendingPosts || 0)
+					this.mediaCleanup.cleanedPosts = Number(data.cleanedPosts || 0)
+					this.mediaCleanup.pendingFiles = Number(data.pendingFiles || 0)
+					this.mediaCleanup.sampled = data.sampled === true
+					this.mediaCleanup.loaded = true
+				} catch (error) {
+					console.warn('loadMediaCleanup failed', error)
+				} finally {
+					this.mediaCleanup.loading = false
+				}
+			},
+			// 文件删掉不可恢复，必须二次确认；确认后才真正发请求
+			handleCleanupMedia() {
+				const cleanup = this.mediaCleanup
+				if (cleanup.loading || cleanup.cleaning || !cleanup.pendingPosts) {
+					return
+				}
+				const batch = Math.min(cleanup.pendingPosts, MEDIA_CLEANUP_BATCH)
+				uni.showModal({
+					title: '清理云存储',
+					content: `将永久删除 ${batch} 条已删除动态的原图与缩略图，删除后无法恢复。确定继续？`,
+					confirmText: '清理',
+					confirmColor: '#e24b4a',
+					success: (res) => {
+						if (res.confirm) {
+							this.runMediaCleanup()
+						}
+					}
+				})
+			},
+			async runMediaCleanup() {
+				if (this.mediaCleanup.cleaning) {
+					return
+				}
+				this.mediaCleanup.cleaning = true
+				uni.showLoading({
+					title: '清理中…',
+					mask: true
+				})
+				let loadingVisible = true
+				const hideLoading = () => {
+					if (!loadingVisible) {
+						return
+					}
+					loadingVisible = false
+					uni.hideLoading()
+				}
+				try {
+					const result = await getPlatformApi().cleanupDailyMedia({
+						limit: MEDIA_CLEANUP_BATCH
+					})
+					hideLoading()
+					const parsed = this.handleResult(result, '清理失败')
+					if (!parsed.ok) {
+						if (!parsed.silent) {
+							uni.showToast({ title: parsed.message, icon: 'none' })
+						}
+						return
+					}
+					const data = parsed.data || {}
+					const posts = Number(data.posts || 0)
+					const files = Number(data.files || 0)
+					const failed = Number(data.failed || 0)
+					this.mediaCleanup.lastResult = failed
+						? `已清理 ${posts} 条动态、${files} 个文件，${failed} 条失败（下次可重试）`
+						: `已清理 ${posts} 条动态、${files} 个文件`
+					uni.showToast({
+						title: this.mediaCleanup.lastResult,
+						icon: 'none'
+					})
+					await this.loadMediaCleanup()
+				} catch (error) {
+					hideLoading()
+					console.warn('runMediaCleanup failed', error)
+					uni.showToast({
+						title: '清理失败，请稍后重试',
+						icon: 'none'
+					})
+				} finally {
+					this.mediaCleanup.cleaning = false
+				}
+			},
+			// 开关即时保存：先按用户意图更新，失败再回滚（版本号让 switch 重建，视觉跟着回滚）
+			async onPermissionSwitch(item = {}, event = {}) {
+				const nextValue = Boolean(event && event.detail ? event.detail.value : false)
+				const field = item.field
+				if (!field) {
+					return
+				}
+				// 顶层开关写 permission[field]，小游戏子开关写 permission.gameItems[field]
+				const target = item.parent === 'gameItems' ? this.permission.gameItems : this.permission
+				const previous = target[field]
+				if (nextValue === previous) {
+					return
+				}
+				if (this.permission.saving) {
+					// 上一次还没落库，这次点击直接回滚视觉，避免并发写互相覆盖
+					this.permission.version += 1
+					return
+				}
+				target[field] = nextValue
+				this.permission.saving = true
+				try {
+					// 只提交当前这一项，其它开关的值由服务端原样返回
+					const payload = item.parent === 'gameItems'
+						? {
+							gameItems: {
+								[field]: nextValue
+							}
+						}
+						: {
+							[field]: nextValue
+						}
+					const result = await getPlatformApi().updatePermissionSettings(payload)
+					const parsed = this.handleResult(result, '保存权限设置失败')
+					if (!parsed.ok) {
+						target[field] = previous
+						if (!parsed.silent) {
+							uni.showToast({ title: parsed.message, icon: 'none' })
+						}
+						return
+					}
+					// 以服务端返回值为准（连同其它开关一起同步）
+					this.permission.feedVisible = parsed.data.feedVisible === true
+					this.permission.gameVisible = parsed.data.gameVisible !== false
+					this.permission.gameItems = normalizeGameItems(parsed.data.gameItems)
+					this.permission.error = ''
+					uni.showToast({
+						title: `${nextValue ? '已开启' : '已关闭'}${item.name || ''}`,
+						icon: 'none'
+					})
+				} catch (error) {
+					console.warn('updatePermissionSettings failed', error)
+					target[field] = previous
+					uni.showToast({ title: '网络异常，请稍后重试', icon: 'none' })
+				} finally {
+					this.permission.saving = false
+					this.permission.version += 1
+				}
 			}
 		}
 	}
@@ -2531,5 +2965,157 @@
 		font-size: 18rpx;
 		line-height: 1.7;
 		color: #a07b70;
+	}
+
+	/* 权限 tab：开关行 */
+	.ops-perm {
+		margin-top: 20rpx;
+	}
+
+	.ops-perm__group + .ops-perm__group {
+		margin-top: 4rpx;
+		padding-top: 4rpx;
+		border-top: 1rpx solid rgba(240, 220, 210, 0.9);
+	}
+
+	.ops-perm__item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24rpx;
+		padding: 20rpx 0;
+	}
+
+	/* 子开关：缩进 + 左侧竖线；父开关关闭时整组降透明度（值还在，重新打开不用重配） */
+	.ops-perm__children {
+		margin: 0 0 10rpx;
+		padding: 2rpx 0 2rpx 22rpx;
+		border-left: 3rpx solid rgba(240, 200, 186, 0.9);
+	}
+
+	.ops-perm__children--muted {
+		opacity: 0.55;
+	}
+
+	.ops-perm__item--child {
+		padding: 12rpx 0;
+	}
+
+	.ops-perm__item--child + .ops-perm__item--child {
+		border-top: 1rpx dashed rgba(240, 220, 210, 0.9);
+	}
+
+	.ops-perm__name--child {
+		font-size: 24rpx;
+		font-weight: 500;
+	}
+
+	.ops-perm__main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.ops-perm__title-row {
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+	}
+
+	.ops-perm__name {
+		font-size: 26rpx;
+		font-weight: 600;
+		color: #5d372b;
+	}
+
+	.ops-perm__state {
+		padding: 4rpx 14rpx;
+		border-radius: 999rpx;
+		font-size: 17rpx;
+		font-weight: 500;
+		color: #a07b70;
+		background: #f7ece6;
+	}
+
+	.ops-perm__state--on {
+		color: #b35a48;
+		background: #ffe8df;
+	}
+
+	.ops-perm__desc {
+		display: block;
+		margin-top: 8rpx;
+		font-size: 19rpx;
+		line-height: 1.6;
+		color: #9a766c;
+	}
+
+	/* 权限 tab：云存储清理 */
+	.ops-cleanup__stats {
+		display: flex;
+		gap: 12rpx;
+		margin-top: 18rpx;
+	}
+
+	.ops-cleanup__stat {
+		flex: 1;
+		padding: 16rpx 10rpx;
+		border-radius: 14rpx;
+		background: #fdf3ee;
+		text-align: center;
+	}
+
+	.ops-cleanup__value {
+		display: block;
+		font-size: 34rpx;
+		font-weight: 500;
+		line-height: 1.2;
+		color: #5d372b;
+	}
+
+	.ops-cleanup__value--warn {
+		color: #b35a48;
+	}
+
+	.ops-cleanup__label {
+		display: block;
+		margin-top: 6rpx;
+		font-size: 18rpx;
+		color: #9a766c;
+	}
+
+	.ops-cleanup__desc {
+		display: block;
+		margin-top: 18rpx;
+		font-size: 19rpx;
+		line-height: 1.65;
+		color: #9a766c;
+	}
+
+	.ops-cleanup__btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 76rpx;
+		margin-top: 20rpx;
+		border-radius: 999rpx;
+		background: #ec7558;
+	}
+
+	.ops-cleanup__btn--disabled {
+		opacity: 0.45;
+	}
+
+	.ops-cleanup__btn-text {
+		font-size: 24rpx;
+		font-weight: 500;
+		color: #ffffff;
+	}
+
+	.ops-cleanup__result {
+		display: block;
+		margin-top: 14rpx;
+		font-size: 19rpx;
+		line-height: 1.6;
+		color: #b35a48;
 	}
 </style>

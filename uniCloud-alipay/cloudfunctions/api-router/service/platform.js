@@ -31,6 +31,7 @@ const {
 	visitCollection,
 	dailyStatCollection,
 	uniIdLogCollection,
+	appSettingCollection,
 	adpRevenueCollection,
 	appRevenueCollection,
 	adPositionCollection,
@@ -47,6 +48,40 @@ const {
 	formatRangeLabel
 } = require('../lib/date-key')
 const { LOG_TYPE_LOGIN } = require('../lib/login-log')
+const { collectFileIdsFromPhotos } = require('../lib/media')
+
+// 云存储清理：单次处理的动态条数上限（每条要走一次 deleteFile + 一次 update，别把云函数跑超时）
+const MEDIA_CLEANUP_BATCH_LIMIT = 20
+const MEDIA_CLEANUP_BATCH_MAX = 50
+// 统计待清理文件数时最多翻多少条记录（只是给运营看个量级，不做精确全表遍历）
+const MEDIA_CLEANUP_STATS_SAMPLE = 50
+
+/**
+ * 把 media 里的云文件引用摘掉，url / 宽高等字段原样保留。
+ *
+ * 清理后记录仍然可读（已软删，列表不展示），只是文件链接指向已删除的对象；
+ * 下划线字段一并置空，避免下次清理再次收到同一个 fileID。
+ */
+function stripMediaFileIds(mediaList = []) {
+	const list = Array.isArray(mediaList) ? mediaList : []
+	return list.map((item) => {
+		if (!item || typeof item !== 'object') {
+			return item
+		}
+		return Object.assign({}, item, {
+			file_id: '',
+			thumbnail_file_id: ''
+		})
+	})
+}
+
+/** 待清理条件：已软删 + 还没清理过（老数据没有 media_cleaned_at 字段，也会被扫到） */
+function buildPendingCleanupCondition() {
+	return {
+		is_deleted: true,
+		media_cleaned_at: dbCmd.exists(false)
+	}
+}
 
 const COUPLE_STATUS_BOUND = 1
 
@@ -81,6 +116,24 @@ const AD_SYNC_STATUS_TEXT = {
 	2: '同步中',
 	3: '同步失败'
 }
+
+// 全局配置键（love-app-settings）—— 首页 / 游戏大厅的模块显示开关
+//   feed_visible：双人日常。权限类开关**默认关闭**（内容型模块要运营显式放开）
+//   game_visible：聚会游戏入口。功能类开关**默认开启**（关掉只是隐藏入口，不影响已开的房间）
+//   game_<type>_visible：每个小游戏单独一个子开关，同样默认开启
+// 记录不存在 / 表还没建 / 读取异常一律按这里的默认值走，
+// 两种默认值方向相反，所以不能共用一个 fallback 常量
+const SETTING_KEY_FEED_VISIBLE = 'feed_visible'
+const SETTING_KEY_GAME_VISIBLE = 'game_visible'
+// 子开关的键必须和客户端 GAME_TYPE_*（common/game/rules.js）一一对应
+const SETTING_KEY_GAME_ITEMS = {
+	undercover: 'game_undercover_visible',
+	landlord: 'game_landlord_visible',
+	bomb: 'game_bomb_visible'
+}
+const DEFAULT_FEED_VISIBLE = false
+const DEFAULT_GAME_VISIBLE = true
+const DEFAULT_GAME_ITEM_VISIBLE = true
 
 // ad_platform 字典（对账用）
 const AD_PLATFORM_TEXT = {
@@ -405,6 +458,86 @@ async function getFeedbackSummary() {
 	})
 
 	return summary
+}
+
+/* ---------------- 全局配置（love-app-settings） ---------------- */
+
+/**
+ * 读一个布尔开关：value 为 undefined（记录不存在）时用 fallback；
+ * 记录存在时只认严格 true —— 库里存了 'false' / 'true' 字符串一律按 false 处理。
+ */
+function pickSwitchValue(value, fallback) {
+	if (value === undefined) {
+		return fallback
+	}
+	return value === true
+}
+
+/** 写全局配置：有记录就 update，没有就 add（首次写入需要表已存在） */
+async function writeAppSetting(key, value, uid) {
+	const now = Date.now()
+	const result = await appSettingCollection.where({ key }).limit(1).get()
+	const rows = result && Array.isArray(result.data) ? result.data : []
+
+	if (rows.length) {
+		await appSettingCollection.doc(rows[0]._id).update({
+			value,
+			update_uid: uid || '',
+			update_time: now
+		})
+		return
+	}
+
+	await appSettingCollection.add({
+		key,
+		value,
+		update_uid: uid || '',
+		create_time: now,
+		update_time: now
+	})
+}
+
+/**
+ * 一次查出首页 / 游戏大厅所有模块开关，运营页与客户端共用同一口径。
+ *
+ * 表没建 / Query 抛错 → 全部按默认值返回（feed 关、game 与小游戏都开），
+ * 绝不把异常抛给页面：页面只想要几个布尔值，不该因为配置缺失白屏或弹 toast。
+ */
+async function readModuleVisibility() {
+	const gameItemTypes = Object.keys(SETTING_KEY_GAME_ITEMS)
+	const keys = [SETTING_KEY_FEED_VISIBLE, SETTING_KEY_GAME_VISIBLE].concat(
+		gameItemTypes.map((type) => SETTING_KEY_GAME_ITEMS[type])
+	)
+	let rows = []
+	try {
+		const result = await appSettingCollection
+			.where({ key: dbCmd.in(keys) })
+			.limit(keys.length + 2)
+			.get()
+		rows = result && Array.isArray(result.data) ? result.data : []
+	} catch (error) {
+		console.error('readModuleVisibility failed', error)
+		rows = []
+	}
+
+	const found = {}
+	rows.forEach((row) => {
+		const key = String((row && row.key) || '')
+		if (key) {
+			found[key] = row.value
+		}
+	})
+
+	const gameItems = {}
+	gameItemTypes.forEach((type) => {
+		gameItems[type] = pickSwitchValue(found[SETTING_KEY_GAME_ITEMS[type]], DEFAULT_GAME_ITEM_VISIBLE)
+	})
+
+	return {
+		feedVisible: pickSwitchValue(found[SETTING_KEY_FEED_VISIBLE], DEFAULT_FEED_VISIBLE),
+		gameVisible: pickSwitchValue(found[SETTING_KEY_GAME_VISIBLE], DEFAULT_GAME_VISIBLE),
+		gameItems
+	}
 }
 
 module.exports = class PlatformService extends Service {
@@ -1184,6 +1317,303 @@ module.exports = class PlatformService extends Service {
 			}
 		} catch (error) {
 			return formatError(error, '获取广告诊断数据失败')
+		}
+	}
+
+	/**
+	 * 权限设置（仅 admin）：首页模块的显示开关。
+	 * feed 默认关、game 默认开，口径统一由 readModuleVisibility 决定。
+	 */
+	async getPermissionSettings() {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			return {
+				errCode: 0,
+				data: Object.assign(await readModuleVisibility(), {
+					updatedAt: Date.now()
+				})
+			}
+		} catch (error) {
+			return formatError(error, '获取权限设置失败')
+		}
+	}
+
+	/**
+	 * 云存储清理：统计「已删除动态」还有多少文件没回收（仅 admin）。
+	 *
+	 * 删除动态只做软删、不动文件（删了就找不回，误删 / 排查都没兜底），
+	 * 所以原图和缩略图由运营在这里手动回收。
+	 */
+	async getMediaCleanupStats() {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			const [deletedRes, pendingRes, sampleRes] = await Promise.all([
+				dailyPostCollection.where({ is_deleted: true }).count(),
+				dailyPostCollection.where(buildPendingCleanupCondition()).count(),
+				dailyPostCollection
+					.where(buildPendingCleanupCondition())
+					.orderBy('update_time', 'asc')
+					.limit(MEDIA_CLEANUP_STATS_SAMPLE)
+					.get()
+			])
+
+			const samples = sampleRes && Array.isArray(sampleRes.data) ? sampleRes.data : []
+			const pendingFiles = samples.reduce(
+				(sum, post) => sum + collectFileIdsFromPhotos(post.media_list).length,
+				0
+			)
+			const deletedPosts = Number((deletedRes && deletedRes.total) || 0)
+			const pendingPosts = Number((pendingRes && pendingRes.total) || 0)
+
+			return {
+				errCode: 0,
+				data: {
+					deletedPosts,
+					pendingPosts,
+					cleanedPosts: Math.max(0, deletedPosts - pendingPosts),
+					// 文件数只按前 N 条抽样累加，sampled=true 时页面上要说明「约」
+					pendingFiles,
+					sampleCount: samples.length,
+					sampled: pendingPosts > samples.length
+				}
+			}
+		} catch (error) {
+			return formatError(error, '获取云存储清理统计失败')
+		}
+	}
+
+	/**
+	 * 云存储清理：回收已删除动态的原图与缩略图（仅 admin）。
+	 *
+	 * 幂等靠 media_cleaned_at：清过的记录不会再被扫到，媒体里的 file_id 也一并摘掉。
+	 * 单次只处理 limit 条（默认 20，最多 50）—— 每条要走一次 deleteFile + 一次 update，
+	 * 一次跑太多会把云函数拖超时；运营连点几次即可清完存量。
+	 */
+	async cleanupDailyMedia(data = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			const rawLimit = Number(data.limit)
+			const limit = Number.isFinite(rawLimit) && rawLimit > 0
+				? Math.min(Math.round(rawLimit), MEDIA_CLEANUP_BATCH_MAX)
+				: MEDIA_CLEANUP_BATCH_LIMIT
+
+			const pendingRes = await dailyPostCollection
+				.where(buildPendingCleanupCondition())
+				.orderBy('update_time', 'asc')
+				.limit(limit)
+				.get()
+			const posts = pendingRes && Array.isArray(pendingRes.data) ? pendingRes.data : []
+
+			if (!posts.length) {
+				return {
+					errCode: 0,
+					data: {
+						posts: 0,
+						files: 0,
+						failed: 0,
+						remaining: 0
+					}
+				}
+			}
+
+			let cleanedPosts = 0
+			let deletedFiles = 0
+			let failedPosts = 0
+
+			for (const post of posts) {
+				const fileIds = collectFileIdsFromPhotos(post.media_list)
+				if (fileIds.length) {
+					try {
+						await uniCloud.deleteFile({
+							fileList: fileIds
+						})
+						deletedFiles += fileIds.length
+					} catch (error) {
+						// 删文件失败就不打标记：下次还能重试。打了标记这些文件就永远漏在桶里
+						console.warn('清理日常媒体文件失败:', post._id, error)
+						failedPosts += 1
+						continue
+					}
+				}
+
+				const now = Date.now()
+				await dailyPostCollection.doc(post._id).update({
+					media_list: stripMediaFileIds(post.media_list),
+					media_cleaned_at: now,
+					update_time: now
+				})
+				cleanedPosts += 1
+			}
+
+			const remainingRes = await dailyPostCollection.where(buildPendingCleanupCondition()).count()
+
+			return {
+				errCode: 0,
+				data: {
+					posts: cleanedPosts,
+					files: deletedFiles,
+					failed: failedPosts,
+					remaining: Number((remainingRes && remainingRes.total) || 0)
+				}
+			}
+		} catch (error) {
+			return formatError(error, '清理云存储失败')
+		}
+	}
+
+	/**
+	 * 更新权限设置（仅 admin）：支持只传要改的那几个开关。
+	 * 每个值只认布尔，不做字符串兜底 —— 前端万一传 'false'，兜底反而会把它打开；
+	 * 一个开关都没传也当参数错误，避免「以为改了其实没改」。
+	 */
+	async updatePermissionSettings(data = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			const nextSettings = {}
+			if (data.feedVisible !== undefined) {
+				if (typeof data.feedVisible !== 'boolean') {
+					return {
+						errCode: 'love-note-invalid-param',
+						errMsg: 'feedVisible 必须是布尔值'
+					}
+				}
+				nextSettings[SETTING_KEY_FEED_VISIBLE] = data.feedVisible
+			}
+			if (data.gameVisible !== undefined) {
+				if (typeof data.gameVisible !== 'boolean') {
+					return {
+						errCode: 'love-note-invalid-param',
+						errMsg: 'gameVisible 必须是布尔值'
+					}
+				}
+				nextSettings[SETTING_KEY_GAME_VISIBLE] = data.gameVisible
+			}
+			if (data.gameItems !== undefined) {
+				if (!data.gameItems || typeof data.gameItems !== 'object' || Array.isArray(data.gameItems)) {
+					return {
+						errCode: 'love-note-invalid-param',
+						errMsg: 'gameItems 必须是对象'
+					}
+				}
+				const gameItemTypes = Object.keys(data.gameItems)
+				if (!gameItemTypes.length) {
+					return {
+						errCode: 'love-note-invalid-param',
+						errMsg: 'gameItems 里没有要更新的游戏'
+					}
+				}
+				for (let index = 0; index < gameItemTypes.length; index += 1) {
+					const type = gameItemTypes[index]
+					const settingKey = SETTING_KEY_GAME_ITEMS[type]
+					// 未知类型直接报错，别静默丢弃 —— 前端拼错 key 会表现为「点了没反应」
+					if (!settingKey) {
+						return {
+							errCode: 'love-note-invalid-param',
+							errMsg: `未知的游戏类型 ${type}`
+						}
+					}
+					if (typeof data.gameItems[type] !== 'boolean') {
+						return {
+							errCode: 'love-note-invalid-param',
+							errMsg: `gameItems.${type} 必须是布尔值`
+						}
+					}
+					nextSettings[settingKey] = data.gameItems[type]
+				}
+			}
+
+			const settingKeys = Object.keys(nextSettings)
+			if (!settingKeys.length) {
+				return {
+					errCode: 'love-note-invalid-param',
+					errMsg: '没有需要更新的开关'
+				}
+			}
+
+			// 先读当前值，写入后直接合并返回：比「写完再查一次」少依赖一次读一致性，
+			// 返回的也一定是这次请求算出来的完整状态
+			const current = await readModuleVisibility()
+			const nextGameItems = Object.assign({}, current.gameItems)
+			Object.keys(SETTING_KEY_GAME_ITEMS).forEach((type) => {
+				const settingKey = SETTING_KEY_GAME_ITEMS[type]
+				if (nextSettings[settingKey] !== undefined) {
+					nextGameItems[type] = nextSettings[settingKey]
+				}
+			})
+			const nextVisibility = {
+				feedVisible: nextSettings[SETTING_KEY_FEED_VISIBLE] !== undefined
+					? nextSettings[SETTING_KEY_FEED_VISIBLE]
+					: current.feedVisible,
+				gameVisible: nextSettings[SETTING_KEY_GAME_VISIBLE] !== undefined
+					? nextSettings[SETTING_KEY_GAME_VISIBLE]
+					: current.gameVisible,
+				gameItems: nextGameItems
+			}
+
+			for (let index = 0; index < settingKeys.length; index += 1) {
+				const key = settingKeys[index]
+				await writeAppSetting(key, nextSettings[key], uid)
+			}
+
+			return {
+				errCode: 0,
+				data: Object.assign(nextVisibility, {
+					updatedAt: Date.now()
+				})
+			}
+		} catch (error) {
+			return formatError(error, '保存权限设置失败')
+		}
+	}
+
+	/**
+	 * 客户端读取各模块可见性（首页 / 游戏大厅用）：游客也要按同一口径渲染，所以进免登录白名单。
+	 * 读不到一律按默认值返回（feed 关、game 与小游戏都开），不抛错误码 —— 页面不该因为配置问题弹 toast。
+	 */
+	async getModuleVisibility() {
+		return {
+			errCode: 0,
+			data: await readModuleVisibility()
 		}
 	}
 

@@ -95,6 +95,25 @@ const DEFAULT_COMPRESS_OVER_SIZE = 10 * 1024 * 1024
 // 画布要能装下长边，所以留 4 倍余量：200 短边 → 最长可到 800（≈4:1 的图）。
 const THUMBNAIL_CANVAS_MAX_EDGE = 800
 
+/**
+ * 图片压缩的目标长边（px）。
+ *
+ * 只把 quality 调低是压不动的：4000×3000 的手机原图降到 quality 86 依旧两三兆 ——
+ * 体积的大头是像素数量，不是质量参数。2560 足够详情页全屏看
+ * （iPhone 15 Pro Max 屏幕长边也才 2796），再大纯属浪费用户流量。
+ */
+const DEFAULT_MAX_IMAGE_EDGE = 2560
+
+/** 动图不能碰：compressImage 会把 gif 压成静态单帧，直接跳过（webp 静图居多，照常压） */
+const ANIMATED_IMAGE_EXTS = ['gif']
+
+/**
+ * 并发上传数。
+ * 原图上传是纯网络 IO，串行时 9 张图就是 9 个来回；2~3 路并发能明显压短总耗时，
+ * 再往上意义不大 —— 反而抢带宽，还会同时挤一堆临时文件在内存里。
+ */
+const UPLOAD_CONCURRENCY = 3
+
 function toUniqueArray(value = [], fallback = []) {
 	const list = Array.isArray(value) ? value : fallback
 	return Array.from(new Set(list.map(item => String(item || '').trim().toLowerCase()).filter(Boolean)))
@@ -243,6 +262,11 @@ export default {
 			type: Number,
 			default: 80
 		},
+		// 图片压缩的目标长边（px）。长边超过它就按比例缩；传 0 退回「只降质量」的旧行为
+		maxImageEdge: {
+			type: Number,
+			default: DEFAULT_MAX_IMAGE_EDGE
+		},
 		videoCompressQuality: {
 			type: String,
 			default: 'medium'
@@ -346,7 +370,9 @@ export default {
 		return {
 			files: [],
 			uploading: false,
-			thumbnailCanvasId: `love_media_thumbnail_${Date.now()}_${Math.floor(Math.random() * 100000)}`
+			thumbnailCanvasId: `love_media_thumbnail_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
+			// 缩略图绘制队列：canvas 只有一个 id，多张并发画会互相覆盖（串图）
+			thumbnailQueue: Promise.resolve()
 		}
 	},
 	computed: {
@@ -407,6 +433,14 @@ export default {
 		compressThreshold() {
 			const value = Number(this.compressOverSize || 0)
 			return value > 0 ? value : DEFAULT_COMPRESS_OVER_SIZE
+		},
+		// 0 = 不做尺寸缩放（只降质量）
+		compressMaxEdge() {
+			const value = Number(this.maxImageEdge)
+			if (!Number.isFinite(value) || value <= 0) {
+				return 0
+			}
+			return Math.round(value)
 		},
 		resolvedTipText() {
 			if (this.tipText) {
@@ -808,16 +842,10 @@ export default {
 				})
 			})
 		},
-		compressImageFile(filePath = '') {
+		runCompressImage(options = {}) {
 			return new Promise((resolve, reject) => {
-				if (!filePath || typeof uni.compressImage !== 'function') {
-					reject(new Error('当前环境不支持图片压缩'))
-					return
-				}
-				const quality = Math.max(1, Math.min(100, Number(this.imageCompressQuality || 80)))
 				uni.compressImage({
-					src: filePath,
-					quality,
+					...options,
 					success: (res) => {
 						resolve(res || {})
 					},
@@ -826,6 +854,74 @@ export default {
 					}
 				})
 			})
+		},
+		/**
+		 * 算压缩目标尺寸：返回 null 表示不用缩（尺寸本来就达标 / 读不到尺寸 / 没开缩放）。
+		 */
+		async resolveCompressedImageSize(filePath = '') {
+			const maxEdge = this.compressMaxEdge
+			if (!maxEdge) {
+				return null
+			}
+			let imageInfo = null
+			try {
+				imageInfo = await this.getImageInfo(filePath)
+			} catch (error) {
+				console.warn('读取图片尺寸失败，跳过缩放（只降质量）', error)
+				return null
+			}
+			const width = Number((imageInfo && imageInfo.width) || 0)
+			const height = Number((imageInfo && imageInfo.height) || 0)
+			if (width <= 0 || height <= 0) {
+				return null
+			}
+			const longEdge = Math.max(width, height)
+			if (longEdge <= maxEdge) {
+				return null
+			}
+			const scale = maxEdge / longEdge
+			return {
+				width: Math.max(1, Math.round(width * scale)),
+				height: Math.max(1, Math.round(height * scale))
+			}
+		},
+		/**
+		 * 图片压缩：降质量 + 缩分辨率。
+		 *
+		 * 尺寸走 uni.compressImage 的 compressedWidth / compressedHeight（wx 2.26+ 起支持），
+		 * 只传长边对应的那一个，让底层按比例缩放 —— 两个都传会被当成目标宽高直接拉伸变形。
+		 * 不认这两个参数的端会失败，兜底退回「只降质量」，跟旧行为一致。
+		 */
+		async compressImageFile(filePath = '') {
+			if (!filePath || typeof uni.compressImage !== 'function') {
+				throw new Error('当前环境不支持图片压缩')
+			}
+			const quality = Math.max(1, Math.min(100, Number(this.imageCompressQuality || 80)))
+			const target = await this.resolveCompressedImageSize(filePath)
+			const options = {
+				src: filePath,
+				quality
+			}
+			if (target) {
+				if (target.width >= target.height) {
+					options.compressedWidth = target.width
+				} else {
+					options.compressedHeight = target.height
+				}
+			}
+
+			try {
+				return await this.runCompressImage(options)
+			} catch (error) {
+				if (!options.compressedWidth && !options.compressedHeight) {
+					throw error
+				}
+				console.warn('带尺寸压缩失败，退回只降质量', error)
+				return this.runCompressImage({
+					src: filePath,
+					quality
+				})
+			}
 		},
 		compressVideoFile(filePath = '') {
 			return new Promise((resolve, reject) => {
@@ -845,23 +941,36 @@ export default {
 				})
 			})
 		},
+		isAnimatedImage(filePath = '') {
+			const ext = String(filePath || '').split('?')[0].split('.').pop().toLowerCase()
+			return ANIMATED_IMAGE_EXTS.includes(ext)
+		},
 		async prepareFileForUpload(file = {}) {
 			const originPath = String(file.path || '')
 			const originSize = Number(file.size || 0)
+			const untouched = {
+				path: originPath,
+				size: originSize,
+				width: Number(file.width || 0),
+				height: Number(file.height || 0),
+				compressed: false
+			}
 			if (!originPath) {
 				return {
+					...untouched,
 					path: '',
-					size: 0,
-					compressed: false
+					size: 0
 				}
 			}
 
+			// 动图压不得：gif 会被压成静态单帧
+			if (this.isAnimatedImage(originPath)) {
+				return untouched
+			}
+
+			// 体积没超阈值就不折腾：像素数量同样是这个量级，再压收益很低
 			if (!this.useCompression || originSize <= this.compressThreshold) {
-				return {
-					path: originPath,
-					size: originSize,
-					compressed: false
-				}
+				return untouched
 			}
 
 			try {
@@ -872,17 +981,22 @@ export default {
 						throw new Error('图片压缩结果无效')
 					}
 					const info = await this.getFileInfo(compressedPath)
-					const compressedSize = Number((info && info.size) || originSize)
-					if (originSize > 0 && compressedSize >= originSize) {
-						return {
-							path: originPath,
-							size: originSize,
-							compressed: false
-						}
+					const compressedSize = Number((info && info.size) || 0)
+					// 大小都读不到就不冒险用了，宁可传原图
+					if (!compressedSize) {
+						return untouched
 					}
+					// 压完反而更大（小图重编码 / 原图已是高压缩比）→ 保留原图
+					if (compressedSize >= originSize) {
+						return untouched
+					}
+					// 压缩后尺寸要写回，服务端存的是这个宽高（列表排版依赖它算比例）
+					const compressedInfo = await this.getImageInfo(compressedPath).catch(() => null)
 					return {
 						path: compressedPath,
 						size: compressedSize,
+						width: Number((compressedInfo && compressedInfo.width) || file.width || 0),
+						height: Number((compressedInfo && compressedInfo.height) || file.height || 0),
 						compressed: compressedPath !== originPath
 					}
 				}
@@ -896,6 +1010,8 @@ export default {
 					return {
 						path: compressedPath,
 						size: Number(compressRes.size || originSize),
+						width: Number(file.width || 0),
+						height: Number(file.height || 0),
 						compressed: compressedPath !== originPath
 					}
 				}
@@ -903,11 +1019,7 @@ export default {
 				console.warn('prepareFileForUpload compress failed, fallback to original file', error)
 			}
 
-			return {
-				path: originPath,
-				size: originSize,
-				compressed: false
-			}
+			return untouched
 		},
 		shouldCreateThumbnail(file = {}) {
 			if (!this.thumbnailEnabled) {
@@ -1104,6 +1216,19 @@ export default {
 			}
 			return ''
 		},
+		/**
+		 * 缩略图任务排队执行。
+		 * 并发上传原图时，多张图会同时走到「画 canvas → 导出临时文件」，
+		 * 而画布只有一个 id，谁后画谁覆盖，导出的图会串成别人的照片。
+		 * 这里用一条 Promise 链把绘制/导出串起来，上传本身仍然并发。
+		 */
+		enqueueThumbnailTask(task) {
+			const run = () => task()
+			const next = this.thumbnailQueue.then(run, run)
+			// 队列自身要吞掉失败，否则一张图缩略图失败会卡死后面所有图
+			this.thumbnailQueue = next.then(() => {}, () => {})
+			return next
+		},
 		async uploadThumbnailForFile(file = {}, modulePath = '', prefix = '') {
 			if (!this.shouldCreateThumbnail(file)) {
 				return {
@@ -1114,7 +1239,7 @@ export default {
 			}
 
 			try {
-				const thumbnailSource = await this.buildThumbnailSource(file)
+				const thumbnailSource = await this.enqueueThumbnailTask(() => this.buildThumbnailSource(file))
 				if (!thumbnailSource) {
 					return {
 						thumbnailUrl: '',
@@ -1146,6 +1271,40 @@ export default {
 				}
 			}
 		},
+		/**
+		 * 这个文件是不是已经躺在云存储里了。
+		 * 回填的既有媒体（source: remote）算，上一次上传成功的也算。
+		 *
+		 * ⚠️ 上传成功后 source 仍然是 local，只看 source 会把整批重传一遍 ——
+		 * 「发布失败后重试」正是踩在这里：云存储凭空多出一整套孤儿文件。
+		 */
+		isUploadedFile(file = {}) {
+			if (!file.url && !file.fileId) {
+				return false
+			}
+			return file.source === 'remote' || file.status === 'success'
+		},
+		/** 把内部文件对象摊成对外的上传结果（提交表单只认这几个字段） */
+		toUploadResult(file = {}) {
+			const url = String(file.url || '').trim()
+			const mediaUrl = url || String(file.path || '').trim()
+			return {
+				path: file.path,
+				url: mediaUrl,
+				fileId: String(file.fileId || '').trim(),
+				cloudPath: file.cloudPath || '',
+				mediaType: file.mediaType,
+				mimeType: file.mimeType || '',
+				fileSize: file.size || 0,
+				duration: file.duration || 0,
+				width: file.width || 0,
+				height: file.height || 0,
+				thumbnailUrl: file.thumbnailUrl || (file.mediaType === 'video' ? '' : mediaUrl),
+				thumbnailFileId: file.thumbnailFileId || '',
+				thumbnailCloudPath: file.thumbnailCloudPath || '',
+				poster: file.poster || ''
+			}
+		},
 		async uploadAll(options = {}) {
 			if (this.uploading) {
 				return []
@@ -1158,110 +1317,107 @@ export default {
 			const prefix = String(options.prefix || this.uploadPrefix || 'file').trim() || 'file'
 
 			this.uploading = true
-			const successList = []
-			const failedList = []
-			const total = this.files.length
+			// 拍快照：并发时 this.files 会被多处 splice，按下标写回才不会串位
+			const snapshot = this.files.slice()
+			const total = snapshot.length
+			// 结果按下标占位再过滤，保证 success / failed 的顺序与用户选图顺序一致
+			const successSlots = new Array(total).fill(null)
+			const failedSlots = new Array(total).fill(null)
+			let finished = 0
 
-			try {
-				for (let i = 0; i < total; i++) {
-					const current = this.files[i]
-					if (!current) {
-						continue
-					}
+			const emitProgress = () => {
+				finished += 1
+				this.$emit('progress', {
+					current: finished,
+					total,
+					success: successSlots.filter(Boolean).length,
+					failed: failedSlots.filter(Boolean).length
+				})
+			}
 
-					if (current.source === 'remote' && (current.url || current.fileId)) {
-						successList.push({
-							path: current.path,
-							url: current.url || current.path || '',
-							fileId: current.fileId || '',
-							cloudPath: current.cloudPath || '',
-							mediaType: current.mediaType,
-							mimeType: current.mimeType || '',
-							fileSize: current.size || 0,
-							duration: current.duration || 0,
-							width: current.width || 0,
-							height: current.height || 0,
-							thumbnailUrl: current.thumbnailUrl || (current.mediaType === 'video' ? '' : (current.url || current.path || '')),
-							thumbnailFileId: current.thumbnailFileId || '',
-							thumbnailCloudPath: current.thumbnailCloudPath || '',
-							poster: current.poster || ''
-						})
-						continue
-					}
+			const uploadOne = async (file, index) => {
+				if (!file) {
+					emitProgress()
+					return
+				}
 
-					this.files.splice(i, 1, {
-						...current,
-						status: 'uploading',
-						errorMsg: ''
+				if (this.isUploadedFile(file)) {
+					successSlots[index] = this.toUploadResult(file)
+					emitProgress()
+					return
+				}
+
+				this.files.splice(index, 1, {
+					...file,
+					status: 'uploading',
+					errorMsg: ''
+				})
+
+				try {
+					const uploadSource = await this.prepareFileForUpload(file)
+					const uploadRes = await uploadFileWithModule({
+						filePath: uploadSource.path || file.path,
+						module: modulePath,
+						prefix,
+						fileType: file.mediaType === 'video' ? 'video' : 'image'
 					})
+					const thumbnailRes = await this.uploadThumbnailForFile(file, modulePath, prefix)
+					const thumbnailUrl = thumbnailRes.thumbnailUrl ||
+						(file.mediaType === 'image' ? (uploadRes.fileURL || '') : '')
 
-					try {
-						const uploadSource = await this.prepareFileForUpload(current)
-						const uploadRes = await uploadFileWithModule({
-							filePath: uploadSource.path || current.path,
-							module: modulePath,
-							prefix,
-							fileType: current.mediaType === 'video' ? 'video' : 'image'
-						})
-						const thumbnailRes = await this.uploadThumbnailForFile(current, modulePath, prefix)
-						const thumbnailUrl = thumbnailRes.thumbnailUrl ||
-							(current.mediaType === 'image' ? (uploadRes.fileURL || '') : '')
-
-						const nextItem = {
-							...current,
-							size: Number(uploadSource.size || current.size || 0),
-							status: 'success',
-							cloudPath: uploadRes.cloudPath || '',
-							url: uploadRes.fileURL || '',
-							fileId: uploadRes.fileID || '',
-							thumbnailUrl,
-							thumbnailFileId: thumbnailRes.thumbnailFileId || '',
-							thumbnailCloudPath: thumbnailRes.thumbnailCloudPath || '',
-							errorMsg: ''
-						}
-						this.files.splice(i, 1, nextItem)
-
-						successList.push({
-							path: nextItem.path,
-							url: nextItem.url,
-							fileId: nextItem.fileId,
-							cloudPath: nextItem.cloudPath,
-							mediaType: nextItem.mediaType,
-							mimeType: nextItem.mimeType || '',
-							fileSize: nextItem.size || 0,
-							duration: nextItem.duration || 0,
-							width: nextItem.width || 0,
-							height: nextItem.height || 0,
-							thumbnailUrl: nextItem.thumbnailUrl || (nextItem.mediaType === 'video' ? '' : nextItem.url),
-							thumbnailFileId: nextItem.thumbnailFileId || '',
-							thumbnailCloudPath: nextItem.thumbnailCloudPath || '',
-							poster: nextItem.poster || ''
-						})
-					} catch (error) {
-						const failedItem = {
-							...current,
-							status: 'error',
-							errorMsg: error && error.message ? error.message : '上传失败'
-						}
-						this.files.splice(i, 1, failedItem)
-						failedList.push({
-							...failedItem
-						})
-						this.$emit('error', {
-							file: { ...failedItem },
-							error
-						})
+					const nextItem = {
+						...file,
+						size: Number(uploadSource.size || file.size || 0),
+						// 压缩会改尺寸，这里必须用压缩后的真实宽高（服务端按它算列表排版比例）
+						width: Number(uploadSource.width || file.width || 0),
+						height: Number(uploadSource.height || file.height || 0),
+						status: 'success',
+						cloudPath: uploadRes.cloudPath || '',
+						url: uploadRes.fileURL || '',
+						fileId: uploadRes.fileID || '',
+						thumbnailUrl,
+						thumbnailFileId: thumbnailRes.thumbnailFileId || '',
+						thumbnailCloudPath: thumbnailRes.thumbnailCloudPath || '',
+						errorMsg: ''
 					}
-
-					this.$emit('progress', {
-						current: i + 1,
-						total,
-						success: successList.length,
-						failed: failedList.length
+					this.files.splice(index, 1, nextItem)
+					successSlots[index] = this.toUploadResult(nextItem)
+				} catch (error) {
+					const failedItem = {
+						...file,
+						status: 'error',
+						errorMsg: error && error.message ? error.message : '上传失败'
+					}
+					this.files.splice(index, 1, failedItem)
+					failedSlots[index] = failedItem
+					this.$emit('error', {
+						file: { ...failedItem },
+						error
 					})
 				}
+
+				emitProgress()
+			}
+
+			try {
+				// 固定并发池：worker 领一个下标就往下走，跑完再领下一个
+				let cursor = 0
+				const workerCount = Math.min(UPLOAD_CONCURRENCY, total)
+				const workers = []
+				for (let i = 0; i < workerCount; i += 1) {
+					workers.push((async () => {
+						while (cursor < total) {
+							const index = cursor
+							cursor += 1
+							await uploadOne(snapshot[index], index)
+						}
+					})())
+				}
+				await Promise.all(workers)
 			} finally {
 				this.uploading = false
+				const successList = successSlots.filter(Boolean)
+				const failedList = failedSlots.filter(Boolean)
 				this.$emit('uploaded', {
 					success: [...successList],
 					failed: [...failedList],
@@ -1270,7 +1426,7 @@ export default {
 				this.emitChange()
 			}
 
-			return successList
+			return successSlots.filter(Boolean)
 		}
 	}
 }

@@ -808,6 +808,9 @@ module.exports = class DailyService extends Service {
 				update_time: Date.now()
 			})
 
+			// ⚠️ 这里**不删**云存储文件：文件删掉就找不回来，误删 / 排查 / 举报取证都没有兜底，
+			// 所以删除只做软删。原图与缩略图由运营管理「权限 → 云存储清理」手动回收
+			// （platform.cleanupDailyMedia，清理后打 media_cleaned_at 标记）。
 			return {
 				errCode: 0,
 				data: {

@@ -22,10 +22,14 @@
 				</view>
 			</view>
 
-			<!-- 游戏网格 -->
-			<view class="game-grid">
+			<!-- 游戏网格：每个小游戏受运营「权限」tab 的子开关控制 -->
+			<view v-if="!visibleGameCards.length" class="game-empty">
+				<text class="game-empty__title">当前没有开放的游戏</text>
+				<text class="game-empty__desc">运营暂时收起了全部小游戏，晚点再来看看</text>
+			</view>
+			<view v-else class="game-grid">
 				<view
-					v-for="item in gameCards"
+					v-for="item in visibleGameCards"
 					:key="item.gameType"
 					class="game-card"
 					hover-class="game-card--hover"
@@ -114,6 +118,7 @@
 	import LoveGameRules from '@/components/love-game-rules/love-game-rules.vue'
 	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
 	import { getGameApi } from '@/common/api/game.js'
+	import { getPlatformApi } from '@/common/api/platform.js'
 	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
 	import { getActiveRoom, clearActiveRoom } from '@/common/game/active-room.js'
 	import {
@@ -132,6 +137,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		landlord: '/pages/game/landlord/room'
 	}
 
+	// 小游戏子开关（运营管理「权限」tab）：大厅每次进入最多对齐一次配置，
+	// 从房间返回大厅会触发 onShow，30 秒节流避免反复请求
+	const MODULE_VISIBILITY_FETCH_INTERVAL = 30 * 1000
+	let lastModuleVisibilityFetchAt = 0
+
 	export default {
 		components: {
 			LoveGameRules,
@@ -142,6 +152,12 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				appStateStore: null,
 				isLoggedIn: false,
 				gameCards: getGameCardList(),
+				// 每个小游戏是否在大厅展示：默认全开，只有运营显式关闭才隐藏
+				gameItems: {
+					undercover: true,
+					landlord: true,
+					bomb: true
+				},
 				activeRoom: null,
 				records: [],
 				loadingRecords: false,
@@ -153,6 +169,10 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			currentUid() {
 				const userInfo = this.appStateStore ? this.appStateStore.userInfo : null
 				return userInfo && userInfo._id ? String(userInfo._id) : ''
+			},
+			// 被运营关掉的小游戏不出现；未在 gameItems 里的类型按默认开启处理
+			visibleGameCards() {
+				return this.gameCards.filter((item) => this.gameItems[item.gameType] !== false)
 			},
 			resumeTitle() {
 				if (!this.activeRoom) {
@@ -197,6 +217,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncLoginState()
+			this.loadModuleVisibility()
 			this.refreshActiveRoom()
 			this.loadRecords()
 		},
@@ -205,11 +226,13 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			// 这里再挡一刀，避免未登录就发对局/战绩请求、在登录页上闪错误 toast。
 			if (!requirePageLogin()) return
 			this.syncLoginState()
+			this.loadModuleVisibility()
 			this.refreshActiveRoom()
 			this.loadRecords()
 		},
 		onPullDownRefresh() {
 			Promise.resolve()
+				.then(() => this.loadModuleVisibility(true))
 				.then(() => this.refreshActiveRoom())
 				.then(() => this.loadRecords())
 				.finally(() => {
@@ -232,6 +255,30 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			syncLoginState() {
 				const userInfo = this.appStateStore ? this.appStateStore.userInfo : null
 				this.isLoggedIn = Boolean(userInfo && userInfo._id) || hasValidLogin()
+			},
+			// 运营「权限」tab 的小游戏子开关：读不到就维持默认全开，不影响大厅可用性
+			async loadModuleVisibility(force = false) {
+				const now = Date.now()
+				if (!force && now - lastModuleVisibilityFetchAt < MODULE_VISIBILITY_FETCH_INTERVAL) {
+					return
+				}
+				lastModuleVisibilityFetchAt = now
+				try {
+					const result = await getPlatformApi().getModuleVisibility()
+					if (!result || (result.errCode && result.errCode !== 0)) {
+						return
+					}
+					const items = result.data && result.data.gameItems
+					const source = items && typeof items === 'object' ? items : {}
+					this.gameItems = {
+						undercover: source.undercover !== false,
+						landlord: source.landlord !== false,
+						bomb: source.bomb !== false
+					}
+				} catch (error) {
+					// 配置接口失败就沿用当前值（默认全开），大厅照常可用
+					console.warn('loadModuleVisibility failed', error)
+				}
 			},
 			titleOf(gameType) {
 				const meta = getGameMeta(gameType)
