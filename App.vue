@@ -28,6 +28,7 @@
 	} from './common/utils/interstitial-ad.js'
 	import { getPlatformApi } from './common/api/platform.js'
 	import { loadAppSettings } from './common/app-settings.js'
+	import { resetPhotoGridSession } from './common/utils/photo-grid-selector.js'
 
 	const DEVICE_ID_KEY = 'love_device_id'
 
@@ -84,6 +85,8 @@
 		onLaunch() {
 			// 插屏广告每次冷启动重置「已展示」状态：一次 App 运行内最多弹一次
 			resetInterstitialAdState()
+			// 首页宫格方案每次冷启动重新分配（进入首页时才会真正选一次）
+			resetPhotoGridSession()
 			installRouteAuthGuard()
 			this.reportVisit()
 			// 全局配置（模块可见性 / 心动点任务开关）启动时拉一次写缓存，
@@ -168,7 +171,7 @@
 	/*每个页面公共css */
 	@import './components/firstui/common/fui-app.css';
 	@import './components/firstui/fui-theme/fui-theme.css';
-	@import './common/styles/noir-serif-num.css';
+	@import './common/styles/noir-serif-num.css';
 	@import './common/styles/love-theme.css';
 
 	.app-root {

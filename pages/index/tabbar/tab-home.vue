@@ -268,60 +268,38 @@
 						<fui-icon name="arrowright" :size="24" color="rgba(216, 176, 140, 0.72)"></fui-icon>
 					</view>
 				</view>
-				<view v-if="recentPhotos.length" class="th-film-grid">
-					<view class="th-film-big" @tap="handlePhotoTap(recentPhotos[0], 0)">
-						<image class="th-film-img" :src="recentPhotos[0].thumb" mode="aspectFill"></image>
-						<view class="th-film-cap">
-							<text class="th-film-cap__title">{{ recentPhotos[0].title }}</text>
-							<text class="th-film-cap__date">{{ recentPhotos[0].date }}</text>
-						</view>
-					</view>
-					<view class="th-film-col">
-						<view
-							v-if="recentPhotos[1]"
-							class="th-film-sm"
-							@tap="handlePhotoTap(recentPhotos[1], 1)"
-						>
-							<image class="th-film-img" :src="recentPhotos[1].thumb" mode="aspectFill"></image>
-						</view>
-						<view
-							v-else
-							class="th-film-sm th-film-sm--add"
-							@tap="goPage('/pages/album/upload')"
-						>
-							<text class="th-film-add__plus">＋</text>
-							<text class="th-film-add__txt">上传照片</text>
-						</view>
-
-						<view
-							v-if="recentPhotos[2]"
-							class="th-film-sm"
-							@tap="goPage('/pages/album/list')"
-						>
-							<image class="th-film-img" :src="recentPhotos[2].thumb" mode="aspectFill"></image>
-							<view v-if="extraPhotoCount > 0" class="th-film-more">
-								<text class="th-film-more__num">+{{ extraPhotoCount }}</text>
-								<text class="th-film-more__txt">查看全部</text>
-							</view>
-						</view>
-						<view
-							v-else
-							class="th-film-sm th-film-sm--add"
-							@tap="goPage('/pages/album/upload')"
-						>
-							<text class="th-film-add__plus">＋</text>
-							<text class="th-film-add__txt">记录此刻</text>
-						</view>
+				<!-- 一张照片都没有：给「进入相册」开启入口 -->
+				<view
+					v-if="photoSectionVariant === 'empty'"
+					class="th-film-empty"
+					@tap="goPage('/pages/album/list')"
+				>
+					<text class="th-film-empty__kicker">FILM · NOT STARTED</text>
+					<text class="th-film-empty__title">时光胶片还没开始</text>
+					<text class="th-film-empty__desc">进入相册上传第一张照片，开启你们的时光记录</text>
+					<view class="th-film-empty__btn">
+						<text class="th-film-empty__btn-txt">进入相册</text>
 					</view>
 				</view>
-				<noir-empty
-					v-else
-					kicker="RECENT PHOTOS"
-					title="还没有上传照片或视频"
-					desc="把一起看过的风景和日常收进双人时光流"
-					action-text="去上传"
-					@action="goPage('/pages/album/upload')"
-				/>
+
+				<!-- 照片 ≥1 张：按宫格方案（22 项，按权重随机）铺排 -->
+				<view v-else class="th-film">
+					<love-photo-grid
+						:photos="recentPhotos"
+						:total="Number(photoTotal) || 0"
+						:scheme="photoGridSession.scheme"
+						@photo="handleGridPhotoTap"
+						@all="goPage('/pages/album/list')"
+						@upload="goPage('/pages/album/upload')"
+					/>
+
+<!--					<view class="th-film-foot">
+						<text class="th-film-foot__txt">{{ filmSummaryText }}</text>
+						<view class="th-film-foot__go" @tap="goPage('/pages/album/upload')">
+							<text class="th-film-foot__go-txt">上传新照片</text>
+						</view>
+					</view>-->
+				</view>
 
 				<!-- 新增 2：今晚玩一局 · 聚会游戏速开区 -->
 				<template v-if="gameVisible && visibleHomeGames.length">
@@ -432,8 +410,10 @@
 	import { readAppSettingsCache } from '@/common/app-settings.js'
 	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
 	import { getNavBarHeight, getNavBarMetrics } from '@/common/utils/nav-bar.js'
+	import { getPhotoGridSession } from '@/common/utils/photo-grid-selector.js'
 	import { useAppStateStore } from '@/store/app-state.js'
 	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
+	import LovePhotoGrid from '@/components/love-photo-grid/love-photo-grid.vue'
 
 	const DEFAULT_HERO_COVER = '/static/images/home-hero-bg.jpg'
 
@@ -509,7 +489,8 @@
 	export default {
 		name: 'TabHome',
 		components: {
-			LoveGameIcon
+			LoveGameIcon,
+			LovePhotoGrid
 		},
 		props: {
 			settings: {
@@ -544,6 +525,7 @@
 				nextAnniversary: null,
 				secondAnniversary: null,
 				recentPhotos: [],
+				photoTotal: null,
 				latestMoment: null,
 				plans: [],
 				activeGameRoom: null,
@@ -666,13 +648,39 @@
 				}
 				return `今日任务 ${done}/${total}`
 			},
-			photoHeaderActionText() {
-				const total = Number(this.stats.albumTotal || 0)
-				return total > 0 ? `全部 ${total} 项` : '查看全部'
+			/**
+			 * 宫格方案会话：进入首页时按 photoTotal 分配一次并缓存
+			 * （缓存在模块内存里，小程序冷启动 / App.vue onLaunch 清空重分配；
+			 *   照片总数变化视为需要重抽，见 photo-grid-selector.js）
+			 */
+			photoGridSession() {
+				return getPhotoGridSession(this.photoTotal)
 			},
-			extraPhotoCount() {
-				const total = Number(this.stats.albumTotal || 0)
-				return Math.max(0, total - 3)
+			photoHeaderActionText() {
+				const total = Number(this.photoTotal || 0)
+				return total > 0 ? `全部 ${total} 张` : '查看全部'
+			},
+			/** 模板只看这个：loading 不渲染；empty 开启入口；grid 宫格照片墙（含 1~2 张的 1/2 块方案） */
+			photoSectionVariant() {
+				if (this.photoTotal === null || this.photoTotal === undefined) return 'loading'
+				const mode = this.photoGridSession.mode
+				if (mode === 'empty' || !this.recentPhotos.length) return 'empty'
+				return 'grid'
+			},
+			/** 真正上墙的张数：会话里的可放照片块数 */
+			displayedPhotoCount() {
+				if (this.photoSectionVariant !== 'grid') return 0
+				return Math.min(this.recentPhotos.length, this.photoGridSession.photoSlots)
+			},
+			filmSummaryText() {
+				const shown = this.displayedPhotoCount
+				const total = Number(this.photoTotal || 0)
+				if (!shown) return ''
+				const latest = this.recentPhotos[0].date
+				if (total > shown) {
+					return `共 ${total} 张 · 宫格展示最近 ${shown} 张`
+				}
+				return `共 ${shown} 张 · 最近更新 ${latest}`
 			},
 			visibleQuickItems() {
 				const all = [
@@ -798,19 +806,31 @@
 					this.secondAnniversary = list.length > 1 ? normalizeAnniversaryItem(list[1]) : null
 				}).catch(() => {})
 
-				// 3. 时光胶片 · 最近 3 张照片
-				getPhotoApi().getList({ page: 1, pageSize: 3 }).then((res) => {
+				// 3. 时光胶片 · 最近 10 张照片（宫格最多放 7 块，照片超量时末块变「+N 全部」，其余只统计数量）
+				getPhotoApi().getList({ page: 1, pageSize: 10 }).then((res) => {
 					const list = (res && res.data && Array.isArray(res.data.list)) ? res.data.list : []
+					const total = Number(res && res.data && res.data.pagination && res.data.pagination.total)
+					this.photoTotal = Number.isFinite(total) && total > 0 ? total : list.length
 					this.recentPhotos = list
-						.map((item) => ({
-							id: item._id,
-							thumb: String(item.thumbnail_url || item.url || '').trim(),
-							url: String(item.url || item.thumbnail_url || '').trim(),
-							title: String(item.title || item.description || '双人时光').trim(),
-							date: formatShortDate(item.shot_time || item.create_time)
-						}))
+						.map((item) => {
+							const loc = item.location && item.location.name ? String(item.location.name).trim() : ''
+							const tags = Array.isArray(item.tags)
+								? item.tags.map((t) => String(t || '').trim()).filter(Boolean).slice(0, 2)
+								: []
+							return {
+								id: item._id,
+								thumb: String(item.thumbnail_url || item.url || '').trim(),
+								url: String(item.url || item.thumbnail_url || '').trim(),
+								title: String(item.description || '').trim() || '双人时光',
+								date: formatShortDate(item.shoot_time || item.create_time),
+								location: loc.length > 8 ? `${loc.slice(0, 8)}…` : loc,
+								tags,
+								likeCount: Number(item.like_count || 0),
+								isVideo: String(item.media_type || '').toLowerCase() === 'video'
+							}
+						})
 						.filter((item) => Boolean(item.thumb))
-						.slice(0, 3)
+						.slice(0, 8)
 				}).catch(() => {})
 
 				// 4. 最新双人日常
@@ -925,12 +945,21 @@
 					this.signing = false
 				}
 			},
+			// 宫格组件回传：photo 为照片对象，index 为它在 recentPhotos 里的下标
+			handleGridPhotoTap(payload) {
+				if (!payload || !payload.photo) {
+					this.goPage('/pages/album/upload')
+					return
+				}
+				this.handlePhotoTap(payload.photo, payload.index || 0)
+			},
 			handlePhotoTap(photo, index = 0) {
 				if (!photo || !photo.url) {
 					this.goPage('/pages/album/list')
 					return
 				}
-				const urls = this.recentPhotos.map((p) => p.url).filter(Boolean)
+				// 只预览当前上墙的照片（「+N 全部」以外的），避免滑到没展示的那张
+				const urls = this.recentPhotos.slice(0, this.displayedPhotoCount).map((p) => p.url).filter(Boolean)
 				if (urls.length) {
 					uni.previewImage({
 						urls,
@@ -1700,116 +1729,86 @@
 		white-space: nowrap;
 	}
 
-	/* 4. 时光胶片 · 最近照片墙 */
-	.th-film-grid {
+	.th-film {
 		display: flex;
-		gap: 14rpx;
-		height: 320rpx;
+		flex-direction: column;
+		gap: 16rpx;
 	}
 
-	.th-film-big {
-		position: relative;
-		flex: 1.35;
-		height: 100%;
+	/* 一张照片都没有：开启入口卡 */
+	.th-film-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 40rpx 32rpx 36rpx;
 		border-radius: 26rpx;
-		overflow: hidden;
-		border: 1rpx solid rgba(255, 255, 255, 0.09);
-		background: #1A1512;
+		border: 1rpx dashed rgba(216, 176, 140, 0.3);
+		background: rgba(216, 176, 140, 0.05);
 	}
 
-	.th-film-col {
-		flex: 1;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		gap: 14rpx;
-	}
-
-	.th-film-sm {
-		position: relative;
-		flex: 1;
-		border-radius: 22rpx;
-		overflow: hidden;
-		border: 1rpx solid rgba(255, 255, 255, 0.09);
-		background: #1A1512;
-	}
-
-	.th-film-sm--add {
-		border-style: dashed;
-		border-color: rgba(216, 176, 140, 0.28);
-		background: rgba(255, 255, 255, 0.025);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 6rpx;
-	}
-
-	.th-film-add__plus {
-		font-size: 30rpx;
-		color: #D8B08C;
-		line-height: 1;
-	}
-
-	.th-film-add__txt {
-		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.48);
-	}
-
-	.th-film-img {
-		width: 100%;
-		height: 100%;
-		display: block;
-	}
-
-	.th-film-cap {
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		padding: 36rpx 20rpx 16rpx;
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0), rgba(17, 13, 11, 0.86));
-	}
-
-	.th-film-cap__title {
-		display: block;
-		font-size: 23rpx;
-		font-weight: 500;
-		color: #FBF4EA;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.th-film-cap__date {
-		display: block;
-		margin-top: 4rpx;
-		font-family: "SF Mono", "Consolas", monospace;
+	.th-film-empty__kicker {
 		font-size: 18rpx;
-		color: rgba(216, 176, 140, 0.82);
+		letter-spacing: 2rpx;
+		color: rgba(216, 176, 140, 0.6);
 	}
 
-	.th-film-more {
-		position: absolute;
-		inset: 0;
-		background: rgba(17, 13, 11, 0.58);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.th-film-more__num {
-		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
-		font-size: 32rpx;
-		color: #FBF4EA;
+	.th-film-empty__title {
+		margin-top: 14rpx;
+		font-size: 28rpx;
 		font-weight: 500;
+		color: #FBF4EA;
 	}
 
-	.th-film-more__txt {
-		margin-top: 4rpx;
+	.th-film-empty__desc {
+		margin-top: 10rpx;
+		font-size: 21rpx;
+		line-height: 1.6;
+		color: rgba(245, 237, 228, 0.52);
+		text-align: center;
+	}
+
+	.th-film-empty__btn {
+		margin-top: 24rpx;
+		padding: 12rpx 40rpx;
+		border-radius: 999rpx;
+		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+	}
+
+	.th-film-empty__btn-txt {
+		font-size: 22rpx;
+		font-weight: 500;
+		color: #2A1A14;
+	}
+
+	/* 4. 时光胶片 · 最近照片墙 */
+
+	/* 宫格几何：可用宽 694rpx = 5×129.2 + 4×12，格间距 12rpx
+	   具体铺排由 components/love-photo-grid 换算成 px 后绝对定位 */
+
+	/* 宫格脚注 */
+	.th-film-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 4rpx;
+	}
+
+	.th-film-foot__txt {
 		font-size: 19rpx;
-		color: rgba(216, 176, 140, 0.86);
+		color: rgba(245, 237, 228, 0.44);
+	}
+
+	.th-film-foot__go {
+    display: flex;
+		padding: 4rpx 16rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.32);
+		background: rgba(216, 176, 140, 0.1);
+	}
+
+	.th-film-foot__go-txt {
+		font-size: 18rpx;
+		color: rgba(240, 209, 179, 0.92);
 	}
 
 	/* LATEST MOMENT (保持原有样式) */
