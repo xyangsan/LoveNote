@@ -1,172 +1,242 @@
 <template>
-	<view class="bomb-page">
-		<view class="bomb-page__glow bomb-page__glow--left"></view>
-		<view class="bomb-page__glow bomb-page__glow--right"></view>
+	<view class="nb-page">
+		<view class="nb-glow nb-glow--left"></view>
+		<view class="nb-glow nb-glow--right"></view>
 
-		<!-- 自绘顶栏：navigationStyle 为 custom，需自行避让状态栏与右上角胶囊 -->
-		<view class="bomb-navbar" :style="navBarStyle">
-			<view class="bomb-navbar__inner">
-				<view class="bomb-navbar__back" :style="{ marginLeft: navBar.leftInset + 'px' }" @click="handleBack">
-					<text class="bomb-navbar__back-text">‹</text>
+		<noir-navbar
+			title="数字炸弹"
+			:show-back="true"
+			:custom-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+			@back="handleBack"
+		>
+			<template #right>
+				<view
+					v-if="phase === 'playing'"
+					class="nb-pill-act"
+					@tap="handleConfirmRestart"
+				>
+					<text class="nb-pill-act__txt">重开</text>
 				</view>
-				<view class="bomb-navbar__title-wrap">
-					<text class="bomb-navbar__title">数字炸弹</text>
+				<view
+					v-else
+					class="nb-pill-act"
+					@tap="handleShowRules"
+				>
+					<text class="nb-pill-act__txt">规则</text>
 				</view>
-				<view class="bomb-navbar__rule" :style="{ marginRight: navBar.rightInset + 'px' }" @click="handleShowRules">
-					<text class="bomb-navbar__rule-text">?</text>
-				</view>
-			</view>
-		</view>
+			</template>
+		</noir-navbar>
 
-		<view class="bomb-layer">
+		<view class="nb-wrap">
 			<!-- ============ 设置阶段 ============ -->
 			<template v-if="phase === 'setup'">
-				<view class="bomb-hero">
-					<text class="bomb-hero__emoji">💣</text>
-					<text class="bomb-hero__title">选个范围，开始埋雷</text>
-					<text class="bomb-hero__desc">开始后系统会在范围内随机埋下一个数字，猜中即爆炸。</text>
+				<view class="nb-setup-hero">
+					<text class="nb-kicker">NUMBER BOMB · 单机同设备</text>
+					<text class="nb-setup-hero__title">选个范围，开始埋雷</text>
+					<text class="nb-setup-hero__desc">系统会在范围内随机埋下一个炸弹数字，轮流猜数收窄区间，踩中即触发结算。</text>
 				</view>
 
-				<love-glass-card :margin="['0', '0', '0', '0']" :header-line="false" :padding="['22rpx', '24rpx']">
-					<view class="bomb-limit">
-						<view class="bomb-limit__head">
-							<text class="bomb-label bomb-label--inline">数字范围上限</text>
-							<text class="bomb-limit__value">1 ~ {{ limitPreview || game.rangeLimit }}</text>
+				<view v-if="hasProgress" class="nb-resume" @tap="handleResumeProgress">
+					<view class="nb-resume__info">
+						<text class="nb-resume__title">检测到上一局尚未结束</text>
+						<text class="nb-resume__desc">安全区间 {{ progressSummary }} · 点击继续</text>
+					</view>
+					<view class="nb-resume__btn">
+						<text class="nb-resume__btn-txt">继续</text>
+					</view>
+				</view>
+
+				<view class="nb-card">
+					<!-- 范围上限 -->
+					<view class="nb-section">
+						<view class="nb-section__head">
+							<text class="nb-section__label">数字范围上限</text>
+							<text class="nb-section__val">1 ~ {{ limitPreview || game.rangeLimit }}</text>
+						</view>
+						<view class="nb-presets">
+							<view
+								v-for="preset in rangePresets"
+								:key="preset"
+								class="nb-chip"
+								:class="{ 'nb-chip--active': (limitPreview || game.rangeLimit) === preset }"
+								@tap="handleSelectPreset(preset)"
+							>
+								<text class="nb-chip__txt">1~{{ preset }}</text>
+							</view>
 						</view>
 						<uv-slider
-							class="bomb-limit__slider"
+							class="nb-slider"
 							:value="game.rangeLimit"
 							:min="minLimit"
 							:max="maxLimit"
 							:step="limitStep"
-							active-color="#e76f51"
-							background-color="#f4ded6"
-							block-color="#ffffff"
-							:block-size="26"
+							active-color="#E2643F"
+							background-color="rgba(255, 255, 255, 0.12)"
+							block-color="#FBF4EA"
+							:block-size="24"
 							@changing="handleLimitChanging"
 							@change="handleLimitChange"
 						></uv-slider>
-						<view class="bomb-limit__scale">
-							<text class="bomb-limit__scale-text">{{ minLimit }}</text>
-							<text class="bomb-limit__scale-text">{{ maxLimit }}</text>
+						<view class="nb-scale">
+							<text class="nb-scale__txt">{{ minLimit }}</text>
+							<text class="nb-scale__txt">{{ maxLimit }}</text>
 						</view>
 					</view>
 
-					<view class="bomb-players">
-						<text class="bomb-label">玩家人数（多人时同一台设备轮流猜）</text>
-						<view class="bomb-stepper">
-							<view
-								class="bomb-stepper__btn"
-								:class="{ 'bomb-stepper__btn--disabled': playerCount <= minPlayers }"
-								@click="handlePlayerCountChange(-1)"
-							>
-								<text class="bomb-stepper__btn-text">−</text>
+					<view class="nb-divider"></view>
+
+					<!-- 玩家人数 -->
+					<view class="nb-section">
+						<view class="nb-section__head">
+							<text class="nb-section__label">玩家人数</text>
+							<text class="nb-section__sub">{{ playerCount > 1 ? '同设备轮流传递' : '单人挑战模式' }}</text>
+						</view>
+						<view class="nb-player-row">
+							<view class="nb-presets nb-presets--inline">
+								<view
+									v-for="n in quickPlayerCounts"
+									:key="n"
+									class="nb-chip"
+									:class="{ 'nb-chip--active': playerCount === n }"
+									@tap="handleSelectPlayerCount(n)"
+								>
+									<text class="nb-chip__txt">{{ n }} 人</text>
+								</view>
 							</view>
-							<text class="bomb-stepper__value">{{ playerCount }}</text>
-							<view
-								class="bomb-stepper__btn"
-								:class="{ 'bomb-stepper__btn--disabled': playerCount >= maxPlayers }"
-								@click="handlePlayerCountChange(1)"
-							>
-								<text class="bomb-stepper__btn-text">+</text>
+							<view class="nb-stepper">
+								<view
+									class="nb-stepper__btn"
+									:class="{ 'nb-stepper__btn--disabled': playerCount <= minPlayers }"
+									@tap="handlePlayerCountChange(-1)"
+								>
+									<text class="nb-stepper__btn-txt">−</text>
+								</view>
+								<text class="nb-stepper__val">{{ playerCount }}</text>
+								<view
+									class="nb-stepper__btn"
+									:class="{ 'nb-stepper__btn--disabled': playerCount >= maxPlayers }"
+									@tap="handlePlayerCountChange(1)"
+								>
+									<text class="nb-stepper__btn-txt">+</text>
+								</view>
 							</view>
 						</view>
 					</view>
-				</love-glass-card>
-
-				<view v-if="hasProgress" class="bomb-resume" @click="handleResumeProgress">
-					<text class="bomb-resume__title">检测到上一局没玩完</text>
-					<text class="bomb-resume__desc">区间 {{ progressSummary }}，点这里继续</text>
 				</view>
 
-				<view class="bomb-actions">
-					<fui-button
-						text="开始游戏"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						height="92rpx"
-						radius="999rpx"
-						:size="32"
-						:bold="true"
-						@click="handleStart"
-					/>
-					<view class="bomb-actions__link" @click="handleShowRules">
-						<text class="bomb-actions__link-text">查看玩法说明</text>
+				<view class="nb-actions">
+					<view class="nb-cta" hover-class="nb-cta--hover" @tap="handleStart">
+						<text class="nb-cta__txt">开始埋雷</text>
 					</view>
-					
+					<view class="nb-actions__link" @tap="handleShowRules">
+						<text class="nb-actions__link-txt">查看玩法说明</text>
+					</view>
 				</view>
 			</template>
 
-			<!-- ============ 游戏阶段 ============ -->
+			<!-- ============ 游戏阶段（对标 NOIR v3 设计稿 s10） ============ -->
 			<template v-else-if="phase === 'playing'">
-				<view class="bomb-range">
-					<text class="bomb-range__label">当前范围</text>
-					<view class="bomb-range__row">
-						<text class="bomb-range__value">{{ game.rangeMin }}</text>
-						<text class="bomb-range__tilde">~</text>
-						<text class="bomb-range__value">{{ game.rangeMax }}</text>
+				<!-- 顶部模式信息条 -->
+				<view class="nb-bar">
+					<text class="nb-bar__txt">模式：{{ playerCount > 1 ? '单机同设备轮流' : '单人挑战' }}</text>
+					<text class="nb-bar__txt">人数 {{ playerCount }} 人 · 范围 1~{{ game.rangeLimit }} · {{ elapsedText }}</text>
+				</view>
+
+				<!-- 安全区间主卡片 -->
+				<view class="nb-range">
+					<text class="nb-kicker">SAFE RANGE · 避开炸弹数字</text>
+					<view class="nb-nums">
+						<text class="nb-nums__val">{{ game.rangeMin }}</text>
+						<text class="nb-nums__dash">—</text>
+						<text class="nb-nums__val">{{ game.rangeMax }}</text>
 					</view>
-					<text class="bomb-range__hint">还剩 {{ remainingCount }} 种可能 · 已猜 {{ game.guessCount }} 次</text>
+					<view class="nb-turn">
+						<text v-if="playerCount > 1" class="nb-turn__txt">当前轮到：{{ currentPlayerName }} · 请传递手机</text>
+						<text v-else class="nb-turn__txt">还剩 {{ remainingCount }} 个可能 · 已猜 {{ game.guessCount }} 次</text>
+					</view>
+					<text
+						v-if="lastMessage"
+						class="nb-feedback"
+						:class="'nb-feedback--' + lastTone"
+					>{{ lastMessage }}</text>
 				</view>
 
-				<view v-if="playerCount > 1" class="bomb-turn">
-					<text class="bomb-turn__label">轮到</text>
-					<text class="bomb-turn__name">{{ currentPlayerName }}</text>
-					<text class="bomb-turn__timer">{{ elapsedText }}</text>
-				</view>
-				<view v-else class="bomb-turn bomb-turn--single">
-					<text class="bomb-turn__label">用时</text>
-					<text class="bomb-turn__timer">{{ elapsedText }}</text>
-				</view>
-
-				<view v-if="lastMessage" class="bomb-message" :class="'bomb-message--' + lastTone">
-					<text class="bomb-message__text">{{ lastMessage }}</text>
-				</view>
-
-				<scroll-view v-if="game.guesses.length" class="bomb-history" scroll-x>
-					<view class="bomb-history__inner">
+				<!-- 输入展示框 -->
+				<view class="nb-input-box">
+					<text
+						class="nb-input-box__val"
+						:class="{ 'nb-input-box__val--empty': !guessText }"
+					>{{ guessText || '—' }}</text>
+					<view class="nb-input-box__right">
+						<text class="nb-input-box__hint">输入 {{ game.rangeMin }} ~ {{ game.rangeMax }} 之间的整数</text>
 						<view
-							v-for="(item, index) in game.guesses"
-							:key="index"
-							class="bomb-history__chip"
-							:class="{ 'bomb-history__chip--low': item.value < previousBombHint }"
+							v-if="guessText"
+							class="nb-backspace"
+							hover-class="nb-backspace--hover"
+							@tap="handleKeypadDelete"
 						>
-							<text class="bomb-history__chip-text">{{ item.value }}</text>
+							<text class="nb-backspace__txt">⌫</text>
 						</view>
 					</view>
-				</scroll-view>
+				</view>
 
-				<view class="bomb-input-card">
-					<fui-input
-						type="number"
-						:placeholder="inputPlaceholder"
-						:value="guessText"
-						:size="34"
-						:radius="20"
-						background-color="#fffaf7"
-						color="#5a3427"
-						:padding="['22rpx', '24rpx']"
-						@input="handleGuessInput"
-						@confirm="handleGuess"
-					></fui-input>
-					<view class="bomb-input-card__action" @click="handleGuess">
-						<text class="bomb-input-card__action-text">引爆</text>
+				<!-- 内置数字键盘 3x4 -->
+				<view class="nb-pad">
+					<view
+						v-for="digit in padDigitsTop"
+						:key="digit"
+						class="nb-key"
+						hover-class="nb-key--hover"
+						@tap="handleKeypadDigit(digit)"
+					>
+						<text class="nb-key__txt">{{ digit }}</text>
+					</view>
+					<view
+						class="nb-key nb-key--fn"
+						hover-class="nb-key--hover"
+						@tap="handleKeypadClear"
+					>
+						<text class="nb-key__txt nb-key__txt--fn">清空</text>
+					</view>
+					<view
+						class="nb-key"
+						hover-class="nb-key--hover"
+						@tap="handleKeypadDigit('0')"
+					>
+						<text class="nb-key__txt">0</text>
+					</view>
+					<view
+						class="nb-key nb-key--ok"
+						hover-class="nb-key--ok-hover"
+						@tap="handleGuess"
+					>
+						<text class="nb-key__txt nb-key__txt--ok">确认猜数</text>
 					</view>
 				</view>
 
-				<view class="bomb-tools">
-					<view class="bomb-tools__item" @click="handleQuickGuess('mid')">
-						<text class="bomb-tools__text">猜中点</text>
+				<!-- 本局猜测历史 -->
+				<view class="nb-hist">
+					<text v-if="historySummaryText" class="nb-hist__txt">{{ historySummaryText }}</text>
+					<text v-else class="nb-hist__txt">本局已猜 0 次 · 点按上方数字键盘开始猜数</text>
+				</view>
+
+				<!-- 辅助快捷操作 -->
+				<view class="nb-tools">
+					<view class="nb-tools__item" @tap="handleQuickGuess('mid')">
+						<text class="nb-tools__txt">猜中点 ({{ midGuessValue }})</text>
 					</view>
-					<view class="bomb-tools__item" @click="handleShowRules">
-						<text class="bomb-tools__text">规则</text>
+					<view class="nb-tools__item" @tap="handleShowRules">
+						<text class="nb-tools__txt">玩法规则</text>
 					</view>
-					<view class="bomb-tools__item" @click="handleQuit">
-						<text class="bomb-tools__text">结束本局</text>
+					<view class="nb-tools__item" @tap="handleQuit">
+						<text class="nb-tools__txt">结束本局</text>
 					</view>
 				</view>
 			</template>
-		
+
 			<view class="ad-view">
 				<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
 			</view>
@@ -204,8 +274,8 @@
 <script>
 	import LoveGameRules from '@/components/love-game-rules/love-game-rules.vue'
 	import LoveGameResultDialog from '@/components/love-game-result-dialog/love-game-result-dialog.vue'
-	import LoveGlassCard from '@/components/love-glass-card/love-glass-card.vue'
 	import { getGameApi } from '@/common/api/game.js'
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import {
 		createBombGame,
 		startBombGame,
@@ -225,8 +295,7 @@
 		MAX_PLAYERS,
 		GUESS_RESULT,
 		PHASE_SETUP,
-		PHASE_PLAYING,
-		PHASE_EXPLODED
+		PHASE_PLAYING
 	} from '@/common/game/bomb.js'
 	import {
 		saveBombProgress,
@@ -238,29 +307,28 @@
 	import { formatGameDuration } from '@/store/modules/game.js'
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { hasValidLogin } from '@/common/auth-center.js'
-	import { getNavBarMetrics, buildNavBarStyle } from '@/common/utils/nav-bar.js'
 
 	export default {
 		components: {
 			LoveGameRules,
-			LoveGameResultDialog,
-			LoveGlassCard
+			LoveGameResultDialog
 		},
 		data() {
 			return {
 				appStateStore: null,
-				// 状态栏 + 右上角胶囊的安全区，自定义顶栏靠它定位
-				navBar: getNavBarMetrics(),
+				scrollTop: 0,
 				phase: PHASE_SETUP,
 				game: createBombGame({ rangeLimit: DEFAULT_RANGE_LIMIT }),
 				/** uv-slider 拖动过程中的实时值（仅用于显示，松手才写回 game.rangeLimit） */
 				limitPreview: 0,
 				limitStep: RANGE_LIMIT_STEP,
+				rangePresets: [50, 100, 200, 500],
+				quickPlayerCounts: [1, 2, 3, 4],
+				padDigitsTop: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
 				playerCount: 1,
 				guessText: '',
 				lastMessage: '',
 				lastTone: 'normal',
-				previousBombHint: 0,
 				elapsedSeconds: 0,
 				timer: null,
 				exploding: false,
@@ -275,9 +343,6 @@
 			}
 		},
 		computed: {
-			navBarStyle() {
-				return buildNavBarStyle(this.navBar)
-			},
 			isLoggedIn() {
 				const userInfo = this.appStateStore ? this.appStateStore.userInfo : null
 				return Boolean(userInfo && userInfo._id) || hasValidLogin()
@@ -289,8 +354,8 @@
 			remainingCount() {
 				return getRemainingCount(this.game)
 			},
-			inputPlaceholder() {
-				return `输入 ${this.game.rangeMin} ~ ${this.game.rangeMax} 之间的数字`
+			midGuessValue() {
+				return Math.floor((Number(this.game.rangeMin) + Number(this.game.rangeMax)) / 2)
 			},
 			currentPlayerName() {
 				const players = this.game.players || []
@@ -303,6 +368,29 @@
 				const minute = Math.floor(total / 60)
 				const second = total % 60
 				return `${minute}:${`${second}`.padStart(2, '0')}`
+			},
+			historySummaryText() {
+				const list = Array.isArray(this.game.guesses) ? this.game.guesses : []
+				if (!list.length) {
+					return ''
+				}
+				const bomb = Number(this.game.bombNumber || 0)
+				const ordered = list.slice(0, 6).reverse()
+				const parts = ordered.map((item) => {
+					const val = Number(item.value)
+					if (!bomb) {
+						return String(val)
+					}
+					if (val < bomb) {
+						return `${val} ↑`
+					}
+					if (val > bomb) {
+						return `${val} ↓`
+					}
+					return `${val} 💥`
+				})
+				const prefix = list.length > 6 ? '… · ' : ''
+				return `本局已猜 ${this.game.guessCount} 次：${prefix}${parts.join(' · ')}`
 			},
 			hasProgress() {
 				return Boolean(this.savedProgressRaw)
@@ -363,13 +451,12 @@
 					return '下一局换个顺序，看看谁的运气更差。'
 				}
 				return this.isLoggedIn
-					? '这一局已经记进战绩了，去「全部」里看看你的记录。'
+					? '这一局已经记进战绩了，去「游戏战绩」里看看你的记录。'
 					: '登录后这一局就会自动记进战绩。'
 			}
 		},
 		onLoad() {
 			this.ensureAppStateStore()
-			this.refreshNavBar()
 			this.syncPlayerCountFromGame()
 			this.loadSavedProgress()
 
@@ -377,6 +464,9 @@
 				this.rulesVisible = true
 				markRulesSeen('bomb')
 			}
+		},
+		onPageScroll(e) {
+			this.scrollTop = e && e.scrollTop ? e.scrollTop : 0
 		},
 		onUnload() {
 			this.stopTimer()
@@ -386,26 +476,11 @@
 			this.persistProgress()
 		},
 		onShow() {
-			this.refreshNavBar()
 			if (this.phase === PHASE_PLAYING) {
 				this.startTimer()
 			}
 		},
 		methods: {
-			refreshNavBar() {
-				const next = getNavBarMetrics()
-				const current = this.navBar
-				if (
-					current
-					&& current.statusBarHeight === next.statusBarHeight
-					&& current.barHeight === next.barHeight
-					&& current.leftInset === next.leftInset
-					&& current.rightInset === next.rightInset
-				) {
-					return
-				}
-				this.navBar = next
-			},
 			ensureAppStateStore() {
 				if (!this.appStateStore) {
 					this.appStateStore = useAppStateStore()
@@ -455,6 +530,9 @@
 				}
 			},
 			handleBack() {
+				if (this.phase === PHASE_PLAYING) {
+					this.persistProgress()
+				}
 				const pages = getCurrentPages()
 				if (pages && pages.length > 1) {
 					uni.navigateBack()
@@ -464,12 +542,14 @@
 			},
 			handleBackToHall() {
 				this.resultVisible = false
-				uni.reLaunch({
-					url: '/pages/game/index'
-				})
+				navigateToTab('game')
 			},
 			handleShowRules() {
 				this.rulesVisible = true
+			},
+			handleSelectPreset(limit) {
+				this.limitPreview = 0
+				this.game = updateRangeLimit(this.game, limit)
 			},
 			/** 拖动过程中只更新展示值：不动 game.rangeLimit，免得回写 :value 把滑块拽回原位 */
 			handleLimitChanging(value) {
@@ -488,18 +568,8 @@
 				}
 				this.game = updateRangeLimit(this.game, next)
 			},
-			/** 与 room.vue 的 resolveInputText 同口径：fui-input 的 input 事件回传原始字符串 */
-			resolveInputText(value = '') {
-				if (value && typeof value === 'object') {
-					value = value.detail
-				}
-				if (value && typeof value === 'object') {
-					value = value.value
-				}
-				return value === null || value === undefined ? '' : String(value)
-			},
-			handlePlayerCountChange(delta = 0) {
-				const next = normalizePlayerCount(this.playerCount + Number(delta || 0))
+			handleSelectPlayerCount(count) {
+				const next = normalizePlayerCount(count)
 				if (next === this.playerCount) {
 					return
 				}
@@ -509,9 +579,12 @@
 					playerCount: next
 				})
 			},
+			handlePlayerCountChange(delta = 0) {
+				this.handleSelectPlayerCount(this.playerCount + Number(delta || 0))
+			},
 			handleStart() {
 				const players = Array.from({ length: this.playerCount }).map((item, index) => ({
-					name: index === 0 && this.playerCount > 1 ? '玩家1' : (this.playerCount > 1 ? `玩家${index + 1}` : '我'),
+					name: this.playerCount > 1 ? `玩家 ${index + 1}` : '我',
 					avatarUrl: ''
 				}))
 
@@ -523,23 +596,42 @@
 				)
 				this.phase = PHASE_PLAYING
 				this.guessText = ''
-				this.lastMessage = `炸弹已埋好，${this.game.rangeMin} ~ ${this.game.rangeMax} 开始猜吧`
+				this.lastMessage = ''
 				this.lastTone = 'normal'
-				this.previousBombHint = 0
 				this.resultVisible = false
 				this.exploding = false
 				this.startTimer()
 				this.persistProgress()
 			},
-			handleGuessInput(event = '') {
-				this.guessText = this.resolveInputText(event)
+			handleKeypadDigit(digit) {
+				if (this.phase !== PHASE_PLAYING) {
+					return
+				}
+				const maxLen = Math.max(2, String(this.game.rangeLimit || 100).length)
+				const current = String(this.guessText || '')
+				if (current === '0') {
+					this.guessText = String(digit)
+					return
+				}
+				if (current.length >= maxLen) {
+					return
+				}
+				this.guessText = current + String(digit)
+			},
+			handleKeypadDelete() {
+				if (!this.guessText) {
+					return
+				}
+				this.guessText = this.guessText.slice(0, -1)
+			},
+			handleKeypadClear() {
+				this.guessText = ''
 			},
 			handleQuickGuess(type = '') {
 				if (type !== 'mid') {
 					return
 				}
-				const mid = Math.floor((Number(this.game.rangeMin) + Number(this.game.rangeMax)) / 2)
-				this.guessText = String(mid)
+				this.guessText = String(this.midGuessValue)
 				this.handleGuess()
 			},
 			handleGuess() {
@@ -549,7 +641,7 @@
 				const raw = this.guessText
 				if (String(raw || '').trim() === '') {
 					uni.showToast({
-						title: '先输入一个数字',
+						title: '请先输入数字',
 						icon: 'none'
 					})
 					return
@@ -576,7 +668,6 @@
 
 				this.lastMessage = outcome.message
 				this.lastTone = outcome.result === GUESS_RESULT.LOW ? 'low' : 'high'
-				this.previousBombHint = Number(outcome.game.lastResult.value) || 0
 				this.persistProgress()
 			},
 			handleExplode() {
@@ -614,18 +705,31 @@
 				try {
 					await getGameApi().reportRecord(buildRecordPayload(this.game))
 				} catch (error) {
-					// 战绩上报失败不打扰玩家
 					console.warn('reportRecord failed', error)
 				}
+			},
+			handleConfirmRestart() {
+				if (!this.game.guessCount) {
+					this.handleRestart()
+					return
+				}
+				uni.showModal({
+					title: '重新开局',
+					content: '当前进度将被重置并重新埋雷，确定吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.handleRestart()
+						}
+					}
+				})
 			},
 			handleRestart() {
 				this.resultVisible = false
 				this.game = restartBombGame(this.game)
 				this.phase = PHASE_PLAYING
 				this.guessText = ''
-				this.lastMessage = `新的一局，范围 ${this.game.rangeMin} ~ ${this.game.rangeMax}`
+				this.lastMessage = ''
 				this.lastTone = 'normal'
-				this.previousBombHint = 0
 				this.resultData = null
 				this.elapsedSeconds = 0
 				this.startTimer()
@@ -634,7 +738,7 @@
 			handleQuit() {
 				uni.showModal({
 					title: '结束本局',
-					content: '结束后不会记录战绩，确定吗？',
+					content: '结束后不会记录战绩，确定返回设置页吗？',
 					success: (res) => {
 						if (!res.confirm) {
 							return
@@ -662,7 +766,7 @@
 				this.game = restored
 				this.phase = PHASE_PLAYING
 				this.playerCount = normalizePlayerCount((restored.players || []).length || 1)
-				this.lastMessage = `继续上一局，范围 ${restored.rangeMin} ~ ${restored.rangeMax}`
+				this.lastMessage = `已恢复上一局，安全区间 ${restored.rangeMin} ~ ${restored.rangeMax}`
 				this.lastTone = 'normal'
 				this.startTimer()
 			}
@@ -670,423 +774,545 @@
 	}
 </script>
 
-<style>
-	.bomb-page {
+<style scoped>
+	.nb-page {
 		position: relative;
 		box-sizing: border-box;
 		min-height: 100vh;
-		padding: 0 24rpx 60rpx;
+		padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+		background: #110D0B;
 		overflow: hidden;
 	}
 
-	.bomb-page__glow {
-		position: absolute;
-		width: 320rpx;
-		height: 320rpx;
+	.nb-glow {
+		position: fixed;
+		width: 420rpx;
+		height: 420rpx;
 		border-radius: 50%;
-		filter: blur(28rpx);
-		opacity: 0.42;
+		filter: blur(80rpx);
+		opacity: 0.22;
+		pointer-events: none;
 		z-index: 0;
-		pointer-events: none;
 	}
 
-	.bomb-page__glow--left {
-		top: -90rpx;
-		left: -120rpx;
-		background: rgba(255, 180, 160, 0.48);
+	.nb-glow--left {
+		top: -120rpx;
+		left: -140rpx;
+		background: #E2643F;
 	}
 
-	.bomb-page__glow--right {
-		top: 260rpx;
-		right: -120rpx;
-		background: rgba(255, 220, 174, 0.48);
+	.nb-glow--right {
+		top: 320rpx;
+		right: -160rpx;
+		background: #D8B08C;
 	}
 
-	.bomb-navbar {
-		position: relative;
-		z-index: 1;
-		box-sizing: border-box;
-		/* 负 margin 抵消 .bomb-page 的左右 24rpx 内边距，让顶栏通屏；
-		   height / padding 全部由 navBarStyle 按状态栏与胶囊位置实时给出 */
-		margin: 0 -24rpx;
-	}
-
-	.bomb-navbar__inner {
-		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		height: 100%;
-	}
-
-	.bomb-navbar__title-wrap {
-		position: absolute;
-		top: 0;
-		/* 左右对称留白（> 按钮宽度 64rpx + 页面 24rpx 边距），
-		   这样标题层既不压住左右按钮，又始终相对屏幕居中 */
-		right: 100rpx;
-		bottom: 0;
-		left: 100rpx;
+	.nb-pill-act {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		/* 标题纯展示，别挡住左右两个按钮的点击 */
-		pointer-events: none;
+		height: 52rpx;
+		padding: 0 22rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.44);
+		background: rgba(216, 176, 140, 0.10);
 	}
 
-	.bomb-navbar__back,
-	.bomb-navbar__rule {
-		display: flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		width: 64rpx;
-		height: 64rpx;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.92);
-		box-shadow: 0 10rpx 24rpx rgba(168, 110, 80, 0.12);
-	}
-
-	.bomb-navbar__back-text {
-		font-size: 40rpx;
-		line-height: 1;
-		color: #b05b48;
-	}
-
-	.bomb-navbar__rule-text {
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #b98069;
-	}
-
-	.bomb-navbar__title {
-		font-size: 32rpx;
-		font-weight: 700;
-		color: #5a3427;
-	}
-
-	.bomb-layer {
-		position: relative;
-		z-index: 1;
-		padding-top: 18rpx;
-	}
-
-	.bomb-hero {
-		padding: 26rpx 12rpx 34rpx;
-		text-align: center;
-	}
-
-	.bomb-hero__emoji {
-		display: block;
-		font-size: 96rpx;
-		line-height: 1;
-	}
-
-	.bomb-hero__title {
-		display: block;
-		margin-top: 22rpx;
-		font-size: 40rpx;
-		font-weight: 700;
-		color: #5a3427;
-	}
-
-	.bomb-hero__desc {
-		display: block;
-		margin-top: 14rpx;
-		font-size: 25rpx;
-		line-height: 1.7;
-		color: #8b6659;
-	}
-
-	.bomb-label {
-		display: block;
-		margin-bottom: 14rpx;
-		font-size: 24rpx;
-		color: #936d62;
-	}
-
-	.bomb-label--inline {
-		margin-bottom: 0;
-	}
-
-	.bomb-limit__head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-	}
-
-	.bomb-limit__value {
-		font-size: 36rpx;
-		font-weight: 700;
-		line-height: 1.1;
-		color: #b05b48;
-	}
-
-	.bomb-limit__slider {
-		margin-top: 22rpx;
-	}
-
-	.bomb-limit__scale {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-top: 2rpx;
-	}
-
-	.bomb-limit__scale-text {
-		font-size: 21rpx;
-		color: #b98069;
-	}
-
-	.bomb-players {
-		margin-top: 30rpx;
-	}
-
-	.bomb-stepper {
-		display: flex;
-		align-items: center;
-		gap: 24rpx;
-	}
-
-	.bomb-stepper__btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 72rpx;
-		height: 72rpx;
-		border-radius: 22rpx;
-		background: rgba(255, 241, 235, 0.96);
-	}
-
-	.bomb-stepper__btn--disabled {
-		opacity: 0.4;
-	}
-
-	.bomb-stepper__btn-text {
-		font-size: 36rpx;
-		font-weight: 700;
-		color: #b05b48;
-	}
-
-	.bomb-stepper__value {
-		min-width: 70rpx;
-		font-size: 36rpx;
-		font-weight: 700;
-		color: #5a3427;
-		text-align: center;
-	}
-
-	.bomb-resume {
-		margin-top: 24rpx;
-		padding: 24rpx 28rpx;
-		border-radius: 28rpx;
-		background: rgba(255, 235, 222, 0.96);
-	}
-
-	.bomb-resume__title {
-		display: block;
-		font-size: 27rpx;
-		font-weight: 700;
-		color: #a5523c;
-	}
-
-	.bomb-resume__desc {
-		display: block;
-		margin-top: 8rpx;
-		font-size: 23rpx;
-		color: #9a6c5c;
-	}
-
-	.bomb-actions {
-		margin-top: 34rpx;
-	}
-
-	.bomb-actions__link {
-		margin-top: 22rpx;
-		text-align: center;
-	}
-
-	.bomb-actions__link-text {
-		font-size: 24rpx;
-		color: #b98069;
-		text-decoration: underline;
-	}
-
-	/* ---------- playing ---------- */
-
-	.bomb-range {
-		padding: 30rpx 28rpx;
-		border-radius: 34rpx;
-		background: rgba(255, 255, 255, 0.95);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.1);
-		text-align: center;
-	}
-
-	.bomb-range__label {
-		display: block;
-		font-size: 23rpx;
-		letter-spacing: 4rpx;
-		color: #b98069;
-	}
-
-	.bomb-range__row {
-		display: flex;
-		align-items: baseline;
-		justify-content: center;
-		gap: 20rpx;
-		margin-top: 14rpx;
-	}
-
-	.bomb-range__value {
-		font-size: 68rpx;
-		font-weight: 700;
-		line-height: 1.1;
-		color: #5a3427;
-	}
-
-	.bomb-range__tilde {
-		font-size: 40rpx;
-		color: #c9a99a;
-	}
-
-	.bomb-range__hint {
-		display: block;
-		margin-top: 14rpx;
-		font-size: 23rpx;
-		color: #917165;
-	}
-
-	.bomb-turn {
-		display: flex;
-		align-items: center;
-		gap: 16rpx;
-		margin-top: 22rpx;
-		padding: 20rpx 28rpx;
-		border-radius: 26rpx;
-		background: rgba(255, 246, 241, 0.96);
-	}
-
-	.bomb-turn--single {
-		justify-content: space-between;
-	}
-
-	.bomb-turn__label {
-		font-size: 23rpx;
-		color: #a07b70;
-	}
-
-	.bomb-turn__name {
-		flex: 1;
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #5d372b;
-	}
-
-	.bomb-turn__timer {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: #c0674d;
-	}
-
-	.bomb-message {
-		margin-top: 22rpx;
-		padding: 22rpx 28rpx;
-		border-radius: 26rpx;
-		background: rgba(255, 246, 241, 0.96);
-	}
-
-	.bomb-message--low {
-		background: rgba(226, 241, 233, 0.96);
-	}
-
-	.bomb-message--high {
-		background: rgba(255, 235, 222, 0.96);
-	}
-
-	.bomb-message--warn {
-		background: rgba(255, 240, 214, 0.98);
-	}
-
-	.bomb-message__text {
-		font-size: 26rpx;
-		line-height: 1.6;
-		color: #6d473a;
-	}
-
-	.bomb-history {
-		margin-top: 22rpx;
+	.nb-pill-act__txt {
+		font-size: 22rpx;
+		color: #EAD4BC;
 		white-space: nowrap;
 	}
 
-	.bomb-history__inner {
-		display: inline-flex;
-		align-items: center;
-		padding: 4rpx 2rpx;
+	.nb-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 12rpx 36rpx 0;
 	}
 
-	.bomb-history__chip {
+	.nb-kicker {
+		display: block;
+		font-size: 20rpx;
+		letter-spacing: 3rpx;
+		color: rgba(216, 176, 140, 0.72);
+	}
+
+	/* ---------- Setup 阶段 ---------- */
+
+	.nb-setup-hero {
+		padding: 20rpx 4rpx 30rpx;
+	}
+
+	.nb-setup-hero__title {
+		display: block;
+		margin-top: 12rpx;
+		font-family: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
+		font-size: 46rpx;
+		font-weight: 600;
+		color: #FBF4EA;
+		line-height: 1.25;
+	}
+
+	.nb-setup-hero__desc {
+		display: block;
+		margin-top: 14rpx;
+		font-size: 24rpx;
+		line-height: 1.65;
+		color: rgba(245, 237, 228, 0.54);
+	}
+
+	.nb-resume {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		min-width: 76rpx;
-		height: 56rpx;
-		margin-right: 14rpx;
-		padding: 0 16rpx;
-		border-radius: 18rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 8rpx 20rpx rgba(168, 110, 80, 0.08);
+		justify-content: space-between;
+		gap: 20rpx;
+		margin-bottom: 24rpx;
+		padding: 22rpx 26rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.44);
+		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
 	}
 
-	.bomb-history__chip-text {
+	.nb-resume__info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.nb-resume__title {
+		display: block;
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #8b6659;
+		color: #FBF4EA;
 	}
 
-	.bomb-input-card {
-		display: flex;
-		align-items: center;
-		gap: 18rpx;
-		margin-top: 28rpx;
+	.nb-resume__desc {
+		display: block;
+		margin-top: 6rpx;
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.58);
 	}
 
-	.bomb-input-card__action {
+	.nb-resume__btn {
 		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 168rpx;
-		height: 92rpx;
-		border-radius: 24rpx;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-		box-shadow: 0 14rpx 26rpx rgba(231, 111, 81, 0.26);
+		height: 56rpx;
+		padding: 0 26rpx;
+		border-radius: 28rpx;
+		background: linear-gradient(135deg, #F09A6B, #DE5F3C);
 	}
 
-	.bomb-input-card__action-text {
-		font-size: 30rpx;
-		font-weight: 700;
-		color: #ffffff;
+	.nb-resume__btn-txt {
+		font-size: 22rpx;
+		font-weight: 600;
+		color: #FFF7EF;
 	}
 
-	.bomb-tools {
+	.nb-card {
+		padding: 30rpx 28rpx;
+		border-radius: 32rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+	}
+
+	.nb-section__head {
 		display: flex;
-		gap: 18rpx;
-		margin-top: 26rpx;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 16rpx;
 	}
 
-	.bomb-tools__item {
+	.nb-section__label {
+		font-size: 26rpx;
+		font-weight: 500;
+		color: #F5EDE4;
+	}
+
+	.nb-section__val {
+		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
+		font-size: 38rpx;
+		font-weight: 500;
+		color: #EAD4BC;
+		line-height: 1.1;
+	}
+
+	.nb-section__sub {
+		font-size: 22rpx;
+		color: rgba(216, 176, 140, 0.72);
+	}
+
+	.nb-presets {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 14rpx;
+		margin-top: 20rpx;
+	}
+
+	.nb-presets--inline {
+		margin-top: 0;
+		flex: 1;
+	}
+
+	.nb-chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 58rpx;
+		padding: 0 22rpx;
+		border-radius: 18rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.nb-chip--active {
+		border-color: rgba(226, 100, 63, 0.54);
+		background: rgba(226, 100, 63, 0.16);
+	}
+
+	.nb-chip__txt {
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.72);
+	}
+
+	.nb-chip--active .nb-chip__txt {
+		color: #FBF4EA;
+		font-weight: 600;
+	}
+
+	.nb-slider {
+		margin-top: 22rpx;
+	}
+
+	.nb-scale {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-top: 4rpx;
+	}
+
+	.nb-scale__txt {
+		font-size: 20rpx;
+		color: rgba(216, 176, 140, 0.62);
+	}
+
+	.nb-divider {
+		height: 1rpx;
+		margin: 30rpx 0;
+		background: rgba(255, 255, 255, 0.07);
+	}
+
+	.nb-player-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		margin-top: 20rpx;
+	}
+
+	.nb-stepper {
+		display: flex;
+		align-items: center;
+		gap: 14rpx;
+		flex-shrink: 0;
+	}
+
+	.nb-stepper__btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 58rpx;
+		height: 58rpx;
+		border-radius: 18rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.28);
+		background: rgba(216, 176, 140, 0.08);
+	}
+
+	.nb-stepper__btn--disabled {
+		opacity: 0.35;
+	}
+
+	.nb-stepper__btn-txt {
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #EAD4BC;
+		line-height: 1;
+	}
+
+	.nb-stepper__val {
+		min-width: 44rpx;
+		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
+		font-size: 36rpx;
+		font-weight: 500;
+		color: #FBF4EA;
+		text-align: center;
+	}
+
+	.nb-actions {
+		margin-top: 34rpx;
+	}
+
+	.nb-cta {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 92rpx;
+		border-radius: 46rpx;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 16rpx 36rpx rgba(222, 95, 60, 0.28);
+	}
+
+	.nb-cta--hover {
+		opacity: 0.88;
+	}
+
+	.nb-cta__txt {
+		font-size: 30rpx;
+		font-weight: 600;
+		color: #FFF7EF;
+		letter-spacing: 2rpx;
+	}
+
+	.nb-actions__link {
+		margin-top: 22rpx;
+		text-align: center;
+	}
+
+	.nb-actions__link-txt {
+		font-size: 24rpx;
+		color: rgba(216, 176, 140, 0.78);
+	}
+
+	/* ---------- Playing 阶段（s10） ---------- */
+
+	.nb-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12rpx;
+		padding: 16rpx 24rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.nb-bar__txt {
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.64);
+	}
+
+	.nb-range {
+		margin-top: 24rpx;
+		padding: 36rpx 28rpx 32rpx;
+		border-radius: 36rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: linear-gradient(145deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.025));
+		text-align: center;
+	}
+
+	.nb-nums {
+		display: flex;
+		align-items: baseline;
+		justify-content: center;
+		gap: 28rpx;
+		margin-top: 14rpx;
+	}
+
+	.nb-nums__val {
+		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", "Times New Roman", serif;
+		font-size: 104rpx;
+		line-height: 1;
+		color: #FBF4EA;
+		font-weight: 500;
+	}
+
+	.nb-nums__dash {
+		font-size: 36rpx;
+		color: #D8B08C;
+	}
+
+	.nb-turn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 22rpx;
+		height: 50rpx;
+		padding: 0 24rpx;
+		border-radius: 25rpx;
+		background: rgba(226, 100, 63, 0.18);
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+	}
+
+	.nb-turn__txt {
+		font-size: 22rpx;
+		color: #F5B496;
+	}
+
+	.nb-feedback {
+		display: block;
+		margin-top: 16rpx;
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.64);
+	}
+
+	.nb-feedback--low {
+		color: #9ED6B2;
+	}
+
+	.nb-feedback--high {
+		color: #F5B496;
+	}
+
+	.nb-feedback--warn {
+		color: #EAD4BC;
+	}
+
+	.nb-input-box {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		margin-top: 24rpx;
+		height: 98rpx;
+		padding: 0 28rpx 0 32rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		background: rgba(255, 255, 255, 0.035);
+	}
+
+	.nb-input-box__val {
+		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
+		font-size: 52rpx;
+		color: #FBF4EA;
+		letter-spacing: 4rpx;
+		line-height: 1;
+	}
+
+	.nb-input-box__val--empty {
+		color: rgba(245, 237, 228, 0.24);
+	}
+
+	.nb-input-box__right {
+		display: flex;
+		align-items: center;
+		gap: 14rpx;
+	}
+
+	.nb-input-box__hint {
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.42);
+	}
+
+	.nb-backspace {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 52rpx;
+		height: 52rpx;
+		border-radius: 16rpx;
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.nb-backspace--hover {
+		background: rgba(255, 255, 255, 0.14);
+	}
+
+	.nb-backspace__txt {
+		font-size: 26rpx;
+		color: #EAD4BC;
+	}
+
+	.nb-pad {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 16rpx;
+		margin-top: 24rpx;
+	}
+
+	.nb-key {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 94rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.035);
+	}
+
+	.nb-key--hover {
+		background: rgba(255, 255, 255, 0.10);
+	}
+
+	.nb-key--fn {
+		background: rgba(255, 255, 255, 0.025);
+	}
+
+	.nb-key--ok {
+		border: none;
+		background: linear-gradient(135deg, #F09A6B, #DE5F3C);
+		box-shadow: 0 10rpx 24rpx rgba(222, 95, 60, 0.26);
+	}
+
+	.nb-key--ok-hover {
+		opacity: 0.86;
+	}
+
+	.nb-key__txt {
+		font-family: "Georgia", "Times New Roman", serif;
+		font-size: 38rpx;
+		color: #F5EDE4;
+		line-height: 1;
+	}
+
+	.nb-key__txt--fn {
+		font-family: "PingFang SC", -apple-system, sans-serif;
+		font-size: 24rpx;
+		color: rgba(245, 237, 228, 0.58);
+	}
+
+	.nb-key__txt--ok {
+		font-family: "PingFang SC", -apple-system, sans-serif;
+		font-size: 26rpx;
+		font-weight: 600;
+		color: #FFF7EF;
+	}
+
+	.nb-hist {
+		margin-top: 24rpx;
+		padding: 0 8rpx;
+		text-align: center;
+	}
+
+	.nb-hist__txt {
+		font-size: 22rpx;
+		line-height: 1.6;
+		color: rgba(245, 237, 228, 0.44);
+	}
+
+	.nb-tools {
+		display: flex;
+		gap: 16rpx;
+		margin-top: 24rpx;
+	}
+
+	.nb-tools__item {
 		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 76rpx;
+		height: 68rpx;
 		border-radius: 22rpx;
-		background: rgba(255, 247, 243, 0.96);
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.025);
 	}
 
-	.bomb-tools__text {
-		font-size: 25rpx;
-		color: #b05b48;
+	.nb-tools__txt {
+		font-size: 22rpx;
+		color: rgba(234, 212, 188, 0.78);
+	}
+
+	.ad-view {
+		margin-top: 32rpx;
 	}
 
 	/* ---------- 爆炸动画 ---------- */

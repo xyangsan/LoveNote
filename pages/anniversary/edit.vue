@@ -1,29 +1,26 @@
 <template>
 	<view
-		class="love-page anniversary-edit-page"
+		class="ae-page"
 		:class="{ 'anniversary-edit-page--locked': calendarPopupVisible }"
 	>
-		<view class="love-page__glow love-page__glow--left"></view>
-		<view class="love-page__glow love-page__glow--right"></view>
+		<view class="ae-glow ae-glow--l"></view>
+		<view class="ae-glow ae-glow--r"></view>
 
-		<view class="love-layer">
-			<fui-section
-				:title="pageTitle"
-				descr="支持背景图、背景色、字体色、遮罩透明度、公历/农历和重复规则。"
-				:is-line="true"
-				line-width="10rpx"
-				line-color="#ec7558"
-				:line-right="22"
-				:descr-top="14"
-				:size="40"
-				descr-size="24"
-				color="#5a3427"
-				descr-color="#906b61"
-				:padding="['0', '0']"
-				:margin-top="12"
-				:margin-bottom="24"
-			></fui-section>
+		<noir-navbar
+			:title="pageTitle"
+			:show-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+		>
+			<template #right>
+				<view v-if="isEditMode && canDelete" class="ae-del-pill" @tap="handleDelete">
+					<text class="ae-del-pill__txt">删除</text>
+				</view>
+			</template>
+		</noir-navbar>
 
+		<view class="ae-wrap">
 			<love-auth-required
 				v-if="!isLoggedIn"
 				desc="请先登录后再编辑纪念日。"
@@ -33,235 +30,10 @@
 			></love-auth-required>
 
 			<view v-else>
-				<love-glass-card
-					:margin="['0', '0', '0', '0']"
-					:padding="['20rpx', '0']"
-					:content-padding="['28rpx', '28rpx', '30rpx', '28rpx']"
-					:header-line="false"
-				>
-					<view class="form-block">
-						<text class="love-field-label">标题</text>
-						<fui-input
-							:value="form.title"
-							type="text"
-							placeholder="请输入纪念日标题"
-							background-color="#fff7f3"
-							:border-bottom="false"
-							:padding="['26rpx', '24rpx']"
-							:radius="24"
-							:size="28"
-							color="#5a3427"
-							maxlength="50"
-							@input="onTitleInput"
-						></fui-input>
-					</view>
-
-					<fui-divider
-						width="100%"
-						height="46"
-						divider-color="rgba(231, 204, 194, 0.66)"
-					></fui-divider>
-
-					<view class="form-block">
-						<text class="love-field-label">日期</text>
-						<view @click="openDateCalendar">
-							<fui-list-cell
-								:padding="['26rpx', '24rpx']"
-								background="#fff7f3"
-								:bottom-border="false"
-								radius="24rpx"
-								arrow
-								arrow-color="#d2a394"
-							>
-								<view class="picker-field picker-field--space">
-									<view class="picker-field__content">
-										<text
-											class="picker-field__value"
-											:class="{ 'picker-field__value--placeholder': !currentDisplayDateText }"
-										>{{ currentDisplayDateText || '请选择日期' }}</text>
-									</view>
-									<view class="picker-field__tag">
-										<text class="picker-field__tag-text">{{ currentDateTypeText }}</text>
-									</view>
-								</view>
-							</fui-list-cell>
-						</view>
-					</view>
-
-					<view class="form-block">
-						<text class="love-field-label">重复方式</text>
-						<fui-segmented-control
-							:values="repeatTypeOptions"
-							:current="repeatTypeIndex"
-							color="#ec7558"
-							active-color="#ffffff"
-							:height="70"
-							:size="24"
-							:bold="true"
-							:radius="999"
-							@click="handleRepeatTypeChange"
-						></fui-segmented-control>
-					</view>
-
-					<fui-divider
-						width="100%"
-						height="46"
-						divider-color="rgba(231, 204, 194, 0.66)"
-					></fui-divider>
-
-					<view class="form-block">
-						<text class="love-field-label">背景模式</text>
-						<fui-segmented-control
-							:values="backgroundTypeOptions"
-							:current="backgroundTypeIndex"
-							color="#ec7558"
-							active-color="#ffffff"
-							:height="70"
-							:size="24"
-							:bold="true"
-							:radius="999"
-							@click="handleBackgroundTypeChange"
-						></fui-segmented-control>
-					</view>
-
-					<view v-if="form.backgroundType === 'image'" class="form-block">
-						<text class="love-field-label">背景图片</text>
-						<view
-							v-if="false && displayBackgroundPreview"
-							class="background-preview"
-						>
-							<image
-								class="background-preview__image"
-								:src="displayBackgroundPreview"
-								mode="aspectFill"
-							></image>
-							<view class="background-preview__overlay">
-								<fui-tag
-									text="清除"
-									:is-border="false"
-									background="rgba(0, 0, 0, 0.48)"
-									color="#ffffff"
-									radius="999"
-									:padding="['8rpx', '16rpx']"
-									@click="clearBackgroundImage"
-								></fui-tag>
-							</view>
-						</view>
-
-						<love-media-uploader
-							ref="backgroundUploader"
-							:file-types="['image']"
-							:max-file-size="20 * 1024 * 1024"
-							:compressed="true"
-							:enable-compression="true"
-							:compress-over-size="5 * 1024 * 1024"
-							save-path="anniversary/backgrounds"
-							upload-prefix="bg"
-							:max-count="1"
-							:crop-options="backgroundCropOptions"
-							:show-tips="true"
-							tip-text="仅支持图片，超过 5MB 自动压缩。"
-							:previewable="true"
-							object-fit="aspectFit"
-							:source-type="['album', 'camera']"
-							:show-delete-button="true"
-							add-text="选择背景图"
-							upload-icon="+"
-							@change="onBackgroundUploaderChange"
-						>
-							<template #tip>
-								<text class="upload-tip">仅支持图片，超过 5MB 自动压缩。</text>
-							</template>
-						</love-media-uploader>
-					</view>
-
-					<view v-else class="form-block">
-						<text class="love-field-label">背景色</text>
-						<view class="color-list">
-							<view
-								v-for="color in backgroundColorOptions"
-								:key="`bg-${color}`"
-								class="color-item"
-								:class="{ 'color-item--active': form.backgroundColor === color }"
-								:style="{ backgroundColor: color }"
-								@click="setColor('backgroundColor', color)"
-							></view>
-							<view
-								class="color-item color-item--custom"
-								:class="{ 'color-item--active': isCustomColorActive('backgroundColor', backgroundColorOptions) }"
-								@click="openCustomColorPicker('backgroundColor')"
-							></view>
-						</view>
-					</view>
-
-					<view class="form-block">
-						<text class="love-field-label">字体色</text>
-						<view class="color-list">
-							<view
-								v-for="color in fontColorOptions"
-								:key="`font-${color}`"
-								class="color-item"
-								:class="{ 'color-item--active': form.fontColor === color }"
-								:style="{ backgroundColor: color }"
-								@click="setColor('fontColor', color)"
-							></view>
-							<view
-								class="color-item color-item--custom"
-								:class="{ 'color-item--active': isCustomColorActive('fontColor', fontColorOptions) }"
-								@click="openCustomColorPicker('fontColor')"
-							></view>
-						</view>
-					</view>
-
-					<view class="form-block">
-						<view class="switch-row">
-							<text class="love-field-label switch-row__label">背景遮罩</text>
-							<fui-switch
-								:checked="form.maskEnabled"
-								color="#ec7558"
-								scale-ratio="0.9"
-								@change="handleMaskEnabledChange"
-							></fui-switch>
-						</view>
-						<view v-if="form.maskEnabled" class="mask-settings">
-							<view class="color-list">
-								<view
-									v-for="color in maskColorOptions"
-									:key="`mask-${color}`"
-									class="color-item"
-									:class="{ 'color-item--active': form.maskColor === color }"
-									:style="{ backgroundColor: color }"
-									@click="setColor('maskColor', color)"
-								></view>
-							</view>
-							<view class="slider-row">
-								<text class="slider-row__label">透明度</text>
-								<slider
-									class="slider-row__slider"
-									min="0"
-									max="100"
-									step="1"
-									:value="maskOpacityPercent"
-									activeColor="#ec7558"
-									backgroundColor="rgba(236, 117, 88, 0.2)"
-									block-color="#ec7558"
-									@change="handleMaskOpacityChange"
-								/>
-								<text class="slider-row__value">{{ maskOpacityPercent }}%</text>
-							</view>
-						</view>
-					</view>
-				</love-glass-card>
-
-				<love-glass-card
-					title="预览"
-					:margin="['22rpx', '0', '0', '0']"
-					:padding="['20rpx', '0']"
-					:content-padding="['0', '0', '0', '0']"
-					background="transparent"
-				>
+				<!-- 顶部实时封面预览（18 编辑纪念日设计稿） -->
+				<view class="ae-preview">
 					<love-anniversary-card
-						:title="form.title"
+						:title="form.title || '未命名纪念日'"
 						:meta-text="`${currentDisplayDateText || '--'} · ${currentDateTypeText} · ${currentRepeatTypeText}`"
 						:elapsed-text="previewElapsedText"
 						:countdown-text="previewCountdownText"
@@ -271,35 +43,220 @@
 						:mask-enabled="form.maskEnabled"
 						:shadow="false"
 						:clickable="false"
-						height="228rpx"
+						height="252rpx"
 						radius="28rpx"
 					></love-anniversary-card>
-				</love-glass-card>
-
-				<view class="love-action-stack actions">
-					<fui-button
-						:text="saveButtonText"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						radius="999rpx"
-						height="90rpx"
-						:size="28"
-						:bold="true"
-						:loading="saving"
-						@click="handleSave"
-					></fui-button>
-					<fui-button
-						text="返回"
-						background="rgba(255, 241, 235, 0.98)"
-						color="#b05b48"
-						border-color="rgba(214, 145, 122, 0.24)"
-						radius="999rpx"
-						height="90rpx"
-						:size="28"
-						:bold="true"
-						@click="goBack"
-					></fui-button>
 				</view>
+
+				<!-- 封面暗色遮罩浓度滑块 -->
+				<view class="ae-slider-card">
+					<view class="ae-shead">
+						<text class="ae-shead__lbl">封面暗色遮罩</text>
+						<view class="ae-shead__right">
+							<text v-if="form.maskEnabled" class="ae-shead__val">{{ maskOpacityPercent }}%</text>
+							<fui-switch
+								:checked="form.maskEnabled"
+								color="#E2643F"
+								scale-ratio="0.82"
+								@change="handleMaskEnabledChange"
+							></fui-switch>
+						</view>
+					</view>
+					<template v-if="form.maskEnabled">
+						<slider
+							class="ae-slider"
+							min="0"
+							max="100"
+							step="1"
+							:value="maskOpacityPercent"
+							activeColor="#D8B08C"
+							backgroundColor="rgba(255, 255, 255, 0.12)"
+							block-color="#FBF4EA"
+							:block-size="16"
+							@changing="handleMaskOpacityChange"
+							@change="handleMaskOpacityChange"
+						/>
+						<view class="color-list ae-mask-colors">
+							<view
+								v-for="color in maskColorOptions"
+								:key="`mask-${color}`"
+								class="color-item color-item--sm"
+								:class="{ 'color-item--active': form.maskColor === color }"
+								:style="{ backgroundColor: color }"
+								@tap="setColor('maskColor', color)"
+							></view>
+						</view>
+					</template>
+				</view>
+
+				<!-- 核心表单卡片 -->
+				<view class="ae-sec">
+					<noir-card padding="4rpx 26rpx">
+						<!-- 标题 -->
+						<view class="ae-row">
+							<text class="ae-row__lbl">标题（必填）</text>
+							<input
+								class="ae-input"
+								:value="form.title"
+								type="text"
+								placeholder="例如：第一次旅行"
+								placeholder-style="color: rgba(245, 237, 228, 0.30);"
+								maxlength="50"
+								@input="onNativeTitleInput"
+							/>
+						</view>
+
+						<!-- 历法 -->
+						<view class="ae-row">
+							<text class="ae-row__lbl">历法</text>
+							<view class="ae-inline-chips">
+								<view
+									class="ae-chip"
+									:class="{ 'is-on': form.dateType === 'solar' }"
+									@tap="switchFormDateType('solar')"
+								>
+									<text class="ae-chip__txt">公历</text>
+								</view>
+								<view
+									class="ae-chip"
+									:class="{ 'is-on': form.dateType === 'lunar' }"
+									@tap="switchFormDateType('lunar')"
+								>
+									<text class="ae-chip__txt">农历</text>
+								</view>
+							</view>
+						</view>
+
+						<!-- 日期 -->
+						<view class="ae-row ae-row--last" @tap="openDateCalendar">
+							<text class="ae-row__lbl">日期</text>
+							<view class="ae-row__val-wrap">
+								<text
+									class="ae-row__val"
+									:class="{ 'is-placeholder': !currentDisplayDateText }"
+								>{{ currentDisplayDateText || '请选择日期' }}</text>
+								<text class="ae-row__chev">›</text>
+							</view>
+						</view>
+					</noir-card>
+				</view>
+
+				<!-- 重复规则（4 种） -->
+				<view class="ae-sec">
+					<text class="ae-sec__lbl">重复规则（4 种）</text>
+					<view class="ae-chips">
+						<view
+							v-for="(item, idx) in repeatTypeOptions"
+							:key="item.name"
+							class="ae-chip"
+							:class="{ 'is-on': idx === repeatTypeIndex }"
+							@tap="handleRepeatTypeChange({ index: idx })"
+						>
+							<text class="ae-chip__txt">{{ item.name }}</text>
+						</view>
+					</view>
+				</view>
+
+				<!-- 封面背景与字体外观 -->
+				<view class="ae-sec">
+					<text class="ae-sec__lbl">封面背景与字体</text>
+					<noir-card padding="24rpx">
+						<view class="ae-bg-mode">
+							<view
+								v-for="(item, idx) in backgroundTypeOptions"
+								:key="item.name"
+								class="ae-chip"
+								:class="{ 'is-on': idx === backgroundTypeIndex }"
+								@tap="handleBackgroundTypeChange({ index: idx })"
+							>
+								<text class="ae-chip__txt">{{ item.name }}</text>
+							</view>
+						</view>
+
+						<view v-if="form.backgroundType === 'image'" class="ae-block">
+							<love-media-uploader
+								ref="backgroundUploader"
+								:file-types="['image']"
+								:max-file-size="20 * 1024 * 1024"
+								:compressed="true"
+								:enable-compression="true"
+								:compress-over-size="5 * 1024 * 1024"
+								save-path="anniversary/backgrounds"
+								upload-prefix="bg"
+								:max-count="1"
+								:crop-options="backgroundCropOptions"
+								:show-tips="true"
+								tip-text="支持图片封面，超过 5MB 自动压缩。"
+								:previewable="true"
+								object-fit="aspectFit"
+								:source-type="['album', 'camera']"
+								:show-delete-button="true"
+								add-text="选择封面图"
+								upload-icon="＋"
+								@change="onBackgroundUploaderChange"
+							>
+								<template #tip>
+									<text class="upload-tip">支持图片封面，超过 5MB 自动压缩。</text>
+								</template>
+							</love-media-uploader>
+						</view>
+
+						<view v-else class="ae-block">
+							<text class="ae-sub-lbl">背景色</text>
+							<view class="color-list">
+								<view
+									v-for="color in backgroundColorOptions"
+									:key="`bg-${color}`"
+									class="color-item"
+									:class="{ 'color-item--active': form.backgroundColor === color }"
+									:style="{ backgroundColor: color }"
+									@tap="setColor('backgroundColor', color)"
+								></view>
+								<view
+									class="color-item color-item--custom"
+									:class="{ 'color-item--active': isCustomColorActive('backgroundColor', backgroundColorOptions) }"
+									@tap="openCustomColorPicker('backgroundColor')"
+								></view>
+							</view>
+						</view>
+
+						<view class="ae-block">
+							<text class="ae-sub-lbl">字体色</text>
+							<view class="color-list">
+								<view
+									v-for="color in fontColorOptions"
+									:key="`font-${color}`"
+									class="color-item"
+									:class="{ 'color-item--active': form.fontColor === color }"
+									:style="{ backgroundColor: color }"
+									@tap="setColor('fontColor', color)"
+								></view>
+								<view
+									class="color-item color-item--custom"
+									:class="{ 'color-item--active': isCustomColorActive('fontColor', fontColorOptions) }"
+									@tap="openCustomColorPicker('fontColor')"
+								></view>
+							</view>
+						</view>
+					</noir-card>
+				</view>
+
+				<!-- 广告位（位于保存按钮上方） -->
+				<view class="ad-view ae-ad">
+					<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+				</view>
+			</view>
+
+			<!-- 底部固定主操作栏 -->
+			<view v-if="isLoggedIn" class="ae-footer">
+				<noir-button
+					:text="saveButtonText"
+					variant="primary"
+					size="lg"
+					block
+					:loading="saving"
+					@click="handleSave"
+				/>
 			</view>
 
 			<view v-if="calendarPopupVisible" class="calendar-popup" @touchmove.stop.prevent="stopTouchMove">
@@ -342,10 +299,6 @@
 								</view>
 							</view>
 						</view>
-					</view>
-					
-					<view class="ad-view">
-						<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
 					</view>
 
 					<uni-calendar
@@ -678,7 +631,9 @@ export default {
 			calendarDraft: buildDateSelectionFromSolarValue(getTodayDateString()),
 			form: createDefaultForm(),
 			dateTypeOptions: ['公历', '农历'],
-			repeatTypeOptions: [{ name: '不重复' }, { name: '每周' }, { name: '每月' }, { name: '每年' }],
+			scrollTop: 0,
+			canDelete: false,
+			repeatTypeOptions: [{ name: '不重复' }, { name: '每周重复' }, { name: '每月重复' }, { name: '每年重复' }],
 			backgroundTypeOptions: [{ name: '背景图' }, { name: '背景色' }],
 			backgroundCropOptions: {
 				enabled: true,
@@ -687,8 +642,8 @@ export default {
 				fileType: 'jpg',
 				zIndex: 1200
 			},
-			backgroundColorOptions: ['#EC7558', '#FA856A', '#F59E7C', '#E76F51', '#D96C6C', '#8CC0DE'],
-			fontColorOptions: ['#FFFFFF', '#FFF5E8', '#3F2A24', '#5A3427', '#1F1F1F'],
+			backgroundColorOptions: ['#EC7558', '#FA856A', '#F59E7C', '#E2643F', '#D96C6C', '#8CC0DE'],
+			fontColorOptions: ['#FFFFFF', '#FFF5E8', '#3F2A24', '#FBF4EA', '#1F1F1F'],
 			maskColorOptions: ['#000000', '#1A1A1A', '#2B2B2B', '#4C2E28', '#6B3E36']
 		}
 	},
@@ -700,7 +655,7 @@ export default {
 			return this.isEditMode ? '编辑纪念日' : '新增纪念日'
 		},
 		saveButtonText() {
-			return this.isEditMode ? '保存修改' : '创建纪念日'
+			return this.isEditMode ? '保存修改' : '保存纪念日 (+5点)'
 		},
 		calendarDateTypeIndex() {
 			const index = DATE_TYPE_OPTIONS.indexOf(this.calendarSelectionMode)
@@ -834,6 +789,17 @@ export default {
 		},
 		onTitleInput(value) {
 			this.form.title = String(value || '')
+		},
+		onNativeTitleInput(event = {}) {
+			this.form.title = String((event && event.detail && event.detail.value) || '')
+		},
+		switchFormDateType(type = 'solar') {
+			const safeType = type === 'lunar' ? 'lunar' : 'solar'
+			this.form.dateType = safeType
+			if (safeType === 'lunar' && !this.form.lunarDateValue) {
+				const sel = buildDateSelectionFromSolarValue(this.form.solarDateValue || this.form.dateValue)
+				this.form.lunarDateValue = sel.lunarDateValue
+			}
 		},
 		handleCalendarPanelClick() {
 			this.closeCalendarDateTypeDropdown()
@@ -1013,6 +979,7 @@ export default {
 				}
 				const data = result && result.data ? result.data : {}
 				const anniversary = data.anniversary || {}
+				this.canDelete = Boolean(anniversary.is_self === true)
 				const defaultForm = createDefaultForm()
 				const solarDateValue = anniversary.solar_date_value || anniversary.date_value || defaultForm.solarDateValue
 				const dateSelection = buildDateSelectionFromSolarValue(solarDateValue)
@@ -1205,14 +1172,269 @@ export default {
 		},
 		goBack() {
 			uni.navigateBack()
+		},
+		handleDelete() {
+			if (!this.anniversaryId || !this.canDelete) return
+			uni.showModal({
+				title: '删除纪念日',
+				content: `确定删除「${this.form.title || '该纪念日'}」吗？删除后无法恢复。`,
+				confirmColor: '#E2643F',
+				success: async (res) => {
+					if (!res.confirm) return
+					try {
+						const result = await getAnniversaryApi().delete({ anniversaryId: this.anniversaryId })
+						if (result && result.errCode && result.errCode !== 0) {
+							throw new Error(result.errMsg || '删除失败')
+						}
+						uni.showToast({ title: '已删除', icon: 'success' })
+						setTimeout(() => uni.navigateBack(), 400)
+					} catch (error) {
+						uni.showToast({ title: error.message || '删除失败', icon: 'none' })
+					}
+				}
+			})
+		}
+	},
+	onPageScroll(e) {
+		const next = Math.max(0, Number((e && e.scrollTop) || 0))
+		if (next !== this.scrollTop) {
+			this.scrollTop = next
 		}
 	}
 }
 </script>
 
 <style>
-	.anniversary-edit-page {
-		padding-bottom: calc(44rpx + env(safe-area-inset-bottom));
+	.ae-page {
+		position: relative;
+		min-height: 100vh;
+		background:
+			radial-gradient(88% 36% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			#110D0B;
+		padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
+		overflow-x: hidden;
+	}
+
+	.ae-glow {
+		position: fixed;
+		width: 360rpx;
+		height: 360rpx;
+		border-radius: 50%;
+		filter: blur(50rpx);
+		opacity: 0.22;
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	.ae-glow--l {
+		top: -120rpx;
+		left: -130rpx;
+		background: rgba(226, 100, 63, 0.36);
+	}
+
+	.ae-glow--r {
+		top: 240rpx;
+		right: -130rpx;
+		background: rgba(216, 176, 140, 0.24);
+	}
+
+	.ae-del-pill {
+		height: 48rpx;
+		padding: 0 20rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.44);
+		background: rgba(226, 100, 63, 0.14);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.ae-del-pill__txt {
+		font-size: 21rpx;
+		color: #F5B496;
+		white-space: nowrap;
+	}
+
+	.ae-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 12rpx 28rpx 0;
+	}
+
+	.ae-preview {
+		border-radius: 28rpx;
+		overflow: hidden;
+		border: 1rpx solid rgba(216, 176, 140, 0.28);
+		box-shadow: 0 18rpx 44rpx rgba(0, 0, 0, 0.42);
+	}
+
+	.ae-slider-card {
+		margin-top: 20rpx;
+		padding: 20rpx 24rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.032);
+	}
+
+	.ae-shead {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.ae-shead__lbl {
+		font-size: 24rpx;
+		color: rgba(245, 237, 228, 0.68);
+	}
+
+	.ae-shead__right {
+		display: flex;
+		align-items: center;
+		gap: 14rpx;
+	}
+
+	.ae-shead__val {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 22rpx;
+		color: #EAD4BC;
+	}
+
+	.ae-slider {
+		margin: 14rpx 0 8rpx;
+	}
+
+	.ae-mask-colors {
+		margin-top: 10rpx;
+	}
+
+	.ae-sec {
+		margin-top: 24rpx;
+	}
+
+	.ae-sec__lbl {
+		display: block;
+		margin-bottom: 14rpx;
+		padding-left: 4rpx;
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.54);
+	}
+
+	.ae-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20rpx;
+		min-height: 94rpx;
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+	}
+
+	.ae-row--last {
+		border-bottom: none;
+	}
+
+	.ae-row__lbl {
+		font-size: 25rpx;
+		color: rgba(245, 237, 228, 0.66);
+		flex-shrink: 0;
+	}
+
+	.ae-input {
+		flex: 1;
+		min-width: 0;
+		text-align: right;
+		font-size: 26rpx;
+		color: #FBF4EA;
+	}
+
+	.ae-inline-chips,
+	.ae-chips,
+	.ae-bg-mode {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12rpx;
+	}
+
+	.ae-chip {
+		height: 54rpx;
+		padding: 0 24rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		background: rgba(255, 255, 255, 0.036);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.ae-chip.is-on {
+		border-color: rgba(216, 176, 140, 0.62);
+		background: rgba(216, 176, 140, 0.18);
+	}
+
+	.ae-chip__txt {
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.66);
+		white-space: nowrap;
+	}
+
+	.ae-chip.is-on .ae-chip__txt {
+		color: #FBF4EA;
+		font-weight: 500;
+	}
+
+	.ae-row__val-wrap {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 10rpx;
+	}
+
+	.ae-row__val {
+		font-size: 25rpx;
+		color: #EAD4BC;
+		font-family: "SF Mono", "Consolas", monospace;
+	}
+
+	.ae-row__val.is-placeholder {
+		color: rgba(245, 237, 228, 0.34);
+		font-family: inherit;
+	}
+
+	.ae-row__chev {
+		font-size: 32rpx;
+		color: rgba(216, 176, 140, 0.56);
+	}
+
+	.ae-block {
+		margin-top: 22rpx;
+	}
+
+	.ae-sub-lbl {
+		display: block;
+		margin-bottom: 14rpx;
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.52);
+	}
+
+	.color-item--sm {
+		width: 44rpx;
+		height: 44rpx;
+	}
+
+	.ae-ad {
+		margin-top: 26rpx;
+	}
+
+	.ae-footer {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 40;
+		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, #110D0B 100%);
+		box-sizing: border-box;
 	}
 
 	.anniversary-edit-page--locked {
@@ -1249,7 +1471,7 @@ export default {
 	.picker-field__value {
 		display: block;
 		font-size: 28rpx;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.picker-field__value--placeholder {
@@ -1291,7 +1513,7 @@ export default {
 		max-height: calc(100vh - 120rpx);
 		padding: 28rpx 24rpx 24rpx;
 		border-radius: 32rpx;
-		background: #fffaf7;
+		background: #1E1814;
 		box-shadow: 0 22rpx 60rpx rgba(103, 58, 45, 0.22);
 		overflow: hidden auto;
 	}
@@ -1307,7 +1529,7 @@ export default {
 	.calendar-popup__title {
 		font-size: 30rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.calendar-popup__actions {
@@ -1323,7 +1545,7 @@ export default {
 
 	.calendar-popup__action--primary {
 		font-weight: 700;
-		color: #e76f51;
+		color: #E2643F;
 	}
 
 	.calendar-popup__selector-wrap {
@@ -1337,14 +1559,14 @@ export default {
 		gap: 12rpx;
 		padding: 12rpx 18rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 255, 255, 0.92);
+		background: rgba(26, 21, 18, 0.94);
 		border: 1px solid rgba(236, 117, 88, 0.2);
 	}
 
 	.calendar-popup__selector-value-text {
 		font-size: 24rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.calendar-popup__selector-arrow {
@@ -1364,7 +1586,7 @@ export default {
 		min-width: 140rpx;
 		padding: 10rpx;
 		border-radius: 20rpx;
-		background: rgba(255, 250, 247, 0.98);
+		background: rgba(26, 21, 18, 0.94);
 		border: 1px solid rgba(236, 117, 88, 0.14);
 		box-shadow: 0 14rpx 36rpx rgba(115, 67, 52, 0.16);
 		z-index: 8;
@@ -1393,7 +1615,7 @@ export default {
 
 	.calendar-popup__selector-option-text--active {
 		font-weight: 700;
-		color: #e76f51;
+		color: #E2643F;
 	}
 
 	.calendar-popup__summary {
@@ -1404,7 +1626,7 @@ export default {
 		padding: 22rpx 20rpx;
 		margin: 0 0 16rpx;
 		border-radius: 24rpx;
-		background: #fff2ec;
+		background: #231C18;
 	}
 
 	.calendar-popup__summary-value {
@@ -1413,7 +1635,7 @@ export default {
 		font-size: 30rpx;
 		font-weight: 700;
 		line-height: 1.4;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.background-preview {
@@ -1456,7 +1678,7 @@ export default {
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.7), 0 6rpx 12rpx rgba(0, 0, 0, 0.08);
+		box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.04), 0 6rpx 12rpx rgba(0, 0, 0, 0.08);
 	}
 
 	.color-item--custom {
@@ -1469,12 +1691,12 @@ export default {
 		position: absolute;
 		inset: 12rpx;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.94);
+		background: rgba(26, 21, 18, 0.94);
 		box-shadow: inset 0 0 0 1rpx rgba(236, 117, 88, 0.12);
 	}
 
 	.color-item--active {
-		box-shadow: inset 0 0 0 4rpx rgba(255, 255, 255, 0.95), 0 0 0 2rpx #ec7558, 0 10rpx 18rpx rgba(236, 117, 88, 0.25);
+		box-shadow: inset 0 0 0 4rpx rgba(26, 21, 18, 0.94), 0 0 0 2rpx #ec7558, 0 10rpx 18rpx rgba(236, 117, 88, 0.25);
 	}
 
 	.switch-row {
@@ -1491,7 +1713,7 @@ export default {
 		margin-top: 16rpx;
 		padding: 18rpx 16rpx 6rpx;
 		border-radius: 20rpx;
-		background: rgba(255, 246, 241, 0.92);
+		background: rgba(255, 255, 255, 0.036);
 	}
 
 	.slider-row {

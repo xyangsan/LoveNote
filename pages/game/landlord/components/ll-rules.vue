@@ -2,9 +2,17 @@
 	<view v-if="show" class="ll-rules">
 		<view class="ll-rules__mask" @click="handleMask"></view>
 		<view class="ll-rules__panel">
-			<!-- 头部：标题 + 副标题 + meta 标签 -->
+			<!-- 头部：Kicker + 标题 + 关闭钮 + 副标题 + meta 标签 -->
 			<view class="ll-rules__head">
-				<text class="ll-rules__title">{{ currentRules.title }}</text>
+				<view class="ll-rules__head-top">
+					<view class="ll-rules__head-main">
+						<text class="ll-rules__kicker">LANDLORD · RULES</text>
+						<text class="ll-rules__title">{{ currentRules.title }}</text>
+					</view>
+					<view class="ll-rules__close" @click="handleClose">
+						<text class="ll-rules__close-txt">✕</text>
+					</view>
+				</view>
 				<text class="ll-rules__subtitle">{{ currentRules.subtitle }}</text>
 				<view v-if="currentRules.meta && currentRules.meta.length" class="ll-rules__meta">
 					<text
@@ -249,7 +257,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(8, 30, 18, 0.55);
+		background: rgba(8, 6, 5, 0.74);
 	}
 
 	.ll-rules__panel {
@@ -258,51 +266,90 @@
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
-		width: 520px;
+		width: 540px;
 		max-width: 90vw;
 		max-height: 86vh;
 		padding: 0 18px 14px;
 		border-radius: 18px;
-		background: linear-gradient(180deg, #fffdf8 0%, #fff5ec 100%);
-		box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+		border: 1px solid rgba(216, 176, 140, 0.32);
+		background: linear-gradient(180deg, #1E1814 0%, #15110E 100%);
+		box-shadow: 0 18px 42px rgba(0, 0, 0, 0.58);
 		overflow: hidden;
 	}
 
 	.ll-rules__head {
 		flex-shrink: 0;
 		padding: 14px 0 10px;
-		text-align: center;
+	}
+
+	.ll-rules__head-top {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 10px;
+	}
+
+	.ll-rules__head-main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.ll-rules__kicker {
+		display: block;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 9px;
+		letter-spacing: 2px;
+		color: rgba(216, 176, 140, 0.68);
 	}
 
 	.ll-rules__title {
 		display: block;
-		font-size: 20px;
+		margin-top: 2px;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
+		font-size: 19px;
 		font-weight: 700;
-		color: #5a3a10;
+		color: #FBF4EA;
+	}
+
+	.ll-rules__close {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		background: rgba(255, 255, 255, 0.05);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.ll-rules__close-txt {
+		font-size: 12px;
+		color: rgba(245, 237, 228, 0.72);
 	}
 
 	.ll-rules__subtitle {
 		display: block;
-		margin-top: 6px;
+		margin-top: 5px;
 		font-size: 12px;
 		line-height: 1.5;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.ll-rules__meta {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
 		gap: 6px;
-		margin-top: 9px;
+		margin-top: 8px;
 	}
 
 	.ll-rules__meta-tag {
-		padding: 2px 8px;
+		padding: 2px 9px;
 		border-radius: 999px;
-		background: #fff1e6;
+		border: 1px solid rgba(216, 176, 140, 0.34);
+		background: rgba(216, 176, 140, 0.10);
 		font-size: 10px;
-		color: #b8604c;
+		color: #EAD4BC;
 	}
 
 	/* 正文区：**确切高度** —— JS 算好后绑 height（见 measureBody），
@@ -330,13 +377,14 @@
 	}
 
 	.ll-rules__section {
-		padding: 9px 0 2px;
+		padding: 10px 12px;
+		border-radius: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.07);
+		background: rgba(255, 255, 255, 0.03);
 	}
 
 	.ll-rules__section + .ll-rules__section {
-		margin-top: 4px;
-		padding-top: 11px;
-		border-top: 1px solid rgba(231, 204, 194, 0.55);
+		margin-top: 8px;
 	}
 
 	.ll-rules__heading {
@@ -344,7 +392,7 @@
 		margin-bottom: 7px;
 		font-size: 14px;
 		font-weight: 700;
-		color: #c0674d;
+		color: #E5865C;
 	}
 
 	.ll-rules__item {
@@ -367,7 +415,7 @@
 		flex: 1;
 		font-size: 13px;
 		line-height: 1.6;
-		color: #6d473a;
+		color: #F5EDE4;
 	}
 
 	.ll-rules__footer {
@@ -379,16 +427,16 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 40px;
+		height: 38px;
 		border-radius: 999px;
-		background: linear-gradient(180deg, #ffdf8e 0%, #ffb84d 55%, #f59b2a 100%);
-		border-bottom: 2px solid #b86a14;
-		box-shadow: 0 4px 10px rgba(120, 60, 20, 0.26);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 6px 16px rgba(222, 95, 60, 0.30);
 	}
 
 	.ll-rules__btn-text {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 700;
-		color: #5a3a10;
+		letter-spacing: 1px;
+		color: #FFF9F4;
 	}
 </style>

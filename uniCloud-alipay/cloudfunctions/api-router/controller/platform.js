@@ -33,6 +33,11 @@ module.exports = class PlatformController extends Controller {
 		return this.service.platform.updatePermissionSettings(this.ctx.data || {})
 	}
 
+	/** 心动点新人礼回补：按页补齐历史账号的注册赠送（仅 admin，可重复执行） */
+	async backfillPoints() {
+		return this.service.platform.backfillPoints(this.ctx.data || {})
+	}
+
 	/** 云存储清理统计：已删除动态还剩多少文件没回收（仅 admin） */
 	async getMediaCleanupStats() {
 		return this.service.platform.getMediaCleanupStats()

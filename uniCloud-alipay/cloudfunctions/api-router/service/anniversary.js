@@ -14,6 +14,7 @@ const {
 	getTempFileUrlMap
 } = require('../lib/media')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 const {
 	buildNextDateFields,
 	computeAnniversaryCountdown
@@ -695,6 +696,14 @@ module.exports = class AnniversaryService extends Service {
 			Object.assign(record, buildNextDateFields(record))
 
 			const result = await anniversaryCollection.add(record)
+
+			// 心动点：每个 +5（日上限 5 个）
+			await pointsLib.awardPoints(uid, 'anniversary', {
+				refId: result.id,
+				coupleId: activeCouple ? activeCouple._id : '',
+				title: '新增纪念日'
+			})
+
 			return withAuthResponse(authState, {
 				errCode: 0,
 				data: {

@@ -8,7 +8,7 @@
 				:error-src="fallback"
 				:width="width"
 				:height="height"
-				background="#fff1eb"
+				background="#231C18"
 			></fui-avatar>
 		</view>
 		<text class="love-avatar-picker__label">{{ label }}</text>
@@ -24,7 +24,7 @@
 				:error-src="fallback"
 				:width="width"
 				:height="height"
-				background="#fff1eb"
+				background="#231C18"
 			></fui-avatar>
 		</view>
 		<text class="love-avatar-picker__label">{{ label }}</text>
@@ -101,7 +101,7 @@
 		padding: 6rpx;
 		border-radius: 50%;
 		background: rgba(255, 255, 255, 0.56);
-		box-shadow: 0 14rpx 26rpx rgba(177, 114, 83, 0.14);
+		box-shadow: 0 14rpx 26rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.love-avatar-picker__avatar {

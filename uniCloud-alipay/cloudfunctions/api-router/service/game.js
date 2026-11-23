@@ -9,6 +9,7 @@ const {
 	dbCmd
 } = require('../lib/db')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 const {
 	ROOM_STATUS_WAITING,
 	ROOM_STATUS_PLAYING,
@@ -37,6 +38,7 @@ const {
 	buildUserSnapshot,
 	buildRobotSnapshot,
 	getJoinedSeats,
+	isRobotSeat,
 	getSeatIndexByUid,
 	getSeatByIndex,
 	getNextFreeSeatIndex,
@@ -213,6 +215,25 @@ module.exports = class GameService extends Service {
 	async writeSettleArtifacts(room = {}, { createUid = '', now = Date.now() } = {}) {
 		await this.writeGameRecord(room, { createUid, now })
 		await this.writeMatchRecord(room, { createUid, now })
+
+		// 心动点：房内真人玩家各 +5（一房多局，用 room_id + round 做幂等；机器人不计）
+		try {
+			const seats = Array.isArray(room.seats) ? room.seats : []
+			const refId = `${room._id || ''}:${Number(room.round || 0)}`
+			for (const seat of seats) {
+				const seatUid = String((seat && seat.uid) || '').trim()
+				if (!seatUid || isRobotSeat(seat)) {
+					continue
+				}
+				await pointsLib.awardPoints(seatUid, 'game_settle', {
+					refId,
+					title: '完成一局游戏',
+					now
+				})
+			}
+		} catch (error) {
+			console.warn('api-router settle points failed', error)
+		}
 	}
 
 	/**
@@ -2038,6 +2059,17 @@ module.exports = class GameService extends Service {
 			}
 
 			const result = await gameRecordCollection.add(recordData)
+
+			// 心动点：每完成一局数字炸弹 +5（按局数计分，与卧底/斗地主共用每日上限）
+			try {
+				await pointsLib.awardPoints(uid, 'game_settle', {
+					refId: `bomb:${(result && result.id) || now}`,
+					title: '完成一局游戏',
+					now
+				})
+			} catch (error) {
+				console.warn('api-router bomb reportRecord points failed', error)
+			}
 
 			return Object.assign({}, authState.response, {
 				errCode: 0,

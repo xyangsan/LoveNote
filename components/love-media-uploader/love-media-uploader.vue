@@ -1445,7 +1445,7 @@ export default {
 	display: block;
 	font-size: 22rpx;
 	line-height: 1.7;
-	color: #9f7568;
+	color: rgba(245, 237, 228, 0.48);
 }
 
 .love-media-uploader__grid {
@@ -1456,10 +1456,12 @@ export default {
 
 .love-media-uploader__item {
 	position: relative;
+	box-sizing: border-box;
 	margin: 0 8rpx 16rpx;
-	border-radius: 10rpx;
+	border-radius: 22rpx;
+	border: 1rpx solid rgba(255, 255, 255, 0.10);
 	overflow: hidden;
-	background: #f0f0f0;
+	background: #1B1512;
 }
 
 .love-media-uploader__image,
@@ -1471,10 +1473,11 @@ export default {
 .love-media-uploader__type {
 	position: absolute;
 	left: 10rpx;
-	top: 10rpx;
+	bottom: 10rpx;
 	padding: 4rpx 12rpx;
 	border-radius: 12rpx;
-	background: rgba(0, 0, 0, 0.56);
+	border: 1rpx solid rgba(255, 255, 255, 0.12);
+	background: rgba(17, 13, 11, 0.78);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -1482,25 +1485,27 @@ export default {
 
 .love-media-uploader__type-text {
 	font-size: 20rpx;
-	color: #fff;
+	color: #FBF4EA;
 }
 
 .love-media-uploader__remove {
 	position: absolute;
-	top: 8rpx;
-	right: 8rpx;
-	width: 44rpx;
-	height: 44rpx;
+	top: 10rpx;
+	right: 10rpx;
+	width: 42rpx;
+	height: 42rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: rgba(0, 0, 0, 0.5);
+	border: 1rpx solid rgba(255, 255, 255, 0.14);
+	background: rgba(17, 13, 11, 0.74);
 	border-radius: 50%;
 }
 
 .love-media-uploader__remove-icon {
-	font-size: 28rpx;
-	color: #fff;
+	font-size: 26rpx;
+	line-height: 1;
+	color: #FBF4EA;
 }
 
 .love-media-uploader__mask,
@@ -1513,7 +1518,7 @@ export default {
 }
 
 .love-media-uploader__mask {
-	background: rgba(0, 0, 0, 0.4);
+	background: rgba(17, 13, 11, 0.55);
 }
 
 .love-media-uploader__success {
@@ -1521,27 +1526,27 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	height: 46rpx;
+	height: 44rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: rgba(76, 175, 80, 0.8);
+	background: rgba(132, 190, 156, 0.86);
 }
 
 .love-media-uploader__success-icon,
 .love-media-uploader__error-icon {
-	font-size: 48rpx;
-	color: #fff;
+	font-size: 44rpx;
+	color: #FFF7EF;
 	font-weight: 700;
 }
 
 .love-media-uploader__success-icon {
-	font-size: 28rpx;
+	font-size: 26rpx;
 	line-height: 1;
 }
 
 .love-media-uploader__error {
-	background: rgba(244, 67, 54, 0.82);
+	background: rgba(226, 100, 63, 0.86);
 }
 
 .love-media-uploader__item--add {
@@ -1549,31 +1554,32 @@ export default {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	background: rgba(255, 255, 255, 0.8);
-	border: 2rpx dashed rgba(231, 111, 81, 0.4);
+	background: rgba(255, 255, 255, 0.03);
+	border: 1.5rpx dashed rgba(216, 176, 140, 0.36);
 }
 
 .love-media-uploader__add-icon {
-	font-size: 52rpx;
+	font-size: 46rpx;
 	line-height: 1;
-	color: #e76f51;
+	color: rgba(216, 176, 140, 0.84);
 }
 
 .love-media-uploader__add-icon-image {
-	width: 56rpx;
-	height: 56rpx;
+	width: 52rpx;
+	height: 52rpx;
 }
 
 .love-media-uploader__add-text {
 	margin-top: 8rpx;
-	font-size: 26rpx;
-	color: #e76f51;
+	font-size: 22rpx;
+	color: rgba(234, 212, 188, 0.82);
 }
 
 .love-media-uploader__add-hint {
-	margin-top: 4rpx;
-	font-size: 22rpx;
-	color: #ad8476;
+	margin-top: 6rpx;
+	font-family: "SF Mono", "Consolas", monospace;
+	font-size: 20rpx;
+	color: rgba(216, 176, 140, 0.52);
 }
 
 .love-media-uploader__thumbnail-canvas {

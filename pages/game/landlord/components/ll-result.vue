@@ -248,7 +248,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(8, 30, 18, 0.6);
+		background: rgba(8, 5, 4, 0.72);
 	}
 
 	.ll-result__panel {
@@ -262,16 +262,17 @@
 		/* 一次性完整显示：不设 max-height，让内容撑开（横屏 ~375px 高度刚好装下） */
 		padding: 0 18px 14px;
 		border-radius: 18px;
-		background: linear-gradient(180deg, #fffdf8 0%, #fff5ec 100%);
-		box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+		border: 1px solid rgba(216, 176, 140, 0.26);
+		background: linear-gradient(160deg, #211915 0%, #16110E 100%);
+		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
 		overflow: hidden;
 	}
 
 	/* 右上角圆形关闭：压在半透明圆底上，任何背景（金/蓝头部）都能看清 */
 	.ll-result__close {
 		position: absolute;
-		top: 6px;
-		right: 6px;
+		top: 8px;
+		right: 8px;
 		z-index: 4;
 		display: flex;
 		align-items: center;
@@ -279,28 +280,30 @@
 		width: 26px;
 		height: 26px;
 		border-radius: 50%;
-		background: rgba(90, 58, 16, 0.12);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.06);
 	}
 
 	.ll-result__close-icon {
-		font-size: 18px;
+		font-size: 16px;
 		line-height: 1;
-		font-weight: 700;
-		color: #8b6659;
+		font-weight: 600;
+		color: rgba(245, 237, 228, 0.72);
 	}
 
-	/* 头部配色按胜负切换：胜利金、失败蓝（QQ 斗地主口径） */
+	/* 头部配色按胜负切换：胜利暖金、失败冷蓝 */
 	.ll-result__hero {
-		padding: 14px 0 10px;
+		margin: 0 -18px;
+		padding: 14px 18px 10px;
 		text-align: center;
 	}
 
 	.ll-result__panel--win .ll-result__hero {
-		background: linear-gradient(180deg, rgba(255, 215, 110, 0.18) 0%, rgba(255, 215, 110, 0) 100%);
+		background: radial-gradient(circle at 50% 0%, rgba(245, 166, 35, 0.24) 0%, rgba(245, 166, 35, 0) 75%);
 	}
 
 	.ll-result__panel--lose .ll-result__hero {
-		background: linear-gradient(180deg, rgba(120, 150, 200, 0.18) 0%, rgba(120, 150, 200, 0) 100%);
+		background: radial-gradient(circle at 50% 0%, rgba(120, 155, 205, 0.22) 0%, rgba(120, 155, 205, 0) 75%);
 	}
 
 	.ll-result__emoji {
@@ -312,17 +315,18 @@
 	.ll-result__title {
 		display: block;
 		margin-top: 6px;
+		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 20px;
 		font-weight: 700;
 		letter-spacing: 2px;
 	}
 
 	.ll-result__panel--win .ll-result__title {
-		color: #c0801a;
+		color: #FFD67A;
 	}
 
 	.ll-result__panel--lose .ll-result__title {
-		color: #4a6a8e;
+		color: #A8C4E2;
 	}
 
 	/* 倍数信息行：一行紧凑显示底分 / 炸弹 / 倍数 + 春天标签 */
@@ -331,16 +335,17 @@
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
-		padding: 6px 10px;
+		padding: 6px 12px;
 		margin: 0 4px;
 		border-radius: 10px;
-		background: rgba(255, 240, 224, 0.7);
+		border: 1px solid rgba(216, 176, 140, 0.18);
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.ll-result__multiplier-text {
 		font-size: 12px;
 		font-weight: 600;
-		color: #8b5a3a;
+		color: #EAD4BC;
 	}
 
 	.ll-result__spring {
@@ -379,7 +384,7 @@
 		gap: 3px;
 		padding: 8px 4px;
 		border-radius: 12px;
-		background: rgba(255, 255, 255, 0.7);
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.ll-result__player--landlord {
@@ -392,7 +397,7 @@
 	}
 
 	.ll-result__player--win .ll-result__avatar {
-		border-color: #e76f51;
+		border-color: #E2643F;
 	}
 
 	/* 输的一方压暗：作用在「头像 + 身份牌」整体上，否则牌还是满色、头像发灰，看着像没对齐 */
@@ -415,8 +420,8 @@
 		width: 36px;
 		height: 36px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, #e76f51 100%);
-		border: 2px solid rgba(255, 255, 255, 0.85);
+		background: linear-gradient(135deg, #ffb37a 0%, #E2643F 100%);
+		border: 2px solid rgba(255, 255, 255, 0.05);
 		overflow: hidden;
 	}
 
@@ -448,7 +453,7 @@
 		font-weight: 700;
 		line-height: 1.5;
 		white-space: nowrap;
-		box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.92), 0 2px 4px rgba(90, 50, 30, 0.3);
+		box-shadow: 0 0 0 1.5px rgba(26, 21, 18, 0.94), 0 2px 4px rgba(90, 50, 30, 0.3);
 	}
 
 	.ll-result__role-tag--landlord {
@@ -464,7 +469,7 @@
 	.ll-result__name {
 		font-size: 12px;
 		font-weight: 600;
-		color: #5d372b;
+		color: #FBF4EA;
 		max-width: 100%;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -474,7 +479,7 @@
 	.ll-result__self-flag {
 		font-size: 10px;
 		font-weight: 400;
-		color: #b8604c;
+		color: #E5865C;
 	}
 
 	.ll-result__score-delta {
@@ -484,7 +489,7 @@
 	}
 
 	.ll-result__score-delta--win {
-		color: #c0674d;
+		color: #E5865C;
 	}
 
 	.ll-result__score-delta--lose {
@@ -493,7 +498,7 @@
 
 	.ll-result__total {
 		font-size: 10px;
-		color: #917165;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	/* 底部按钮：返回大厅（ghost）+ 再来一局（primary，非房主禁用） */
@@ -513,27 +518,27 @@
 	}
 
 	.ll-result__action--ghost {
-		background: rgba(255, 255, 255, 0.92);
-		border: 1px solid rgba(180, 170, 160, 0.4);
+		background: rgba(216, 176, 140, 0.08);
+		border: 1px solid rgba(216, 176, 140, 0.30);
 	}
 
 	.ll-result__action--primary {
-		background: linear-gradient(180deg, #ffdf8e 0%, #ffb84d 55%, #f59b2a 100%);
-		border-bottom: 2px solid #b86a14;
-		box-shadow: 0 4px 10px rgba(120, 60, 20, 0.26);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		border: none;
+		box-shadow: 0 4px 12px rgba(222, 95, 60, 0.28);
 	}
 
 	.ll-result__action--disabled {
-		opacity: 0.5;
+		opacity: 0.45;
 	}
 
 	.ll-result__action-text {
 		font-size: 14px;
 		font-weight: 700;
-		color: #5a3a10;
+		color: #FFF7EF;
 	}
 
 	.ll-result__action-text--ghost {
-		color: #1c4f33;
+		color: #EAD4BC;
 	}
 </style>

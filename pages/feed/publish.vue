@@ -1,67 +1,180 @@
 <template>
-	<view class="page" @click="handlePageTap">
-		<view class="page__glow page__glow--left"></view>
-		<view class="page__glow page__glow--right"></view>
+	<view class="pf-page" @tap="handlePageTap">
+		<view class="pf-glow pf-glow--left"></view>
+		<view class="pf-glow pf-glow--right"></view>
 
-		<view class="card">
-			<!-- 隐私说明：审核关注「用户内容是否对外传播」，这里把可见范围直接写在发布入口上 -->
-			<view class="privacy-tip">
-				<text class="privacy-tip__title">{{ privacyTipTitle }}</text>
-				<text class="privacy-tip__desc">{{ privacyTipDesc }}</text>
-			</view>
-			<textarea v-model="content" class="content-input" placeholder="写点今天的故事" maxlength="2000" auto-height
-				:show-confirm-bar="false" :adjust-position="false" :focus="inputFocus"
-				:cursor-spacing="emojiTriggerSpacing" @focus="handleInputFocus" @blur="handleInputBlur"
-				@tap.stop="handleInputTap" @keyboardheightchange="onKeyboardHeightChange" />
+		<noir-navbar
+			title="发布日常"
+			:show-back="true"
+			:custom-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+			@back="goBack"
+		>
+		</noir-navbar>
 
-
-
-			<love-media-uploader ref="mediaUploader" :file-types="uploaderFileTypes" :max-file-size="maxFileSize"
-				:compressed="true" :enable-compression="true" :compress-over-size="uploaderCompressOverSize"
-				:image-compress-quality="uploaderImageCompressQuality" :enable-thumbnail="true"
-				:thumbnail-options="uploaderThumbnailOptions" :save-path="uploaderSavePath" upload-prefix="daily"
-				:max-count="uploaderMaxCount" :exclusive-media-types="true" :max-image-count="9" :max-video-count="1"
-				:mixed-media-tip="'不允许同时选择图片和视频'" :tip-text="uploaderTipText" :item-width="200" :item-height="200"
-				:previewable="true" object-fit="aspectFill" :source-type="['album', 'camera']"
-				:show-delete-button="true" :show-tips="false" @change="onUploaderChange" @progress="onUploaderProgress">
-				<template #upload-icon>
-					<text class="upload-icon">+</text>
-				</template>
-			</love-media-uploader>
-		</view>
-
-		<view class="card">
-			<view class="location-row" @click="handleChooseLocation">
-				<view class="location-row__main">
-					<text class="location-row__label">当前位置</text>
-					<text class="location-row__value">{{ locationDisplayText }}</text>
+		<view class="pf-wrap">
+			<!-- 图文 / 视频模式切换（对标 s17 .m-seg） -->
+			<view class="pf-seg">
+				<view
+					class="pf-seg__item"
+					:class="{ 'pf-seg__item--on': mediaMode === 'image' }"
+					@tap="switchMediaMode('image')"
+				>
+					<text class="pf-seg__txt">图文模式（最多 9 张）</text>
 				</view>
-				<text class="location-row__action">{{ hasSelectedLocation ? '重新选择' : '选择位置' }}</text>
+				<view
+					class="pf-seg__item"
+					:class="{ 'pf-seg__item--on': mediaMode === 'video' }"
+					@tap="switchMediaMode('video')"
+				>
+					<text class="pf-seg__txt">视频模式（1 段）</text>
+				</view>
 			</view>
-			<view v-if="hasSelectedLocation" class="location-extra">
-				<text v-if="locationAddressText" class="location-extra__line">{{ locationAddressText }}</text>
-				<text class="location-extra__clear" @click="clearLocation">清除位置</text>
+
+			<!-- 正文输入卡片（对标 s17 .pf-box） -->
+			<view class="pf-box" @tap.stop>
+				<textarea
+					v-model="content"
+					class="pf-textarea"
+					placeholder="写点今天的故事…"
+					placeholder-class="pf-ph"
+					:maxlength="2000"
+					auto-height
+					:show-confirm-bar="false"
+					:adjust-position="false"
+					:focus="inputFocus"
+					:cursor-spacing="emojiTriggerSpacing"
+					@focus="handleInputFocus"
+					@blur="handleInputBlur"
+					@tap.stop="handleInputTap"
+					@keyboardheightchange="onKeyboardHeightChange"
+				/>
+				<view class="pf-box__foot">
+					<view
+						class="pf-emoji-trigger"
+						@touchstart.prevent="prepareOpenEmojiPanel"
+						@touchend.prevent="toggleEmojiPanel"
+					>
+						<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="36" color="#EAD4BC" />
+					</view>
+					<text class="pf-cnt">{{ contentLength }} / 2000</text>
+				</view>
+			</view>
+
+			<!-- 媒体选择区（保留完整压缩与缩略图上传逻辑） -->
+			<view class="pf-media">
+				<love-media-uploader
+					ref="mediaUploader"
+					:file-types="uploaderFileTypes"
+					:max-file-size="maxFileSize"
+					:compressed="true"
+					:enable-compression="true"
+					:compress-over-size="uploaderCompressOverSize"
+					:image-compress-quality="uploaderImageCompressQuality"
+					:enable-thumbnail="true"
+					:thumbnail-options="uploaderThumbnailOptions"
+					:save-path="uploaderSavePath"
+					upload-prefix="daily"
+					:max-count="uploaderMaxCount"
+					:exclusive-media-types="true"
+					:max-image-count="9"
+					:max-video-count="1"
+					:mixed-media-tip="'不允许同时选择图片和视频'"
+					:tip-text="uploaderTipText"
+					:item-width="214"
+					:item-height="214"
+					:previewable="true"
+					object-fit="aspectFill"
+					:source-type="['album', 'camera']"
+					:show-delete-button="true"
+					:show-tips="false"
+					@change="onUploaderChange"
+					@progress="onUploaderProgress"
+				>
+					<template #upload-icon>
+						<view class="pf-add-slot">
+							<text class="pf-add-slot__plus">＋</text>
+							<text class="pf-add-slot__lbl">{{ mediaMode === 'video' ? '添加视频' : '添加图片' }}</text>
+						</view>
+					</template>
+				</love-media-uploader>
+			</view>
+
+			<!-- 位置与可见范围（对标 s17 .pf-meta） -->
+			<view class="pf-meta">
+				<view class="pf-row-block">
+					<view class="pf-row" @tap="handleChooseLocation">
+						<text class="pf-row__label">位置（选填）</text>
+						<view class="pf-row__right">
+							<fui-icon name="location" :size="28" :color="hasSelectedLocation ? '#D8B08C' : 'rgba(245, 237, 228, 0.36)'" />
+							<text
+								class="pf-loc-txt"
+								:class="{ 'pf-loc-txt--active': hasSelectedLocation }"
+							>{{ locationDisplayText }}</text>
+							<fui-icon name="arrowright" :size="24" color="rgba(245, 237, 228, 0.36)" />
+						</view>
+					</view>
+					<view v-if="hasSelectedLocation" class="pf-loc-extra">
+						<text v-if="locationAddressText" class="pf-loc-extra__addr">{{ locationAddressText }}</text>
+						<text class="pf-loc-extra__clear" @tap.stop="clearLocation">清除</text>
+					</view>
+				</view>
+
+				<!-- <view class="pf-row-block pf-row-block--last">
+					<view class="pf-row">
+						<text class="pf-row__label">可见范围</text>
+						<text class="pf-row__val">{{ privacyTipTitle }}</text>
+					</view>
+				</view> -->
+			</view>
+
+			<!-- 隐私合规说明 -->
+			<view class="pf-privacy">
+				<text class="pf-privacy__txt">{{ privacyTipDesc }}</text>
 			</view>
 		</view>
 
-		<view class="footer">
-			<button class="submit-btn" :loading="submitting" :disabled="submitting" @click="handleSubmit">
-				{{ submitting ? `发布中 ${uploadProgress}/${selectedCount || 0}` : '发布动态' }}
-			</button>
+		<!-- 底部固定发布按钮（对标 s17 .m-foot） -->
+		<view class="pf-foot-bar">
+			<view
+				class="pf-submit"
+				:class="{ 'pf-submit--disabled': submitting }"
+				hover-class="pf-submit--hover"
+				@tap="handleSubmit"
+			>
+				<text class="pf-submit__txt">{{ submitButtonText }}</text>
+			</view>
 		</view>
 
-
+		<!-- 暗色表情工具条与表情面板 -->
 		<view v-if="showEmojiToolbarPanel" class="emoji-toolbar-panel" :style="emojiPanelStyle" @tap.stop>
 			<view class="emoji-toolbar">
-				<view class="emoji-toolbar__button" @touchstart.prevent="prepareOpenEmojiPanel"
-					@touchend.prevent="toggleEmojiPanel">
-					<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="56" color="#333333"></fui-icon>
+				<view
+					class="emoji-toolbar__button"
+					@touchstart.prevent="prepareOpenEmojiPanel"
+					@touchend.prevent="toggleEmojiPanel"
+				>
+					<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="44" color="#EAD4BC" />
+				</view>
+				<view class="emoji-toolbar__right">
+					<view v-if="showEmojiPanel && content" class="emoji-toolbar__del" @tap.stop="deleteLastChar">
+						<text class="emoji-toolbar__del-txt">⌫</text>
+					</view>
+					<view class="emoji-toolbar__done" @tap.stop="closeEmojiToolbarPanel">
+						<text class="emoji-toolbar__done-txt">完成</text>
+					</view>
 				</view>
 			</view>
 			<view v-if="showEmojiPanel" class="emoji-panel">
 				<view class="emoji-grid">
-					<text v-for="emoji in emojiList" :key="emoji.unicode || emoji.glyph" class="emoji-panel__item"
-						@click.stop="appendEmoji(emoji)">{{ emoji.glyph }}</text>
+					<text
+						v-for="emoji in emojiList"
+						:key="emoji.unicode || emoji.glyph"
+						class="emoji-panel__item"
+						@tap.stop="appendEmoji(emoji)"
+					>{{ emoji.glyph }}</text>
 				</view>
 			</view>
 		</view>
@@ -69,12 +182,8 @@
 </template>
 
 <script>
-	import {
-		getDailyApi
-	} from '../../common/api/daily.js'
-	import {
-		uploadFileWithModule
-	} from '../../common/utils/file-upload.js'
+	import { getDailyApi } from '../../common/api/daily.js'
+	import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 	import glyph from '../../components/love-editor/glyph.json'
 	import { requirePageLogin } from '@/common/auth-entry.js'
 	import { markPageRefresh } from '@/common/utils/page-refresh.js'
@@ -84,22 +193,20 @@
 	const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
 	const DAILY_IMAGE_COMPRESS_QUALITY = 86
 	const THUMBNAIL_IMAGE_QUALITY = 45
-	// 与 pages/feed/list.vue 的 FEED_REFRESH_KEY 保持一致
 	const FEED_REFRESH_KEY = 'feed'
 
 	export default {
 		data() {
 			return {
+				scrollTop: 0,
 				mediaMode: 'image',
 				keyboardHeight: 0,
-				emojiPanelHeight: 0,
 				inputFocus: false,
 				inputFocused: false,
 				showEmojiPanel: false,
 				pendingOpenEmojiPanel: false,
 				restoreKeyboardTimer: null,
 				content: '',
-				// 是否已绑定情侣：决定发布页顶部隐私说明的措辞，取不到时按未绑定处理
 				coupleBound: false,
 				emojiList: glyph,
 				maxFileSize: MAX_FILE_SIZE,
@@ -115,24 +222,25 @@
 			}
 		},
 		computed: {
-			/**
-			 * 发布页顶部隐私说明的标题。
-			 * 未绑定：只自己可见；已绑定：双人私密可见。
-			 * ⚠️ 文案要与服务端真实可见范围一致（见 lib/content-scope.js）：
-			 *    未绑定 = 仅作者本人；已绑定 = 作者本人 + 当前伴侣。
-			 */
-			privacyTipTitle() {
-				return this.coupleBound ? '双人私密 · 仅你与 TA 可见' : '仅自己可见 · 私密记录'
+			contentLength() {
+				return String(this.content || '').length
 			},
-			/**
-			 * 隐私说明正文。两个版本的共同点：都明确「不对外公开」「没有分享入口」，
-			 * 这是审核判定「是否有公开传播」时最关键的一句话。
-			 */
+			privacyTipTitle() {
+				return this.coupleBound ? '双人共享空间' : '仅自己可见'
+			},
 			privacyTipDesc() {
 				if (this.coupleBound) {
-					return '发布后只有你和已绑定的伴侣能看到，不会对外公开，也不进入任何公开列表；小程序内没有将它转发或分享出去的入口。'
+					return '发布后仅你与已绑定的伴侣可见，不会对外公开，也不进入任何公开列表；小程序内无转发或分享入口。'
 				}
-				return '发布后只有你自己能看到，不会对外公开，也不进入任何公开列表；小程序内没有将它转发或分享出去的入口，仅用于记录你的日常生活。'
+				return '发布后仅你自己可见，不会对外公开，也不进入任何公开列表；小程序内无转发或分享入口，仅用于私密记录日常。'
+			},
+			submitButtonText() {
+				if (this.submitting) {
+					return this.selectedCount > 0
+						? `发布中 ${this.uploadProgress}/${this.selectedCount}`
+						: '发布中…'
+				}
+				return this.coupleBound ? '发布日常 (+5 心动点)' : '发布日常'
 			},
 			uploaderFileTypes() {
 				return this.mediaMode ? [this.mediaMode] : ['image', 'video']
@@ -174,7 +282,7 @@
 				return 24
 			},
 			showEmojiToolbarPanel() {
-				return this.inputFocused
+				return this.inputFocused || this.showEmojiPanel
 			},
 			hasSelectedLocation() {
 				return Boolean(
@@ -186,58 +294,76 @@
 			},
 			locationDisplayText() {
 				if (!this.hasSelectedLocation) {
-					return '未选择位置'
+					return '添加位置'
 				}
-				return this.locationInfo.name || this.locationInfo.address || '已选择坐标位置'
+				return this.locationInfo.name || this.locationInfo.address || '已选择位置'
 			},
 			locationAddressText() {
 				return this.locationInfo.address || ''
 			},
 			emojiPanelStyle() {
 				const height = Number(this.keyboardHeight || 0)
-				const bottom = Number.isFinite(height) ? Math.max(0, height) : 0
-				return [
-					{
-						bottom: `${bottom}px`
-					}
-				]
+				const bottom = this.showEmojiPanel ? 0 : (Number.isFinite(height) ? Math.max(0, height) : 0)
+				return [{ bottom: `${bottom}px` }]
 			}
 		},
 		onLoad(options = {}) {
-			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
 			if (!requirePageLogin()) return
 			const type = String(options.type || '').trim()
 			this.mediaMode = type === 'video' ? 'video' : 'image'
-			// 绑定状态只影响顶部隐私说明的措辞，异步加载，不阻塞页面
 			this.loadCoupleState()
+		},
+		onPageScroll(e) {
+			this.scrollTop = e && e.scrollTop ? e.scrollTop : 0
 		},
 		onUnload() {
 			this.clearRestoreKeyboardTimer()
 		},
 		methods: {
-			/**
-			 * 读取情侣绑定状态，只用于顶部隐私说明的措辞。
-			 * fetchCoupleCenter 命中缓存时不会重复请求；失败一律按「未绑定」处理 ——
-			 * 此时文案更保守（仅自己可见），不会声称比实际更宽的可见范围。
-			 */
 			async loadCoupleState() {
 				try {
 					const appStateStore = useAppStateStore()
-					await appStateStore.fetchCoupleCenter({
-						force: false
-					})
+					await appStateStore.fetchCoupleCenter({ force: false })
 					const centerData = appStateStore.coupleCenterData || {}
 					this.coupleBound = Boolean(centerData.activeCouple)
 				} catch (error) {
 					console.warn('publish: load couple state failed', error)
 				}
 			},
+			switchMediaMode(nextMode) {
+				if (this.submitting || nextMode === this.mediaMode) {
+					return
+				}
+				if (this.selectedCount > 0) {
+					uni.showModal({
+						title: '切换模式',
+						content: '切换后将清空当前已选媒体，确定切换吗？',
+						success: (res) => {
+							if (!res.confirm) return
+							const uploader = this.$refs.mediaUploader
+							if (uploader && typeof uploader.clear === 'function') {
+								uploader.clear()
+							}
+							this.selectedCount = 0
+							this.mediaMode = nextMode
+						}
+					})
+					return
+				}
+				this.mediaMode = nextMode
+			},
 			appendEmoji(emoji = '') {
 				const glyphText = emoji && typeof emoji === 'object' ? String(emoji.glyph || '') : String(emoji || '')
 				if (!glyphText) {
 					return
 				}
-				this.content = `${this.content || ''}${glyphText}`
+				this.content = `${this.content || ''}${glyphText}`.slice(0, 2000)
+			},
+			deleteLastChar() {
+				if (!this.content) return
+				const chars = Array.from(this.content)
+				chars.pop()
+				this.content = chars.join('')
 			},
 			handleInputFocus() {
 				this.inputFocused = true
@@ -283,11 +409,9 @@
 				})
 			},
 			prepareOpenEmojiPanel() {
-				console.log('prepareOpenEmojiPanel', this.showEmojiPanel);
 				this.pendingOpenEmojiPanel = true
 			},
 			toggleEmojiPanel() {
-				console.log('toggle emoji panel', this.showEmojiPanel);
 				const nextShowEmojiPanel = !this.showEmojiPanel
 				this.pendingOpenEmojiPanel = false
 				this.inputFocused = true
@@ -309,18 +433,12 @@
 			closeEmojiToolbarPanel() {
 				this.closeEmojiPanel()
 				this.inputFocused = false
+				this.hideKeyboardOnly()
 			},
 			handlePageTap() {
 				if (this.inputFocused || this.showEmojiPanel) {
 					this.closeEmojiToolbarPanel()
 				}
-			},
-			formatCoordinate(value) {
-				const num = Number(value)
-				if (Number.isNaN(num)) {
-					return '--'
-				}
-				return num.toFixed(6)
 			},
 			clearLocation() {
 				this.locationInfo = {
@@ -382,8 +500,7 @@
 						src: sourcePath,
 						quality: THUMBNAIL_IMAGE_QUALITY,
 						success: (res) => {
-							const nextPath = String(res && (res.tempFilePath || res.filePath) || '')
-								.trim()
+							const nextPath = String(res && (res.tempFilePath || res.filePath) || '').trim()
 							resolve(nextPath || sourcePath)
 						},
 						fail: () => {
@@ -392,11 +509,7 @@
 					})
 				})
 			},
-			async uploadThumbnailFile({
-				localPath = '',
-				module = '',
-				prefix = ''
-			} = {}) {
+			async uploadThumbnailFile({ localPath = '', module = '', prefix = '' } = {}) {
 				const sourcePath = String(localPath || '').trim()
 				if (!sourcePath) {
 					return ''
@@ -416,8 +529,7 @@
 
 				if (mediaType === 'image' && !thumbnailUrl) {
 					try {
-						const thumbnailSourcePath = await this.compressImageForThumbnail(String(file.path || '')
-							.trim())
+						const thumbnailSourcePath = await this.compressImageForThumbnail(String(file.path || '').trim())
 						thumbnailUrl = await this.uploadThumbnailFile({
 							localPath: thumbnailSourcePath,
 							module: 'daily/thumbnails/images',
@@ -486,14 +598,13 @@
 					return
 				}
 
+				this.closeEmojiToolbarPanel()
 				this.submitting = true
 				this.uploadProgress = 0
 				uni.showLoading({
 					title: '发布中...',
 					mask: true
 				})
-				// ⚠️ 微信小程序 showLoading / showToast 共用同一个提示槽，hideLoading 会把刚弹的 toast
-				// 一起关掉（失败的提示也会被吞）。改成弹 toast 之前先关 loading，且只关一次。
 				let submitLoadingVisible = true
 				const hideSubmitLoading = () => {
 					if (!submitLoadingVisible) {
@@ -516,7 +627,6 @@
 					}
 
 					const mediaList = await Promise.all(uploadedFiles.map((file) => this.buildMediaPayload(file)))
-
 					const location = this.buildLocationPayload()
 					const result = await getDailyApi().create({
 						content,
@@ -527,7 +637,6 @@
 						throw new Error(result.errMsg || '发布失败')
 					}
 
-					// 通知日常列表页：下次 onShow 时重拉首屏（否则刚发的这条不显示）
 					markPageRefresh(FEED_REFRESH_KEY)
 
 					hideSubmitLoading()
@@ -569,165 +678,299 @@
 </script>
 
 <style scoped lang="scss">
-	
-	@mixin flex-center {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	// 水平两端对齐
-	@mixin flex-between {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-	.page {
+	.pf-page {
 		position: relative;
+		box-sizing: border-box;
 		min-height: 100vh;
-		padding: 32rpx 24rpx 160rpx;
-		background: linear-gradient(180deg, #FFF7F1 0%, #FFF0E8 100%);
+		padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
+		background: #110D0B;
 		overflow: hidden;
 	}
 
-	.page__glow {
-		position: absolute;
-		width: 320rpx;
-		height: 320rpx;
+	.pf-glow {
+		position: fixed;
+		width: 420rpx;
+		height: 420rpx;
 		border-radius: 50%;
-		filter: blur(24rpx);
-		opacity: 0.4;
+		filter: blur(80rpx);
+		opacity: 0.2;
+		pointer-events: none;
 		z-index: 0;
 	}
 
-	.page__glow--left {
-		top: -80rpx;
-		left: -120rpx;
-		background: rgba(255, 170, 153, 0.55);
+	.pf-glow--left {
+		top: -120rpx;
+		left: -140rpx;
+		background: #E2643F;
 	}
 
-	.page__glow--right {
-		top: 240rpx;
-		right: -120rpx;
-		background: rgba(255, 220, 174, 0.55);
+	.pf-glow--right {
+		top: 320rpx;
+		right: -160rpx;
+		background: #D8B08C;
 	}
 
-	.header,
-	.card {
-		position: relative;
-		z-index: 1;
-	}
-
-	.header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 22rpx;
-	}
-
-	.header__back {
-		display: flex;
-		align-items: center;
-		padding: 14rpx 0;
-	}
-
-	.header__back-icon {
-		font-size: 36rpx;
-		color: #5a3427;
-		margin-right: 8rpx;
-	}
-
-	.header__back-text {
-		font-size: 28rpx;
-		color: #5a3427;
-	}
-
-	.header__title {
-		font-size: 36rpx;
-		font-weight: 700;
-		color: #5a3427;
-	}
-
-	.header__placeholder {
-		width: 100rpx;
-	}
-
-	.card {
-		margin-top: 16rpx;
-		padding: 24rpx;
-		border-radius: 24rpx;
-		background: rgba(255, 255, 255, 0.92);
-		box-shadow: 0 12rpx 30rpx rgba(177, 114, 83, 0.09);
-	}
-
-	.type-switch {
-		display: flex;
-		gap: 14rpx;
-		margin-bottom: 18rpx;
-	}
-
-	.type-switch__item {
-		flex: 1;
-		height: 72rpx;
+	.pf-nav-cancel {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		height: 52rpx;
+		padding: 0 22rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 241, 235, 0.9);
+		border: 1rpx solid rgba(245, 237, 228, 0.16);
+		background: rgba(255, 255, 255, 0.04);
 	}
 
-	.type-switch__item--active {
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-	}
-
-	.type-switch__text {
-		font-size: 24rpx;
-		font-weight: 600;
-		color: #b05b48;
-	}
-
-	.type-switch__item--active .type-switch__text {
-		color: #fff;
-	}
-
-	/* 发布页隐私说明：暖色浅底 + 左侧竖条，紧贴输入框上方 */
-	.privacy-tip {
-		margin-bottom: 18rpx;
-		padding: 16rpx 20rpx;
-		border-radius: 0 16rpx 16rpx 0;
-		border-left: 6rpx solid #e76f51;
-		background: rgba(255, 241, 235, 0.92);
-	}
-
-	.privacy-tip__title {
-		display: block;
-		font-size: 24rpx;
-		font-weight: 600;
-		line-height: 1.4;
-		color: #b05b48;
-	}
-
-	.privacy-tip__desc {
-		display: block;
-		margin-top: 6rpx;
+	.pf-nav-cancel__txt {
 		font-size: 22rpx;
-		line-height: 1.65;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.68);
+		white-space: nowrap;
 	}
 
-	.content-input {
+	.pf-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 12rpx 36rpx 0;
+	}
+
+	/* 图文 / 视频分段切换（对标 s17 .m-seg） */
+	.pf-seg {
+		display: flex;
+		padding: 6rpx;
+		margin-bottom: 22rpx;
+		border-radius: 22rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.pf-seg__item {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 60rpx;
+		border-radius: 17rpx;
+	}
+
+	.pf-seg__item--on {
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		background: linear-gradient(135deg, rgba(226, 100, 63, 0.24), rgba(216, 176, 140, 0.14));
+	}
+
+	.pf-seg__txt {
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.54);
+	}
+
+	.pf-seg__item--on .pf-seg__txt {
+		color: #FBF4EA;
+		font-weight: 600;
+	}
+
+	/* 正文输入卡（对标 s17 .pf-box） */
+	.pf-box {
+		position: relative;
+		padding: 24rpx 28rpx 18rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.pf-textarea {
 		width: 100%;
 		min-height: 220rpx;
-		padding: 18rpx 20rpx;
-		margin-bottom: 20rpx;
-		box-sizing: border-box;
-		border-radius: 18rpx;
-		background: #fff7f3;
 		font-size: 28rpx;
-		line-height: 1.8;
-		color: #5a3427;
+		line-height: 1.75;
+		color: #FBF4EA;
+		box-sizing: border-box;
 	}
 
+	.pf-ph {
+		color: rgba(245, 237, 228, 0.30);
+	}
 
+	.pf-box__foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-top: 14rpx;
+		padding-top: 12rpx;
+		border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+	}
+
+	.pf-emoji-trigger {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 56rpx;
+		height: 56rpx;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	.pf-cnt {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 21rpx;
+		color: rgba(216, 176, 140, 0.68);
+	}
+
+	/* 媒体选择区 */
+	.pf-media {
+		margin-top: 22rpx;
+	}
+
+	.pf-add-slot {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8rpx;
+	}
+
+	.pf-add-slot__plus {
+		font-size: 44rpx;
+		line-height: 1;
+		color: rgba(216, 176, 140, 0.84);
+	}
+
+	.pf-add-slot__lbl {
+		font-size: 22rpx;
+		color: rgba(234, 212, 188, 0.78);
+	}
+
+	/* 位置与可见范围卡片（对标 s17 .pf-meta） */
+	.pf-meta {
+		margin-top: 24rpx;
+		padding: 0 28rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.pf-row-block {
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+	}
+
+	.pf-row-block--last {
+		border-bottom: none;
+	}
+
+	.pf-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		min-height: 94rpx;
+	}
+
+	.pf-row__label {
+		flex-shrink: 0;
+		font-size: 25rpx;
+		color: rgba(245, 237, 228, 0.62);
+	}
+
+	.pf-row__right {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 8rpx;
+	}
+
+	.pf-loc-txt {
+		font-size: 25rpx;
+		color: rgba(245, 237, 228, 0.36);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.pf-loc-txt--active {
+		color: #D8B08C;
+	}
+
+	.pf-row__val {
+		font-size: 25rpx;
+		color: #FBF4EA;
+	}
+
+	.pf-loc-extra {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		padding-bottom: 18rpx;
+	}
+
+	.pf-loc-extra__addr {
+		flex: 1;
+		min-width: 0;
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.44);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.pf-loc-extra__clear {
+		flex-shrink: 0;
+		font-size: 21rpx;
+		color: #E5865C;
+	}
+
+	.pf-privacy {
+		margin-top: 20rpx;
+		padding: 18rpx 22rpx;
+		border-radius: 22rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.16);
+		background: rgba(216, 176, 140, 0.05);
+	}
+
+	.pf-privacy__txt {
+		font-size: 21rpx;
+		line-height: 1.65;
+		color: rgba(245, 237, 228, 0.46);
+	}
+
+	/* 底部固定发布栏 */
+	.pf-foot-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 30;
+		padding: 20rpx 36rpx calc(24rpx + env(safe-area-inset-bottom));
+		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: rgba(17, 13, 11, 0.94);
+	}
+
+	.pf-submit {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 88rpx;
+		border-radius: 44rpx;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
+	}
+
+	.pf-submit--disabled {
+		opacity: 0.55;
+	}
+
+	.pf-submit--hover {
+		opacity: 0.86;
+	}
+
+	.pf-submit__txt {
+		font-size: 28rpx;
+		font-weight: 600;
+		color: #FFF7EF;
+		letter-spacing: 2rpx;
+	}
+
+	/* 表情工具栏与面板 */
 	.emoji-toolbar-panel {
 		position: fixed;
 		left: 0;
@@ -736,160 +979,90 @@
 		padding-bottom: env(safe-area-inset-bottom);
 		z-index: 3000;
 		width: 100%;
-		margin: 16rpx 0 0;
 		box-sizing: border-box;
-		background: #ffffff;
-		border-radius: 18rpx;
-		box-shadow: 0 8rpx 24rpx rgba(177, 114, 83, 0.08);
-		overflow: hidden;
+		border-top: 1rpx solid rgba(216, 176, 140, 0.22);
+		background: #1A1512;
+		box-shadow: 0 -12rpx 32rpx rgba(0, 0, 0, 0.55);
 	}
 
 	.emoji-toolbar {
 		width: 100%;
-		height: 88rpx;
+		height: 84rpx;
 		display: flex;
 		align-items: center;
-		justify-content: flex-start;
-		padding: 0 24rpx;
+		justify-content: space-between;
+		padding: 0 28rpx;
 		box-sizing: border-box;
-		background: #ffffff;
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
 	}
 
 	.emoji-toolbar__button {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 72rpx;
-		height: 72rpx;
+		width: 64rpx;
+		height: 64rpx;
 		border-radius: 50%;
 	}
 
-	.emoji-panel {
-		max-height: 560rpx;
-		padding: 20rpx 24rpx 28rpx;
-		box-sizing: border-box;
-		background: #ffffff;
-		overflow-y: auto;
-	}
-	
-	.emoji-grid {
-		display: grid;
-		grid-template-columns: repeat(8, 1fr);
-		grid-gap: 20rpx;
-		padding: 0;
-		box-sizing: border-box;
-	}
-
-	.emoji-panel__item {
-		@include flex-center;
-		aspect-ratio: 1 / 1;
-		border-radius: 12rpx;
-		font-size: 50rpx;
-		line-height: 1;
-	}
-
-
-
-	.upload-tip {
-		display: block;
-		font-size: 22rpx;
-		color: #9f7568;
-		padding-bottom: 8rpx;
-	}
-
-	.upload-icon {
-		font-size: 52rpx;
-		line-height: 1;
-		color: #e76f51;
-	}
-
-	.location-row {
+	.emoji-toolbar__right {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		gap: 20rpx;
 	}
 
-	.location-row__main {
-		flex: 1;
-		min-width: 0;
+	.emoji-toolbar__del {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 52rpx;
+		padding: 0 20rpx;
+		border-radius: 16rpx;
+		background: rgba(255, 255, 255, 0.06);
 	}
 
-	.location-row__label {
-		display: block;
-		font-size: 24rpx;
-		color: #7d5c52;
+	.emoji-toolbar__del-txt {
+		font-size: 26rpx;
+		color: #EAD4BC;
 	}
 
-	.location-row__value {
-		display: block;
-		margin-top: 10rpx;
-		font-size: 28rpx;
-		font-weight: 600;
-		color: #5a3427;
-		word-break: break-all;
+	.emoji-toolbar__done {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 52rpx;
+		padding: 0 22rpx;
+		border-radius: 26rpx;
+		background: rgba(226, 100, 63, 0.18);
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
 	}
 
-	.location-row__action {
-		flex-shrink: 0;
-		font-size: 24rpx;
-		color: #c46e56;
-	}
-
-	.location-extra {
-		margin-top: 16rpx;
-		padding-top: 14rpx;
-		border-top: 1rpx solid rgba(231, 204, 194, 0.6);
-	}
-
-	.location-extra__line {
-		display: block;
+	.emoji-toolbar__done-txt {
 		font-size: 22rpx;
-		line-height: 1.6;
-		color: #8d695f;
-		word-break: break-all;
-	}
-
-	.location-extra__line+.location-extra__line {
-		margin-top: 6rpx;
-	}
-
-	.location-extra__clear {
-		display: inline-block;
-		margin-top: 10rpx;
-		font-size: 22rpx;
-		color: #c46e56;
-	}
-
-	.footer {
-		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 24rpx 32rpx;
-		padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-		background: rgba(255, 247, 241, 0.98);
-		backdrop-filter: blur(10rpx);
-		z-index: 100;
-	}
-
-	.submit-btn {
-		width: 100%;
-		height: 96rpx;
-		line-height: 96rpx;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-		color: #fff;
-		font-size: 32rpx;
+		color: #F5B496;
 		font-weight: 600;
-		border-radius: 48rpx;
-		border: none;
 	}
 
-	.submit-btn::after {
-		border: none;
+	.emoji-panel {
+		max-height: 460rpx;
+		padding: 20rpx 24rpx 28rpx;
+		box-sizing: border-box;
+		overflow-y: auto;
 	}
 
-	.submit-btn[disabled] {
-		opacity: 0.7;
+	.emoji-grid {
+		display: grid;
+		grid-template-columns: repeat(8, 1fr);
+		grid-gap: 16rpx;
+	}
+
+	.emoji-panel__item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		aspect-ratio: 1 / 1;
+		border-radius: 12rpx;
+		font-size: 46rpx;
+		line-height: 1;
 	}
 </style>

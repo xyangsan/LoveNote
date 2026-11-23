@@ -2,8 +2,12 @@
 
 const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
-const { getUserById } = require('../lib/user-base')
+const { getUserById, resolveAvatar } = require('../lib/user-base')
 const {
+	normalizeBindCode,
+	findUserByBindCode,
+	ensureUserBindCode,
+	clearUserBindCode,
 	COUPLE_STATUS_PENDING,
 	COUPLE_STATUS_BOUND,
 	COUPLE_STATUS_UNBOUND,
@@ -22,6 +26,7 @@ const {
 const { coupleCollection } = require('../lib/db')
 const { DEFAULT_NICKNAME } = require('../lib/constants')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 
 module.exports = class CoupleService extends Service {
 	async getCenter() {
@@ -33,6 +38,224 @@ module.exports = class CoupleService extends Service {
 			})
 		} catch (error) {
 			return formatError(error, '获取情侣信息失败')
+		}
+	}
+
+	async refreshBindCode() {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState.authResult.uid
+			const activeCouple = await getActiveCoupleByUid(uid)
+			if (activeCouple) {
+				return {
+					errCode: 'love-note-couple-already-bound',
+					errMsg: '你已绑定情侣，无需刷新绑定码'
+				}
+			}
+
+			const bindCodeInfo = await ensureUserBindCode(uid, { forceRefresh: true })
+			return Object.assign({}, authState.response, {
+				errCode: 0,
+				errMsg: '绑定码已刷新',
+				bindCodeInfo,
+				...(await buildCoupleCenterPayload(uid))
+			})
+		} catch (error) {
+			return formatError(error, '刷新绑定码失败')
+		}
+	}
+
+	async getInvitePreview(params = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState.authResult.uid
+			const code = normalizeBindCode(params.code)
+
+			if (code.length !== 6) {
+				return Object.assign({}, authState.response, {
+					errCode: 0,
+					invite: {
+						status: 'invalid',
+						statusText: '邀请码无效',
+						code
+					}
+				})
+			}
+
+			const [inviter, selfActiveCouple] = await Promise.all([
+				findUserByBindCode(code),
+				getActiveCoupleByUid(uid)
+			])
+
+			if (!inviter) {
+				return Object.assign({}, authState.response, {
+					errCode: 0,
+					invite: {
+						status: 'invalid',
+						statusText: '邀请码不存在或已被刷新',
+						code
+					}
+				})
+			}
+
+			const now = Date.now()
+			const expiresAt = Number(inviter.couple_bind_code_expires_at || 0)
+			const inviterAvatar = await resolveAvatar(inviter)
+			const inviterActiveCouple = await getActiveCoupleByUid(inviter._id)
+
+			let status = 'valid'
+			let statusText = '7 天内有效'
+			if (inviter._id === uid) {
+				status = 'self'
+				statusText = '不能接受自己发出的绑定邀请'
+			} else if (selfActiveCouple) {
+				status = 'self_bound'
+				statusText = '你当前已绑定情侣，解绑后才可接受新邀请'
+			} else if (inviterActiveCouple) {
+				status = 'used'
+				statusText = '对方已完成绑定，该邀请已失效'
+			} else if (!expiresAt || expiresAt <= now) {
+				status = 'expired'
+				statusText = '该邀请码已超过 7 天有效期，请让对方刷新'
+			}
+
+			return Object.assign({}, authState.response, {
+				errCode: 0,
+				invite: {
+					status,
+					statusText,
+					code,
+					expiresAt,
+					inviterNickname: inviter.nickname || inviter.username || DEFAULT_NICKNAME,
+					inviterAvatarUrl: inviterAvatar.avatarUrl || '',
+					inviterGender: Number(inviter.gender || 0)
+				}
+			})
+		} catch (error) {
+			return formatError(error, '获取邀请信息失败')
+		}
+	}
+
+	async bindByCode(params = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState.authResult.uid
+			const code = normalizeBindCode(params.code)
+			const source = String(params.source || 'code').trim() === 'invite' ? 'invite' : 'code'
+
+			if (code.length !== 6) {
+				return {
+					errCode: 'love-note-param-required',
+					errMsg: '请输入完整的 6 位数字绑定码'
+				}
+			}
+
+			const inviterPreview = await findUserByBindCode(code)
+			if (!inviterPreview) {
+				return {
+					errCode: 'love-note-bind-code-invalid',
+					errMsg: '绑定码无效或已刷新，请核对后重试'
+				}
+			}
+
+			const inviterUid = inviterPreview._id
+			if (inviterUid === uid) {
+				return {
+					errCode: 'love-note-invalid-target',
+					errMsg: '不能使用自己的绑定码绑定自己'
+				}
+			}
+
+			return await runWithCoupleLocks([uid, inviterUid], async () => {
+				const now = Date.now()
+				const [currentUser, inviter, selfActiveCouple, inviterActiveCouple] = await Promise.all([
+					getUserById(uid),
+					getUserById(inviterUid),
+					getActiveCoupleByUid(uid),
+					getActiveCoupleByUid(inviterUid)
+				])
+
+				if (!currentUser || !inviter) {
+					return {
+						errCode: 'uni-id-account-not-exists',
+						errMsg: '账号信息不存在'
+					}
+				}
+
+				if (normalizeBindCode(inviter.couple_bind_code) !== code) {
+					return {
+						errCode: 'love-note-bind-code-invalid',
+						errMsg: '绑定码已被对方刷新，请获取最新绑定码'
+					}
+				}
+
+				if (!inviter.couple_bind_code_expires_at || Number(inviter.couple_bind_code_expires_at) <= now) {
+					return {
+						errCode: 'love-note-bind-code-expired',
+						errMsg: '绑定码已过期，请让对方刷新绑定码'
+					}
+				}
+
+				if (selfActiveCouple) {
+					return {
+						errCode: 'love-note-couple-already-bound',
+						errMsg: '你已绑定情侣，解绑后才能重新绑定'
+					}
+				}
+
+				if (inviterActiveCouple) {
+					return {
+						errCode: 'love-note-target-bound',
+						errMsg: '对方已完成绑定，无法重复绑定'
+					}
+				}
+
+				const addRes = await coupleCollection.add({
+					user_a_uid: inviterUid,
+					user_b_uid: uid,
+					partner_nickname: currentUser.nickname || currentUser.username || DEFAULT_NICKNAME,
+					status: COUPLE_STATUS_BOUND,
+					bind_source: source,
+					bind_date: now,
+					created_by: inviterUid,
+					last_action_uid: uid,
+					created_at: now,
+					updated_at: now
+				})
+				const coupleId = (addRes && (addRes.id || addRes._id)) || ''
+
+				await Promise.all([
+					closePendingCouplesForUsers([uid, inviterUid], {
+						excludeId: coupleId,
+						status: COUPLE_STATUS_CLOSED,
+						actionUid: uid
+					}),
+					clearUserBindCode(uid),
+					clearUserBindCode(inviterUid)
+				])
+
+				// 心动点：双方各 +1000（每个账号一生一次，靠流水唯一索引锁死）
+				await pointsLib.awardPoints(uid, 'bind_couple', {
+					coupleId,
+					title: '绑定情侣',
+					now
+				})
+				await pointsLib.awardPoints(inviterUid, 'bind_couple', {
+					coupleId,
+					title: '绑定情侣',
+					now
+				})
+				await pointsLib.bindAccountCouple(uid, coupleId, now)
+				await pointsLib.bindAccountCouple(inviterUid, coupleId, now)
+
+				return Object.assign({}, authState.response, {
+					errCode: 0,
+					errMsg: '绑定成功',
+					...(await buildCoupleCenterPayload(uid))
+				})
+			})
+		} catch (error) {
+			return formatError(error, '绑定失败')
 		}
 	}
 
@@ -239,6 +462,20 @@ module.exports = class CoupleService extends Service {
 					actionUid: uid
 				})
 
+				// 心动点：双方各 +1000（每个账号一生一次，靠流水唯一索引锁死）
+				await pointsLib.awardPoints(uid, 'bind_couple', {
+					coupleId: requestId,
+					title: '绑定情侣',
+					now
+				})
+				await pointsLib.awardPoints(partnerUid, 'bind_couple', {
+					coupleId: requestId,
+					title: '绑定情侣',
+					now
+				})
+				await pointsLib.bindAccountCouple(uid, requestId, now)
+				await pointsLib.bindAccountCouple(partnerUid, requestId, now)
+
 				return Object.assign({}, authState.response, {
 					errCode: 0,
 					errMsg: '绑定成功',
@@ -359,9 +596,18 @@ module.exports = class CoupleService extends Service {
 					updated_at: now
 				})
 
+				// 心动点：双方余额清零（留负数流水备查）
+				const partnerUid = currentRelation.user_a_uid === uid
+					? currentRelation.user_b_uid
+					: currentRelation.user_a_uid
+				const selfReset = await pointsLib.resetForUnbind(uid, currentRelation._id, now)
+				const partnerReset = await pointsLib.resetForUnbind(partnerUid, currentRelation._id, now)
+
 				return Object.assign({}, authState.response, {
 					errCode: 0,
 					errMsg: '已解绑当前情侣关系',
+					pointsCleared: selfReset.balanceBefore,
+					partnerPointsCleared: partnerReset.balanceBefore,
 					...(await buildCoupleCenterPayload(uid))
 				})
 			})

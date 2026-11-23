@@ -1,18 +1,20 @@
 <template>
-	<view class="love-page love-page--compact">
-		<view class="love-page__glow love-page__glow--left"></view>
-		<view class="love-page__glow love-page__glow--right"></view>
+	<view class="gr-page">
+		<view class="gr-glow gr-glow--left"></view>
+		<view class="gr-glow gr-glow--right"></view>
 
-		<view class="love-layer">
-			<view class="records-head">
-				<text class="love-title-block__eyebrow">聚会游戏</text>
-				<text class="love-title-block__title">游戏战绩</text>
-				<text class="love-title-block__desc">每一局结束后自动记录，试试看你的胜率如何。</text>
-			</view>
+		<noir-navbar
+			title="游戏战绩"
+			:show-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+		/>
 
+		<view class="gr-wrap">
 			<love-auth-required
 				v-if="!isLoggedIn"
-				class="records-auth"
+				class="gr-auth"
 				title="登录后查看战绩"
 				desc="战绩保存在云端，登录后会同步你在各个设备上的对局记录。"
 				login-text="前往登录"
@@ -20,149 +22,144 @@
 			></love-auth-required>
 
 			<template v-else>
-				<fui-segmented-control
-					:values="filterLabels"
-					:current="filterIndex"
-					type="button"
-					color="#ec7558"
-					active-color="#ffffff"
-					:height="70"
-					:size="25"
-					:radius="999"
-					:bold="true"
-					:margin-bottom="18"
-					@click="handleFilterChange"
-				></fui-segmented-control>
-
-				<view v-if="loading && !records.length" class="records-tip">
-					<text class="records-tip__text">正在加载…</text>
-				</view>
-
-				<view v-else-if="!records.length" class="records-tip">
-					<text class="records-tip__title">还没有战绩</text>
-					<text class="records-tip__desc">去大厅开一局，结束后这里就会自动出现记录</text>
-					<fui-button
-						text="去玩一局"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						height="80rpx"
-						radius="999rpx"
-						:size="28"
-						:margin="['24rpx', '0', '0', '0']"
-						@click="handleGoHall"
-					/>
-				</view>
-
-				<view v-else class="records-list">
+				<!-- 4 项筛选分段控件（对标 s24） -->
+				<view class="gr-seg">
 					<view
-						v-for="item in records"
-						:key="item.recordId"
-						class="record-card"
-						@click="handleOpenDetail(item)"
+						v-for="(item, idx) in filters"
+						:key="item.value || 'all'"
+						class="gr-seg__item"
+						:class="{ 'gr-seg__item--on': filterIndex === idx }"
+						@tap="handleFilterChange({ index: idx })"
 					>
-						<view class="record-card__top">
-							<view class="record-card__icon" :style="{ background: gradientOf(item.gameType) }">
-								<love-game-icon :game-type="item.gameType" :size="54" />
-							</view>
-							<view class="record-card__head">
-								<text class="record-card__title">{{ titleOf(item.gameType) }}</text>
-								<text class="record-card__time">{{ formatTime(item.createTime) }}</text>
-							</view>
-<view class="record-card__badge-wrap">
-							<uni-tag
-								:text="resultText(item)"
-								size="small"
-								:custom-style="resultTagStyle(item)"
-							></uni-tag>
-						</view>
-						</view>
-
-						<text class="record-card__summary">{{ item.summary }}</text>
-
-						<view class="record-card__meta">
-							<text class="record-card__meta-item">{{ item.playerCount }} 人</text>
-							<text class="record-card__meta-item">{{ formatDuration(item.duration) }}</text>
-							<text v-if="roleText(item)" class="record-card__meta-item record-card__meta-item--role">
-								{{ roleText(item) }}
-							</text>
-						</view>
+						<text class="gr-seg__txt">{{ item.label }}</text>
 					</view>
+				</view>
 
-					<view class="records-more">
-						<text class="records-more__text">
-							{{ hasMore ? '上拉加载更多' : '没有更多了' }}
+				<view v-if="loading && !records.length" class="gr-tip">
+					<text class="gr-tip__text">正在加载战绩…</text>
+				</view>
+
+				<view v-else-if="!records.length" class="gr-tip">
+					<text class="gr-tip__kicker">GAME RECORDS</text>
+					<text class="gr-tip__title">还没有战绩记录</text>
+					<text class="gr-tip__desc">去大厅开一局，结束后这里就会自动记录胜负与详情</text>
+					<view class="gr-tip__btn" hover-class="gr-btn--hover" @tap="handleGoHall">
+						<text class="gr-tip__btn-txt">去玩一局</text>
+					</view>
+				</view>
+
+				<view v-else class="gr-list">
+					<template v-for="entry in displayList" :key="entry.key">
+						<view v-if="entry.type === 'ad'" class="gr-ad-card">
+							<!-- #ifdef MP-WEIXIN -->
+							<ad v-if="entry.adType === 'grid'" unit-id="adunit-7a1e5e50b619b450" ad-theme="black"></ad>
+							<ad v-else unit-id="adunit-230be1ed0ea4b29b" ad-theme="black"></ad>
+							<!-- #endif -->
+						</view>
+						<view
+							v-else
+							class="gr-card"
+							hover-class="gr-card--hover"
+							@tap="handleOpenDetail(entry.record)"
+						>
+							<view class="gr-top">
+								<view class="gr-top__left">
+									<view class="gr-card__icon">
+										<love-game-icon :game-type="entry.record.gameType" :size="36" />
+									</view>
+									<text class="gr-top__title">{{ titleOf(entry.record.gameType) }}</text>
+									<text class="gr-top__time">{{ formatTime(entry.record.createTime) }}</text>
+								</view>
+								<view class="gr-tag" :class="'gr-tag--' + resultTone(entry.record.myResult)">
+									<text class="gr-tag__txt">{{ resultText(entry.record) }}</text>
+								</view>
+							</view>
+
+							<text v-if="entry.record.summary" class="gr-sum">{{ entry.record.summary }}</text>
+
+							<view class="gr-meta">
+								<view class="gr-meta__left">
+									<text class="gr-meta__item">{{ entry.record.playerCount }} 人</text>
+									<text class="gr-meta__item">{{ formatDuration(entry.record.duration) }}</text>
+									<text v-if="roleText(entry.record)" class="gr-meta__item gr-meta__item--role">角色：{{ roleText(entry.record) }}</text>
+								</view>
+								<text class="gr-meta__more">详情 ›</text>
+							</view>
+						</view>
+					</template>
+
+					<view class="gr-more">
+						<text class="gr-more__txt">
+							{{ loading ? '加载中…' : (hasMore ? '上拉加载更多' : '已展示全部战绩') }}
 						</text>
 					</view>
 				</view>
 			</template>
 		</view>
 
-		<fui-bottom-popup
-			:show="detailVisible"
-			:radius="'32rpx'"
-			:mask-closable="true"
-			:safe-area="true"
-			@close="detailVisible = false"
-		>
-			<view class="record-detail">
-				<text class="record-detail__title">{{ detailTitle }}</text>
-				<text class="record-detail__summary">{{ detailSummary }}</text>
+		<!-- 底部战绩详情弹层（对标 NOIR v3 s24 .gr-sheet） -->
+		<view v-if="detailVisible && detail" class="gr-sheet-wrap" @touchmove.stop.prevent>
+			<view class="gr-sheet-mask" @tap="detailVisible = false"></view>
+			<view class="gr-sheet">
+				<view class="gr-sheet__bar"></view>
 
-				<view v-if="detailLines.length" class="record-detail__lines">
-					<view v-for="(line, index) in detailLines" :key="index" class="record-detail__line">
-						<text class="record-detail__line-label">{{ line.label }}</text>
-						<text class="record-detail__line-value">{{ line.value }}</text>
+				<view class="gr-sh-head">
+					<text class="gr-sh-head__title">战绩详情 · {{ detailTitle }}</text>
+					<view class="gr-tag" :class="'gr-tag--' + resultTone(detail.myResult)">
+						<text class="gr-tag__txt">{{ detailResultText }}</text>
 					</view>
 				</view>
 
-				<view v-if="detailPlayers.length" class="record-detail__players">
-					<view
-						v-for="(player, index) in detailPlayers"
-						:key="index"
-						class="record-detail__player"
-						:class="{ 'record-detail__player--self': player.isSelf }"
-					>
-						<view class="record-detail__avatar">
-							<image
-								v-if="player.avatarUrl"
-								class="record-detail__avatar-img"
-								:src="player.avatarUrl"
-								mode="aspectFill"
-							></image>
-							<text v-else class="record-detail__avatar-text">{{ (player.nickname || '玩').slice(0, 1) }}</text>
-						</view>
-						<view class="record-detail__player-body">
-							<text class="record-detail__player-name">
-								{{ player.nickname || '玩家' }}<text v-if="player.isSelf" class="record-detail__self">（我）</text>
-							</text>
-							<text class="record-detail__player-role">
-								{{ player.roleText }}{{ player.isRobot ? ' · 机器人' : '' }}
-							</text>
-						</view>
-						<text
-							class="record-detail__player-score"
-							:class="{
-								'record-detail__player-score--win': player.result === 'win',
-								'record-detail__player-score--lose': player.result === 'lose'
-							}"
-						>{{ player.scoreText }}</text>
-					</view>
-				</view>
+				<text v-if="detailSummary" class="gr-sh-sub">{{ detailSummary }}</text>
 
-				<view class="record-detail__footer">
-					<fui-button
-						text="关闭"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						height="84rpx"
-						radius="999rpx"
-						:size="29"
-						:bold="true"
-						@click="detailVisible = false"
-					/>
+				<scroll-view class="gr-sh-scroll" scroll-y>
+					<view v-if="detailLines.length" class="gr-sh-lines">
+						<view v-for="(line, index) in detailLines" :key="index" class="gr-sh-line">
+							<text class="gr-sh-line__label">{{ line.label }}</text>
+							<text class="gr-sh-line__val">{{ line.value }}</text>
+						</view>
+					</view>
+
+					<view v-if="detailPlayers.length" class="gr-sh-players">
+						<view
+							v-for="(player, index) in detailPlayers"
+							:key="index"
+							class="gr-sh-p"
+							:class="{ 'gr-sh-p--self': player.isSelf }"
+						>
+							<view class="gr-sh-ava">
+								<image
+									v-if="player.avatarUrl"
+									class="gr-sh-ava__img"
+									:src="player.avatarUrl"
+									mode="aspectFill"
+								></image>
+								<text v-else class="gr-sh-ava__txt">{{ (player.nickname || '玩').slice(0, 1) }}</text>
+							</view>
+							<view class="gr-sh-p__name-wrap">
+								<text class="gr-sh-p__name">{{ player.nickname || '玩家' }}</text>
+								<text v-if="player.isSelf" class="gr-sh-p__self">（我）</text>
+								<text v-if="player.isRobot" class="gr-sh-p__ai">AI</text>
+							</view>
+							<text class="gr-sh-p__role">{{ player.roleText }}</text>
+							<text
+								class="gr-sh-p__score"
+								:class="{
+									'gr-sh-p__score--win': player.result === 'win',
+									'gr-sh-p__score--lose': player.result === 'lose'
+								}"
+							>{{ player.scoreText }}</text>
+						</view>
+					</view>
+				</scroll-view>
+
+				<view class="gr-sh-foot">
+					<view class="gr-sh-btn" hover-class="gr-btn--hover" @tap="detailVisible = false">
+						<text class="gr-sh-btn__txt">关闭</text>
+					</view>
 				</view>
 			</view>
-		</fui-bottom-popup>
+		</view>
 	</view>
 </template>
 
@@ -171,6 +168,7 @@
 	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
 	import { getGameApi, assertGameResult } from '@/common/api/game.js'
 	import { getGameMeta } from '@/common/game/rules.js'
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import {
 		normalizeGameRecordList,
 		formatGameTime,
@@ -181,7 +179,7 @@
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { hasValidLogin } from '@/common/auth-center.js'
 	import { openLoginModal } from '@/common/auth-modal.js'
-import { requirePageLogin } from '@/common/auth-entry.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const FILTERS = [
 		{ label: '全部', value: '' },
@@ -189,6 +187,36 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		{ label: '斗地主', value: 'landlord' },
 		{ label: '炸弹', value: 'bomb' }
 	]
+
+	const AD_SEED_MAX = 2147483647
+	const AD_MIN_GAP = 10
+
+	// 广告插入：每 10~20 条战绩之间随机插入一条广告（至少间隔 10 条），在横幅广告与宫格广告间随机选择；不足 10 条时在末尾补一条
+	function buildAdSlotMap(total = 0, seed = 0, hasMore = false) {
+		const slotMap = new Map()
+		if (total <= 0) {
+			return slotMap
+		}
+		let state = Math.floor(Math.abs(Number(seed) || 0)) % AD_SEED_MAX || 1
+		const random = () => {
+			state = (state * 48271) % AD_SEED_MAX
+			return state / AD_SEED_MAX
+		}
+		const pickAdType = () => (random() < 0.5 ? 'banner' : 'grid')
+		if (total < AD_MIN_GAP) {
+			slotMap.set(total, pickAdType())
+			return slotMap
+		}
+		let cursor = AD_MIN_GAP + Math.floor(random() * 11) // 10~20
+		while (cursor <= total) {
+			slotMap.set(cursor, pickAdType())
+			cursor += AD_MIN_GAP + Math.floor(random() * 11)
+		}
+		if (!slotMap.size && !hasMore) {
+			slotMap.set(total, pickAdType())
+		}
+		return slotMap
+	}
 
 	export default {
 		components: {
@@ -198,9 +226,12 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		data() {
 			return {
 				appStateStore: null,
+				scrollTop: 0,
 				isLoggedIn: false,
+				filters: FILTERS,
 				filterIndex: 0,
 				records: [],
+				adSeed: Math.floor(Math.random() * AD_SEED_MAX) + 1,
 				page: 1,
 				pageSize: 10,
 				hasMore: false,
@@ -210,15 +241,40 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			}
 		},
 		computed: {
-			filterLabels() {
-				return FILTERS.map((item) => item.label)
-			},
 			currentFilter() {
 				const filter = FILTERS[this.filterIndex] || FILTERS[0]
 				return filter.value
 			},
+			displayList() {
+				const list = Array.isArray(this.records) ? this.records : []
+				if (!list.length) return []
+				const adSlotMap = buildAdSlotMap(list.length, this.adSeed, this.hasMore)
+				const result = []
+				let adIndex = 0
+				for (let i = 0; i < list.length; i += 1) {
+					const record = list[i]
+					result.push({
+						type: 'record',
+						key: record && record.recordId ? `rec_${record.recordId}` : `rec_idx_${i}`,
+						record
+					})
+					const adType = adSlotMap.get(i + 1)
+					if (adType) {
+						adIndex += 1
+						result.push({
+							type: 'ad',
+							adType,
+							key: `ad_${this.adSeed}_${adIndex}_${adType}`
+						})
+					}
+				}
+				return result
+			},
 			detailTitle() {
 				return this.detail ? this.titleOf(this.detail.gameType) : '战绩详情'
+			},
+			detailResultText() {
+				return this.detail ? getResultText(this.detail.myResult) : ''
 			},
 			detailSummary() {
 				return this.detail ? this.detail.summary : ''
@@ -228,16 +284,19 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					return []
 				}
 				const lines = [
-					{ label: '对局时间', value: formatGameTime(this.detail.createTime) },
-					{ label: '参与人数', value: `${this.detail.playerCount} 人` },
-					{ label: '对局时长', value: formatGameDuration(this.detail.duration) }
+					{
+						label: '对局时间 / 时长',
+						value: `${formatGameTime(this.detail.createTime)} · ${formatGameDuration(this.detail.duration)}`
+					}
 				]
-				if (this.detail.roundCount > 1) {
-					lines.push({ label: '进行轮次', value: `${this.detail.roundCount} 轮` })
-				}
 				const extra = this.detail.detail || {}
 				if (extra.civilianWord) {
 					lines.push({ label: '平民词 / 卧底词', value: `${extra.civilianWord} / ${extra.undercoverWord}` })
+				}
+				if (this.detail.roundCount > 1) {
+					lines.push({ label: '进行轮次', value: `${this.detail.roundCount} 轮 · ${this.detail.playerCount} 人局` })
+				} else {
+					lines.push({ label: '参与人数', value: `${this.detail.playerCount} 人局` })
 				}
 				if (extra.multiplier) {
 					lines.push({ label: '倍数', value: `${extra.multiplier} 倍` })
@@ -266,11 +325,13 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			}
 		},
 		onLoad() {
-			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
 			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncLoginState()
 			this.reload()
+		},
+		onPageScroll(e) {
+			this.scrollTop = e && e.scrollTop ? e.scrollTop : 0
 		},
 		onShow() {
 			this.syncLoginState()
@@ -300,42 +361,19 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				})
 			},
 			handleGoHall() {
-				uni.navigateTo({
-					url: '/pages/game/index'
-				})
+				navigateToTab('game')
 			},
 			titleOf(gameType) {
 				const meta = getGameMeta(gameType)
 				return meta ? meta.title : '对局'
 			},
-			gradientOf(gameType) {
-				const meta = getGameMeta(gameType)
-				return meta ? meta.gradient : 'linear-gradient(135deg, #ffb37a 0%, #e76f51 100%)'
-			},
 			resultText(item) {
 				return getResultText(item.myResult)
 			},
-			/**
-			 * 战绩卡的胜负标签样式。外观全部交给 uni-tag（见其自带色板是冷色，
-			 * 这里用 customStyle 换成项目暖色调；定位/收缩交给外层 .record-card__badge-wrap）。
-			 * 注意 border-color 必须一起覆盖，否则会露出 uni-tag 自带的灰边。
-			 */
-			resultTagStyle(item) {
-				const palette = {
-					win: { bg: 'rgba(255, 226, 205, 0.98)', color: '#c0674d' },
-					lose: { bg: 'rgba(226, 241, 233, 0.98)', color: '#6a8f7b' }
-				}
-				const tone = palette[item.myResult] || { bg: 'rgba(240, 240, 240, 0.98)', color: '#a07d71' }
-				return [
-					'display:inline-block',
-					'padding:8rpx 20rpx',
-					'border-radius:999rpx',
-					'font-size:24rpx',
-					'font-weight:700',
-					`background-color:${tone.bg}`,
-					`border-color:${tone.bg}`,
-					`color:${tone.color}`
-				].join(';')
+			resultTone(result) {
+				if (result === 'win') return 'green'
+				if (result === 'lose') return 'coral'
+				return 'muted'
 			},
 			roleText(item) {
 				return getRoleText(item.gameType, item.myRole)
@@ -387,6 +425,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			},
 			async reload() {
 				this.page = 1
+				this.adSeed = Math.floor(Math.random() * AD_SEED_MAX) + 1
 				await this.fetchRecords({ append: false })
 			},
 			async loadMore() {
@@ -424,263 +463,526 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	}
 </script>
 
-<style>
-	.records-head {
-		padding: 20rpx 8rpx 30rpx;
+<style scoped>
+	.gr-page {
+		position: relative;
+		box-sizing: border-box;
+		min-height: 100vh;
+		padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+		background: #110D0B;
+		overflow: hidden;
 	}
 
-	.records-auth {
-		margin-top: 10rpx;
+	.gr-glow {
+		position: fixed;
+		width: 420rpx;
+		height: 420rpx;
+		border-radius: 50%;
+		filter: blur(80rpx);
+		opacity: 0.2;
+		pointer-events: none;
+		z-index: 0;
 	}
 
-	.records-tip {
-		margin-top: 40rpx;
-		padding: 60rpx 30rpx;
-		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+	.gr-glow--left {
+		top: -120rpx;
+		left: -140rpx;
+		background: #E2643F;
+	}
+
+	.gr-glow--right {
+		top: 320rpx;
+		right: -160rpx;
+		background: #D8B08C;
+	}
+
+	.gr-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 12rpx 32rpx 0;
+	}
+
+	.gr-auth {
+		margin-top: 20rpx;
+	}
+
+	/* 4 项分段筛选（对标 s24 .m-seg） */
+	.gr-seg {
+		display: flex;
+		align-items: center;
+		padding: 6rpx;
+		border-radius: 22rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.gr-seg__item {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 60rpx;
+		border-radius: 17rpx;
+		transition: all 0.18s ease;
+	}
+
+	.gr-seg__item--on {
+		background: linear-gradient(135deg, rgba(226, 100, 63, 0.24), rgba(216, 176, 140, 0.14));
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+	}
+
+	.gr-seg__txt {
+		font-size: 24rpx;
+		color: rgba(245, 237, 228, 0.56);
+	}
+
+	.gr-seg__item--on .gr-seg__txt {
+		color: #FBF4EA;
+		font-weight: 600;
+	}
+
+	/* 空态 & 加载 */
+	.gr-tip {
+		margin-top: 36rpx;
+		padding: 64rpx 36rpx;
+		border-radius: 32rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
 		text-align: center;
 	}
 
-	.records-tip__title {
+	.gr-tip__kicker {
 		display: block;
-		font-size: 30rpx;
-		font-weight: 700;
-		color: #5d372b;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 19rpx;
+		letter-spacing: 4rpx;
+		color: rgba(216, 176, 140, 0.66);
 	}
 
-	.records-tip__text {
+	.gr-tip__title {
+		display: block;
+		margin-top: 14rpx;
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 34rpx;
+		font-weight: 600;
+		color: #FBF4EA;
+	}
+
+	.gr-tip__text {
 		font-size: 25rpx;
-		color: #917165;
+		color: rgba(245, 237, 228, 0.52);
 	}
 
-	.records-tip__desc {
+	.gr-tip__desc {
 		display: block;
 		margin-top: 12rpx;
 		font-size: 24rpx;
-		line-height: 1.7;
-		color: #8f6e63;
+		line-height: 1.65;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
-	.records-list {
-		margin-top: 6rpx;
+	.gr-tip__btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 30rpx;
+		height: 76rpx;
+		padding: 0 56rpx;
+		border-radius: 38rpx;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.26);
 	}
 
-	.record-card {
-		padding: 26rpx 28rpx;
-		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+	.gr-tip__btn-txt {
+		font-size: 26rpx;
+		font-weight: 600;
+		color: #FFF7EF;
 	}
 
-	.record-card + .record-card {
-		margin-top: 18rpx;
+	/* 战绩列表（对标 s24 .gr-list / .gr-card） */
+	.gr-list {
+		margin-top: 22rpx;
 	}
 
-	.record-card__top {
+	.gr-card {
+		padding: 24rpx 26rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
+		margin-bottom: 18rpx;
+	}
+
+	.gr-card--hover {
+		background: rgba(255, 255, 255, 0.055);
+	}
+
+	.gr-top {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 16rpx;
 	}
 
-	.record-card__icon {
+	.gr-top__left {
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.gr-card__icon {
 		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 68rpx;
-		height: 68rpx;
+		width: 48rpx;
+		height: 48rpx;
+		border-radius: 14rpx;
+		background: rgba(216, 176, 140, 0.10);
+	}
+
+	.gr-top__title {
+		font-size: 28rpx;
+		font-weight: 500;
+		color: #F5EDE4;
+		white-space: nowrap;
+	}
+
+	.gr-top__time {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		color: rgba(245, 237, 228, 0.38);
+		white-space: nowrap;
+	}
+
+	.gr-tag {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 40rpx;
+		padding: 0 18rpx;
 		border-radius: 20rpx;
 	}
 
-	.record-card__head {
-		flex: 1;
-		min-width: 0;
+	.gr-tag--green {
+		border: 1rpx solid rgba(132, 190, 156, 0.38);
+		background: rgba(132, 190, 156, 0.14);
 	}
 
-	.record-card__title {
-		display: block;
-		font-size: 29rpx;
-		font-weight: 700;
-		color: #5d372b;
+	.gr-tag--green .gr-tag__txt {
+		color: #9ED6B2;
 	}
 
-	.record-card__time {
-		display: block;
-		margin-top: 6rpx;
+	.gr-tag--coral {
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		background: rgba(226, 100, 63, 0.16);
+	}
+
+	.gr-tag--coral .gr-tag__txt {
+		color: #F5B496;
+	}
+
+	.gr-tag--muted {
+		border: 1rpx solid rgba(216, 176, 140, 0.32);
+		background: rgba(216, 176, 140, 0.12);
+	}
+
+	.gr-tag--muted .gr-tag__txt {
+		color: #EAD4BC;
+	}
+
+	.gr-tag__txt {
 		font-size: 21rpx;
-		color: #b0a09a;
+		font-weight: 600;
 	}
 
-	/* 胜负标签：外观交给 uni-tag（见 methods resultTagStyle），这里只保留 flex 收缩约束 */
-	.record-card__badge-wrap {
-		flex-shrink: 0;
-	}
-
-	.record-card__summary {
+	.gr-sum {
 		display: block;
-		margin-top: 18rpx;
-		font-size: 26rpx;
-		line-height: 1.7;
-		color: #6d473a;
+		margin-top: 14rpx;
+		font-size: 24rpx;
+		line-height: 1.55;
+		color: rgba(245, 237, 228, 0.58);
 	}
 
-	.record-card__meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 16rpx;
-		margin-top: 16rpx;
-	}
-
-	.record-card__meta-item {
-		font-size: 22rpx;
-		color: #a07d71;
-	}
-
-	.record-card__meta-item--role {
-		color: #c0674d;
-	}
-
-	.records-more {
-		padding: 28rpx 0 10rpx;
-		text-align: center;
-	}
-
-	.records-more__text {
-		font-size: 23rpx;
-		color: #b0a09a;
-	}
-
-	/* ---------- 详情 ---------- */
-
-	.record-detail {
-		padding: 28rpx 32rpx 24rpx;
-		background: #ffffff;
-	}
-
-	.record-detail__title {
-		display: block;
-		font-size: 38rpx;
-		font-weight: 700;
-		color: #5a3427;
-	}
-
-	.record-detail__summary {
-		display: block;
-		margin-top: 12rpx;
-		font-size: 25rpx;
-		line-height: 1.7;
-		color: #8b6659;
-	}
-
-	.record-detail__lines {
-		margin-top: 22rpx;
-		padding: 18rpx 24rpx;
-		border-radius: 26rpx;
-		background: rgba(255, 247, 241, 0.98);
-	}
-
-	.record-detail__line {
+	.gr-meta {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 10rpx 0;
+		margin-top: 14rpx;
+		padding-top: 12rpx;
+		border-top: 1rpx solid rgba(255, 255, 255, 0.045);
 	}
 
-	.record-detail__line-label {
-		font-size: 24rpx;
-		color: #917165;
+	.gr-meta__left {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 20rpx;
 	}
 
-	.record-detail__line-value {
-		font-size: 26rpx;
+	.gr-meta__item {
+		font-size: 21rpx;
+		color: rgba(216, 176, 140, 0.66);
+	}
+
+	.gr-meta__item--role {
+		color: #E5865C;
+	}
+
+	.gr-meta__more {
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.38);
+	}
+
+	.gr-more {
+		padding: 24rpx 0 12rpx;
+		text-align: center;
+	}
+
+	.gr-more__txt {
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.36);
+	}
+
+	/* ---------- 战绩详情底部弹层（s24 .gr-sheet） ---------- */
+
+	.gr-sheet-wrap {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 1200;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+	}
+
+	.gr-sheet-mask {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(8, 5, 4, 0.72);
+	}
+
+	.gr-sheet {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		max-height: 82vh;
+		padding: 16rpx 36rpx calc(28rpx + env(safe-area-inset-bottom));
+		border-radius: 40rpx 40rpx 0 0;
+		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
+		background: linear-gradient(180deg, #1E1713 0%, #140F0D 100%);
+		box-shadow: 0 -20rpx 60rpx rgba(0, 0, 0, 0.64);
+	}
+
+	.gr-sheet__bar {
+		width: 68rpx;
+		height: 8rpx;
+		margin: 0 auto 22rpx;
+		border-radius: 4rpx;
+		background: rgba(245, 237, 228, 0.16);
+	}
+
+	.gr-sh-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+	}
+
+	.gr-sh-head__title {
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 32rpx;
 		font-weight: 600;
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 
-	.record-detail__players {
-		margin-top: 22rpx;
+	.gr-sh-sub {
+		display: block;
+		margin-top: 10rpx;
+		font-size: 23rpx;
+		line-height: 1.55;
+		color: rgba(245, 237, 228, 0.52);
 	}
 
-	.record-detail__player {
+	.gr-sh-scroll {
+		flex: 1;
+		min-height: 0;
+		max-height: 54vh;
+		margin-top: 20rpx;
+	}
+
+	.gr-sh-lines {
+		padding: 14rpx 22rpx;
+		border-radius: 22rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.gr-sh-line {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20rpx;
+		padding: 10rpx 0;
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.045);
+	}
+
+	.gr-sh-line:last-child {
+		border-bottom: none;
+	}
+
+	.gr-sh-line__label {
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.46);
+	}
+
+	.gr-sh-line__val {
+		font-size: 24rpx;
+		font-weight: 500;
+		color: #EAD4BC;
+		text-align: right;
+	}
+
+	.gr-sh-players {
+		margin-top: 18rpx;
+		border-radius: 22rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: rgba(255, 255, 255, 0.02);
+		overflow: hidden;
+	}
+
+	.gr-sh-p {
 		display: flex;
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 20rpx;
-		border-radius: 24rpx;
-		background: rgba(255, 251, 248, 0.98);
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
 	}
 
-	.record-detail__player + .record-detail__player {
-		margin-top: 12rpx;
+	.gr-sh-p:last-child {
+		border-bottom: none;
 	}
 
-	.record-detail__player--self {
-		background: rgba(255, 240, 232, 0.98);
+	.gr-sh-p--self {
+		background: rgba(226, 100, 63, 0.10);
 	}
 
-	.record-detail__avatar {
+	.gr-sh-ava {
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 60rpx;
-		height: 60rpx;
+		width: 54rpx;
+		height: 54rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, #e76f51 100%);
+		border: 1.5rpx solid rgba(216, 176, 140, 0.30);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 		overflow: hidden;
 	}
 
-	.record-detail__avatar-img {
+	.gr-sh-ava__img {
 		width: 100%;
 		height: 100%;
 	}
 
-	.record-detail__avatar-text {
-		font-size: 24rpx;
+	.gr-sh-ava__txt {
+		font-size: 22rpx;
 		font-weight: 700;
-		color: #ffffff;
+		color: #FFF7EF;
 	}
 
-	.record-detail__player-body {
+	.gr-sh-p__name-wrap {
 		flex: 1;
 		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: 6rpx;
 	}
 
-	.record-detail__player-name {
-		display: block;
-		font-size: 26rpx;
+	.gr-sh-p__name {
+		font-size: 25rpx;
+		color: rgba(245, 237, 228, 0.86);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.gr-sh-p__self {
+		flex-shrink: 0;
+		font-size: 21rpx;
+		color: #E5865C;
+	}
+
+	.gr-sh-p__ai {
+		flex-shrink: 0;
+		padding: 0 8rpx;
+		border-radius: 8rpx;
+		background: rgba(108, 184, 255, 0.18);
+		font-size: 18rpx;
+		color: #8AC8FF;
+	}
+
+	.gr-sh-p__role {
+		flex-shrink: 0;
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.44);
+	}
+
+	.gr-sh-p__score {
+		flex-shrink: 0;
+		min-width: 68rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 25rpx;
 		font-weight: 600;
-		color: #5d372b;
+		color: rgba(245, 237, 228, 0.42);
+		text-align: right;
 	}
 
-	.record-detail__self {
-		font-size: 21rpx;
-		font-weight: 400;
-		color: #b8604c;
+	.gr-sh-p__score--win {
+		color: #E5865C;
 	}
 
-	.record-detail__player-role {
-		display: block;
-		margin-top: 4rpx;
-		font-size: 21rpx;
-		color: #a07d71;
+	.gr-sh-p__score--lose {
+		color: rgba(245, 237, 228, 0.42);
 	}
 
-	.record-detail__player-score {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: #a07d71;
+	.gr-sh-foot {
+		flex-shrink: 0;
+		margin-top: 24rpx;
 	}
 
-	.record-detail__player-score--win {
-		color: #c0674d;
+	.gr-sh-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 82rpx;
+		border-radius: 41rpx;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 26rpx rgba(222, 95, 60, 0.24);
 	}
 
-	.record-detail__player-score--lose {
-		color: #6a8f7b;
+	.gr-sh-btn__txt {
+		font-size: 27rpx;
+		font-weight: 600;
+		color: #FFF7EF;
+		letter-spacing: 2rpx;
 	}
 
-	.record-detail__footer {
-		margin-top: 26rpx;
+	.gr-btn--hover {
+		opacity: 0.86;
+	}
+
+	.gr-ad-card {
+		border-radius: 26rpx;
+		overflow: hidden;
+		border: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: rgba(255, 255, 255, 0.025);
 	}
 </style>

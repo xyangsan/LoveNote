@@ -10,9 +10,7 @@
 			title=""
 		>
 			<template #left>
-				<view class="feed-navbar__left" :class="{ 'feed-navbar__left--opaque': navBarOpaque }" @click.stop="goBack">
-					<uv-icon name="arrow-left" size="40" :color="navTextColor"></uv-icon>
-				</view>
+				<view style="width: 60rpx;"></view>
 			</template>
 
 			<template #center>
@@ -231,10 +229,12 @@
 		</qf-image-cropper>
 
 		<love-couple-guide scene="feed" :active="noCouple" />
+		<noir-tabbar active="feed" @refresh="loadPostList(true)" />
 	</view>
 </template>
 
 <script>
+import { navigateToTab } from '@/common/utils/tab-nav.js'
 import { DEFAULT_AVATAR, getCachedUserProfile } from '../../common/auth-center.js'
 import { getDailyApi } from '../../common/api/daily.js'
 import { getUserApi } from '../../common/api/user.js'
@@ -245,7 +245,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 import { consumePageRefresh } from '@/common/utils/page-refresh.js'
 import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
-const DEFAULT_COVER_IMAGE = 'https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.png'
+const DEFAULT_COVER_IMAGE = '/static/images/feed-cover-bg.jpg'
 // 发布页保存成功后会打这个标记，列表页在 onShow 里消费并重拉首屏
 const FEED_REFRESH_KEY = 'feed'
 
@@ -429,10 +429,10 @@ export default {
 			return list
 		},
 		navBarBgColor() {
-			return this.navBarOpaque ? 'rgba(255, 247, 241, 0.98)' : 'rgba(255, 247, 241, 0)'
+			return this.navBarOpaque ? 'rgba(17, 13, 11, 0.94)' : 'rgba(17, 13, 11, 0)'
 		},
 		navTextColor() {
-			return this.navBarOpaque ? '#111111' : '#ffffff'
+			return '#FBF4EA'
 		}
 	},
 	onShow() {
@@ -512,9 +512,7 @@ export default {
 				uni.navigateBack()
 				return
 			}
-			uni.switchTab({
-				url: '/pages/index/index'
-			})
+			navigateToTab('/pages/index/index')
 		},
 		ensureStore() {
 			if (!this.appStateStore) {
@@ -1243,8 +1241,9 @@ export default {
 <style>
 .moments-page {
 	min-height: 100vh;
-	background: linear-gradient(180deg, #FFF7F1 0%, #FFF0E8 100%);
-	padding-bottom: 48rpx;
+	background: #110D0B;
+	color: #F5EDE4;
+	padding-bottom: calc(184rpx + env(safe-area-inset-bottom));
 }
 
 .feed-navbar__left,
@@ -1298,7 +1297,8 @@ export default {
 .feed-navbar__cover-action--opaque,
 .feed-navbar__left--opaque,
 .feed-navbar__publish--opaque {
-	background: rgba(255, 255, 255, 0.78);
+	background: rgba(26, 21, 18, 0.88);
+	border: 1rpx solid rgba(216, 176, 140, 0.28);
 }
 
 .moments-shell {
@@ -1401,14 +1401,14 @@ export default {
 	margin-top: 22rpx;
 	font-size: 30rpx;
 	font-weight: 600;
-	color: #333333;
+	color: #FBF4EA;
 }
 
 .state-block__text {
 	margin-top: 14rpx;
 	font-size: 24rpx;
 	line-height: 1.6;
-	color: #8b8b8b;
+	color: rgba(245, 237, 228, 0.48);
 	text-align: center;
 }
 
@@ -1422,13 +1422,13 @@ export default {
 	align-items: flex-start;
 	gap: 16rpx;
 	padding: 26rpx 24rpx 24rpx;
-	border-bottom: 1rpx solid #f1f1f1;
+	border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
 	background: transparent;
 }
 
 .ad-view {
 	padding: 0 24rpx;
-	border-bottom: 1rpx solid #f1f1f1;
+	border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
 }
 
 .moment-item__main {
@@ -1440,7 +1440,7 @@ export default {
 	display: block;
 	font-size: 30rpx;
 	font-weight: 600;
-	color: #576b95;
+	color: #D8B08C;
 	line-height: 1.2;
 }
 
@@ -1448,8 +1448,8 @@ export default {
 	display: block;
 	margin-top: 10rpx;
 	font-size: 28rpx;
-	line-height: 1.62;
-	color: #111111;
+	line-height: 1.65;
+	color: #F5EDE4;
 	white-space: pre-wrap;
 	word-break: break-all;
 }
@@ -1512,12 +1512,12 @@ export default {
 
 .moment-item__time {
 	font-size: 22rpx;
-	color: #b2b2b2;
+	color: rgba(245, 237, 228, 0.38);
 }
 
 .moment-item__delete {
 	font-size: 23rpx;
-	color: #576b95;
+	color: #E5865C;
 }
 
 .moment-actions {
@@ -1533,14 +1533,15 @@ export default {
 	gap: 6rpx;
 	width: 52rpx;
 	height: 36rpx;
-	border-radius: 6rpx;
+	border-radius: 10rpx;
+	background: rgba(255, 255, 255, 0.06);
 }
 
 .moment-action-trigger__dot {
 	width: 6rpx;
 	height: 6rpx;
 	border-radius: 50%;
-	background: #576b95;
+	background: #D8B08C;
 }
 
 .moment-action-panel {
@@ -1552,40 +1553,36 @@ export default {
 	align-items: center;
 	height: 62rpx;
 	padding: 0 8rpx;
-	border-radius: 8rpx;
-	background: #4c5154;
+	border-radius: 12rpx;
+	border: 1rpx solid rgba(216, 176, 140, 0.28);
+	background: #231B16;
 	white-space: nowrap;
 }
 
 .moment-action-panel__item {
 	padding: 0 18rpx;
 	font-size: 24rpx;
-	color: #ffffff;
+	color: #FBF4EA;
 	line-height: 62rpx;
 }
 
 .moment-action-panel__divider {
 	width: 1rpx;
 	height: 24rpx;
-	background: rgba(255, 255, 255, 0.28);
+	background: rgba(255, 255, 255, 0.18);
 }
 
 .moment-interactions {
 	position: relative;
-	margin-top: 6rpx;
-	border-radius: 8rpx;
+	margin-top: 10rpx;
+	border-radius: 14rpx;
+	background: rgba(255, 255, 255, 0.036);
+	border: 1rpx solid rgba(255, 255, 255, 0.06);
 	overflow: hidden;
 }
 
 .moment-interactions__triangle {
-	position: absolute;
-	top: -10rpx;
-	left: 22rpx;
-	width: 0;
-	height: 0;
-	border-left: 10rpx solid transparent;
-	border-right: 10rpx solid transparent;
-	border-bottom: 10rpx solid #f7f7f7;
+	display: none;
 }
 
 .moment-like-row {
@@ -1597,12 +1594,12 @@ export default {
 
 .moment-like-row__icon {
 	font-size: 22rpx;
-	color: #576b95;
+	color: #E5865C;
 }
 
 .moment-like-row__text {
 	font-size: 24rpx;
-	color: #576b95;
+	color: #D8B08C;
 }
 
 .moment-comment-list {
@@ -1610,7 +1607,7 @@ export default {
 }
 
 .moment-comment-list--with-like {
-	border-top: 1rpx solid #ececec;
+	border-top: 1rpx solid rgba(255, 255, 255, 0.06);
 }
 
 .moment-comment-item {
@@ -1637,13 +1634,13 @@ export default {
 
 .moment-comment-item__name {
 	font-size: 24rpx;
-	color: #576b95;
+	color: #D8B08C;
 	font-weight: 500;
 }
 
 .moment-comment-item__time {
 	font-size: 21rpx;
-	color: #b2b2b2;
+	color: rgba(245, 237, 228, 0.36);
 }
 
 .moment-comment-item__content {
@@ -1651,7 +1648,7 @@ export default {
 	margin-top: 4rpx;
 	font-size: 24rpx;
 	line-height: 1.58;
-	color: #111111;
+	color: rgba(245, 237, 228, 0.84);
 	word-break: break-all;
 }
 

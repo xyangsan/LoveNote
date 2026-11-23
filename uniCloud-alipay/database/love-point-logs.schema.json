@@ -1,0 +1,67 @@
+{
+	"bsonType": "object",
+	"required": ["dedupe_key", "uid", "task_key", "points", "date_key", "create_time"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "流水ID，系统自动生成"
+		},
+		"dedupe_key": {
+			"bsonType": "string",
+			"title": "幂等键",
+			"description": "uid:task_key:date_key:ref_id，唯一索引；重复写入被数据库拦截即视为已计分"
+		},
+		"uid": {
+			"bsonType": "string",
+			"title": "用户ID"
+		},
+		"couple_id": {
+			"bsonType": "string",
+			"title": "情侣关系ID"
+		},
+		"task_key": {
+			"bsonType": "string",
+			"title": "任务标识",
+			"description": "bind_couple / daily_bonus / photo_upload / daily_post / anniversary / plan_create / game_settle / plan_finish / profile_complete / couple_anniversary / challenge_4|5|6 / couple_unbind"
+		},
+		"title": {
+			"bsonType": "string",
+			"title": "展示文案",
+			"description": "记录页直接展示，例如「发布双人日常」「上传相册 3 张」"
+		},
+		"points": {
+			"bsonType": "int",
+			"title": "点数变动",
+			"description": "正数为获得，负数为清零扣减"
+		},
+		"date_key": {
+			"bsonType": "string",
+			"title": "发生日期",
+			"description": "东八区自然日 YYYY-MM-DD"
+		},
+		"ref_id": {
+			"bsonType": "string",
+			"title": "业务对象ID",
+			"description": "动态ID / 照片ID / 对局房间+局号 / 为空表示按次计分"
+		},
+		"source": {
+			"bsonType": "string",
+			"title": "来源",
+			"description": "sign / challenge / task / milestone / register / unbind，由 REWARD_TYPES 统一定义"
+		},
+		"extra": {
+			"bsonType": "string",
+			"title": "自定义数据",
+			"description": "业务透传的附加信息，无则为空串"
+		},
+		"create_time": {
+			"bsonType": "long",
+			"title": "发生时间"
+		}
+	}
+}

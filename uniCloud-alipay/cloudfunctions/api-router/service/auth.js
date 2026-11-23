@@ -8,6 +8,7 @@ const { ensureUserNickname } = require('../lib/nickname')
 const { ensureUserAvatar } = require('../lib/avatar-pool')
 const { getUserById } = require('../lib/user-base')
 const { recordLoginLog } = require('../lib/login-log')
+const pointsLib = require('../lib/points')
 const { formatError } = require('../lib/response')
 
 module.exports = class AuthService extends Service {
@@ -76,8 +77,13 @@ module.exports = class AuthService extends Service {
 				userRecord = await getUserById(loginResult.uid)
 			}
 
+			// ③ 新人见面礼 +100：每个账号一生一次，老用户命中流水短路。
+			//    与情侣关系无关（allowUnbound），内部吞异常，发分失败不影响登录。
+			const registerBonusPoints = await pointsLib.ensureRegisterBonus(loginResult.uid)
+
 			return Object.assign({}, loginResult, {
 				errCode: 0,
+				registerBonusPoints,
 				userInfo: await formatUserInfo(userRecord || {})
 			})
 		} catch (error) {

@@ -84,7 +84,7 @@
 			</view>
 			<fui-button
 				text="保存头像"
-				background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
+				background="linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%)"
 				color="#ffffff"
 				radius="999rpx"
 				height="88rpx"
@@ -100,7 +100,8 @@
 </template>
 
 <script>
-	import {
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
+import {
 		DEFAULT_AVATAR,
 		DEFAULT_AVATAR_LIST,
 		clearUniIdTokenStorage,
@@ -285,9 +286,7 @@
 				})
 			},
 			backToProfile() {
-				uni.switchTab({
-					url: '/pages/profile/index'
-				})
+				navigateToTab('/pages/profile/index')
 			},
 			selectAvatar(item) {
 				if (!item || !item.url || this.isUploading) {
@@ -429,16 +428,16 @@
 		align-items: center;
 		padding: 40rpx 32rpx 34rpx;
 		border-radius: 36rpx;
-		background: rgba(255, 250, 247, 0.96);
-		box-shadow: 0 20rpx 48rpx rgba(192, 120, 92, 0.12);
+		background: rgba(26, 21, 18, 0.94);
+		box-shadow: 0 20rpx 48rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.avatar-hero__ring {
 		position: relative;
 		padding: 8rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb59f 0%, #e76f51 100%);
-		box-shadow: 0 18rpx 36rpx rgba(199, 116, 88, 0.28);
+		background: linear-gradient(135deg, #ffb59f 0%, #E2643F 100%);
+		box-shadow: 0 18rpx 36rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.avatar-hero__ring--busy {
@@ -450,7 +449,7 @@
 		width: 190rpx;
 		height: 190rpx;
 		border-radius: 50%;
-		background: #fff1eb;
+		background: #231C18;
 	}
 
 	.avatar-hero__mask {
@@ -477,7 +476,7 @@
 		bottom: 10rpx;
 		padding: 6rpx 16rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 		font-size: 20rpx;
 		color: #ffffff;
 		box-shadow: 0 8rpx 16rpx rgba(199, 116, 88, 0.32);
@@ -487,7 +486,7 @@
 		margin-top: 24rpx;
 		font-size: 34rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.avatar-hero__hint {
@@ -495,7 +494,7 @@
 		font-size: 23rpx;
 		line-height: 1.7;
 		text-align: center;
-		color: #906b61;
+		color: rgba(245, 237, 228, 0.52);
 	}
 
 	.wx-avatar-btn {
@@ -511,7 +510,7 @@
 		background: rgba(255, 236, 229, 0.96);
 		border: 1rpx solid rgba(236, 117, 88, 0.36);
 		font-size: 25rpx;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	.wx-avatar-btn::after {
@@ -529,7 +528,7 @@
 	.wx-avatar-btn__text {
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	/* 分组列表 */
@@ -540,8 +539,8 @@
 	.avatar-group {
 		padding: 26rpx 24rpx 28rpx;
 		border-radius: 32rpx;
-		background: rgba(255, 250, 247, 0.96);
-		box-shadow: 0 14rpx 34rpx rgba(192, 120, 92, 0.1);
+		background: rgba(26, 21, 18, 0.94);
+		box-shadow: 0 14rpx 34rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.avatar-group + .avatar-group {
@@ -565,13 +564,13 @@
 		width: 10rpx;
 		height: 30rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(180deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(180deg, #ff8b72 0%, #E2643F 100%);
 	}
 
 	.avatar-group__title {
 		font-size: 28rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.avatar-group__count {
@@ -594,14 +593,14 @@
 	}
 
 	.avatar-cell--active {
-		box-shadow: inset 0 0 0 4rpx rgba(236, 117, 88, 0.92), 0 10rpx 20rpx rgba(199, 116, 88, 0.24);
+		box-shadow: inset 0 0 0 4rpx rgba(236, 117, 88, 0.92), 0 10rpx 20rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.avatar-cell__img {
 		display: block;
 		width: 100%;
 		height: 150rpx;
-		background: #fff1eb;
+		background: #231C18;
 	}
 
 	.avatar-cell__check {
@@ -613,7 +612,7 @@
 		line-height: 34rpx;
 		text-align: center;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 		font-size: 20rpx;
 		color: #ffffff;
 	}
@@ -636,7 +635,7 @@
 		padding: 20rpx 28rpx;
 		padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
 		background: rgba(255, 247, 241, 0.98);
-		box-shadow: 0 -10rpx 30rpx rgba(192, 120, 92, 0.12);
+		box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.avatar-savebar__meta {
@@ -648,7 +647,7 @@
 		display: block;
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #5a3427;
+		color: #FBF4EA;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

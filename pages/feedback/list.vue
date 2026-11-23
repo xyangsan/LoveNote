@@ -1,26 +1,12 @@
 <template>
-	<view class="love-page feedback-list-page">
+	<view class="love-page fl-page">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
-		<view class="love-layer">
-			<fui-section
-				title="反馈列表"
-				descr="管理员可查看所有反馈，进入详情后回复并确认问题是否已解决。"
-				:is-line="true"
-				line-width="10rpx"
-				line-color="#ec7558"
-				:line-right="22"
-				:descr-top="14"
-				:size="40"
-				descr-size="24"
-				color="#5a3427"
-				descr-color="#906b61"
-				:padding="['0', '0']"
-				:margin-top="12"
-				:margin-bottom="28"
-			></fui-section>
+		<noir-navbar title="反馈列表" :transparent="true" :scroll-top="scrollTop">
+		</noir-navbar>
 
+		<view class="love-layer fl-wrap">
 			<love-auth-required
 				v-if="!isLoggedIn"
 				desc="请先登录后查看反馈列表。"
@@ -29,142 +15,98 @@
 				@secondary="backToProfile"
 			></love-auth-required>
 
-			<fui-card
-				v-else-if="adminChecked && !isAdmin"
-				:margin="['0', '0', '0', '0']"
-				background="rgba(255, 250, 247, 0.97)"
-				radius="32rpx"
-				shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-				:padding="['0', '0']"
-				:header-line="false"
-			>
-				<view class="feedback-list-page__forbidden">
-					<fui-empty
-						title="暂无管理权限"
-						descr="该页面仅管理员可访问。你可以进入反馈页提交问题或建议。"
-						:size="28"
-						descr-size="22"
-						color="#6e4a3f"
-						descr-color="#9a766c"
-						:margin-top="8"
-					></fui-empty>
-					<fui-button
+			<view v-else-if="adminChecked && !isAdmin" class="fl-forbidden-card">
+				<text class="fl-forbidden__title">暂无管理权限</text>
+				<text class="fl-forbidden__desc">该页面仅管理员可访问。你可以进入反馈页提交问题或建议。</text>
+				<view class="fl-forbidden__btn">
+					<noir-button
 						text="去提交反馈"
-						background="rgba(255, 241, 235, 0.98)"
-						color="#b05b48"
-						border-color="rgba(214, 145, 122, 0.24)"
-						radius="999rpx"
-						height="86rpx"
-						:size="26"
-						:bold="true"
-						:margin="['12rpx', '0', '0', '0']"
+						variant="ghost"
+						size="md"
+						block
 						@click="goFeedbackSubmit"
-					></fui-button>
+					/>
 				</view>
-			</fui-card>
+			</view>
 
-			<view v-else class="feedback-list-page__body">
-				<fui-card
-					:margin="['0', '0', '0', '0']"
-					background="rgba(255, 250, 247, 0.97)"
-					radius="32rpx"
-					shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-					:padding="['0', '0']"
-					:header-line="false"
-				>
-					<view class="feedback-list-page__filter">
-						<fui-segmented-control
-							:values="statusOptions"
-							:current="statusIndex"
-							color="#ec7558"
-							active-color="#ffffff"
-							:height="72"
-							:size="24"
-							:bold="true"
-							:radius="999"
-							@click="handleStatusChange"
-						></fui-segmented-control>
+			<view v-else class="fl-body">
+				<view class="fl-seg">
+					<view
+						v-for="(item, index) in statusFilters"
+						:key="item.name"
+						class="fl-seg__item"
+						:class="{ 'fl-seg__item--on': statusIndex === index }"
+						@tap="selectStatus(index)"
+					>
+						<text class="fl-seg__txt">{{ item.name }}</text>
 					</view>
+				</view>
 
-					<fui-divider
-						:text="`共 ${pagination.total} 条反馈`"
-						width="100%"
-						height="52"
-						divider-color="rgba(231, 204, 194, 0.7)"
-						color="#b36a56"
-						:size="22"
-					></fui-divider>
+				<text class="fl-div">共 {{ pagination.total }} 条反馈（按提交时间倒序）</text>
 
-					<view v-if="loading && feedbackList.length === 0" class="feedback-list-page__loading">
-						<fui-loading type="rotate" size="42"></fui-loading>
-						<text class="feedback-list-page__loading-text">加载中...</text>
-					</view>
+				<view v-if="loading && feedbackList.length === 0" class="fl-loading">
+					<fui-loading type="rotate" size="40"></fui-loading>
+					<text class="fl-loading__txt">加载中...</text>
+				</view>
 
-					<view v-else-if="feedbackList.length > 0" class="feedback-list">
-						<fui-list-cell
-							v-for="(item, index) in feedbackList"
-							:key="item._id"
-							:padding="['24rpx', '24rpx']"
-							background="transparent"
-							:border-color="'rgba(231, 204, 194, 0.62)'"
-							:bottom-border="index !== feedbackList.length - 1"
-							arrow
-							arrow-color="#d2a394"
-							@click="goDetail(item)"
-						>
-							<view class="feedback-item">
-								<view class="feedback-item__head">
-									<text class="feedback-item__name">{{ getNickname(item) }}</text>
-									<view class="feedback-item__status" :style="getStatusStyle(item.status)">
-										<text class="feedback-item__status-text">{{ item.status_text || getStatusText(item.status) }}</text>
-									</view>
-								</view>
-								<view class="feedback-item__meta">
-									<text class="feedback-item__meta-text">{{ getCategoryText(item.category) }}</text>
-									<text class="feedback-item__meta-text">{{ formatDateTime(item.create_time) }}</text>
-								</view>
-								<text class="feedback-item__content">{{ item.content || '' }}</text>
-								<view class="feedback-item__extra">
-									<text class="feedback-item__extra-text">图片 {{ Number(item.image_count || 0) }} 张</text>
-									<text v-if="item.admin_reply" class="feedback-item__extra-text feedback-item__extra-text--reply">
-										已回复
-									</text>
-								</view>
+				<view v-else-if="feedbackList.length > 0" class="fl-list">
+					<view
+						v-for="item in feedbackList"
+						:key="item._id"
+						class="fl-card"
+						@tap="goDetail(item)"
+					>
+						<view class="fl-chead">
+							<text class="fl-name">{{ getNickname(item) }}</text>
+							<view class="fl-status" :class="getStatusTagClass(item.status)">
+								<text class="fl-status__txt">{{ item.status_text || getStatusText(item.status) }}</text>
 							</view>
-						</fui-list-cell>
-					</view>
+						</view>
 
-					<view v-else class="feedback-list-page__empty">
-						<fui-empty
-							title="暂无反馈"
-							descr="当前筛选条件下没有反馈记录。"
-							:size="28"
-							descr-size="22"
-							color="#6e4a3f"
-							descr-color="#9a766c"
-							:margin-top="12"
-						></fui-empty>
-					</view>
-				</fui-card>
+						<view class="fl-meta">
+							<text class="fl-meta__txt">{{ getCategoryText(item.category) }}</text>
+							<text class="fl-meta__time">{{ formatDateTime(item.create_time) }}</text>
+						</view>
 
-				<view v-if="feedbackList.length > 0" class="feedback-list-page__loadmore">
-					<text class="feedback-list-page__loadmore-text">
+						<text class="fl-content">{{ item.content || '' }}</text>
+
+						<view class="fl-cfoot">
+							<view class="fl-cfoot__left">
+								<text class="fl-cfoot__txt">图片 {{ Number(item.image_count || 0) }} 张</text>
+								<text v-if="item.admin_reply" class="fl-cfoot__dot">·</text>
+								<text v-if="item.admin_reply" class="fl-cfoot__reply">已回复</text>
+							</view>
+							<fui-icon name="arrowright" :size="26" color="rgba(216, 176, 140, 0.56)"></fui-icon>
+						</view>
+					</view>
+				</view>
+
+				<view v-else class="fl-empty-card">
+					<text class="fl-empty__title">暂无反馈</text>
+					<text class="fl-empty__desc">当前筛选条件下没有反馈记录。</text>
+				</view>
+
+				<view v-if="feedbackList.length > 0" class="fl-loadmore">
+					<text class="fl-loadmore__txt">
 						{{ loadingMore ? '加载更多中...' : (pagination.hasMore ? '上拉加载更多' : '已经到底了') }}
 					</text>
 				</view>
+
+				<text class="fl-note">仅 admin 角色可访问 · 非管理员展示「暂无管理权限」提示卡</text>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script>
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import {
 		clearUniIdTokenStorage,
 		getCurrentUniIdUser,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getFeedbackApi } from '../../common/api/feedback.js'
-import { requirePageLogin } from '@/common/auth-entry.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const STATUS_FILTERS = [{
 		name: '全部',
@@ -209,6 +151,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	export default {
 		data() {
 			return {
+				scrollTop: 0,
 				loggedIn: false,
 				isAdmin: false,
 				adminChecked: false,
@@ -229,17 +172,17 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			isLoggedIn() {
 				return this.loggedIn
 			},
-			statusOptions() {
-				return STATUS_FILTERS.map((item) => ({
-					name: item.name
-				}))
+			statusFilters() {
+				return STATUS_FILTERS
 			},
 			currentStatusFilter() {
 				return STATUS_FILTERS[this.statusIndex] || STATUS_FILTERS[0]
 			}
 		},
+		onPageScroll(e) {
+			this.scrollTop = Number((e && e.scrollTop) || 0)
+		},
 		onLoad() {
-			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
 			if (!requirePageLogin()) return
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
@@ -286,24 +229,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					: {}
 				return String(userSnapshot.nickname || '').trim() || '微信用户'
 			},
-			getStatusStyle(status) {
+			getStatusTagClass(status) {
 				const value = Number(status)
-				if (value === 2) {
-					return {
-						background: 'rgba(224, 247, 230, 0.95)',
-						color: '#2f8a4b'
-					}
-				}
-				if (value === 1) {
-					return {
-						background: 'rgba(230, 244, 255, 0.95)',
-						color: '#3f75b6'
-					}
-				}
-				return {
-					background: 'rgba(255, 241, 235, 0.98)',
-					color: '#c4684f'
-				}
+				if (value === 2) return 'fl-status--green'
+				if (value === 1) return 'fl-status--gold'
+				return 'fl-status--coral'
 			},
 			resetListState() {
 				this.feedbackList = []
@@ -393,8 +323,9 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					this.loadingMore = false
 				}
 			},
-			handleStatusChange(event = {}) {
-				const nextIndex = Number(event.index || 0)
+			selectStatus(index) {
+				const nextIndex = Number(index || 0)
+				if (nextIndex === this.statusIndex) return
 				this.statusIndex = Number.isNaN(nextIndex) ? 0 : nextIndex
 				if (!this.isAdmin) {
 					return
@@ -421,99 +352,193 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				})
 			},
 			backToProfile() {
-				uni.switchTab({
-					url: '/pages/profile/index'
-				})
+				navigateToTab('/pages/profile/index')
 			}
 		}
 	}
 </script>
 
-<style>
-	.feedback-list-page {
-		padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
+<style scoped>
+	.fl-page {
+		min-height: 100vh;
+		background: #110D0B;
+		padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
 	}
 
-	.feedback-list-page__forbidden {
-		padding: 34rpx 28rpx 30rpx;
+	.fl-nav-tag {
+		padding: 6rpx 16rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.36);
+		background: rgba(226, 100, 63, 0.14);
 	}
 
-	.feedback-list-page__body {
+	.fl-nav-tag__txt {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 18rpx;
+		letter-spacing: 2rpx;
+		color: #F09A6B;
+		font-weight: 500;
+	}
+
+	.fl-wrap {
+		padding: 12rpx 32rpx 0;
+	}
+
+	.fl-body {
 		padding-top: 2rpx;
 	}
 
-	.feedback-list-page__filter {
-		padding: 28rpx 24rpx 8rpx;
+	.fl-seg {
+		display: flex;
+		align-items: center;
+		padding: 6rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
 	}
 
-	.feedback-list-page__loading {
+	.fl-seg__item {
+		flex: 1;
+		height: 64rpx;
+		border-radius: 999rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+	}
+
+	.fl-seg__item--on {
+		background: linear-gradient(135deg, rgba(240, 154, 107, 0.24), rgba(222, 95, 60, 0.28));
+		box-shadow: inset 0 0 0 1rpx rgba(226, 100, 63, 0.44);
+	}
+
+	.fl-seg__txt {
+		font-size: 24rpx;
+		color: rgba(245, 237, 228, 0.56);
+	}
+
+	.fl-seg__item--on .fl-seg__txt {
+		color: #FBF4EA;
+		font-weight: 500;
+	}
+
+	.fl-div {
+		display: block;
+		margin: 24rpx 0 20rpx;
+		text-align: center;
+		font-size: 21rpx;
+		letter-spacing: 1rpx;
+		color: rgba(216, 176, 140, 0.68);
+	}
+
+	.fl-loading {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 56rpx 0 52rpx;
+		padding: 96rpx 0;
 	}
 
-	.feedback-list-page__loading-text {
+	.fl-loading__txt {
 		margin-top: 16rpx;
-		font-size: 24rpx;
-		color: #9a766c;
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.46);
 	}
 
-	.feedback-list {
-		padding: 6rpx 0;
+	.fl-list {
+		display: flex;
+		flex-direction: column;
+		gap: 18rpx;
 	}
 
-	.feedback-item {
-		width: 100%;
+	.fl-card {
+		padding: 24rpx 26rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
 	}
 
-	.feedback-item__head {
+	.fl-chead {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12rpx;
+		gap: 16rpx;
 	}
 
-	.feedback-item__name {
+	.fl-name {
 		flex: 1;
 		min-width: 0;
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #5a3427;
-		word-break: break-all;
+		font-size: 29rpx;
+		font-weight: 500;
+		color: #F5EDE4;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	.feedback-item__status {
+	.fl-status {
 		flex-shrink: 0;
-		padding: 8rpx 16rpx;
+		padding: 6rpx 16rpx;
 		border-radius: 999rpx;
+		display: flex;
+		border: 1rpx solid transparent;
 	}
 
-	.feedback-item__status-text {
+	.fl-status--coral {
+		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(226, 100, 63, 0.34);
+	}
+
+	.fl-status--coral .fl-status__txt {
+		color: #F09A6B;
+	}
+
+	.fl-status--gold {
+		background: rgba(216, 176, 140, 0.14);
+		border-color: rgba(216, 176, 140, 0.28);
+	}
+
+	.fl-status--gold .fl-status__txt {
+		color: #EAD4BC;
+	}
+
+	.fl-status--green {
+		background: rgba(104, 196, 140, 0.14);
+		border-color: rgba(104, 196, 140, 0.3);
+	}
+
+	.fl-status--green .fl-status__txt {
+		color: #7ED4A2;
+	}
+
+	.fl-status__txt {
 		font-size: 20rpx;
-		font-weight: 600;
+		font-weight: 500;
 	}
 
-	.feedback-item__meta {
+	.fl-meta {
 		display: flex;
 		align-items: center;
-		flex-wrap: wrap;
-		gap: 18rpx;
+		justify-content: space-between;
 		margin-top: 10rpx;
 	}
 
-	.feedback-item__meta-text {
-		font-size: 22rpx;
-		color: #947064;
+	.fl-meta__txt {
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.42);
 	}
 
-	.feedback-item__content {
-		display: block;
-		margin-top: 12rpx;
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: #6e4a3f;
+	.fl-meta__time {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		color: rgba(245, 237, 228, 0.38);
+	}
+
+	.fl-content {
 		display: -webkit-box;
+		margin-top: 14rpx;
+		font-size: 25rpx;
+		line-height: 1.65;
+		color: rgba(245, 237, 228, 0.68);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		-webkit-line-clamp: 2;
@@ -521,33 +546,77 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		word-break: break-all;
 	}
 
-	.feedback-item__extra {
+	.fl-cfoot {
 		display: flex;
 		align-items: center;
-		gap: 16rpx;
-		margin-top: 12rpx;
+		justify-content: space-between;
+		margin-top: 16rpx;
+		padding-top: 14rpx;
+		border-top: 1rpx solid rgba(255, 255, 255, 0.05);
 	}
 
-	.feedback-item__extra-text {
-		font-size: 22rpx;
-		color: #9a766c;
+	.fl-cfoot__left {
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
 	}
 
-	.feedback-item__extra-text--reply {
-		color: #3f75b6;
+	.fl-cfoot__txt,
+	.fl-cfoot__dot {
+		font-size: 21rpx;
+		color: rgba(216, 176, 140, 0.62);
 	}
 
-	.feedback-list-page__empty {
-		padding: 26rpx 0 20rpx;
+	.fl-cfoot__reply {
+		font-size: 21rpx;
+		color: #EAD4BC;
 	}
 
-	.feedback-list-page__loadmore {
-		padding: 18rpx 0 8rpx;
+	.fl-empty-card,
+	.fl-forbidden-card {
+		padding: 64rpx 36rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
 		text-align: center;
 	}
 
-	.feedback-list-page__loadmore-text {
+	.fl-empty__title,
+	.fl-forbidden__title {
+		display: block;
+		font-family: "Songti SC", "SimSun", serif;
+		font-size: 32rpx;
+		color: #FBF4EA;
+	}
+
+	.fl-empty__desc,
+	.fl-forbidden__desc {
+		display: block;
+		margin-top: 12rpx;
+		font-size: 23rpx;
+		line-height: 1.6;
+		color: rgba(245, 237, 228, 0.46);
+	}
+
+	.fl-forbidden__btn {
+		margin-top: 32rpx;
+	}
+
+	.fl-loadmore {
+		padding: 26rpx 0 6rpx;
+		text-align: center;
+	}
+
+	.fl-loadmore__txt {
 		font-size: 22rpx;
-		color: #ab8376;
+		color: rgba(245, 237, 228, 0.4);
+	}
+
+	.fl-note {
+		display: block;
+		margin-top: 22rpx;
+		text-align: center;
+		font-size: 20rpx;
+		color: rgba(245, 237, 228, 0.3);
 	}
 </style>

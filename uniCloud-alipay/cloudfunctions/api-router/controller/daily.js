@@ -19,6 +19,10 @@ module.exports = class DailyController extends Controller {
 		return this.service.daily.addComment(this.ctx.data || {})
 	}
 
+	async deleteComment() {
+		return this.service.daily.deleteComment(this.ctx.data || {})
+	}
+
 	async delete() {
 		return this.service.daily.delete(this.ctx.data || {})
 	}

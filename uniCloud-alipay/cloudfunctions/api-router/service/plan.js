@@ -11,6 +11,7 @@ const { getUserById } = require('../lib/user-base')
 const { wishPlanCollection } = require('../lib/db')
 const { DEFAULT_NICKNAME } = require('../lib/constants')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 
 const ITEM_TYPE_WISH = 'wish'
 const ITEM_TYPE_PLAN = 'plan'
@@ -592,6 +593,13 @@ module.exports = class PlanService extends Service {
 				_id: createRes.id
 			})
 
+			// 心动点：每条 +5（日上限 5 条）
+			await pointsLib.awardPoints(uid, 'plan_create', {
+				refId: createRes.id,
+				coupleId: activeCouple ? activeCouple._id : '',
+				title: '新增愿望 / 计划'
+			})
+
 			return {
 				errCode: 0,
 				data: {
@@ -950,6 +958,16 @@ module.exports = class PlanService extends Service {
 			}
 
 			await wishPlanCollection.doc(itemId).update(updateData)
+
+			// 心动点：真正完成 +10（跳过不算），日上限 3 个
+			if (action === STEP_ACTION_DIRECT_COMPLETE) {
+				await pointsLib.awardPoints(uid, 'plan_finish', {
+					refId: itemId,
+					coupleId: activeCouple ? activeCouple._id : '',
+					title: '完成愿望 / 计划'
+				})
+			}
+
 			return {
 				errCode: 0,
 				data: {

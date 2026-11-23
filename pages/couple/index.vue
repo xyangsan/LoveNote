@@ -1,379 +1,372 @@
 <template>
-	<view class="love-page love-page--compact couple-page">
-		<view class="love-page__glow love-page__glow--left"></view>
-		<view class="love-page__glow love-page__glow--right"></view>
+	<view class="cp-page" :class="{ 'cp-page--bound': Boolean(activeCouple) }">
+		<view class="cp-glow cp-glow--left"></view>
+		<view class="cp-glow cp-glow--right"></view>
 
-		<view class="love-layer">
-
-			<view class="love-title-block couple-title-block">
-				<text class="love-title-block__eyebrow">LOVE NOTE</text>
-				<text class="love-title-block__title">情侣绑定</text>
-				<text class="love-title-block__desc">{{ overviewDesc }}</text>
-				<view class="couple-title-block__status">
-					<fui-tag
-						:text="relationStatusText"
-						:is-border="false"
-						background="rgba(255, 237, 231, 0.96)"
-						color="#c0634d"
-						radius="999"
-						:padding="['12rpx', '22rpx']"
-					></fui-tag>
-					<text class="couple-title-block__count">{{ titleBlockCountText }}</text>
+		<noir-navbar
+			:title="navbarTitle"
+			:show-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+		>
+			<template #right>
+				<view
+					v-if="isLoggedIn && !activeCouple && !inviteMode"
+					class="cp-nav-pill"
+					@tap="handleRefreshCode"
+				>
+					<text class="cp-nav-pill__txt">{{ actionLoading === 'refresh' ? '刷新中…' : '刷新码' }}</text>
 				</view>
-			</view>
+				<view
+					v-else-if="isLoggedIn && !activeCouple && inviteMode"
+					class="cp-tag"
+					:class="invite && invite.status === 'valid' ? 'cp-tag--gold' : 'cp-tag--coral'"
+				>
+					<text class="cp-tag__txt">{{ inviteBadgeText }}</text>
+				</view>
+			</template>
+		</noir-navbar>
 
+		<view class="cp-wrap">
 			<love-auth-required
 				v-if="!isLoggedIn"
-				desc="情侣信息页需要登录后才能查看和操作，登录后可继续发起绑定、处理请求与查看历史记录。"
+				class="cp-auth"
+				desc="情侣信息页需要登录后才能查看和操作，登录后可获取 6 位数字绑定码或接受好友邀请。"
 				secondary-text="返回个人中心"
 				@login="goToLoginPage"
 				@secondary="backToProfile"
 			></love-auth-required>
 
-			<view v-else class="couple-page__body">
-				<love-glass-card
-					title="我的信息"
-					:margin="['0', '0', '0', '0']"
-				>
-					<love-relation-bar
-						class="self-card"
-						:primary-avatar="selfInfo.avatarUrl || DEFAULT_AVATAR"
-						:secondary-avatar="activeCouple && activeCouple.partnerAvatarUrl ? activeCouple.partnerAvatarUrl : ''"
-						:primary-gender="Number(selfInfo.gender || 0)"
-						:secondary-gender="Number(activeCouple && activeCouple.partnerGender || 0)"
-						secondary-placeholder="TA"
-						:title="primaryCardTitle"
-						:desc="primaryCardDesc"
-						:borderless="true"
-						:avatar-size="112"
-						:title-size="36"
-						:desc-size="23"
-					></love-relation-bar>
+			<!-- ==================== 31 已绑定态（NOIR v3 s31） ==================== -->
+			<template v-else-if="activeCouple">
+				<view class="ci-hero">
+					<view class="ci-avs">
+						<view class="ci-av-wrap">
+							<view class="ci-av">
+								<image
+									v-if="selfInfo.avatarUrl"
+									class="ci-av__img"
+									:src="selfInfo.avatarUrl"
+									mode="aspectFill"
+								></image>
+								<text v-else class="ci-av__txt">{{ shortChar(selfInfo.nickname, '我') }}</text>
+							</view>
+							<view
+								v-if="Number(selfInfo.gender) === 1 || Number(selfInfo.gender) === 2"
+								class="ci-gender"
+								:class="Number(selfInfo.gender) === 1 ? 'ci-gender--m' : 'ci-gender--f'"
+							>
+								<text class="ci-gender__txt">{{ Number(selfInfo.gender) === 1 ? '♂' : '♀' }}</text>
+							</view>
+						</view>
 
-					<view class="relation-stats">
-						<view v-for="item in relationshipOverviewStats" :key="item.label" class="relation-stats__item">
-							<text class="relation-stats__value">{{ item.value }}</text>
-							<text class="relation-stats__label">{{ item.label }}</text>
+						<view class="ci-link">
+							<view class="ci-line"></view>
+							<text class="ci-heart">♥</text>
+							<view class="ci-line"></view>
+						</view>
+
+						<view class="ci-av-wrap">
+							<view class="ci-av ci-av--alt">
+								<image
+									v-if="activeCouple.partnerAvatarUrl"
+									class="ci-av__img"
+									:src="activeCouple.partnerAvatarUrl"
+									mode="aspectFill"
+								></image>
+								<text v-else class="ci-av__txt">{{ shortChar(activeCouple.partnerNickname, 'TA') }}</text>
+							</view>
+							<view
+								v-if="Number(activeCouple.partnerGender) === 1 || Number(activeCouple.partnerGender) === 2"
+								class="ci-gender"
+								:class="Number(activeCouple.partnerGender) === 1 ? 'ci-gender--m' : 'ci-gender--f'"
+							>
+								<text class="ci-gender__txt">{{ Number(activeCouple.partnerGender) === 1 ? '♂' : '♀' }}</text>
+							</view>
 						</view>
 					</view>
 
-					<view v-if="!activeCouple" class="info-panel">
-						<fui-list-cell
-							:padding="['20rpx', '0']"
-							background="transparent"
-							:highlight="false"
-							:bottom-border="false"
-						>
-							<view class="info-row">
-								<view class="info-row__body">
-									<text class="info-row__label">用户 ID</text>
-									<text class="info-row__value info-row__value--compact">{{ selfMetaValue }}</text>
-									<text v-if="selfMetaHint" class="info-row__hint">{{ selfMetaHint }}</text>
-								</view>
-								<fui-button
-									text="复制"
-									width="144rpx"
-									height="60rpx"
-									:size="22"
-									radius="999rpx"
-									background="rgba(255, 239, 231, 0.98)"
-									color="#be6f59"
-									border-color="rgba(223, 160, 140, 0.28)"
-									@click="copySelfUid"
-								></fui-button>
-							</view>
-						</fui-list-cell>
+					<view class="ci-names">
+						<text class="ci-names__title">{{ selfInfo.nickname || '我' }} × {{ activeCouple.partnerNickname || '另一半' }}</text>
+						<text class="ci-names__sub">{{ boundDaysSubtitle }}</text>
 					</view>
 
-					<fui-button
-						v-if="activeCouple"
-						text="解绑当前关系"
-						background="rgba(255, 239, 233, 0.98)"
-						color="#ca5d43"
-						border-color="rgba(223, 122, 94, 0.28)"
-						radius="999rpx"
-						height="84rpx"
-						:size="26"
-						:bold="true"
-						:margin="['26rpx', '0', '0', '0']"
-						:loading="actionLoading === 'unbind'"
-						@click="handleUnbind"
-					></fui-button>
-				</love-glass-card>
+					<view class="ci-stats">
+						<view v-for="item in relationshipOverviewStats" :key="item.label" class="ci-stat">
+							<text class="ci-stat__val">{{ item.value }}</text>
+							<text class="ci-stat__lbl">{{ item.label }}</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="ci-card">
+					<view class="ci-row">
+						<text class="ci-row__label">当前状态</text>
+						<view class="cp-tag cp-tag--green">
+							<text class="cp-tag__txt">已绑定</text>
+						</view>
+					</view>
+					<view class="ci-row">
+						<text class="ci-row__label">绑定时间</text>
+						<text class="ci-row__val ci-row__val--mono">{{ formatDateTime(activeCouple.bindDate) }}</text>
+					</view>
+					<view class="ci-row">
+						<text class="ci-row__label">绑定方式</text>
+						<text class="ci-row__val">{{ bindMethodText }}</text>
+					</view>
+					<view class="ci-row ci-row--last" @tap="historyExpanded = !historyExpanded">
+						<text class="ci-row__label">历史绑定记录</text>
+						<view class="ci-row__right">
+							<text class="ci-row__val">{{ historyExpanded ? '收起' : '查看' }}（{{ historyList.length }} 条）</text>
+							<fui-icon
+								:name="historyExpanded ? 'arrowdown' : 'arrowright'"
+								:size="28"
+								color="rgba(245, 237, 228, 0.42)"
+							/>
+						</view>
+					</view>
+
+					<view v-if="historyExpanded" class="ci-hist-panel">
+						<view v-if="historyList.length" class="cp-list">
+							<view v-for="item in historyList" :key="item.relationId" class="cp-item">
+								<view class="cp-item__ava">
+									<image
+										v-if="item.partnerAvatarUrl"
+										class="cp-item__ava-img"
+										:src="item.partnerAvatarUrl"
+										mode="aspectFill"
+									></image>
+									<text v-else class="cp-item__ava-txt">{{ shortChar(item.partnerNicknameMasked, 'TA') }}</text>
+								</view>
+								<view class="cp-item__body">
+									<view class="cp-item__head">
+										<text class="cp-item__name">{{ item.partnerNicknameMasked }}</text>
+										<view class="cp-tag" :class="'cp-tag--' + historyTagTone(item.statusText)">
+											<text class="cp-tag__txt">{{ item.statusText || '已处理' }}</text>
+										</view>
+									</view>
+									<text class="cp-item__meta">对方 ID：{{ item.partnerUidMasked }}</text>
+									<text class="cp-item__meta">{{ formatHistoryPeriod(item) }}</text>
+								</view>
+							</view>
+						</view>
+						<text v-else class="ci-hist-empty">暂无其他历史记录</text>
+					</view>
+				</view>
+
+				<view class="ci-warn">
+					<text class="ci-warn__txt">风险提示：解除当前情侣关系后，双方共享空间将立即关闭，且你与对方当前累计的全部心动点将清零且无法恢复。</text>
+				</view>
 
 				<view class="ad-view">
 					<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
 				</view>
-			
-				<love-glass-card
-					v-if="!activeCouple"
-					title="发起绑定"
-					:margin="['24rpx', '0', '0', '0']"
-				>
-					<view class="request-form">
-						<text class="request-form__desc">把上方“我的 ID”发给另一半，或直接在这里输入对方的 ID 发起绑定请求。</text>
+			</template>
 
-						<view class="love-form-item">
-							<text class="love-field-label">对方用户 ID</text>
-							<fui-input
-								:value="targetUid"
-								type="text"
-								placeholder="请输入对方的用户 ID"
-								background-color="#fff7f3"
-								:border-bottom="false"
-								:padding="['28rpx', '24rpx']"
-								:radius="26"
-								:size="28"
-								color="#5a3427"
-								maxlength="64"
-								@input="onTargetUidInput"
-								@blur="onTargetUidBlur"
-							></fui-input>
-							<text v-if="targetUidError" class="request-form__error">{{ targetUidError }}</text>
-							<text class="love-field-tip">{{ requestFormTipText }}</text>
+			<!-- ==================== 16 绑定邀请落地（NOIR v3 s16） ==================== -->
+			<template v-else-if="inviteMode">
+				<view class="il-wrap">
+					<view v-if="inviteLoading" class="il-card">
+						<text class="il-loading">正在核验邀请信息…</text>
+					</view>
+
+					<template v-else>
+						<view class="il-card">
+							<view class="il-av">
+								<image
+									v-if="invite && invite.inviterAvatarUrl"
+									class="il-av__img"
+									:src="invite.inviterAvatarUrl"
+									mode="aspectFill"
+								></image>
+								<text v-else class="il-av__txt">{{ shortChar(invite && invite.inviterNickname, '♥') }}</text>
+							</view>
+							<text class="il-card__title">
+								{{ invite && invite.inviterNickname ? `${invite.inviterNickname} 邀请你开启双人空间` : '情侣绑定邀请' }}
+							</text>
+							<text class="il-card__desc">
+								接受邀请后，你们将共享纪念日、双人日常、照片与愿望单，并同步记录在一起的每一天。
+							</text>
+							<view class="il-code-pill">
+								<text class="il-code-pill__txt">邀请码 · {{ formatSpacedCode(inviteCode) }}</text>
+							</view>
 						</view>
 
-						<view class="love-action-stack request-form__actions">
-							<fui-button
-								text="发送绑定请求"
-								background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-								color="#ffffff"
-								radius="999rpx"
-								height="88rpx"
+						<view v-if="invite && invite.status !== 'valid'" class="il-status-warn">
+							<text class="il-status-warn__txt">{{ invite.statusText || '当前邀请不可用，请让对方重新发起' }}</text>
+						</view>
+
+						<view class="il-feats">
+							<view class="il-feat">
+								<view class="il-dot"></view>
+								<text class="il-feat__txt">双方各得 +1,000 心动点（一次性成长里程碑）</text>
+							</view>
+							<view class="il-feat">
+								<view class="il-dot"></view>
+								<text class="il-feat__txt">共享纪念日、双人日常、照片视频流与愿望单</text>
+							</view>
+							<view class="il-feat">
+								<view class="il-dot"></view>
+								<text class="il-feat__txt">邀请码 7 天内有效，绑定成功后自动失效</text>
+							</view>
+						</view>
+
+						<view class="il-acts">
+							<view
+								v-if="invite && invite.status === 'valid'"
+								class="cp-btn cp-btn--primary"
+								:class="{ 'cp-btn--disabled': actionLoading === 'bind' }"
+								hover-class="cp-btn--hover"
+								@tap="handleAcceptInvite"
+							>
+								<text class="cp-btn__txt">{{ actionLoading === 'bind' ? '绑定中…' : '接受邀请并绑定 (+1,000点)' }}</text>
+							</view>
+							<view
+								v-else
+								class="cp-btn cp-btn--primary"
+								hover-class="cp-btn--hover"
+								@tap="exitInviteMode"
+							>
+								<text class="cp-btn__txt">去使用 6 位绑定码绑定</text>
+							</view>
+							<view class="cp-btn cp-btn--ghost" hover-class="cp-btn--hover" @tap="goHome">
+								<text class="cp-btn__txt cp-btn__txt--ghost">先逛逛首页</text>
+							</view>
+						</view>
+					</template>
+				</view>
+			</template>
+
+			<!-- ==================== 15 情侣绑定（6 位数字码 · NOIR v3 s15） ==================== -->
+			<template v-else>
+				<view class="cb-card">
+					<text class="cb-kicker">MY BINDING CODE · {{ bindCodeValidityText }}</text>
+					<text class="cb-code" @tap="copyMyBindCode">{{ formattedMyCode }}</text>
+					<text class="cb-meta">发给另一半微信好友，或让 TA 输入上方 6 位数字绑定码</text>
+					<view class="cb-acts">
+						<view class="cp-btn cp-btn--ghost" hover-class="cp-btn--hover" @tap="copyMyBindCode">
+							<text class="cp-btn__txt cp-btn__txt--ghost">复制绑定码</text>
+						</view>
+						<button class="cp-btn cp-btn--primary cp-share-btn" open-type="share" hover-class="cp-btn--hover">
+							<text class="cp-btn__txt">发给微信好友</text>
+						</button>
+					</view>
+				</view>
+
+				<view class="cb-div">
+					<view class="cb-div__line"></view>
+					<text class="cb-div__txt">或输入 TA 的 6 位绑定码</text>
+					<view class="cb-div__line"></view>
+				</view>
+
+				<view class="cb-input-section">
+					<text class="cb-label">输入 6 位数字绑定码</text>
+
+					<!-- 6 格数字槽 + 透明覆盖输入（点击任意格即拉起数字键盘，支持整段粘贴） -->
+					<view class="cb-slots-wrap">
+						<view class="cb-slots">
+							<view
+								v-for="(slot, idx) in codeSlots"
+								:key="idx"
+								class="cb-slot"
+								:class="{
+									'cb-slot--empty': !slot,
+									'cb-slot--active': codeInputFocused && idx === Math.min(inputCode.length, 5)
+								}"
+							>
+								<text class="cb-slot__txt">{{ slot || '·' }}</text>
+							</view>
+						</view>
+						<input
+							class="cb-hidden-input"
+							type="number"
+							:maxlength="6"
+							:value="inputCode"
+							@focus="codeInputFocused = true"
+							@blur="codeInputFocused = false"
+							@input="onCodeNativeInput"
+						/>
+					</view>
+
+					<text v-if="inputCodeError" class="cb-error">{{ inputCodeError }}</text>
+
+					<view
+						class="cp-btn cp-btn--primary cb-submit"
+						:class="{ 'cp-btn--disabled': inputCode.length !== 6 || actionLoading === 'bind' }"
+						hover-class="cp-btn--hover"
+						@tap="handleBindByCode"
+					>
+						<text class="cp-btn__txt">{{ actionLoading === 'bind' ? '绑定中…' : '确认绑定' }}</text>
+					</view>
+				</view>
+
+				<view class="cb-reward">
+					<text class="cb-reward__txt">首次绑定成功后，双方各得 +1,000 心动点并解锁每日签到与任务体系</text>
+				</view>
+
+				<!-- 有历史绑定记录时展示折叠入口 -->
+				<view v-if="historyList.length" class="ci-card cb-hist-card">
+					<view class="ci-row ci-row--last" @tap="historyExpanded = !historyExpanded">
+						<text class="ci-row__label">历史绑定记录</text>
+						<view class="ci-row__right">
+							<text class="ci-row__val">{{ historyExpanded ? '收起' : '查看' }}（{{ historyList.length }} 条）</text>
+							<fui-icon
+								:name="historyExpanded ? 'arrowdown' : 'arrowright'"
 								:size="28"
-								:bold="true"
-								:disabled="!canSendRequest"
-								:loading="actionLoading === 'send'"
-								@click="handleSendRequest"
-							></fui-button>
+								color="rgba(245, 237, 228, 0.42)"
+							/>
 						</view>
 					</view>
-				</love-glass-card>
-
-				<love-glass-card
-					title="请求与记录"
-					:tag="activeTabCountText"
-					:margin="['24rpx', '0', '0', '0']"
-				>
-					<fui-segmented-control
-						:values="requestTabOptions"
-						:current="activeTabIndex"
-						color="#ec7558"
-						active-color="#ffffff"
-						:height="72"
-						:size="24"
-						:bold="true"
-						:radius="999"
-						@click="handleTabChange"
-					></fui-segmented-control>
-
-					<fui-divider
-						:text="activeTabTitle"
-						width="100%"
-						height="54"
-						divider-color="rgba(231, 204, 194, 0.7)"
-						color="#b36a56"
-						:size="22"
-					></fui-divider>
-
-					<text class="records-card__desc">{{ activeTabDesc }}</text>
-
-					<view v-if="activeTabKey === 'incoming'" class="records-card__body">
-						<view v-if="incomingRequests.length" class="records-list">
-							<fui-list-cell
-								v-for="(item, index) in incomingRequests"
-								:key="item.requestId"
-								:padding="['24rpx', '0']"
-								background="transparent"
-								:border-color="'rgba(231, 204, 194, 0.62)'"
-								:bottom-border="index !== incomingRequests.length - 1"
-							>
-								<view class="request-item">
-									<view class="request-item__main">
-										<fui-avatar
-											:src="item.partnerAvatarUrl || DEFAULT_AVATAR"
-											error-src="/static/user-empty.png"
-											width="84"
-											height="84"
-											background="#fff1eb"
-										></fui-avatar>
-										<view class="request-item__body">
-											<view class="request-item__head">
-												<text class="request-item__name">{{ item.partnerNicknameMasked }}</text>
-												<fui-tag
-													text="待处理"
-													:is-border="false"
-													background="rgba(255, 241, 235, 0.98)"
-													color="#c4684f"
-													radius="999"
-													:padding="['8rpx', '16rpx']"
-												></fui-tag>
-											</view>
-											<text class="request-item__meta">对方 ID：{{ item.partnerUidMasked }}</text>
-											<text class="request-item__meta">发起时间：{{ formatDateTime(item.createdAt) }}</text>
+					<view v-if="historyExpanded" class="ci-hist-panel">
+						<view class="cp-list">
+							<view v-for="item in historyList" :key="item.relationId" class="cp-item">
+								<view class="cp-item__ava">
+									<image
+										v-if="item.partnerAvatarUrl"
+										class="cp-item__ava-img"
+										:src="item.partnerAvatarUrl"
+										mode="aspectFill"
+									></image>
+									<text v-else class="cp-item__ava-txt">{{ shortChar(item.partnerNicknameMasked, 'TA') }}</text>
+								</view>
+								<view class="cp-item__body">
+									<view class="cp-item__head">
+										<text class="cp-item__name">{{ item.partnerNicknameMasked }}</text>
+										<view class="cp-tag" :class="'cp-tag--' + historyTagTone(item.statusText)">
+											<text class="cp-tag__txt">{{ item.statusText || '已处理' }}</text>
 										</view>
 									</view>
-									<view class="request-item__actions">
-										<fui-button
-											text="拒绝"
-											background="rgba(255, 239, 231, 0.98)"
-											color="#be6f59"
-											border-color="rgba(223, 160, 140, 0.28)"
-											radius="999rpx"
-											height="72rpx"
-											:size="24"
-											width="180rpx"
-											:loading="actionLoading === `reject-${item.requestId}`"
-											@click="handleReviewRequest(item, 'reject')"
-										></fui-button>
-										<fui-button
-											text="确认绑定"
-											background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-											color="#ffffff"
-											radius="999rpx"
-											height="72rpx"
-											:size="24"
-											width="180rpx"
-											:loading="actionLoading === `accept-${item.requestId}`"
-											@click="handleReviewRequest(item, 'accept')"
-										></fui-button>
-									</view>
+									<text class="cp-item__meta">{{ formatHistoryPeriod(item) }}</text>
 								</view>
-							</fui-list-cell>
-						</view>
-						<view v-else class="records-empty">
-							<fui-empty
-								title="暂无待处理请求"
-								descr="收到新的绑定邀请后，会在这里显示。"
-								:size="28"
-								descr-size="22"
-								color="#6e4a3f"
-								descr-color="#9a766c"
-								:margin-top="12"
-							></fui-empty>
+							</view>
 						</view>
 					</view>
+				</view>
 
-					<view v-else-if="activeTabKey === 'outgoing'" class="records-card__body">
-						<view v-if="outgoingRequests.length" class="records-list">
-							<fui-list-cell
-								v-for="(item, index) in outgoingRequests"
-								:key="item.requestId"
-								:padding="['24rpx', '0']"
-								background="transparent"
-								:border-color="'rgba(231, 204, 194, 0.62)'"
-								:bottom-border="index !== outgoingRequests.length - 1"
-							>
-								<view class="request-item">
-									<view class="request-item__main">
-										<fui-avatar
-											:src="item.partnerAvatarUrl || DEFAULT_AVATAR"
-											error-src="/static/user-empty.png"
-											width="84"
-											height="84"
-											background="#fff1eb"
-										></fui-avatar>
-										<view class="request-item__body">
-											<view class="request-item__head">
-												<text class="request-item__name">{{ item.partnerNicknameMasked }}</text>
-												<fui-tag
-													text="待回应"
-													:is-border="false"
-													background="rgba(255, 246, 241, 0.98)"
-													color="#b97862"
-													radius="999"
-													:padding="['8rpx', '16rpx']"
-												></fui-tag>
-											</view>
-											<text class="request-item__meta">对方 ID：{{ item.partnerUidMasked }}</text>
-											<text class="request-item__meta">发起时间：{{ formatDateTime(item.createdAt) }}</text>
-										</view>
-									</view>
-									<view class="request-item__actions request-item__actions--single">
-										<fui-button
-											text="撤回"
-											width="156rpx"
-											height="60rpx"
-											:size="22"
-											radius="999rpx"
-											background="rgba(255, 239, 231, 0.98)"
-											color="#be6f59"
-											border-color="rgba(223, 160, 140, 0.28)"
-											:loading="actionLoading === `cancel-${item.requestId}`"
-											@click="handleCancelRequest(item)"
-										></fui-button>
-									</view>
-								</view>
-							</fui-list-cell>
-						</view>
-						<view v-else class="records-empty">
-							<fui-empty
-								title="暂无已发出的请求"
-								descr="主动发送的绑定请求会在这里展示，也可以随时撤回。"
-								:size="28"
-								descr-size="22"
-								color="#6e4a3f"
-								descr-color="#9a766c"
-								:margin-top="12"
-							></fui-empty>
-						</view>
-					</view>
+				<view class="ad-view">
+					<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+				</view>
+			</template>
+		</view>
 
-					<view v-else class="records-card__body">
-						<view v-if="historyList.length" class="records-list">
-							<fui-list-cell
-								v-for="(item, index) in historyList"
-								:key="item.relationId"
-								:padding="['24rpx', '0']"
-								background="transparent"
-								:border-color="'rgba(231, 204, 194, 0.62)'"
-								:bottom-border="index !== historyList.length - 1"
-							>
-								<view class="history-item">
-									<fui-avatar
-										:src="item.partnerAvatarUrl || DEFAULT_AVATAR"
-										error-src="/static/user-empty.png"
-										width="76"
-										height="76"
-										background="#fff1eb"
-									></fui-avatar>
-									<view class="history-item__body">
-										<view class="history-item__head">
-											<text class="history-item__name">{{ item.partnerNicknameMasked }}</text>
-											<fui-tag
-												:text="item.statusText || '已处理'"
-												:is-border="false"
-												:background="getHistoryTagStyle(item.statusText).background"
-												:color="getHistoryTagStyle(item.statusText).color"
-												radius="999"
-												:padding="['8rpx', '16rpx']"
-											></fui-tag>
-										</view>
-										<text class="history-item__meta">对方 ID：{{ item.partnerUidMasked }}</text>
-										<text class="history-item__meta">{{ formatHistoryPeriod(item) }}</text>
-									</view>
-								</view>
-							</fui-list-cell>
-						</view>
-						<view v-else class="records-empty">
-							<fui-empty
-								title="暂无绑定记录"
-								descr="成功绑定或解绑之后，历史记录会保留在这里。"
-								:size="28"
-								descr-size="22"
-								color="#6e4a3f"
-								descr-color="#9a766c"
-								:margin-top="12"
-							></fui-empty>
-						</view>
-					</view>
-				</love-glass-card>
+		<!-- 已绑定态底部解绑栏（对标 s31 .m-foot） -->
+		<view v-if="isLoggedIn && activeCouple" class="ci-foot-bar">
+			<view
+				class="cp-btn cp-btn--danger"
+				:class="{ 'cp-btn--disabled': actionLoading === 'unbind' }"
+				hover-class="cp-btn--hover"
+				@tap="handleUnbind"
+			>
+				<text class="cp-btn__txt cp-btn__txt--danger">{{ actionLoading === 'unbind' ? '解绑中…' : '解除当前关系' }}</text>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script>
+	import LoveAuthRequired from '@/components/love-auth-required/love-auth-required.vue'
+	import { navigateToTab, goHomeTab } from '@/common/utils/tab-nav.js'
 	import {
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
@@ -381,21 +374,32 @@
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getCoupleApi } from '../../common/api/couple.js'
+	import { getPointsApi } from '../../common/api/points.js'
 	import { useAppStateStore } from '../../store/app-state.js'
-	import LoveRelationBar from '../../components/love-relation-bar/love-relation-bar.vue'
-import { requirePageLogin } from '@/common/auth-entry.js'
-
-	const TAB_KEYS = ['incoming', 'outgoing', 'history']
+	import { requirePageLogin } from '@/common/auth-entry.js'
 
 	function getDefaultCenterData() {
 		return {
 			selfInfo: null,
 			activeCouple: null,
+			bindCodeInfo: null,
 			incomingRequests: [],
 			outgoingRequests: [],
 			historyList: [],
 			canSendRequest: true
 		}
+	}
+
+	function normalizeSixDigits(value = '') {
+		return String(value || '').replace(/[^\d]/g, '').slice(0, 6)
+	}
+
+	function formatSpacedCode(code = '') {
+		const digits = normalizeSixDigits(code)
+		if (digits.length !== 6) {
+			return digits || '--- ---'
+		}
+		return `${digits.slice(0, 3)} ${digits.slice(3)}`
 	}
 
 	function formatDateTime(timestamp) {
@@ -412,19 +416,38 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		return `${year}-${month}-${day} ${hour}:${minute}`
 	}
 
+	function formatDateDot(timestamp) {
+		if (!timestamp) {
+			return ''
+		}
+		const date = new Date(timestamp)
+		const year = date.getFullYear()
+		const month = `${date.getMonth() + 1}`.padStart(2, '0')
+		const day = `${date.getDate()}`.padStart(2, '0')
+		return `${year}.${month}.${day}`
+	}
+
 	export default {
 		components: {
-			LoveRelationBar
+			LoveAuthRequired
 		},
 		data() {
 			return {
 				DEFAULT_AVATAR,
+				scrollTop: 0,
 				appStateStore: null,
 				actionLoading: '',
-				activeTabIndex: 0,
+				historyExpanded: false,
 				removeAuthListener: null,
-				targetUid: '',
-				targetUidError: '',
+				// 6 位数字绑定码输入
+				inputCode: '',
+				inputCodeError: '',
+				codeInputFocused: false,
+				// 邀请落地态（s16）
+				inviteMode: false,
+				inviteCode: '',
+				inviteLoading: false,
+				invite: null,
 				centerData: getDefaultCenterData()
 			}
 		},
@@ -433,127 +456,89 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				const currentUserInfo = getCurrentUniIdUser()
 				return Boolean(currentUserInfo && currentUserInfo.uid)
 			},
+			navbarTitle() {
+				if (this.activeCouple) return '情侣信息'
+				if (this.inviteMode) return '情侣邀请'
+				return '情侣绑定'
+			},
 			selfInfo() {
 				return this.centerData.selfInfo || {}
 			},
 			activeCouple() {
 				return this.centerData.activeCouple || null
 			},
-			incomingRequests() {
-				return Array.isArray(this.centerData.incomingRequests) ? this.centerData.incomingRequests : []
+			bindCodeInfo() {
+				return this.centerData.bindCodeInfo || null
 			},
-			outgoingRequests() {
-				return Array.isArray(this.centerData.outgoingRequests) ? this.centerData.outgoingRequests : []
+			myBindCode() {
+				return normalizeSixDigits(this.bindCodeInfo && this.bindCodeInfo.code)
+			},
+			formattedMyCode() {
+				return formatSpacedCode(this.myBindCode)
+			},
+			bindCodeValidityText() {
+				const exp = Number(this.bindCodeInfo && this.bindCodeInfo.expiresAt || 0)
+				if (!exp) {
+					return '7 天内有效'
+				}
+				const remainMs = exp - Date.now()
+				if (remainMs <= 0) {
+					return '已过期 · 请刷新'
+				}
+				const days = Math.max(1, Math.ceil(remainMs / 86400000))
+				return `${days} 天内有效`
+			},
+			codeSlots() {
+				const digits = normalizeSixDigits(this.inputCode)
+				return Array.from({ length: 6 }, (_, i) => digits[i] || '')
+			},
+			inviteBadgeText() {
+				if (this.inviteLoading || !this.invite) return '7 天有效'
+				if (this.invite.status === 'valid') return '7 天有效'
+				if (this.invite.status === 'expired') return '已过期'
+				if (this.invite.status === 'used') return '已失效'
+				if (this.invite.status === 'self') return '本人邀请'
+				return '无效邀请'
 			},
 			historyList() {
 				return Array.isArray(this.centerData.historyList) ? this.centerData.historyList : []
 			},
-			canSendRequest() {
-				return Boolean(this.centerData.canSendRequest)
-			},
-			relationStatusText() {
-				if (!this.isLoggedIn) {
-					return '未登录'
-				}
-
-				if (this.activeCouple) {
-					return '已绑定'
-				}
-
-				if (this.incomingRequests.length) {
-					return '待处理'
-				}
-
-				if (this.outgoingRequests.length) {
-					return '等待回应'
-				}
-
-				return '未绑定'
-			},
-			overviewDesc() {
-				if (!this.isLoggedIn) {
-					return '登录后即可查看当前情侣关系、处理绑定请求，并查看历史记录。'
-				}
-
-				if (this.activeCouple) {
-					return `当前已与 ${this.activeCouple.partnerNickname || '另一半'} 完成绑定，可在下方继续管理当前关系。`
-				}
-
-				if (this.incomingRequests.length) {
-					return `你有 ${this.incomingRequests.length} 条待处理的绑定请求，只能确认其中一个人完成绑定。`
-				}
-
-				if (this.outgoingRequests.length) {
-					return `你已发出 ${this.outgoingRequests.length} 条绑定请求，正在等待对方回应。`
-				}
-
-				return '复制自己的 ID 或填写对方 ID，即可开始创建情侣绑定关系。'
-			},
-			titleBlockCountText() {
-				if (!this.isLoggedIn) {
-					return '登录后可查看请求与绑定记录'
-				}
-
-				return `待处理 ${this.incomingRequests.length} · 已发出 ${this.outgoingRequests.length} · 历史 ${this.historyList.length}`
-			},
-			primaryCardTitle() {
-				return this.activeCouple ? this.activeRelationTitle : this.selfRelationTitle
-			},
-			primaryCardDesc() {
-				return this.activeCouple ? this.activeRelationDesc : this.selfStatusBarDesc
-			},
-			selfStatusSummary() {
-				if (this.activeCouple) {
-					return `已与 ${this.activeCouple.partnerNickname || '另一半'} 建立情侣关系`
-				}
-
-				if (this.incomingRequests.length) {
-					return `你有 ${this.incomingRequests.length} 条待确认请求，可在下方快速处理`
-				}
-
-				if (this.outgoingRequests.length) {
-					return `已发出 ${this.outgoingRequests.length} 条请求，等待对方同意`
-				}
-
-				return '当前还没有绑定关系，可以复制自己的 ID 或主动发起邀请'
-			},
-			selfStatusBarDesc() {
-				if (this.activeCouple && this.activeCouple.bindDate) {
-					return `绑定日期：${formatDateTime(this.activeCouple.bindDate)}`
-				}
-
-				return '绑定日期：--'
-			},
-			selfMetaValue() {
-				return `ID：${this.selfInfo.uid || '未获取'}`
-			},
-			selfMetaHint() {
-				return !this.activeCouple && !this.incomingRequests.length && !this.outgoingRequests.length
-					? this.selfStatusSummary
-					: ''
-			},
-			selfRelationTitle() {
-				const selfName = this.selfInfo.nickname || '微信用户'
-				const partnerName = this.activeCouple && this.activeCouple.partnerNickname
-					? this.activeCouple.partnerNickname
-					: '待绑定'
-				return `${selfName} & ${partnerName}`
-			},
-			activeRelationTitle() {
+			bindMethodText() {
 				if (!this.activeCouple) {
-					return this.selfRelationTitle
+					return ''
 				}
-
-				const selfName = this.selfInfo.nickname || '微信用户'
-				const partnerName = this.activeCouple.partnerNickname || '待绑定'
-				return `${selfName} & ${partnerName}`
+				const raw = String(
+					this.activeCouple.bindSource
+					|| this.activeCouple.bind_source
+					|| this.activeCouple.bindType
+					|| this.activeCouple.bind_type
+					|| ''
+				).trim()
+				const key = raw.toLowerCase()
+				if (key === 'code' || key === 'bind_code' || key === '6digit') {
+					return '6 位数字绑定码'
+				}
+				if (key === 'invite' || key === 'share' || key === 'wechat_share') {
+					return '微信好友邀请'
+				}
+				if (key === 'qrcode' || key === 'scan') {
+					return '扫码绑定'
+				}
+				if (!key || key === 'uid' || key === 'request' || key === 'legacy') {
+					return '用户 ID 双向确认'
+				}
+				return raw
 			},
-			activeRelationDesc() {
+			boundDaysSubtitle() {
 				if (!this.activeCouple || !this.activeCouple.bindDate) {
-					return '已完成绑定'
+					return '已绑定双人共享空间'
 				}
-
-				return `已绑定于 ${formatDateTime(this.activeCouple.bindDate)}`
+				const start = new Date(this.activeCouple.bindDate)
+				const now = new Date()
+				const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()
+				const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+				const days = Math.max(1, Math.floor((today - startDay) / 86400000) + 1)
+				return `${formatDateDot(this.activeCouple.bindDate)} 起 · 已绑定第 ${days} 天`
 			},
 			relationshipOverviewStats() {
 				const metrics = this.activeCouple && this.activeCouple.metrics ? this.activeCouple.metrics : {}
@@ -579,88 +564,36 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 						: 0
 				)
 
-				if (this.activeCouple) {
-					return [{
-						label: '共同纪念日',
-						value: `${anniversaryCount}`
-					}, {
-						label: '双人动态',
-						value: `${momentCount}`
-					}, {
-						label: '愿望',
-						value: `${wishCount}`
-					}]
-				}
-
 				return [{
 					label: '共同纪念日',
-					value: '--'
+					value: `${anniversaryCount}`
 				}, {
-					label: '双人动态',
-					value: '0'
+					label: '双人日常',
+					value: `${momentCount}`
 				}, {
-					label: '愿望',
-					value: '0'
+					label: '共同愿望',
+					value: `${wishCount}`
 				}]
-			},
-			requestFormTipText() {
-				if (this.canSendRequest) {
-					return '发送后，对方会在自己的情侣页看到这条待处理请求。'
-				}
-
-				if (this.outgoingRequests.length) {
-					return '你已经发出过绑定请求，请等待对方确认，或在“我发出”中撤回后再发送新的请求。'
-				}
-
-				return '当前状态暂时无法发送新的绑定请求。'
-			},
-			requestTabOptions() {
-				return [{
-					name: '待处理'
-				}, {
-					name: '我发出'
-				}, {
-					name: this.activeCouple ? '其他记录' : '历史记录'
-				}]
-			},
-			activeTabKey() {
-				return TAB_KEYS[this.activeTabIndex] || TAB_KEYS[0]
-			},
-			activeTabTitle() {
-				if (this.activeTabKey === 'outgoing') {
-					return '我发出的请求'
-				}
-
-				if (this.activeTabKey === 'history') {
-					return this.activeCouple ? '其他绑定记录' : '绑定记录'
-				}
-
-				return '待处理请求'
-			},
-			activeTabDesc() {
-				if (this.activeTabKey === 'outgoing') {
-					return '这里会展示你主动发起的绑定请求，必要时可以直接撤回。'
-				}
-
-				if (this.activeTabKey === 'history') {
-					return '已经完成或结束的绑定关系会保留在这里，信息会按规则脱敏展示。'
-				}
-
-				return '收到的绑定邀请会显示在这里，你只能确认其中一个人完成绑定。'
-			},
-			activeTabCountText() {
-				const count = this.getRecordsByKey(this.activeTabKey).length
-				return count ? `${count} 条` : ''
 			}
 		},
-		onLoad() {
-			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
-			if (!requirePageLogin()) return
+		onLoad(options = {}) {
+			if (!requirePageLogin({ route: '/pages/couple/index', options })) return
+			const code = normalizeSixDigits(options.inviteCode || options.code || '')
+			if (code.length === 6) {
+				this.inviteMode = true
+				this.inviteCode = code
+			}
 			this.ensureAppStateStore()
 			this.syncCenterDataFromStore()
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
 			})
+			if (this.inviteMode) {
+				this.loadInvitePreview(this.inviteCode)
+			}
+		},
+		onPageScroll(e) {
+			this.scrollTop = e && e.scrollTop ? e.scrollTop : 0
 		},
 		onShow() {
 			this.restoreLoginState()
@@ -672,6 +605,14 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				force: true
 			})
 		},
+		onShareAppMessage() {
+			const name = this.selfInfo.nickname || '我'
+			const code = this.myBindCode
+			return {
+				title: `${name} 邀请你在恋人手札开启双人空间`,
+				path: code ? `/pages/couple/index?inviteCode=${code}` : '/pages/couple/index'
+			}
+		},
 		onUnload() {
 			if (this.removeAuthListener) {
 				this.removeAuthListener()
@@ -680,6 +621,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		},
 		methods: {
 			formatDateTime,
+			formatSpacedCode,
+			shortChar(name = '', fallback = '我') {
+				const text = String(name || '').trim()
+				return text ? text.slice(0, 1) : fallback
+			},
 			ensureAppStateStore() {
 				if (!this.appStateStore) {
 					this.appStateStore = useAppStateStore()
@@ -689,7 +635,6 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			syncCenterDataFromStore() {
 				const appStateStore = this.ensureAppStateStore()
 				this.centerData = appStateStore.coupleCenterData || getDefaultCenterData()
-				this.syncActiveTabIndex()
 			},
 			formatHistoryPeriod(item = {}) {
 				const parts = []
@@ -701,82 +646,31 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				}
 				return parts.length ? parts.join(' · ') : '暂未记录时间'
 			},
-			getRecordsByKey(key = 'incoming') {
-				if (key === 'outgoing') {
-					return this.outgoingRequests
-				}
-
-				if (key === 'history') {
-					return this.historyList
-				}
-
-				return this.incomingRequests
-			},
-			getHistoryTagStyle(statusText = '') {
+			historyTagTone(statusText = '') {
 				const text = String(statusText || '')
-				if (text.includes('解绑')) {
-					return {
-						background: 'rgba(255, 244, 239, 0.98)',
-						color: '#b5715d'
-					}
-				}
-
-				if (text.includes('撤回') || text.includes('关闭')) {
-					return {
-						background: 'rgba(249, 242, 238, 0.98)',
-						color: '#a88478'
-					}
-				}
-
-				if (text.includes('绑定')) {
-					return {
-						background: 'rgba(255, 239, 231, 0.98)',
-						color: '#c4684f'
-					}
-				}
-
-				return {
-					background: 'rgba(255, 246, 241, 0.98)',
-					color: '#b97862'
-				}
-			},
-			handleTabChange(event = {}) {
-				const nextIndex = Number(event.index || 0)
-				this.activeTabIndex = Number.isNaN(nextIndex) ? 0 : nextIndex
+				if (text.includes('解绑')) return 'coral'
+				if (text.includes('绑定')) return 'green'
+				return 'muted'
 			},
 			resetCenterData() {
 				this.centerData = getDefaultCenterData()
 				this.ensureAppStateStore().updateCoupleCenterData(getDefaultCenterData(), {
 					markFetched: false
 				})
-				this.activeTabIndex = 0
-				this.resetTargetForm()
-			},
-			resetTargetForm() {
-				this.targetUid = ''
-				this.targetUidError = ''
-			},
-			syncActiveTabIndex() {
-				const recordGroups = [this.incomingRequests, this.outgoingRequests, this.historyList]
-				const currentList = recordGroups[this.activeTabIndex]
-				if (Array.isArray(currentList) && currentList.length) {
-					return
-				}
-
-				const nextIndex = recordGroups.findIndex((item) => Array.isArray(item) && item.length)
-				this.activeTabIndex = nextIndex === -1 ? 0 : nextIndex
+				this.inputCode = ''
+				this.inputCodeError = ''
 			},
 			applyCenterData(result = {}) {
 				this.centerData = {
 					selfInfo: result.selfInfo || null,
 					activeCouple: result.activeCouple || null,
+					bindCodeInfo: result.bindCodeInfo || null,
 					incomingRequests: Array.isArray(result.incomingRequests) ? result.incomingRequests : [],
 					outgoingRequests: Array.isArray(result.outgoingRequests) ? result.outgoingRequests : [],
 					historyList: Array.isArray(result.historyList) ? result.historyList : [],
 					canSendRequest: Boolean(result.canSendRequest)
 				}
 				this.ensureAppStateStore().updateCoupleCenterData(this.centerData)
-				this.syncActiveTabIndex()
 			},
 			async restoreLoginState() {
 				const appStateStore = this.ensureAppStateStore()
@@ -796,7 +690,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 
 				try {
 					await appStateStore.fetchCoupleCenter({
-						force: false
+						force: !this.activeCouple && !this.myBindCode
 					})
 					this.syncCenterDataFromStore()
 				} catch (error) {
@@ -826,88 +720,151 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					}
 				}
 			},
+			async loadInvitePreview(code) {
+				if (!code || this.inviteLoading) {
+					return
+				}
+				this.inviteLoading = true
+				try {
+					const result = await getCoupleApi().getInvitePreview({ code })
+					if (result && result.errCode && result.errCode !== 0) {
+						throw new Error(result.errMsg || '获取邀请信息失败')
+					}
+					this.invite = (result && result.invite) || {
+						status: 'invalid',
+						statusText: '邀请码无效',
+						code
+					}
+				} catch (error) {
+					this.invite = {
+						status: 'invalid',
+						statusText: error.message || '获取邀请信息失败',
+						code
+					}
+				} finally {
+					this.inviteLoading = false
+				}
+			},
+			exitInviteMode() {
+				this.inviteMode = false
+				this.invite = null
+				this.inviteCode = ''
+			},
 			goToLoginPage() {
+				const query = this.inviteCode ? `?inviteCode=${this.inviteCode}` : ''
 				uni.redirectTo({
-					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/couple/index')
+					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/couple/index' + query)
 				})
 			},
 			backToProfile() {
-				uni.switchTab({
-					url: '/pages/profile/index'
-				})
+				navigateToTab('/pages/profile/index')
 			},
-			onTargetUidInput(value) {
-				this.targetUid = `${value || ''}`.trim()
-				if (this.targetUidError) {
-					this.targetUidError = ''
+			goHome() {
+				goHomeTab()
+			},
+			onCodeNativeInput(event) {
+				const raw = event && event.detail ? event.detail.value : ''
+				this.inputCode = normalizeSixDigits(raw)
+				if (this.inputCodeError) {
+					this.inputCodeError = ''
 				}
 			},
-			onTargetUidBlur(event) {
-				const value = event && event.detail ? event.detail.value : this.targetUid
-				this.targetUid = `${value || ''}`.trim()
-			},
-			validateTargetUid() {
-				const value = `${this.targetUid || ''}`.trim()
-				if (!value) {
-					this.targetUidError = '请输入对方的用户 ID'
-					return false
-				}
-
-				if (this.selfInfo.uid && value === this.selfInfo.uid) {
-					this.targetUidError = '不能向自己发起绑定请求'
-					return false
-				}
-
-				this.targetUidError = ''
-				return true
-			},
-			copySelfUid() {
-				if (!this.selfInfo.uid) {
+			copyMyBindCode() {
+				if (!this.myBindCode) {
 					uni.showToast({
-						title: '当前未获取到用户 ID',
+						title: '正在生成绑定码，请稍候',
 						icon: 'none'
 					})
 					return
 				}
-
 				uni.setClipboardData({
-					data: this.selfInfo.uid,
+					data: this.myBindCode,
 					success: () => {
 						uni.showToast({
-							title: '复制成功',
+							title: '绑定码已复制',
 							icon: 'success'
 						})
 					}
 				})
 			},
-			async handleSendRequest() {
-				if (this.actionLoading || !this.validateTargetUid()) {
+			async handleRefreshCode() {
+				if (this.actionLoading) {
 					return
 				}
-
-				this.actionLoading = 'send'
+				this.actionLoading = 'refresh'
 				try {
-					const result = await getCoupleApi().sendRequest({
-						targetUid: this.targetUid
-					})
-					if (result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '发送绑定请求失败')
+					const result = await getCoupleApi().refreshBindCode()
+					if (result && result.errCode && result.errCode !== 0) {
+						throw new Error(result.errMsg || '刷新绑定码失败')
 					}
-
 					this.applyCenterData(result)
-					this.ensureAppStateStore().invalidateRelationCounters()
-					this.resetTargetForm()
 					uni.showToast({
-						title: result.errMsg || '绑定请求已发送',
+						title: '已生成新的 6 位绑定码',
 						icon: 'success'
 					})
 				} catch (error) {
 					uni.showToast({
-						title: error.message || '发送绑定请求失败',
+						title: error.message || '刷新绑定码失败',
 						icon: 'none'
 					})
 				} finally {
 					this.actionLoading = ''
+				}
+			},
+			async handleBindByCode() {
+				if (this.actionLoading) {
+					return
+				}
+				const code = normalizeSixDigits(this.inputCode)
+				if (code.length !== 6) {
+					this.inputCodeError = '请输入完整的 6 位数字绑定码'
+					return
+				}
+				if (this.myBindCode && code === this.myBindCode) {
+					this.inputCodeError = '不能输入自己的绑定码'
+					return
+				}
+				await this.submitBindByCode(code, 'code')
+			},
+			async handleAcceptInvite() {
+				if (this.actionLoading || !this.invite || this.invite.status !== 'valid') {
+					return
+				}
+				await this.submitBindByCode(this.inviteCode, 'invite')
+			},
+			async submitBindByCode(code, source = 'code') {
+				this.actionLoading = 'bind'
+				this.inputCodeError = ''
+				uni.showLoading({
+					title: '正在绑定',
+					mask: true
+				})
+				try {
+					const result = await getCoupleApi().bindByCode({ code, source })
+					if (result && result.errCode && result.errCode !== 0) {
+						throw new Error(result.errMsg || '绑定失败')
+					}
+					this.applyCenterData(result)
+					this.ensureAppStateStore().invalidateRelationCounters()
+					this.inputCode = ''
+					this.inviteMode = false
+					this.invite = null
+					uni.showToast({
+						title: '绑定成功！双人空间已开启',
+						icon: 'success'
+					})
+				} catch (error) {
+					const msg = error.message || '绑定失败'
+					if (source === 'code') {
+						this.inputCodeError = msg
+					}
+					uni.showToast({
+						title: msg,
+						icon: 'none'
+					})
+				} finally {
+					this.actionLoading = ''
+					uni.hideLoading()
 				}
 			},
 			confirmAction({ title = '提示', content = '确定继续吗？' } = {}) {
@@ -924,92 +881,15 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					})
 				})
 			},
-			async handleReviewRequest(item, action) {
-				if (!item || !item.requestId || this.actionLoading) {
-					return
-				}
-
-				const isAccept = action === 'accept'
-				const confirmed = await this.confirmAction({
-					title: isAccept ? '确认绑定' : '拒绝请求',
-					content: isAccept
-						? '确认后会立即完成绑定，并自动关闭其他待处理请求。'
-						: '确认后将关闭这条绑定请求。'
-				})
-				if (!confirmed) {
-					return
-				}
-
-				this.actionLoading = `${action}-${item.requestId}`
-				try {
-					const result = await getCoupleApi().reviewRequest({
-						requestId: item.requestId,
-						action
-					})
-					if (result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '处理绑定请求失败')
-					}
-
-					this.applyCenterData(result)
-					this.ensureAppStateStore().invalidateRelationCounters()
-					uni.showToast({
-						title: result.errMsg || (isAccept ? '绑定成功' : '已拒绝请求'),
-						icon: isAccept ? 'success' : 'none'
-					})
-				} catch (error) {
-					uni.showToast({
-						title: error.message || '处理绑定请求失败',
-						icon: 'none'
-					})
-				} finally {
-					this.actionLoading = ''
-				}
-			},
-			async handleCancelRequest(item) {
-				if (!item || !item.requestId || this.actionLoading) {
-					return
-				}
-
-				const confirmed = await this.confirmAction({
-					title: '撤回请求',
-					content: '撤回后，对方将不再看到这条待处理请求。'
-				})
-				if (!confirmed) {
-					return
-				}
-
-				this.actionLoading = `cancel-${item.requestId}`
-				try {
-					const result = await getCoupleApi().cancelRequest({
-						requestId: item.requestId
-					})
-					if (result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '撤回绑定请求失败')
-					}
-
-					this.applyCenterData(result)
-					this.ensureAppStateStore().invalidateRelationCounters()
-					uni.showToast({
-						title: result.errMsg || '已撤回绑定请求',
-						icon: 'none'
-					})
-				} catch (error) {
-					uni.showToast({
-						title: error.message || '撤回绑定请求失败',
-						icon: 'none'
-					})
-				} finally {
-					this.actionLoading = ''
-				}
-			},
 			async handleUnbind() {
 				if (!this.activeCouple || this.actionLoading) {
 					return
 				}
 
+				const pointsNotice = await this.fetchPointsClearNotice()
 				const confirmed = await this.confirmAction({
-					title: '解绑当前关系',
-					content: '解绑后才能重新绑定其他人，当前绑定关系会保留在历史记录中。'
+					title: '解除当前关系',
+					content: `解绑后才能重新绑定其他人，当前绑定关系会保留在历史记录中。${pointsNotice}`
 				})
 				if (!confirmed) {
 					return
@@ -1026,8 +906,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 
 					this.applyCenterData(result)
 					this.ensureAppStateStore().invalidateRelationCounters()
+					const cleared = Number(result.pointsCleared || 0)
 					uni.showToast({
-						title: result.errMsg || '已解绑当前情侣关系',
+						title: cleared > 0
+							? `已解绑，${cleared} 心动点已清零`
+							: (result.errMsg || '已解绑当前情侣关系'),
 						icon: 'none'
 					})
 				} catch (error) {
@@ -1038,255 +921,774 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				} finally {
 					this.actionLoading = ''
 				}
+			},
+			async fetchPointsClearNotice() {
+				try {
+					const result = await getPointsApi().getSummary()
+					const balance = Number((result && result.data && result.data.balance) || 0)
+					if (result && result.errCode && result.errCode !== 0) {
+						return '\n解绑后心动点将全部清零。'
+					}
+					return balance > 0
+						? `\n解绑后你的心动点（${balance}）将清零且无法恢复。`
+						: '\n解绑后心动点将全部清零。'
+				} catch (error) {
+					return '\n解绑后心动点将全部清零。'
+				}
 			}
 		}
 	}
 </script>
 
-<style>
-	.couple-page {
+<style scoped>
+	.cp-page {
+		position: relative;
+		box-sizing: border-box;
+		min-height: 100vh;
 		padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
-	}
-
-	.couple-title-block {
-		padding-top: 8rpx;
-		padding-left: 0;
-		padding-right: 0;
-	}
-
-	.couple-title-block__status {
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 16rpx;
-		margin-top: 24rpx;
-	}
-
-	.couple-title-block__count {
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: #a37a6f;
-	}
-
-	.couple-page__body {
-		padding-top: 12rpx;
-	}
-
-	.self-card,
-	.relation-card {
-		background: linear-gradient(180deg, rgba(255, 250, 247, 0.98), rgba(255, 244, 239, 0.72));
-	}
-
-	.relation-stats {
-		display: flex;
-		gap: 18rpx;
-		margin-top: 28rpx;
-	}
-
-	.relation-stats__item {
-		flex: 1;
-		padding: 24rpx 18rpx;
-		border-radius: 26rpx;
-		background: rgba(255, 255, 255, 0.8);
-		text-align: center;
-	}
-
-	.relation-stats__value {
-		display: block;
-		font-size: 40rpx;
-		font-weight: 700;
-		line-height: 1.3;
-		color: #8f4f3e;
-		word-break: break-all;
-	}
-
-	.relation-stats__label {
-		display: block;
-		margin-top: 8rpx;
-		font-size: 22rpx;
-		line-height: 1.5;
-		color: #9a776d;
-	}
-
-	.info-panel {
-		margin-top: 26rpx;
-		padding: 4rpx 22rpx;
-		border-radius: 28rpx;
-		background: rgba(255, 247, 243, 0.92);
-		box-shadow: inset 0 0 0 1rpx rgba(236, 207, 198, 0.7);
+		background: #110D0B;
 		overflow: hidden;
 	}
 
-	.info-panel--relation {
-		margin-top: 22rpx;
+	.cp-page--bound {
+		padding-bottom: calc(176rpx + env(safe-area-inset-bottom));
 	}
 
-	.info-row {
+	.cp-glow {
+		position: fixed;
+		width: 420rpx;
+		height: 420rpx;
+		border-radius: 50%;
+		filter: blur(80rpx);
+		opacity: 0.2;
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	.cp-glow--left {
+		top: -120rpx;
+		left: -140rpx;
+		background: #E2643F;
+	}
+
+	.cp-glow--right {
+		top: 320rpx;
+		right: -160rpx;
+		background: #D8B08C;
+	}
+
+	.cp-nav-pill {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 16rpx;
-		width: 100%;
+		justify-content: center;
+		height: 52rpx;
+		padding: 0 22rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.44);
+		background: rgba(216, 176, 140, 0.10);
 	}
 
-	.info-row__body {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.info-row__label {
-		display: block;
+	.cp-nav-pill__txt {
 		font-size: 22rpx;
-		color: #a27a6f;
+		color: #EAD4BC;
+		white-space: nowrap;
 	}
 
-	.info-row__value {
-		display: block;
-		margin-top: 8rpx;
-		font-size: 26rpx;
-		line-height: 1.6;
-		color: #5a3427;
-		word-break: break-all;
+	.cp-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 12rpx 36rpx 0;
 	}
 
-	.info-row__value--compact {
-		font-size: 28rpx;
-		font-weight: 700;
-	}
-
-	.info-row__hint {
-		display: block;
-		margin-top: 10rpx;
-		font-size: 22rpx;
-		line-height: 1.7;
-		color: #8f6a61;
-		word-break: break-all;
-	}
-
-	.info-row__value--accent {
-		color: #c4684f;
-	}
-
-	.relation-card__notice {
-		margin-top: 24rpx;
-	}
-
-	.request-form__intro {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 16rpx;
-		padding: 24rpx;
-		border-radius: 28rpx;
-		background: rgba(255, 248, 244, 0.94);
-		box-shadow: inset 0 0 0 1rpx rgba(238, 209, 199, 0.68);
-	}
-
-	.request-form__desc {
-		font-size: 23rpx;
-		line-height: 1.8;
-		color: #906b61;
-	}
-
-	.request-form .love-form-item {
-		margin-top: 24rpx;
-	}
-
-	.request-form__error {
-		display: block;
-		margin-top: 12rpx;
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: #da5a41;
-	}
-
-	.request-form__actions {
-		margin-top: 0;
-	}
-
-	.records-card__desc {
-		display: block;
-		margin-top: 16rpx;
-		padding: 0 4rpx;
-		font-size: 22rpx;
-		line-height: 1.7;
-		color: #976f64;
-	}
-
-	.records-card__body {
+	.cp-auth {
 		margin-top: 20rpx;
 	}
 
-	.records-list {
-		padding: 4rpx 8rpx;
-		border-radius: 26rpx;
-		background: rgba(255, 247, 243, 0.86);
-		box-shadow: inset 0 0 0 1rpx rgba(236, 209, 199, 0.65);
+	/* ==================== 已绑定态 s31 ==================== */
+
+	.ci-hero {
+		padding: 36rpx 28rpx 30rpx;
+		border-radius: 36rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: linear-gradient(135deg, rgba(216, 176, 140, 0.12), rgba(255, 255, 255, 0.025));
+	}
+
+	.ci-avs {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 24rpx;
+	}
+
+	.ci-av-wrap {
+		position: relative;
+	}
+
+	.ci-av {
+		width: 112rpx;
+		height: 112rpx;
+		border-radius: 50%;
+		border: 2rpx solid rgba(255, 240, 226, 0.50);
+		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		overflow: hidden;
 	}
 
-	.request-item,
-	.history-item {
-		width: 100%;
-		padding: 2rpx 0;
+	.ci-av--alt {
+		background: linear-gradient(135deg, #6D7C74, #3F4C46);
 	}
 
-	.request-item__main,
-	.history-item {
+	.ci-av__img {
+		width: 100%;
+		height: 100%;
+	}
+
+	.ci-av__txt {
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 38rpx;
+		color: #FFF6EC;
+	}
+
+	.ci-gender {
+		position: absolute;
+		right: -2rpx;
+		bottom: -2rpx;
+		width: 34rpx;
+		height: 34rpx;
+		border-radius: 50%;
+		border: 3rpx solid #181310;
 		display: flex;
-		align-items: flex-start;
-		gap: 18rpx;
-		width: 100%;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.request-item__body,
-	.history-item__body {
+	.ci-gender--m {
+		background: #4A8FE2;
+	}
+
+	.ci-gender--f {
+		background: #E26478;
+	}
+
+	.ci-gender__txt {
+		font-size: 19rpx;
+		line-height: 1;
+		color: #FFFFFF;
+		font-weight: 700;
+	}
+
+	.ci-link {
+		width: 108rpx;
+		display: flex;
+		align-items: center;
+		gap: 10rpx;
+	}
+
+	.ci-line {
 		flex: 1;
-		min-width: 0;
+		height: 1rpx;
+		background: rgba(216, 176, 140, 0.46);
 	}
 
-	.request-item__head,
-	.history-item__head {
+	.ci-heart {
+		font-size: 22rpx;
+		color: #E2643F;
+		flex-shrink: 0;
+	}
+
+	.ci-names {
+		margin-top: 22rpx;
+		text-align: center;
+	}
+
+	.ci-names__title {
+		display: block;
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 36rpx;
+		font-weight: 600;
+		color: #FBF4EA;
+	}
+
+	.ci-names__sub {
+		display: block;
+		margin-top: 8rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 21rpx;
+		color: rgba(216, 176, 140, 0.74);
+	}
+
+	.ci-stats {
 		display: flex;
-		align-items: flex-start;
+		margin-top: 28rpx;
+		padding-top: 22rpx;
+		border-top: 1rpx solid rgba(255, 255, 255, 0.07);
+	}
+
+	.ci-stat {
+		flex: 1;
+		text-align: center;
+	}
+
+	.ci-stat + .ci-stat {
+		border-left: 1rpx solid rgba(255, 255, 255, 0.06);
+	}
+
+	.ci-stat__val {
+		display: block;
+		font-family: "Georgia", serif;
+		font-size: 36rpx;
+		font-weight: 500;
+		color: #EAD4BC;
+		line-height: 1.1;
+	}
+
+	.ci-stat__lbl {
+		display: block;
+		margin-top: 6rpx;
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.44);
+	}
+
+	.ci-card {
+		margin-top: 24rpx;
+		padding: 0 28rpx;
+		border-radius: 30rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.ci-row {
+		display: flex;
+		align-items: center;
 		justify-content: space-between;
+		gap: 20rpx;
+		min-height: 94rpx;
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+	}
+
+	.ci-row--last {
+		border-bottom: none;
+	}
+
+	.ci-row__label {
+		font-size: 25rpx;
+		color: rgba(245, 237, 228, 0.60);
+	}
+
+	.ci-row__right {
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
+	}
+
+	.ci-row__val {
+		font-size: 25rpx;
+		color: #FBF4EA;
+	}
+
+	.ci-row__val--mono {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 23rpx;
+		color: #EAD4BC;
+	}
+
+	.ci-hist-panel {
+		padding: 12rpx 0 24rpx;
+		border-top: 1rpx solid rgba(255, 255, 255, 0.055);
+	}
+
+	.ci-hist-empty {
+		display: block;
+		padding: 20rpx 0 4rpx;
+		text-align: center;
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.40);
+	}
+
+	.ci-warn {
+		margin-top: 24rpx;
+		padding: 22rpx 26rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.28);
+		background: rgba(226, 100, 63, 0.07);
+	}
+
+	.ci-warn__txt {
+		font-size: 22rpx;
+		line-height: 1.65;
+		color: rgba(240, 176, 140, 0.86);
+	}
+
+	.ci-foot-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 30;
+		padding: 20rpx 36rpx calc(24rpx + env(safe-area-inset-bottom));
+		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: rgba(17, 13, 11, 0.94);
+	}
+
+	/* ==================== 绑定邀请落地 s16 ==================== */
+
+	.il-wrap {
+		padding-top: 28rpx;
+		text-align: center;
+	}
+
+	.il-card {
+		padding: 44rpx 36rpx;
+		border-radius: 38rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.28);
+		background: linear-gradient(155deg, rgba(226, 124, 78, 0.16), rgba(255, 255, 255, 0.03));
+	}
+
+	.il-loading {
+		font-size: 25rpx;
+		color: rgba(245, 237, 228, 0.56);
+	}
+
+	.il-av {
+		width: 136rpx;
+		height: 136rpx;
+		margin: 0 auto;
+		border-radius: 50%;
+		border: 3rpx solid rgba(255, 240, 226, 0.55);
+		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+	}
+
+	.il-av__img {
+		width: 100%;
+		height: 100%;
+	}
+
+	.il-av__txt {
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 52rpx;
+		color: #FFF7EC;
+	}
+
+	.il-card__title {
+		display: block;
+		margin-top: 28rpx;
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 40rpx;
+		font-weight: 600;
+		color: #FBF4EA;
+	}
+
+	.il-card__desc {
+		display: block;
+		margin-top: 16rpx;
+		font-size: 24rpx;
+		line-height: 1.7;
+		color: rgba(245, 237, 228, 0.58);
+	}
+
+	.il-code-pill {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 28rpx;
+		height: 56rpx;
+		padding: 0 28rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.40);
+		background: rgba(17, 13, 11, 0.55);
+	}
+
+	.il-code-pill__txt {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 24rpx;
+		letter-spacing: 3rpx;
+		color: #EAD4BC;
+	}
+
+	.il-status-warn {
+		margin-top: 24rpx;
+		padding: 20rpx 24rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		background: rgba(226, 100, 63, 0.12);
+	}
+
+	.il-status-warn__txt {
+		font-size: 23rpx;
+		color: #F5B496;
+	}
+
+	.il-feats {
+		margin-top: 30rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 14rpx;
+		text-align: left;
+	}
+
+	.il-feat {
+		display: flex;
+		align-items: center;
+		gap: 16rpx;
+		padding: 20rpx 24rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.028);
+	}
+
+	.il-dot {
+		width: 10rpx;
+		height: 10rpx;
+		border-radius: 50%;
+		background: #E5865C;
+		flex-shrink: 0;
+	}
+
+	.il-feat__txt {
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.78);
+		line-height: 1.5;
+	}
+
+	.il-acts {
+		margin-top: 38rpx;
+		display: flex;
+		flex-direction: column;
+		gap: 20rpx;
+	}
+
+	/* ==================== 未绑定 6 位绑定码 s15 ==================== */
+
+	.cb-card {
+		padding: 36rpx 28rpx 32rpx;
+		border-radius: 34rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.03));
+		text-align: center;
+	}
+
+	.cb-kicker {
+		display: block;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		letter-spacing: 3rpx;
+		color: rgba(216, 176, 140, 0.78);
+	}
+
+	.cb-code {
+		display: block;
+		margin-top: 22rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 64rpx;
+		letter-spacing: 12rpx;
+		color: #FBF4EA;
+		font-weight: 600;
+		line-height: 1.15;
+	}
+
+	.cb-meta {
+		display: block;
+		margin-top: 16rpx;
+		font-size: 22rpx;
+		line-height: 1.6;
+		color: rgba(245, 237, 228, 0.48);
+	}
+
+	.cb-acts {
+		display: flex;
+		gap: 16rpx;
+		margin-top: 28rpx;
+	}
+
+	.cb-acts .cp-btn {
+		flex: 1;
+		height: 76rpx;
+	}
+
+	.cp-share-btn {
+		margin: 0;
+		padding: 0;
+		line-height: 1;
+	}
+
+	.cp-share-btn::after {
+		border: none;
+	}
+
+	.cb-div {
+		display: flex;
+		align-items: center;
+		gap: 20rpx;
+		margin: 36rpx 0 28rpx;
+	}
+
+	.cb-div__line {
+		flex: 1;
+		height: 1rpx;
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.cb-div__txt {
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.40);
+	}
+
+	.cb-label {
+		display: block;
+		margin-bottom: 18rpx;
+		font-size: 24rpx;
+		color: rgba(216, 176, 140, 0.78);
+	}
+
+	.cb-slots-wrap {
+		position: relative;
+	}
+
+	.cb-slots {
+		display: grid;
+		grid-template-columns: repeat(6, 1fr);
 		gap: 14rpx;
 	}
 
-	.request-item__name,
-	.history-item__name {
-		flex: 1;
-		min-width: 0;
-		font-size: 28rpx;
-		font-weight: 700;
-		line-height: 1.5;
-		color: #5a3427;
-		word-break: break-all;
+	.cb-slot {
+		height: 94rpx;
+		border-radius: 22rpx;
+		border: 1.5rpx solid rgba(216, 176, 140, 0.36);
+		background: rgba(255, 255, 255, 0.04);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.request-item__meta,
-	.history-item__meta {
+	.cb-slot--empty {
+		border-color: rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.025);
+	}
+
+	.cb-slot--active {
+		border-color: #E2643F;
+		box-shadow: 0 0 0 3rpx rgba(226, 100, 63, 0.22);
+	}
+
+	.cb-slot__txt {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 40rpx;
+		font-weight: 600;
+		color: #FBF4EA;
+	}
+
+	.cb-slot--empty .cb-slot__txt {
+		color: rgba(245, 237, 228, 0.20);
+	}
+
+	.cb-hidden-input {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 94rpx;
+		opacity: 0;
+		z-index: 2;
+	}
+
+	.cb-error {
 		display: block;
-		margin-top: 8rpx;
+		margin-top: 14rpx;
+		font-size: 22rpx;
+		color: #F08A6C;
+	}
+
+	.cb-submit {
+		margin-top: 30rpx;
+	}
+
+	.cb-reward {
+		margin-top: 28rpx;
+		padding: 20rpx 24rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(132, 190, 156, 0.28);
+		background: rgba(132, 190, 156, 0.07);
+		text-align: center;
+	}
+
+	.cb-reward__txt {
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: #8f6a61;
-		word-break: break-all;
+		color: #9ED6B2;
 	}
 
-	.request-item__actions {
+	.cb-hist-card {
+		margin-top: 28rpx;
+	}
+
+	/* 通用历史条目 / 胶囊 / 按钮 */
+	.cp-list {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 16rpx;
-		margin-top: 22rpx;
+		flex-direction: column;
+		gap: 18rpx;
 	}
 
-	.request-item__actions--single {
-		justify-content: flex-end;
+	.cp-item {
+		display: flex;
+		align-items: center;
+		gap: 18rpx;
 	}
 
-	.records-empty {
-		padding: 32rpx 0 12rpx;
+	.cp-item__ava {
+		flex-shrink: 0;
+		width: 72rpx;
+		height: 72rpx;
+		border-radius: 50%;
+		border: 1.5rpx solid rgba(216, 176, 140, 0.34);
+		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
 	}
 
+	.cp-item__ava-img {
+		width: 100%;
+		height: 100%;
+	}
+
+	.cp-item__ava-txt {
+		font-size: 26rpx;
+		color: #FFF6EC;
+		font-weight: 600;
+	}
+
+	.cp-item__body {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.cp-item__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12rpx;
+	}
+
+	.cp-item__name {
+		font-size: 26rpx;
+		font-weight: 600;
+		color: #FBF4EA;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.cp-item__meta {
+		display: block;
+		margin-top: 6rpx;
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.46);
+	}
+
+	.cp-tag {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 38rpx;
+		padding: 0 16rpx;
+		border-radius: 19rpx;
+	}
+
+	.cp-tag--green {
+		border: 1rpx solid rgba(132, 190, 156, 0.38);
+		background: rgba(132, 190, 156, 0.14);
+	}
+
+	.cp-tag--green .cp-tag__txt {
+		color: #9ED6B2;
+	}
+
+	.cp-tag--coral {
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		background: rgba(226, 100, 63, 0.16);
+	}
+
+	.cp-tag--coral .cp-tag__txt {
+		color: #F5B496;
+	}
+
+	.cp-tag--gold {
+		border: 1rpx solid rgba(216, 176, 140, 0.40);
+		background: rgba(216, 176, 140, 0.14);
+	}
+
+	.cp-tag--gold .cp-tag__txt {
+		color: #EAD4BC;
+	}
+
+	.cp-tag--muted {
+		border: 1rpx solid rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.cp-tag--muted .cp-tag__txt {
+		color: rgba(245, 237, 228, 0.56);
+	}
+
+	.cp-tag__txt {
+		font-size: 20rpx;
+		font-weight: 600;
+	}
+
+	.cp-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 88rpx;
+		border-radius: 44rpx;
+	}
+
+	.cp-btn--primary {
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 26rpx rgba(222, 95, 60, 0.26);
+	}
+
+	.cp-btn--ghost {
+		border: 1rpx solid rgba(216, 176, 140, 0.36);
+		background: rgba(216, 176, 140, 0.08);
+	}
+
+	.cp-btn--danger {
+		border: 1rpx solid rgba(226, 100, 63, 0.46);
+		background: rgba(226, 100, 63, 0.14);
+	}
+
+	.cp-btn--disabled {
+		opacity: 0.45;
+	}
+
+	.cp-btn--hover {
+		opacity: 0.86;
+	}
+
+	.cp-btn__txt {
+		font-size: 27rpx;
+		font-weight: 600;
+		color: #FFF7EF;
+	}
+
+	.cp-btn__txt--ghost {
+		color: #EAD4BC;
+	}
+
+	.cp-btn__txt--danger {
+		color: #F5A384;
+	}
+
+	.ad-view {
+		margin-top: 32rpx;
+	}
 </style>

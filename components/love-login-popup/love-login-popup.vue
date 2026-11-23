@@ -169,20 +169,21 @@
 	.login-popup__mask {
 		position: absolute;
 		inset: 0;
-		background: rgba(83, 42, 28, 0.38);
-		backdrop-filter: blur(10rpx);
+		background: rgba(8, 6, 5, 0.72);
+		backdrop-filter: blur(12rpx);
 	}
 
 	.login-popup__panel {
 		position: absolute;
-		left: 24rpx;
-		right: 24rpx;
+		left: 28rpx;
+		right: 28rpx;
 		top: 50%;
 		transform: translateY(-50%);
 		padding: 36rpx 32rpx;
 		border-radius: 36rpx;
-		background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 239, 0.98));
-		box-shadow: 0 24rpx 60rpx rgba(173, 109, 77, 0.18);
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: linear-gradient(155deg, #231B16 0%, #16110E 100%);
+		box-shadow: 0 28rpx 68rpx rgba(0, 0, 0, 0.62);
 	}
 
 	.login-popup__header {
@@ -194,18 +195,20 @@
 
 	.login-popup__eyebrow {
 		display: block;
-		font-size: 22rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
 		letter-spacing: 4rpx;
-		color: #b98069;
-		margin-bottom: 14rpx;
+		color: #D8B08C;
+		margin-bottom: 12rpx;
 	}
 
 	.login-popup__title {
 		display: block;
-		font-size: 42rpx;
-		font-weight: 700;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
+		font-size: 40rpx;
+		font-weight: 600;
 		line-height: 1.3;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.login-popup__desc,
@@ -214,18 +217,18 @@
 		margin-top: 14rpx;
 		font-size: 24rpx;
 		line-height: 1.7;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.56);
 		word-break: break-all;
 	}
 
 	.login-popup__target {
-		color: #c0674d;
+		color: #E5865C;
 	}
 
 	.login-popup__close {
 		flex-shrink: 0;
 		font-size: 24rpx;
-		color: #a97a6c;
+		color: rgba(245, 237, 228, 0.46);
 	}
 
 	.editor-card {
@@ -234,8 +237,9 @@
 		gap: 24rpx;
 		margin-top: 30rpx;
 		padding: 24rpx;
-		border-radius: 28rpx;
-		background: rgba(255, 255, 255, 0.76);
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.035);
 	}
 
 	.avatar-button {
@@ -243,7 +247,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		width: 200rpx;
+		width: 190rpx;
 		padding: 0;
 		background: transparent;
 		border: 0;
@@ -258,14 +262,14 @@
 		width: 116rpx;
 		height: 116rpx;
 		border-radius: 50%;
-		background: #fff1eb;
-		box-shadow: 0 12rpx 24rpx rgba(177, 114, 83, 0.14);
+		border: 2rpx solid rgba(216, 176, 140, 0.46);
+		background: #231C18;
 	}
 
 	.avatar-button__hint {
 		margin-top: 14rpx;
 		font-size: 22rpx;
-		color: #a17567;
+		color: #D8B08C;
 	}
 
 	.editor-card__body {
@@ -274,18 +278,19 @@
 
 	.field-label {
 		display: block;
-		font-size: 24rpx;
-		color: #936d62;
+		font-size: 22rpx;
+		color: rgba(216, 176, 140, 0.78);
 		margin-bottom: 12rpx;
 	}
 
 	.text-input {
-		height: 84rpx;
+		height: 82rpx;
 		padding: 0 22rpx;
-		border-radius: 22rpx;
-		background: #fffaf7;
-		font-size: 28rpx;
-		color: #5a3427;
+		border-radius: 20rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.09);
+		background: rgba(255, 255, 255, 0.04);
+		font-size: 26rpx;
+		color: #FBF4EA;
 	}
 
 	.field-tip,
@@ -294,30 +299,32 @@
 		margin-top: 12rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: #a07b70;
+		color: rgba(245, 237, 228, 0.44);
 	}
 
 	.primary-button {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 88rpx;
-		margin-top: 26rpx;
+		height: 90rpx;
+		margin-top: 28rpx;
 		border: 0;
 		border-radius: 999rpx;
 		font-size: 28rpx;
-		font-weight: 600;
-		line-height: 88rpx;
-		color: #ffffff;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-		box-shadow: 0 16rpx 28rpx rgba(231, 111, 81, 0.28);
+		font-weight: 500;
+		line-height: 90rpx;
+		letter-spacing: 2rpx;
+		color: #FFF7EF;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 16rpx 32rpx rgba(222, 95, 60, 0.28);
 	}
 
 	.notice-card {
 		margin-top: 26rpx;
 		padding: 24rpx;
 		border-radius: 24rpx;
-		background: rgba(255, 246, 241, 0.96);
+		border: 1rpx solid rgba(216, 176, 140, 0.22);
+		background: rgba(216, 176, 140, 0.06);
 	}
 
 	.button-hover {

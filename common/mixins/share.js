@@ -21,6 +21,7 @@
  */
 
 import { hasValidLogin } from '@/common/auth-center.js'
+import { getActiveTabKey, resolveTabKey } from '@/common/utils/tab-nav.js'
 import { useAppStateStore } from '@/store/app-state.js'
 
 /**
@@ -50,7 +51,6 @@ const SHARE_TITLE_MAP = {
 	'/pages/profile/index': '恋人手札｜我们的小世界',
 	'/pages/couple/index': '恋人手札｜我们的小世界',
 	'/pages/album/list': '恋人手札｜我们的照片墙',
-	'/pages/album/detail': '恋人手札｜翻开我们的相册',
 	'/pages/plan/list': '恋人手札｜想要一起做的事',
 	'/pages/anniversary/list': '恋人手札｜值得记住的日子'
 }
@@ -69,6 +69,16 @@ const HIDE_SHARE_PAGES = [
 ]
 
 /**
+ * 首页容器页里不参与分享的 Tab。
+ *
+ * ⚠️ feed（双人日常）与 HIDE_SHARE_PAGES 同理：它是用户自行发布的图文 UGC，
+ * 微信按「社交-笔记」类目驳回过一次（个人主体不可选）。首页内嵌的 feed Tab
+ * 只要能被分享卡片的 path 直接打开，就等于把 UGC 入口递给了审核员。
+ * 所以在 feed Tab 下分享一律回落 home；要放开就把它从数组里删掉。
+ */
+const SHARE_BLOCKED_TABS = ['feed']
+
+/**
  * 转发时强制落地首页，而不是当前页。
  * 这些页面本身不适合对外展示（编辑态表单、或个人私密提交内容），
  * 落地首页能让被分享者从一个完整可用的页面开始浏览。
@@ -77,7 +87,6 @@ const HIDE_SHARE_PAGES = [
 const LANDING_HOME_PAGES = [
 	'/pages/profile/edit',
 	'/pages/album/upload',
-	'/pages/album/edit',
 	'/pages/anniversary/edit',
 	'/pages/feedback/list',
 	'/pages/feedback/detail'
@@ -181,6 +190,30 @@ export function resolveCurrentFullPath(context) {
 		.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
 		.join('&')
 	return `${route}?${query}`
+}
+
+/**
+ * 取分享卡片要落地的 Tab：以页面实例当前的 activeTab 为准（用户看到哪个就分享哪个），
+ * 兜底走全局总线 getActiveTabKey()。被禁分享的 Tab（feed）回落 home。
+ * @param {object} [context] mixin 钩子里的 this
+ * @returns {string}
+ */
+function resolveShareTabKey(context) {
+	const rawKey = (context && context.activeTab) || getActiveTabKey()
+	const key = resolveTabKey(rawKey)
+	return SHARE_BLOCKED_TABS.indexOf(key) === -1 ? key : resolveTabKey('home')
+}
+
+/**
+ * 首页容器页的分享路径：/pages/index/index?tab=xxx
+ *
+ * 不复用 $page.fullPath —— 它是冷启动时的原始地址（可能是 ?tab=game，也可能没有参数），
+ * 用户在页内切过 Tab 之后就已经过期，分享卡会落到错的 Tab 上。
+ * @param {object} [context] mixin 钩子里的 this
+ * @returns {string}
+ */
+function buildHomeSharePath(context) {
+	return `${HOME_PATH}?tab=${encodeURIComponent(resolveShareTabKey(context))}`
 }
 
 /**
@@ -372,8 +405,12 @@ export default {
 			return payload
 		}
 
-		// 正常跳转：落地当前页并保留 query 参数，同时打上分享进入标记供权限校验使用
-		const fullPath = resolveCurrentFullPath(this)
+		// 首页容器页：卡片必须带上「当前激活的 Tab」，被分享者落地后直接进入同一个 Tab
+		// （pages/index/index 的 onLoad 读 options.tab → activateTab + 同步全局总线）
+		// 其余页面：正常跳转，落地当前页并保留 query 参数
+		const fullPath = normalizeRoute(route) === HOME_PATH
+			? buildHomeSharePath(this)
+			: resolveCurrentFullPath(this)
 		if (fullPath) {
 			payload.path = appendShareEntryFlag(fullPath)
 		}
@@ -381,7 +418,10 @@ export default {
 	},
 	onShareTimeline() {
 		const route = resolveCurrentRoute(this)
-		const fullPath = resolveCurrentFullPath(this)
+		// 朋友圈不支持指定 path（只能打开当前页），首页也只能带 query —— 同样按当前 Tab 生成
+		const fullPath = normalizeRoute(route) === HOME_PATH
+			? buildHomeSharePath(this)
+			: resolveCurrentFullPath(this)
 		const queryIndex = fullPath.indexOf('?')
 		return {
 			title: resolveShareTitle(route),

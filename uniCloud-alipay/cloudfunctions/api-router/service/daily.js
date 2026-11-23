@@ -18,6 +18,7 @@ const {
 } = require('../lib/media')
 const { DEFAULT_NICKNAME } = require('../lib/constants')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 
 const ALLOWED_MEDIA_TYPES = new Set(['image', 'video'])
 const MAX_CONTENT_LENGTH = 2000
@@ -590,6 +591,14 @@ module.exports = class DailyService extends Service {
 			}
 
 			const result = await dailyPostCollection.add(postData)
+
+			// 心动点：每条 +5，第 6 条起不再计分（上限由 lib/points 统一裁）
+			await pointsLib.awardPoints(uid, 'daily_post', {
+				refId: result.id,
+				coupleId: activeCouple ? activeCouple._id : '',
+				title: '发布双人日常'
+			})
+
 			return {
 				errCode: 0,
 				data: {
@@ -755,6 +764,81 @@ module.exports = class DailyService extends Service {
 			}
 		} catch (error) {
 			return formatError(error, '发表评论失败')
+		}
+	}
+
+	async deleteComment(params = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState.authResult.uid
+			const activeCouple = await getActiveCoupleByUid(uid)
+
+			const postId = String(params.postId || '').trim()
+			const commentId = String(params.commentId || params.comment_id || '').trim()
+			if (!postId || !commentId) {
+				return {
+					errCode: 'love-note-param-required',
+					errMsg: '动态ID和评论ID不能为空'
+				}
+			}
+
+			const postRes = await dailyPostCollection
+				.where(andWhereConditions(
+					buildCreatorVisibilityCondition({
+						uid,
+						activeCouple,
+						creatorField: 'author_uid'
+					}),
+					{
+						_id: postId,
+						is_deleted: false
+					}
+				))
+				.limit(1)
+				.get()
+
+			if (!postRes.data || postRes.data.length === 0) {
+				return {
+					errCode: 'love-note-post-not-found',
+					errMsg: '动态不存在或无权访问'
+				}
+			}
+
+			const post = postRes.data[0]
+			const commentList = normalizeCommentList(post.comment_list || [])
+			const targetIndex = commentList.findIndex((item) => item.comment_id === commentId)
+			if (targetIndex < 0) {
+				return {
+					errCode: 'love-note-comment-not-found',
+					errMsg: '评论不存在或已被删除'
+				}
+			}
+
+			if (String(commentList[targetIndex].uid || '') !== uid) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '仅本人可以删除自己的评论'
+				}
+			}
+
+			const nextCommentList = commentList.filter((item) => item.comment_id !== commentId)
+			const nextCommentCount = nextCommentList.length
+			await dailyPostCollection.doc(postId).update({
+				comment_list: nextCommentList,
+				comment_count: nextCommentCount,
+				update_time: Date.now()
+			})
+
+			return {
+				errCode: 0,
+				data: {
+					postId,
+					commentId,
+					comment_count: nextCommentCount
+				}
+			}
+		} catch (error) {
+			return formatError(error, '删除评论失败')
 		}
 	}
 

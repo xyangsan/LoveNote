@@ -2,38 +2,74 @@
 	"easycom": {
 		"autoscan": true,
 		"custom": {
-			"fui-(.*)": "@/components/firstui/fui-$1/fui-$1.vue"
+			"fui-(.*)": "@/components/firstui/fui-$1/fui-$1.vue",
+			"noir-(.*)": "@/components/noir-$1/noir-$1.vue"
 		}
 	},
 	"pages": [{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "恋人手札"
+				"navigationBarTitleText": "恋人手札",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "light",
+				"backgroundColor": "#110D0B",
+				"backgroundColorTop": "#110D0B",
+				"backgroundColorBottom": "#110D0B"
 			}
 		},
 		{
 			"path": "pages/profile/index",
 			"style": {
-				"navigationStyle": "custom"
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "light",
+				"backgroundColor": "#110D0B",
+				"backgroundColorTop": "#110D0B",
+				"backgroundColorBottom": "#110D0B"
 			}
 		},
 		{
 			"path": "pages/login/index",
 			"style": {
 				"navigationBarTitleText": "微信登录",
-				"navigationStyle": "custom"
+				"navigationStyle": "custom",
+				"backgroundColor": "#110D0B"
 			}
 		},
 		{
 			"path": "pages/profile/edit",
 			"style": {
-				"navigationBarTitleText": "编辑资料"
+				"navigationBarTitleText": "编辑资料",
+				"navigationStyle": "custom"
 			}
 		},
 		{
 			"path": "pages/profile/avatar",
 			"style": {
 				"navigationBarTitleText": "更换头像"
+			}
+		},
+		{
+			"path": "pages/profile/points",
+			"style": {
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "light",
+				"backgroundColor": "#110D0B",
+				"backgroundColorTop": "#110D0B",
+				"backgroundColorBottom": "#110D0B"
+			}
+		},
+		{
+			"path": "pages/profile/points-records",
+			"style": {
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "light",
+				"backgroundColor": "#110D0B",
+				"backgroundColorTop": "#110D0B",
+				"backgroundColorBottom": "#110D0B"
 			}
 		},
 		{
@@ -54,48 +90,15 @@
 			}
 		},
 		{
-			"path": "pages/couple/index",
-			"style": {
-				"navigationBarTitleText": "情侣信息",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/album/list",
-			"style": {
-				"navigationBarTitleText": "相册",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/album/detail",
-			"style": {
-				"navigationBarTitleText": "相册详情",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/album/upload",
-			"style": {
-				"navigationBarTitleText": "上传照片"
-			}
-		},
-		{
-			"path": "pages/album/edit",
-			"style": {
-				"navigationBarTitleText": "编辑相册"
-			}
-		},
-		{
 			"path": "pages/feed/list",
 			"style": {
 				"navigationBarTitleText": "双人日常",
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark",
+				"backgroundTextStyle": "light",
+				"backgroundColor": "#110D0B",
+				"backgroundColorTop": "#110D0B",
+				"backgroundColorBottom": "#110D0B",
 				// #ifdef MP-BAIDU
 				"usingComponents": {
 					"editor": "dynamicLib://editorLib/editor"
@@ -106,134 +109,222 @@
 		{
 			"path": "pages/feed/publish",
 			"style": {
-				"navigationBarTitleText": "发布日常"
-			}
-		},
-		{
-			"path": "pages/plan/list",
-			"style": {
-				"navigationBarTitleText": "愿望清单",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/anniversary/list",
-			"style": {
-				"navigationBarTitleText": "纪念日",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/anniversary/edit",
-			"style": {
-				"navigationBarTitleText": "编辑纪念日"
-			}
-		},
-		{
-			"path": "pages/feedback/index",
-			"style": {
-				"navigationBarTitleText": "反馈与帮助"
-			}
-		},
-		{
-			"path": "pages/feedback/list",
-			"style": {
-				"navigationBarTitleText": "反馈列表",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/feedback/detail",
-			"style": {
-				"navigationBarTitleText": "反馈详情"
-			}
-		},
-		{
-			"path": "pages/game/index",
-			"style": {
-				"navigationBarTitleText": "聚会游戏",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/game/records",
-			"style": {
-				"navigationBarTitleText": "游戏战绩",
-				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "dark"
-			}
-		},
-		{
-			"path": "pages/game/bomb/index",
-			"style": {
-				"navigationBarTitleText": "数字炸弹",
-				"navigationStyle": "custom",
-				"enablePullDownRefresh": false,
-				"disableScroll": true
-			}
-		},
-		{
-			"path": "pages/game/undercover/room",
-			"style": {
-				"navigationBarTitleText": "谁是卧底",
-				"navigationStyle": "custom",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/game/landlord/room",
-			"style": {
-				"navigationBarTitleText": "三人斗地主",
-				"navigationStyle": "custom",
-				"enablePullDownRefresh": false,
-				"disableScroll": true,
-				"pageOrientation": "landscape"
+				"navigationBarTitleText": "发布日常",
+				"navigationStyle": "custom"
 			}
 		}
-],
+	],
 	"subPackages": [
 		{
-			"root": "pages-operations",
+			"root": "pages/couple",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": "情侣信息",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/album",
+			"pages": [
+				{
+					"path": "list",
+					"style": {
+						"navigationBarTitleText": "照片",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				},
+				{
+					"path": "photo-detail",
+					"style": {
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false,
+						"disableScroll": true,
+						"backgroundColor": "#0A0807",
+						"backgroundColorTop": "#0A0807",
+						"backgroundColorBottom": "#0A0807"
+					}
+				},
+				{
+					"path": "upload",
+					"style": {
+						"navigationBarTitleText": "上传照片",
+						"navigationStyle": "custom",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/plan",
+			"pages": [
+				{
+					"path": "list",
+					"style": {
+						"navigationBarTitleText": "愿望单",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/anniversary",
+			"pages": [
+				{
+					"path": "list",
+					"style": {
+						"navigationBarTitleText": "纪念日",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				},
+				{
+					"path": "edit",
+					"style": {
+						"navigationBarTitleText": "编辑纪念日",
+						"navigationStyle": "custom",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/feedback",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": "反馈与帮助",
+						"navigationStyle": "custom",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				},
+				{
+					"path": "list",
+					"style": {
+						"navigationBarTitleText": "反馈列表",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				},
+				{
+					"path": "detail",
+					"style": {
+						"navigationBarTitleText": "反馈详情",
+						"navigationStyle": "custom",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/game",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": "聚会游戏",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
+					}
+				},
+				{
+					"path": "records",
+					"style": {
+						"navigationBarTitleText": "游戏战绩",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "light"
+					}
+				},
+				{
+					"path": "bomb/index",
+					"style": {
+						"navigationBarTitleText": "数字炸弹",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "undercover/room",
+					"style": {
+						"navigationBarTitleText": "谁是卧底",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "landlord/room",
+					"style": {
+						"navigationBarTitleText": "三人斗地主",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false,
+						"disableScroll": true,
+						"pageOrientation": "landscape"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/operations",
 			"pages": [
 				{
 					"path": "index",
 					"style": {
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "dark"
+						"backgroundTextStyle": "light",
+						"backgroundColor": "#110D0B",
+						"backgroundColorTop": "#110D0B",
+						"backgroundColorBottom": "#110D0B"
 					}
 				}
 			]
 		}
 	],
-	"tabBar": {
-		"color": "#707070",
-		"selectedColor": "#EC7558",
-		"backgroundColor": "#FFF7F1",
-		"borderStyle": "black",
-		"list": [{
-				"pagePath": "pages/index/index",
-				"text": "首页",
-				"iconPath": "/static/tabber/home.png",
-				"selectedIconPath": "/static/tabber/home-filling.png"
-			},
-			{
-				"pagePath": "pages/profile/index",
-				"text": "我的",
-				"iconPath": "/static/tabber/me.png",
-				"selectedIconPath": "/static/tabber/me_fill.png"
-			}
-		]
-	},
 	"globalStyle": {
-		"navigationBarTextStyle": "black",
+		"navigationBarTextStyle": "white",
 		"navigationBarTitleText": "",
-		"navigationBarBackgroundColor": "#FFF7F1",
-		"backgroundColor": "#FFF7F1"
+		"navigationBarBackgroundColor": "#110D0B",
+		"backgroundColor": "#110D0B",
+		"backgroundColorTop": "#110D0B",
+		"backgroundColorBottom": "#110D0B",
+		"backgroundTextStyle": "light"
 	},
 	"uniIdRouter": {}
 }

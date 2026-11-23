@@ -25,6 +25,9 @@ module.exports = {
 	uniIdLogCollection: db.collection('uni-id-log'),
 	// 全局配置（运营管理「权限」tab 写入）：feed_visible 等显示开关
 	appSettingCollection: db.collection('love-app-settings'),
+	// 心动点：账户（_id = uid，一人一条）+ 流水（dedupe_key 唯一索引做幂等）
+	pointAccountCollection: db.collection('love-point-accounts'),
+	pointLogCollection: db.collection('love-point-logs'),
 	// 广告收益：由 uni-ad-admin-receiver 云对象每日推送写入（T+1）
 	adpRevenueCollection: db.collection('uni-ad-adp-revenues'),
 	appRevenueCollection: db.collection('uni-ad-app-revenues'),

@@ -126,6 +126,7 @@
 		font-family: fuiFont;
 		text-decoration: none;
 		text-align: center;
+		display: inherit;
 		/* #ifdef H5 */
 		cursor: pointer;
 		/* #endif */

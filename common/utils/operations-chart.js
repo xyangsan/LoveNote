@@ -7,14 +7,15 @@
  * 配色沿用 love-theme：主珊瑚 #ec7558，文字 #a07b70 / #5d372b。
  */
 
-export const CHART_PALETTE = ['#ec7558', '#e79a50', '#6f8dd6', '#5aa469', '#c07bb0', '#b58c7e']
+export const CHART_PALETTE = ['#E5865C', '#D8B08C', '#8FC0BB', '#9ED6B2', '#C08BB8', '#8FA4D6']
 
-const TEXT_COLOR = '#a07b70'
-const TITLE_COLOR = '#5d372b'
-const GRID_COLOR = 'rgba(231, 204, 194, 0.62)'
-const PRIMARY = '#ec7558'
-const PRIMARY_LIGHT = '#ffb199'
-const SECONDARY = '#6f8dd6'
+const CHART_BG = '#181310'
+const TEXT_COLOR = 'rgba(245, 237, 228, 0.56)'
+const TITLE_COLOR = '#FBF4EA'
+const GRID_COLOR = 'rgba(255, 255, 255, 0.08)'
+const PRIMARY = '#E5865C'
+const PRIMARY_LIGHT = '#D8B08C'
+const SECONDARY = '#8FC0BB'
 
 /** 'YYYY-MM-DD' → 'MM/DD'；其他字符串原样返回 */
 function shortDay(dateKey) {
@@ -69,12 +70,13 @@ export function niceCountAxisMax(value, divisions = 4) {
 /** 笛卡尔坐标系骨架（折线 / 柱图共用） */
 function cartesianBase(categories) {
 	return {
+		backgroundColor: CHART_BG,
 		textColor: TEXT_COLOR,
 		animation: true,
 		animationDuration: 520,
 		legend: { show: false },
 		grid: { left: 42, right: 18, top: 16, bottom: 26, showHorizontal: true, showVertical: false, color: GRID_COLOR },
-		tooltip: { show: true, trigger: 'axis', duration: 1600 },
+		tooltip: { show: true, trigger: 'axis', duration: 1600, backgroundColor: 'rgba(26, 21, 18, 0.96)', textColor: '#FBF4EA' },
 		xAxis: {
 			data: categories,
 			axisLabel: { interval: labelInterval(categories.length), color: TEXT_COLOR, fontSize: 10 },
@@ -138,11 +140,12 @@ export function buildModulePenetrationOption(modules = []) {
 	const max = Math.max(20, Math.ceil(peak / 10) * 10)
 
 	return {
+		backgroundColor: CHART_BG,
 		textColor: TEXT_COLOR,
 		animation: true,
 		animationDuration: 520,
 		legend: { show: false },
-		tooltip: { show: true, trigger: 'axis', duration: 1600 },
+		tooltip: { show: true, trigger: 'axis', duration: 1600, backgroundColor: 'rgba(26, 21, 18, 0.96)', textColor: '#FBF4EA' },
 		grid: { left: 74, right: 34, top: 10, bottom: 22, showHorizontal: false, showVertical: true, color: GRID_COLOR },
 		xAxis: {
 			min: 0,
@@ -167,7 +170,7 @@ export function buildModulePenetrationOption(modules = []) {
 			colors: [PRIMARY_LIGHT, PRIMARY],
 			barWidth: '54%',
 			itemStyle: { borderRadius: 6 },
-			label: { show: true, position: 'right', color: '#b36a56', fontSize: 10 }
+			label: { show: true, position: 'right', color: '#EAD4BC', fontSize: 10 }
 		}]
 	}
 }
@@ -187,11 +190,12 @@ export function buildAdPositionRingOption(positions = []) {
 	const list = (Array.isArray(positions) ? positions : []).filter((item) => toNumber(item.revenue) > 0)
 	const total = list.reduce((sum, item) => sum + toNumber(item.revenue), 0)
 	return {
+		backgroundColor: CHART_BG,
 		textColor: TEXT_COLOR,
 		animation: true,
 		animationDuration: 520,
 		legend: { show: false },
-		tooltip: { show: true },
+		tooltip: { show: true, backgroundColor: 'rgba(26, 21, 18, 0.96)', textColor: '#FBF4EA' },
 		xAxis: { data: list.map((item) => String(item.name || '未知广告位')) },
 		series: [{
 			name: '广告位收益',
@@ -201,6 +205,8 @@ export function buildAdPositionRingOption(positions = []) {
 			pieStyle: 'ring',
 			radius: '88%',
 			innerRadius: '58%',
+			borderColor: CHART_BG,
+			borderWidth: 2,
 			showLabel: false,
 			centerText: '收益合计',
 			centerValue: `¥${total.toFixed(2)}`,

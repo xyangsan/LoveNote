@@ -27,6 +27,7 @@
 		resetInterstitialAdState
 	} from './common/utils/interstitial-ad.js'
 	import { getPlatformApi } from './common/api/platform.js'
+	import { loadAppSettings } from './common/app-settings.js'
 
 	const DEVICE_ID_KEY = 'love_device_id'
 
@@ -85,6 +86,9 @@
 			resetInterstitialAdState()
 			installRouteAuthGuard()
 			this.reportVisit()
+			// 全局配置（模块可见性 / 心动点任务开关）启动时拉一次写缓存，
+			// 其它页面直接读 common/app-settings.js 的缓存，不再各自发请求
+			loadAppSettings()
 			this.ensureAppStateStore().initAppBaseInfo()
 			uni.loadFontFace({
 				global: true,
@@ -164,6 +168,7 @@
 	/*每个页面公共css */
 	@import './components/firstui/common/fui-app.css';
 	@import './components/firstui/fui-theme/fui-theme.css';
+	@import './common/styles/noir-serif-num.css';
 	@import './common/styles/love-theme.css';
 
 	.app-root {

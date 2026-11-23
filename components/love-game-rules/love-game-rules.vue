@@ -1,56 +1,57 @@
 <template>
-	<fui-bottom-popup
-		:show="show"
-		:radius="landscape ? 16 : 32"
-		:mask-closable="true"
-		:safe-area="true"
-		@close="handleClose"
+	<view
+		v-if="show"
+		class="gr-mask"
+		:class="{ 'gr-mask--landscape': landscape }"
+		@tap="handleClose"
+		@touchmove.stop.prevent
 	>
-		<view class="game-rules" :class="{ 'game-rules--landscape': landscape }">
-			<view class="game-rules__head">
-				<text class="game-rules__title">{{ currentRules.title }}</text>
-				<text class="game-rules__subtitle">{{ currentRules.subtitle }}</text>
-				<view v-if="currentRules.meta && currentRules.meta.length" class="game-rules__meta">
-					<fui-tag
-						v-for="(item, index) in currentRules.meta"
-						:key="index"
-						:text="item"
-						theme="light"
-						background="#fff1eb"
-						color="#b8604c"
-						:radius="999"
-						:size="landscape ? 9 : 20"
-						:marginTop="0"
-						:marginBottom="0"
-						:marginRight="landscape ? 6 : 12"
-					/>
+		<view class="gr-sheet" :class="{ 'gr-sheet--landscape': landscape }" @tap.stop>
+			<view v-if="!landscape" class="gr-handle"></view>
+
+			<!-- 头部：Kicker + 标题 + 关闭钮 + Meta 标签 -->
+			<view class="gr-head">
+				<view class="gr-head__main">
+					<text class="gr-kicker">GAME RULES</text>
+					<text class="gr-title">{{ currentRules.title }}</text>
+				</view>
+				<view class="gr-close" @tap="handleClose">
+					<text class="gr-close__txt">✕</text>
 				</view>
 			</view>
 
-			<scroll-view class="game-rules__body" scroll-y>
-				<view v-for="(section, index) in currentRules.sections" :key="index" class="game-rules__section">
-					<text class="game-rules__heading">{{ section.heading }}</text>
-					<view v-for="(item, itemIndex) in section.items" :key="itemIndex" class="game-rules__item">
-						<view class="game-rules__dot"></view>
-						<text class="game-rules__text">{{ item }}</text>
+			<text v-if="currentRules.subtitle" class="gr-subtitle">{{ currentRules.subtitle }}</text>
+
+			<view v-if="currentRules.meta && currentRules.meta.length" class="gr-meta">
+				<view v-for="(item, index) in currentRules.meta" :key="index" class="gr-meta__pill">
+					<text class="gr-meta__txt">{{ item }}</text>
+				</view>
+			</view>
+
+			<!-- 正文区 -->
+			<scroll-view class="gr-body" scroll-y>
+				<view class="gr-sections">
+					<view v-for="(section, index) in currentRules.sections" :key="index" class="gr-sec">
+						<view class="gr-sec__head">
+							<text class="gr-sec__idx">{{ formatIndex(index) }}</text>
+							<text class="gr-sec__heading">{{ section.heading }}</text>
+						</view>
+						<view v-for="(item, itemIndex) in section.items" :key="itemIndex" class="gr-item">
+							<view class="gr-item__dot"></view>
+							<text class="gr-item__text">{{ item }}</text>
+						</view>
 					</view>
 				</view>
 			</scroll-view>
 
-			<view class="game-rules__footer">
-				<fui-button
-					text="知道了"
-					background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-					color="#ffffff"
-					:height="landscape ? '42px' : '88rpx'"
-					:radius="landscape ? '999px' : '999rpx'"
-					:size="landscape ? 14 : 30"
-					:bold="true"
-					@click="handleClose"
-				/>
+			<!-- 底部常驻按钮 -->
+			<view class="gr-footer">
+				<view class="gr-btn" @tap="handleClose">
+					<text class="gr-btn__txt">知道了</text>
+				</view>
 			</view>
 		</view>
-	</fui-bottom-popup>
+	</view>
 </template>
 
 <script>
@@ -78,11 +79,6 @@
 				type: Object,
 				default: null
 			},
-			/**
-			 * 横屏页面（斗地主房间页是 pageOrientation: landscape）必须传 true：
-			 * rpx 按屏宽换算，横屏下 750rpx ≈ 整个屏宽 → 字号/内边距会整体放大到 2 倍以上、
-			 * 竖向空间又只有 375px 左右，弹框会被撑爆。传 true 后内部改用 px 尺寸。
-			 */
 			landscape: {
 				type: Boolean,
 				default: false
@@ -104,188 +100,248 @@
 			}
 		},
 		methods: {
+			formatIndex(idx) {
+				return `0${idx + 1}`.slice(-2)
+			},
 			handleClose() {
 				this.$emit('close')
 			},
-			/**
-			 * 兜底提醒：横屏页面忘了传 `landscape` 时，rpx 会把整个弹框放大 2 倍以上
-			 * —— 这种错误不报错、只是静默变丑，所以给一条 warn。
-			 */
 			warnIfLandscapeMissed() {
-				if (this.landscape) {
-					return
-				}
+				if (this.landscape) return
 				try {
 					const info = uni.getSystemInfoSync()
 					if (Number(info.windowWidth) > Number(info.windowHeight)) {
 						console.warn('[love-game-rules] 当前屏幕是横屏，请在调用处传 :landscape="true"')
 					}
 				} catch (error) {
-					// 取不到屏幕信息就算了，不影响功能
+					// ignore
 				}
 			}
 		}
 	}
 </script>
 
-<style>
-	.game-rules {
+<style scoped>
+	.gr-mask {
+		position: fixed;
+		inset: 0;
+		z-index: 980;
+		background: rgba(8, 6, 5, 0.72);
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+	}
+
+	.gr-sheet {
+		width: 100%;
+		padding: 16rpx 32rpx calc(28rpx + env(safe-area-inset-bottom));
+		border-radius: 34rpx 34rpx 0 0;
+		border-top: 1.5rpx solid rgba(216, 176, 140, 0.32);
+		background: linear-gradient(180deg, #1E1814 0%, #15110E 100%);
+		box-shadow: 0 -16rpx 48rpx rgba(0, 0, 0, 0.52);
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		padding: 8rpx 32rpx 24rpx;
-		background: #ffffff;
 	}
 
-	.game-rules__head {
-		padding: 24rpx 0 18rpx;
+	.gr-handle {
+		width: 72rpx;
+		height: 8rpx;
+		border-radius: 999rpx;
+		background: rgba(216, 176, 140, 0.28);
+		margin: 0 auto 18rpx;
 	}
 
-	.game-rules__title {
+	.gr-head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 16rpx;
+	}
+
+	.gr-head__main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.gr-kicker {
 		display: block;
-		font-size: 40rpx;
-		font-weight: 700;
-		line-height: 1.3;
-		color: #5a3427;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 17rpx;
+		letter-spacing: 4rpx;
+		color: rgba(216, 176, 140, 0.68);
 	}
 
-	.game-rules__subtitle {
+	.gr-title {
+		display: block;
+		margin-top: 6rpx;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
+		font-size: 38rpx;
+		font-weight: 600;
+		line-height: 1.28;
+		color: #FBF4EA;
+	}
+
+	.gr-close {
+		width: 56rpx;
+		height: 56rpx;
+		border-radius: 50%;
+		border: 1rpx solid rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.05);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.gr-close__txt {
+		font-size: 24rpx;
+		color: rgba(245, 237, 228, 0.72);
+	}
+
+	.gr-subtitle {
 		display: block;
 		margin-top: 12rpx;
-		font-size: 25rpx;
+		font-size: 23rpx;
 		line-height: 1.6;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
-	.game-rules__meta {
+	.gr-meta {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
+		gap: 10rpx;
 		margin-top: 18rpx;
 	}
 
-	.game-rules__body {
-		max-height: 56vh;
+	.gr-meta__pill {
+		height: 44rpx;
+		padding: 0 18rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		background: rgba(216, 176, 140, 0.10);
+		display: inline-flex;
+		align-items: center;
 	}
 
-	.game-rules__section {
-		padding: 18rpx 0 4rpx;
+	.gr-meta__txt {
+		font-size: 20rpx;
+		color: #EAD4BC;
+		white-space: nowrap;
 	}
 
-	.game-rules__section + .game-rules__section {
-		margin-top: 8rpx;
-		padding-top: 22rpx;
-		border-top: 1rpx solid rgba(231, 204, 194, 0.6);
+	.gr-body {
+		max-height: 54vh;
+		margin-top: 22rpx;
 	}
 
-	.game-rules__heading {
-		display: block;
-		margin-bottom: 14rpx;
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #c0674d;
+	.gr-sections {
+		display: flex;
+		flex-direction: column;
+		gap: 16rpx;
+		padding-bottom: 8rpx;
 	}
 
-	.game-rules__item {
+	.gr-sec {
+		padding: 20rpx 22rpx;
+		border-radius: 22rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.07);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.gr-sec__head {
+		display: flex;
+		align-items: baseline;
+		gap: 12rpx;
+		margin-bottom: 12rpx;
+	}
+
+	.gr-sec__idx {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		color: rgba(216, 176, 140, 0.64);
+	}
+
+	.gr-sec__heading {
+		font-size: 26rpx;
+		font-weight: 600;
+		color: #E5865C;
+	}
+
+	.gr-item {
 		display: flex;
 		align-items: flex-start;
-		padding: 8rpx 0;
+		padding: 6rpx 0;
 	}
 
-	.game-rules__dot {
+	.gr-item__dot {
 		flex-shrink: 0;
-		width: 12rpx;
-		height: 12rpx;
-		margin-top: 14rpx;
-		margin-right: 16rpx;
+		width: 10rpx;
+		height: 10rpx;
+		margin-top: 15rpx;
+		margin-right: 14rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ff9a76 0%, #f4b183 100%);
-		box-shadow: 0 0 0 6rpx rgba(255, 186, 160, 0.16);
+		background: linear-gradient(135deg, #D8B08C 0%, #E2643F 100%);
 	}
 
-	.game-rules__text {
+	.gr-item__text {
 		flex: 1;
-		font-size: 26rpx;
-		line-height: 1.7;
-		color: #6d473a;
+		font-size: 24rpx;
+		line-height: 1.68;
+		color: rgba(245, 237, 228, 0.84);
 	}
 
-	.game-rules__footer {
+	.gr-footer {
 		padding-top: 22rpx;
 	}
 
-	/* ---------------- 横屏（斗地主房间页）----------------
-	   全部换 px：横屏 rpx 会按屏宽放大，这里用固定的 px 才不会撑爆；
-	   同时给内容加 max-width 居中，避免 800px 宽的一行字读起来吃力。 */
-	/* 外层保留左右 gutter：横屏窄屏（如 568px 宽）下内容限宽后只剩几像素，
-	   没有这层 padding 正文会直接贴到弹框边上 */
-	.game-rules--landscape {
-		padding: 4px 16px 12px;
+	.gr-btn {
+		height: 86rpx;
+		border-radius: 999rpx;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.30);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.game-rules--landscape .game-rules__head,
-	.game-rules--landscape .game-rules__body,
-	.game-rules--landscape .game-rules__footer {
-		width: 100%;
-		max-width: 560px;
-		margin-left: auto;
-		margin-right: auto;
-		box-sizing: border-box;
+	.gr-btn__txt {
+		font-size: 28rpx;
+		font-weight: 600;
+		letter-spacing: 2rpx;
+		color: #FFF9F4;
 	}
 
-	.game-rules--landscape .game-rules__head {
-		padding: 12px 0 9px;
+	/* 横屏 px 适配 */
+	.gr-mask--landscape {
+		align-items: center;
 	}
 
-	.game-rules--landscape .game-rules__title {
-		font-size: 20px;
+	.gr-sheet--landscape {
+		width: 540px;
+		max-width: 90vw;
+		padding: 16px 20px 16px;
+		border-radius: 18px;
+		border: 1px solid rgba(216, 176, 140, 0.32);
 	}
 
-	.game-rules--landscape .game-rules__subtitle {
-		margin-top: 6px;
-		font-size: 13px;
-	}
-
-	.game-rules--landscape .game-rules__meta {
-		margin-top: 9px;
-	}
-
-	/* 横屏可用高度只有 ~375px，正文必须自己滚 */
-	.game-rules--landscape .game-rules__body {
-		max-height: 46vh;
-	}
-
-	.game-rules--landscape .game-rules__section {
-		padding: 9px 0 2px;
-	}
-
-	.game-rules--landscape .game-rules__section + .game-rules__section {
-		margin-top: 4px;
-		padding-top: 11px;
-	}
-
-	.game-rules--landscape .game-rules__heading {
-		margin-bottom: 7px;
-		font-size: 14px;
-	}
-
-	.game-rules--landscape .game-rules__item {
-		padding: 4px 0;
-	}
-
-	.game-rules--landscape .game-rules__dot {
-		width: 6px;
-		height: 6px;
-		margin-top: 7px;
-		margin-right: 8px;
-		box-shadow: 0 0 0 3px rgba(255, 186, 160, 0.16);
-	}
-
-	.game-rules--landscape .game-rules__text {
-		font-size: 13px;
-		line-height: 1.6;
-	}
-
-	.game-rules--landscape .game-rules__footer {
-		padding-top: 11px;
-	}
+	.gr-sheet--landscape .gr-kicker { font-size: 10px; letter-spacing: 2px; }
+	.gr-sheet--landscape .gr-title { font-size: 19px; margin-top: 3px; }
+	.gr-sheet--landscape .gr-close { width: 30px; height: 30px; }
+	.gr-sheet--landscape .gr-close__txt { font-size: 13px; }
+	.gr-sheet--landscape .gr-subtitle { font-size: 12px; margin-top: 6px; }
+	.gr-sheet--landscape .gr-meta { gap: 6px; margin-top: 8px; }
+	.gr-sheet--landscape .gr-meta__pill { height: 22px; padding: 0 10px; }
+	.gr-sheet--landscape .gr-meta__txt { font-size: 11px; }
+	.gr-sheet--landscape .gr-body { max-height: 44vh; margin-top: 10px; }
+	.gr-sheet--landscape .gr-sections { gap: 8px; }
+	.gr-sheet--landscape .gr-sec { padding: 10px 12px; border-radius: 12px; }
+	.gr-sheet--landscape .gr-sec__idx { font-size: 10px; }
+	.gr-sheet--landscape .gr-sec__heading { font-size: 13px; }
+	.gr-sheet--landscape .gr-item { padding: 3px 0; }
+	.gr-sheet--landscape .gr-item__dot { width: 5px; height: 5px; margin-top: 8px; margin-right: 8px; }
+	.gr-sheet--landscape .gr-item__text { font-size: 12px; line-height: 1.55; }
+	.gr-sheet--landscape .gr-footer { padding-top: 10px; }
+	.gr-sheet--landscape .gr-btn { height: 38px; }
+	.gr-sheet--landscape .gr-btn__txt { font-size: 14px; }
 </style>

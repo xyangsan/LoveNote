@@ -1541,7 +1541,8 @@ function drawPie(ctx: CanvasRenderingContext2D, titleHeight: number, progress: n
   const showPercent = item.showPercent == true
   const labelPosition = stringOrDefault(item.labelPosition, 'inside')
   const isOutsideLabel = showLabels && labelPosition == 'outside'
-  const legendWidth = canvasWidth > 330 ? canvasWidth * 0.34 : 0
+  const showSideLegend = currentOption.legend?.show != false && canvasWidth > 330
+  const legendWidth = showSideLegend ? canvasWidth * 0.34 : 0
   const chartWidth = legendWidth > 0 ? canvasWidth - legendWidth - 18 : canvasWidth
   const availableHeight = Math.max(1, canvasHeight - headerBottom - 12)
   const radiusFactor = isOutsideLabel ? 0.30 : 0.39

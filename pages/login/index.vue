@@ -31,6 +31,8 @@
 			></view>
 		</view>
 
+		<noir-navbar :show-back="true" :transparent="true" :placeholder="false" :border="false" />
+
 		<view class="login-page__content">
 			<view class="login-page__main">
 				<view class="love-title-block login-title-block">
@@ -55,12 +57,12 @@
 							type="nickname"
 							placeholder="选填，不填自动帮你取一个"
 							maxlength="20"
-							background-color="rgba(255, 255, 255, 0.94)"
+							background-color="rgba(26, 21, 18, 0.86)"
 							:border-bottom="false"
 							:padding="['28rpx', '24rpx']"
 							:radius="24"
 							:size="28"
-							color="#5a3427"
+							color="#FBF4EA"
 							@input="onNicknameInput"
 							@blur="onNicknameBlur"
 						></fui-input>
@@ -97,8 +99,8 @@
 				text="登录说明"
 				width="100%"
 				height="56"
-				divider-color="rgba(147, 69, 49, 0.22)"
-				color="#9f4936"
+				divider-color="rgba(216, 176, 140, 0.22)"
+				color="#D8B08C"
 				:size="22"
 			></fui-divider>
 			<text class="love-field-tip login-note">如果你是从受保护页面进入，登录成功后会自动继续原来的跳转。</text>
@@ -107,7 +109,8 @@
 </template>
 
 <script>
-	import {
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
+import {
 		DEFAULT_AVATAR,
 		emitAuthChanged,
 		getCachedUserProfile,
@@ -115,7 +118,7 @@
 	} from '../../common/auth-center.js'
 	import { loginByWeixinProfile } from '../../common/auth-login.js'
 
-	const TABBAR_PATHS = ['/pages/index/index', '/pages/profile/index']
+	const TABBAR_PATHS = ['/pages/index/index', '/pages/feed/list', '/pages/game/index', '/pages/profile/index']
 
 	function normalizePath(url = '') {
 		const path = `${url}`.split('?')[0].split('#')[0]
@@ -282,9 +285,7 @@
 				const targetPath = normalizePath(this.redirectUrl)
 				if (targetPath) {
 					if (TABBAR_PATHS.includes(targetPath)) {
-						uni.switchTab({
-							url: targetPath
-						})
+						navigateToTab(targetPath)
 						return
 					}
 
@@ -299,9 +300,7 @@
 					return
 				}
 
-				uni.switchTab({
-					url: '/pages/profile/index'
-				})
+				navigateToTab('/pages/profile/index')
 			},
 			async handleWechatLogin() {
 				// #ifndef MP-WEIXIN
@@ -329,9 +328,11 @@
 						action: 'login',
 						userInfo: result.userInfo || null
 					})
+					// 新账号首次登录会随登录结果带回新人见面礼，老用户为 0
+					const registerBonus = Number(result.registerBonusPoints || 0)
 					uni.showToast({
-						title: '登录成功',
-						icon: 'success'
+						title: registerBonus > 0 ? `新人礼 +${registerBonus} 心动点` : '登录成功',
+						icon: registerBonus > 0 ? 'none' : 'success'
 					})
 					setTimeout(() => {
 						this.navigateAfterLogin()
@@ -353,14 +354,14 @@
 
 <style>
 	page {
-		background: #fff6f1;
+		background: #110D0B;
 	}
 
 	.login-page {
 		position: relative;
 		min-height: 100vh;
 		overflow: hidden;
-		background: #fff6f1;
+		background: #110D0B;
 	}
 
 	.login-page__bg,
@@ -376,13 +377,15 @@
 	.login-page__bg {
 		top: 0;
 		height: 100%;
+		opacity: 0.32;
 	}
 
 	.login-page__mask {
 		top: 0;
 		height: 100%;
 		background:
-			linear-gradient(180deg, rgba(255, 248, 244, 0.22) 0%, rgba(255, 244, 238, 0.12) 26%, rgba(255, 247, 241, 0.18) 56%, rgba(255, 247, 241, 0.78) 100%);
+			radial-gradient(80% 50% at 50% 24%, rgba(226, 124, 78, 0.18), transparent 68%),
+			linear-gradient(180deg, rgba(17, 13, 11, 0.62) 0%, rgba(17, 13, 11, 0.72) 56%, rgba(17, 13, 11, 0.96) 100%);
 	}
 
 	.login-page__meteor {
@@ -528,16 +531,16 @@
 	}
 
 	.login-title-block .love-title-block__eyebrow {
-		color: #a64a36;
+		color: #D8B08C;
 	}
 
 	.login-title-block .love-title-block__title {
-		color: #7f2f21;
-		text-shadow: 0 8rpx 18rpx rgba(255, 255, 255, 0.16);
+		color: #FBF4EA;
+		text-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.45);
 	}
 
 	.login-title-block .love-title-block__desc {
-		color: #9d4735;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.login-editor {
@@ -555,13 +558,13 @@
 
 	.login-editor__label {
 		text-align: center;
-		color: #8f3c2b;
+		color: #D8B08C;
 	}
 
 	.login-editor__tip,
 	.login-note {
 		text-align: center;
-		color: #a24c39;
+		color: rgba(245, 237, 228, 0.46);
 	}
 
 	.login-note {
@@ -577,13 +580,14 @@
 		margin-top: 56rpx;
 		padding: 24rpx 28rpx;
 		border-radius: 28rpx;
-		background: rgba(255, 255, 255, 0.5);
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.login-notice__text {
 		font-size: 22rpx;
 		line-height: 1.7;
-		color: #94503d;
+		color: rgba(245, 237, 228, 0.62);
 		text-align: center;
 	}
 

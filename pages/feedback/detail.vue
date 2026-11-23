@@ -1,26 +1,11 @@
 <template>
-	<view class="love-page feedback-detail-page">
+	<view class="love-page fd-page">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
-		<view class="love-layer">
-			<fui-section
-				title="反馈详情"
-				descr="管理员可回复反馈，并确认问题是否已解决。"
-				:is-line="true"
-				line-width="10rpx"
-				line-color="#ec7558"
-				:line-right="22"
-				:descr-top="14"
-				:size="40"
-				descr-size="24"
-				color="#5a3427"
-				descr-color="#906b61"
-				:padding="['0', '0']"
-				:margin-top="12"
-				:margin-bottom="28"
-			></fui-section>
+		<noir-navbar title="反馈详情" :transparent="true" :scroll-top="scrollTop" />
 
+		<view class="love-layer fd-wrap">
 			<love-auth-required
 				v-if="!isLoggedIn"
 				desc="请先登录后查看反馈详情。"
@@ -29,162 +14,121 @@
 				@secondary="backToProfile"
 			></love-auth-required>
 
-			<fui-card
-				v-else-if="adminChecked && !isAdmin"
-				:margin="['0', '0', '0', '0']"
-				background="rgba(255, 250, 247, 0.97)"
-				radius="32rpx"
-				shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-				:padding="['0', '0']"
-				:header-line="false"
-			>
-				<view class="feedback-detail-page__forbidden">
-					<fui-empty
-						title="暂无管理权限"
-						descr="该页面仅管理员可访问。"
-						:size="28"
-						descr-size="22"
-						color="#6e4a3f"
-						descr-color="#9a766c"
-						:margin-top="8"
-					></fui-empty>
-				</view>
-			</fui-card>
+			<view v-else-if="adminChecked && !isAdmin" class="fd-forbidden">
+				<text class="fd-forbidden__title">暂无管理权限</text>
+				<text class="fd-forbidden__desc">该页面仅管理员可访问。</text>
+			</view>
 
-			<view v-else class="feedback-detail-page__body">
-				<fui-card
-					:margin="['0', '0', '0', '0']"
-					background="rgba(255, 250, 247, 0.97)"
-					radius="32rpx"
-					shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-					:padding="['0', '0']"
-					:header-line="false"
-				>
-					<view v-if="loading && !detail" class="feedback-detail-page__loading">
-						<fui-loading type="rotate" size="42"></fui-loading>
-						<text class="feedback-detail-page__loading-text">加载中...</text>
+			<view v-else class="fd-body">
+				<view v-if="loading && !detail" class="fd-loading">
+					<fui-loading type="rotate" size="40"></fui-loading>
+					<text class="fd-loading__txt">加载中...</text>
+				</view>
+
+				<view v-else-if="detail" class="fd-detail">
+					<view class="fd-status-bar">
+						<text class="fd-label">当前状态</text>
+						<view class="fd-nav-status" :class="getStatusTagClass(detail.status)">
+							<text class="fd-nav-status__txt">{{ detail.status_text || getStatusText(detail.status) }}</text>
+						</view>
 					</view>
 
-					<view v-else-if="detail" class="feedback-detail">
-						<view class="feedback-detail__head">
-							<view class="feedback-detail__status" :style="getStatusStyle(detail.status)">
-								<text class="feedback-detail__status-text">{{ detail.status_text || getStatusText(detail.status) }}</text>
-							</view>
+					<view class="fd-grid">
+						<view class="fd-cell">
+							<text class="fd-cell__label">提交人</text>
+							<text class="fd-cell__val">{{ getNickname(detail) }}</text>
 						</view>
-
-						<view class="feedback-detail__meta-grid">
-							<view class="feedback-detail__meta-item">
-								<text class="feedback-detail__meta-label">提交人</text>
-								<text class="feedback-detail__meta-value">{{ getNickname(detail) }}</text>
-							</view>
-							<view class="feedback-detail__meta-item">
-								<text class="feedback-detail__meta-label">分类</text>
-								<text class="feedback-detail__meta-value">{{ getCategoryText(detail.category) }}</text>
-							</view>
-							<view class="feedback-detail__meta-item">
-								<text class="feedback-detail__meta-label">提交时间</text>
-								<text class="feedback-detail__meta-value">{{ formatDateTime(detail.create_time) }}</text>
-							</view>
-							<view class="feedback-detail__meta-item">
-								<text class="feedback-detail__meta-label">更新时间</text>
-								<text class="feedback-detail__meta-value">{{ formatDateTime(detail.update_time) }}</text>
-							</view>
+						<view class="fd-cell">
+							<text class="fd-cell__label">分类</text>
+							<text class="fd-cell__val">{{ getCategoryText(detail.category) }}</text>
 						</view>
-
-						<view class="feedback-detail__content-wrap">
-							<text class="feedback-detail__content-label">反馈内容</text>
-							<text class="feedback-detail__content">{{ detail.content || '' }}</text>
+						<view class="fd-cell">
+							<text class="fd-cell__label">提交时间</text>
+							<text class="fd-cell__val fd-cell__val--mono">{{ formatDateTime(detail.create_time) }}</text>
 						</view>
-
-						<view v-if="imageList.length" class="feedback-detail__images">
-							<text class="feedback-detail__content-label">反馈截图</text>
-							<view class="feedback-detail__image-grid">
-								<image
-									v-for="(item, index) in imageList"
-									:key="`${detail._id}_${index}`"
-									class="feedback-detail__image"
-									:src="item.url"
-									mode="aspectFill"
-									@click="previewImages(index)"
-								></image>
-							</view>
+						<view class="fd-cell">
+							<text class="fd-cell__label">更新时间</text>
+							<text class="fd-cell__val fd-cell__val--mono">{{ formatDateTime(detail.update_time) }}</text>
 						</view>
+					</view>
 
-						<fui-divider
-							width="100%"
-							height="50"
-							divider-color="rgba(231, 204, 194, 0.68)"
-						></fui-divider>
+					<view class="fd-blk">
+						<text class="fd-label">反馈内容</text>
+						<text class="fd-content">{{ detail.content || '' }}</text>
 
-						<view class="feedback-detail__reply-section">
-							<text class="feedback-detail__content-label">管理员回复</text>
-							<fui-textarea
+						<view v-if="imageList.length" class="fd-imgs">
+							<image
+								v-for="(item, index) in imageList"
+								:key="`${detail._id}_${index}`"
+								class="fd-img"
+								:src="item.url"
+								mode="aspectFill"
+								@tap="previewImages(index)"
+							></image>
+						</view>
+					</view>
+
+					<view v-if="detail.admin_reply" class="fd-cur">
+						<text class="fd-cur__title">当前回复</text>
+						<text class="fd-cur__content">{{ detail.admin_reply }}</text>
+						<text class="fd-cur__time">
+							{{ detail.reply_time ? `回复时间：${formatDateTime(detail.reply_time)}` : '回复时间：暂无记录' }}
+						</text>
+					</view>
+
+					<view class="fd-reply">
+						<text class="fd-label">管理员回复（限 {{ replyMaxLength }} 字）</text>
+						<view class="fd-rbox">
+							<textarea
+								class="fd-textarea"
 								:value="replyContent"
-								placeholder="请输入回复内容"
-								background-color="#fff7f3"
-								:border-top="false"
-								:border-bottom="false"
-								:radius="24"
-								:padding="['22rpx', '24rpx']"
-								height="240rpx"
-								:size="28"
-								color="#5a3427"
+								placeholder="请输入回复内容…"
+								placeholder-class="fd-textarea__ph"
 								:maxlength="replyMaxLength"
-								:is-counter="true"
-								counter-color="#b08a7d"
-								:counter-size="22"
-								@input="onReplyInput"
-							></fui-textarea>
-
-							<view v-if="detail.admin_reply" class="feedback-detail__reply-history">
-								<text class="feedback-detail__reply-history-label">当前回复</text>
-								<text class="feedback-detail__reply-history-content">{{ detail.admin_reply }}</text>
-								<text class="feedback-detail__reply-history-time">
-									{{ detail.reply_time ? `回复时间：${formatDateTime(detail.reply_time)}` : '回复时间：暂无记录' }}
-								</text>
-							</view>
+								:disable-default-padding="true"
+								@input="onNativeReplyInput"
+							/>
+							<text class="fd-count">{{ replyContent.length }} / {{ replyMaxLength }}</text>
 						</view>
 					</view>
-				</fui-card>
-
-				<view v-if="detail" class="feedback-detail-page__actions">
-					<fui-button
-						text="提交回复"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						radius="999rpx"
-						height="90rpx"
-						:size="28"
-						:bold="true"
-						:loading="actionLoading === 'reply'"
-						@click="handleReply"
-					></fui-button>
-					<fui-button
-						text="确认已解决"
-						background="rgba(227, 245, 233, 0.96)"
-						color="#2f8a4b"
-						border-color="rgba(114, 189, 138, 0.38)"
-						radius="999rpx"
-						height="90rpx"
-						:size="28"
-						:bold="true"
-						:loading="actionLoading === 'resolved'"
-						@click="handleResolved"
-					></fui-button>
 				</view>
+			</view>
+		</view>
+
+		<view v-if="detail" class="fd-foot">
+			<view class="fd-foot__ghost">
+				<noir-button
+					text="确认已解决"
+					variant="ghost"
+					size="lg"
+					block
+					:loading="actionLoading === 'resolved'"
+					@click="handleResolved"
+				/>
+			</view>
+			<view class="fd-foot__primary">
+				<noir-button
+					text="提交回复"
+					variant="primary"
+					size="lg"
+					block
+					:loading="actionLoading === 'reply'"
+					@click="handleReply"
+				/>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script>
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import {
 		clearUniIdTokenStorage,
 		getCurrentUniIdUser,
 		subscribeAuthChanged
 	} from '../../common/auth-center.js'
 	import { getFeedbackApi } from '../../common/api/feedback.js'
-import { requirePageLogin } from '@/common/auth-entry.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const STATUS_TEXT_MAP = {
 		0: '待处理',
@@ -215,6 +159,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	export default {
 		data() {
 			return {
+				scrollTop: 0,
 				feedbackId: '',
 				loggedIn: false,
 				isAdmin: false,
@@ -236,8 +181,10 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				return list.filter((item) => item && item.url)
 			}
 		},
+		onPageScroll(e) {
+			this.scrollTop = Number((e && e.scrollTop) || 0)
+		},
 		onLoad(options = {}) {
-			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
 			if (!requirePageLogin()) return
 			this.feedbackId = String(options.feedbackId || '').trim()
 			this.removeAuthListener = subscribeAuthChanged(() => {
@@ -267,24 +214,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					: {}
 				return String(userSnapshot.nickname || '').trim() || '微信用户'
 			},
-			getStatusStyle(status) {
+			getStatusTagClass(status) {
 				const value = Number(status)
-				if (value === 2) {
-					return {
-						background: 'rgba(224, 247, 230, 0.95)',
-						color: '#2f8a4b'
-					}
-				}
-				if (value === 1) {
-					return {
-						background: 'rgba(230, 244, 255, 0.95)',
-						color: '#3f75b6'
-					}
-				}
-				return {
-					background: 'rgba(255, 241, 235, 0.98)',
-					color: '#c4684f'
-				}
+				if (value === 2) return 'fd-nav-status--green'
+				if (value === 1) return 'fd-nav-status--gold'
+				return 'fd-nav-status--coral'
 			},
 			async restoreLoginState() {
 				const userInfo = getCurrentUniIdUser()
@@ -348,7 +282,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					this.loading = false
 				}
 			},
-			onReplyInput(value) {
+			onNativeReplyInput(e) {
+				const value = e && e.detail ? e.detail.value : ''
 				this.replyContent = String(value || '').slice(0, this.replyMaxLength)
 			},
 			async handleReply() {
@@ -443,164 +378,259 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				})
 			},
 			backToProfile() {
-				uni.switchTab({
-					url: '/pages/profile/index'
-				})
+				navigateToTab('/pages/profile/index')
 			}
 		}
 	}
 </script>
 
-<style>
-	.feedback-detail-page {
-		padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
+<style scoped>
+	.fd-page {
+		min-height: 100vh;
+		background: #110D0B;
+		padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 	}
 
-	.feedback-detail-page__forbidden {
-		padding: 34rpx 28rpx 30rpx;
+	.fd-nav-status {
+		display: flex;
+		padding: 6rpx 16rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid transparent;
 	}
 
-	.feedback-detail-page__body {
-		padding-top: 2rpx;
+	.fd-nav-status--coral {
+		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(226, 100, 63, 0.36);
 	}
 
-	.feedback-detail-page__loading {
+	.fd-nav-status--coral .fd-nav-status__txt {
+		color: #F09A6B;
+	}
+
+	.fd-nav-status--gold {
+		background: rgba(216, 176, 140, 0.14);
+		border-color: rgba(216, 176, 140, 0.28);
+	}
+
+	.fd-nav-status--gold .fd-nav-status__txt {
+		color: #EAD4BC;
+	}
+
+	.fd-nav-status--green {
+		background: rgba(104, 196, 140, 0.14);
+		border-color: rgba(104, 196, 140, 0.3);
+	}
+
+	.fd-nav-status--green .fd-nav-status__txt {
+		color: #7ED4A2;
+	}
+
+	.fd-nav-status__txt {
+		font-size: 20rpx;
+		font-weight: 500;
+	}
+
+	.fd-wrap {
+		padding: 12rpx 32rpx 0;
+	}
+
+	.fd-status-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 18rpx;
+	}
+
+	.fd-forbidden {
+		padding: 64rpx 36rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
+		text-align: center;
+	}
+
+	.fd-forbidden__title {
+		display: block;
+		font-family: "Songti SC", "SimSun", serif;
+		font-size: 32rpx;
+		color: #FBF4EA;
+	}
+
+	.fd-forbidden__desc {
+		display: block;
+		margin-top: 12rpx;
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.46);
+	}
+
+	.fd-loading {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 56rpx 0 52rpx;
+		padding: 96rpx 0;
 	}
 
-	.feedback-detail-page__loading-text {
+	.fd-loading__txt {
 		margin-top: 16rpx;
-		font-size: 24rpx;
-		color: #9a766c;
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.46);
 	}
 
-	.feedback-detail {
-		padding: 30rpx 28rpx 32rpx;
-	}
-
-	.feedback-detail__head {
-		display: flex;
-		justify-content: flex-end;
-	}
-
-	.feedback-detail__status {
-		padding: 8rpx 18rpx;
-		border-radius: 999rpx;
-	}
-
-	.feedback-detail__status-text {
-		font-size: 22rpx;
-		font-weight: 600;
-	}
-
-	.feedback-detail__meta-grid {
+	.fd-grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 20rpx;
+		padding: 24rpx 26rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.fd-cell__label {
+		display: block;
+		font-size: 20rpx;
+		color: rgba(245, 237, 228, 0.38);
+	}
+
+	.fd-cell__val {
+		display: block;
+		margin-top: 8rpx;
+		font-size: 25rpx;
+		font-weight: 500;
+		color: #F5EDE4;
+		word-break: break-all;
+	}
+
+	.fd-cell__val--mono {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 22rpx;
+		font-weight: 400;
+	}
+
+	.fd-blk {
+		margin-top: 30rpx;
+	}
+
+	.fd-label {
+		display: block;
+		font-size: 22rpx;
+		letter-spacing: 2rpx;
+		color: rgba(216, 176, 140, 0.78);
+	}
+
+	.fd-content {
+		display: block;
+		margin-top: 14rpx;
+		font-size: 26rpx;
+		line-height: 1.75;
+		color: rgba(245, 237, 228, 0.78);
+		white-space: pre-wrap;
+		word-break: break-all;
+	}
+
+	.fd-imgs {
+		display: flex;
+		flex-wrap: wrap;
 		gap: 16rpx;
 		margin-top: 20rpx;
 	}
 
-	.feedback-detail__meta-item {
-		padding: 18rpx 16rpx;
+	.fd-img {
+		width: 148rpx;
+		height: 148rpx;
 		border-radius: 20rpx;
-		background: rgba(255, 247, 243, 0.9);
+		border: 1rpx solid rgba(255, 255, 255, 0.1);
+		background: #1A1411;
 	}
 
-	.feedback-detail__meta-label {
+	.fd-cur {
+		margin-top: 28rpx;
+		padding: 22rpx 26rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.22);
+		background: rgba(216, 176, 140, 0.06);
+	}
+
+	.fd-cur__title {
 		display: block;
 		font-size: 22rpx;
-		color: #a57d71;
+		font-weight: 500;
+		color: #D8B08C;
 	}
 
-	.feedback-detail__meta-value {
-		display: block;
-		margin-top: 8rpx;
-		font-size: 24rpx;
-		color: #5a3427;
-		line-height: 1.6;
-		word-break: break-all;
-	}
-
-	.feedback-detail__content-wrap {
-		margin-top: 22rpx;
-	}
-
-	.feedback-detail__content-label {
-		display: block;
-		font-size: 25rpx;
-		font-weight: 600;
-		color: #5a3427;
-	}
-
-	.feedback-detail__content {
-		display: block;
-		margin-top: 12rpx;
-		font-size: 24rpx;
-		line-height: 1.8;
-		color: #6e4a3f;
-		white-space: pre-wrap;
-		word-break: break-all;
-	}
-
-	.feedback-detail__images {
-		margin-top: 22rpx;
-	}
-
-	.feedback-detail__image-grid {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12rpx;
-		margin-top: 12rpx;
-	}
-
-	.feedback-detail__image {
-		width: calc((100% - 24rpx) / 3);
-		height: 196rpx;
-		border-radius: 16rpx;
-		background: #f3ece8;
-	}
-
-	.feedback-detail__reply-section {
-		margin-top: 16rpx;
-	}
-
-	.feedback-detail__reply-history {
-		margin-top: 16rpx;
-		padding: 18rpx 16rpx;
-		border-radius: 20rpx;
-		background: rgba(232, 244, 255, 0.86);
-	}
-
-	.feedback-detail__reply-history-label {
-		display: block;
-		font-size: 22rpx;
-		color: #4e6e95;
-	}
-
-	.feedback-detail__reply-history-content {
-		display: block;
-		margin-top: 8rpx;
-		font-size: 24rpx;
-		line-height: 1.7;
-		color: #34587f;
-		white-space: pre-wrap;
-		word-break: break-all;
-	}
-
-	.feedback-detail__reply-history-time {
+	.fd-cur__content {
 		display: block;
 		margin-top: 10rpx;
-		font-size: 22rpx;
-		color: #6f89a8;
+		font-size: 25rpx;
+		line-height: 1.65;
+		color: rgba(245, 237, 228, 0.78);
+		white-space: pre-wrap;
+		word-break: break-all;
 	}
 
-	.feedback-detail-page__actions {
+	.fd-cur__time {
+		display: block;
+		margin-top: 12rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		color: rgba(245, 237, 228, 0.4);
+	}
+
+	.fd-reply {
+		margin-top: 30rpx;
+	}
+
+	.fd-rbox {
+		position: relative;
+		margin-top: 14rpx;
+		border-radius: 24rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.09);
+		background: rgba(255, 255, 255, 0.03);
+		padding: 22rpx 24rpx 52rpx;
+	}
+
+	.fd-textarea {
+		width: 100%;
+		height: 180rpx;
+		font-size: 26rpx;
+		line-height: 1.65;
+		color: #FBF4EA;
+	}
+
+	.fd-textarea__ph {
+		color: rgba(245, 237, 228, 0.34);
+		font-size: 26rpx;
+	}
+
+	.fd-count {
+		position: absolute;
+		right: 24rpx;
+		bottom: 16rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		color: rgba(245, 237, 228, 0.34);
+	}
+
+	.fd-foot {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 30;
 		display: flex;
-		flex-direction: column;
-		gap: 18rpx;
-		margin-top: 28rpx;
+		align-items: center;
+		gap: 20rpx;
+		padding: 20rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0), rgba(17, 13, 11, 0.94) 24%, #110D0B);
+	}
+
+	.fd-foot__ghost {
+		width: 244rpx;
+		flex-shrink: 0;
+	}
+
+	.fd-foot__primary {
+		flex: 1;
+		min-width: 0;
 	}
 </style>

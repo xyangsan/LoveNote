@@ -3,42 +3,21 @@
 		<view class="uc-page__glow uc-page__glow--left"></view>
 		<view class="uc-page__glow uc-page__glow--right"></view>
 
-		<!-- 自绘顶栏：navigationStyle 为 custom，状态栏与右上角胶囊都要自己避让。
-		     结构交给 uv-navbar（状态栏由它的 uv-status-bar 占位，内容区高度按胶囊中心算），
-		     ⚠️ 但 **uv-navbar 自身不避让微信胶囊**，右侧插槽必须靠 nav-bar.js 的 rightInset 顶开。 -->
-		<view class="uc-navbar-wrap">
-			<uv-navbar
-				:height="navBar.contentHeight + 'px'"
-				bg-color="transparent"
-				:border="false"
-				:fixed="false"
-				:placeholder="false"
-				left-icon=""
-				title=""
-			>
-				<template #left>
-					<view class="uc-navbar__back" :style="{ marginLeft: navBarInsets.left }" @click="handleBack">
-						<text class="uc-navbar__back-text">‹</text>
-					</view>
-				</template>
-
-				<template #center>
-					<view class="uc-navbar__center">
-						<text class="uc-navbar__title">谁是卧底</text>
-					</view>
-				</template>
-
-				<template #right>
-					<view
-						class="uc-navbar__rule"
-						:style="{ marginRight: navBarInsets.right }"
-						@click="rulesVisible = true"
-					>
-						<text class="uc-navbar__rule-text">?</text>
-					</view>
-				</template>
-			</uv-navbar>
-		</view>
+		<noir-navbar
+			title="谁是卧底"
+			:show-back="true"
+			:custom-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+			@back="handleBack"
+		>
+			<template #right>
+				<view class="uc-nav-pill" @tap="rulesVisible = true">
+					<text class="uc-nav-pill__txt">规则</text>
+				</view>
+			</template>
+		</noir-navbar>
 
 		<view class="uc-layer">
 			<!-- ============ 未进入房间 ============ -->
@@ -57,8 +36,8 @@
 							:min="minPlayers"
 							:max="maxPlayersLimit"
 							:width="64"
-							background="rgba(255, 241, 235, 0.96)"
-							color="#b05b48"
+							background="rgba(216, 176, 140, 0.12)"
+							color="#EAD4BC"
 							@change="handleMaxPlayersChange"
 						></uni-number-box>
 						<text class="uc-numbox-row__unit">人</text>
@@ -76,7 +55,7 @@
 				<view class="uc-actions">
 					<fui-button
 						text="创建房间"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
+						background="linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%)"
 						color="#ffffff"
 						height="92rpx"
 						radius="999rpx"
@@ -95,8 +74,8 @@
 							:value="joinCode"
 							:size="30"
 							:radius="20"
-							background-color="#fffaf7"
-							color="#5a3427"
+							background-color="#1E1814"
+							color="#FBF4EA"
 							:padding="['20rpx', '24rpx']"
 							@input="handleJoinCodeInput"
 						></fui-input>
@@ -136,13 +115,26 @@
 					</view>
 				</view>
 
-				<!-- 我的身份词 -->
-				<view v-if="myWord" class="uc-my-word" :class="'uc-my-word--' + (myRole === 'undercover' ? 'undercover' : 'civilian')">
-					<text class="uc-my-word__label">
-						<text v-if="undercoverCount" class="uc-my-word__count">（本局 {{ undercoverCount }} 个卧底）</text>
+				<!-- 我的身份牌 -->
+				<view
+					v-if="myWord"
+					class="uc-my-word"
+					:class="'uc-my-word--' + (myRole === 'undercover' ? 'undercover' : 'civilian')"
+					@tap="wordHidden = !wordHidden"
+				>
+					<view class="uc-my-word__head">
+						<text class="uc-my-word__kicker">IDENTITY · 我的身份词</text>
+						<view v-if="undercoverCount" class="uc-my-word__badge">
+							<text class="uc-my-word__badge-txt">{{ undercoverCount }} 名卧底</text>
+						</view>
+					</view>
+					<text class="uc-my-word__value" :class="{ 'uc-my-word__value--hidden': wordHidden }">
+						{{ wordHidden ? '● ● ● ●' : myWord }}
 					</text>
-					<text class="uc-my-word__value">{{ myWord }}</text>
-					<text class="uc-my-word__tip">只有你能看到这个词，别直接说出来</text>
+					<view class="uc-my-word__foot">
+						<text class="uc-my-word__tip">仅自己可见 · 勿直接说出词语</text>
+						<text class="uc-my-word__toggle">{{ wordHidden ? '点击查看' : '点击隐藏' }}</text>
+					</view>
 				</view>
 
 				<!-- 阶段提示 -->
@@ -256,8 +248,8 @@
 							:min="1"
 							:max="2"
 							:width="56"
-							background="rgba(255, 241, 235, 0.96)"
-							color="#b05b48"
+							background="rgba(216, 176, 140, 0.12)"
+							color="#EAD4BC"
 							@change="handleUndercoverCountChange"
 						></uni-number-box>
 						<text class="uc-config__unit">个</text>
@@ -277,7 +269,7 @@
 							v-if="isHost"
 							class="uc-switch"
 							:checked="partyModeInput"
-							color="#e76f51"
+							color="#E2643F"
 							@change="handlePartyModeChange"
 						/>
 						<text v-else class="uc-config__value">{{ partyModeOn ? '已开启' : '已关闭' }}</text>
@@ -348,8 +340,8 @@
 									:value="speakText"
 									:size="28"
 									:radius="20"
-									background-color="#fffaf7"
-									color="#5a3427"
+									background-color="#1E1814"
+									color="#FBF4EA"
 									:padding="['20rpx', '24rpx']"
 									:maxlength="60"
 									@input="handleSpeakInput"
@@ -467,6 +459,7 @@
 	import LoveGameSeats from '@/components/love-game-seats/love-game-seats.vue'
 	import LoveGameRules from '@/components/love-game-rules/love-game-rules.vue'
 	import LoveGameResultDialog from '@/components/love-game-result-dialog/love-game-result-dialog.vue'
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import LoveGameWordEditor from '@/components/love-game-word-editor/love-game-word-editor.vue'
 	import { getGameApi, assertGameResult } from '@/common/api/game.js'
 	import { createRoomSync } from '@/common/game/room-sync.js'
@@ -556,6 +549,8 @@
 				rulesVisible: false,
 				resultVisible: false,
 				resultShown: false,
+				scrollTop: 0,
+				wordHidden: false,
 			// 悬浮操作栏（.uc-op-bar）实测高度（px），用来给内容区留等高空白。
 			// 取不到就退回 OP_BAR_FALLBACK_HEIGHT，别让内容被压在栏下面。
 			opBarHeight: OP_BAR_FALLBACK_HEIGHT
@@ -939,9 +934,9 @@
 			 */
 			connStyle() {
 				const TONES = {
-					ok: { bg: 'rgba(226, 241, 233, 0.98)', border: 'rgba(140, 186, 160, 0.5)', color: '#6a8f7b' },
-					warn: { bg: 'rgba(255, 240, 214, 0.98)', border: 'rgba(214, 158, 80, 0.4)', color: '#b4823c' },
-					pending: { bg: 'rgba(240, 240, 240, 0.98)', border: 'rgba(200, 200, 200, 0.6)', color: '#9a9a9a' }
+					ok: { bg: 'rgba(132, 190, 156, 0.14)', border: 'rgba(132, 190, 156, 0.42)', color: '#9ED6B2' },
+					warn: { bg: 'rgba(216, 176, 140, 0.14)', border: 'rgba(216, 176, 140, 0.42)', color: '#EAD4BC' },
+					pending: { bg: 'rgba(255, 255, 255, 0.06)', border: 'rgba(255, 255, 255, 0.14)', color: 'rgba(245, 237, 228, 0.62)' }
 				}
 				const tone = TONES[this.connTone] || TONES.pending
 				return [
@@ -1099,6 +1094,9 @@
 		onReady() {
 			// 首帧：进房分支的 DOM 还没稳定，主动量一次悬浮栏高度
 			this.measureOpBar()
+		},
+		onPageScroll(e) {
+			this.scrollTop = e && e.scrollTop ? e.scrollTop : 0
 		},
 		onShow() {
 			this.refreshNavBar()
@@ -1298,7 +1296,7 @@
 					title: '退出房间',
 					content: this.buildLeaveConfirmText(),
 					confirmText: '退出',
-					confirmColor: '#e76f51',
+					confirmColor: '#E2643F',
 					success: (res) => {
 						if (res.confirm) {
 							this.doLeaveRoom()
@@ -1321,9 +1319,7 @@
 			},
 			handleBackToHall() {
 				this.resultVisible = false
-				uni.reLaunch({
-					url: '/pages/game/index'
-				})
+				navigateToTab('game')
 			},
 			handleWordBankChange() {
 				uni.showToast({
@@ -2000,79 +1996,48 @@ this.ensureRobotVotes()
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding: 0 24rpx 60rpx;
+		background: #110D0B;
 		overflow: hidden;
 	}
 
 	.uc-page__glow {
-		position: absolute;
-		width: 320rpx;
-		height: 320rpx;
+		position: fixed;
+		width: 420rpx;
+		height: 420rpx;
 		border-radius: 50%;
-		filter: blur(28rpx);
-		opacity: 0.42;
+		filter: blur(80rpx);
+		opacity: 0.22;
 		z-index: 0;
 		pointer-events: none;
 	}
 
 	.uc-page__glow--left {
-		top: -90rpx;
-		left: -120rpx;
-		background: rgba(255, 180, 160, 0.48);
+		top: -120rpx;
+		left: -140rpx;
+		background: #E2643F;
 	}
 
 	.uc-page__glow--right {
-		top: 260rpx;
-		right: -120rpx;
-		background: rgba(255, 220, 174, 0.48);
+		top: 300rpx;
+		right: -160rpx;
+		background: #D8B08C;
 	}
 
-	.uc-navbar-wrap {
-		/* 结构交给 uv-navbar；这里只负责通屏（负 margin 抵消 .uc-page 的左右 24rpx 内边距），
-		   这样「右边界 = 屏幕右边界」成立，nav-bar.js 算出的 capsule inset 才对得上 */
-		position: relative;
-		z-index: 1;
-		margin: 0 -24rpx;
-	}
-
-	.uc-navbar__back,
-	.uc-navbar__rule {
+	.uc-nav-pill {
 		display: flex;
-		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		width: 64rpx;
-		height: 64rpx;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.92);
-		box-shadow: 0 10rpx 24rpx rgba(168, 110, 80, 0.12);
+		height: 52rpx;
+		padding: 0 22rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.44);
+		background: rgba(216, 176, 140, 0.10);
 	}
 
-	.uc-navbar__back-text {
-		font-size: 40rpx;
-		line-height: 1;
-		color: #b05b48;
-	}
-
-	.uc-navbar__rule-text {
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #b98069;
-	}
-
-	/* 标题 + 连接状态标签纯展示。
-	   uv-navbar 的左右插槽是绝对定位、可能和中间内容叠在一起，这里关掉点击，
-	   保证中间层永远不会挡住返回键 / 规则按钮 */
-	.uc-navbar__center {
-		display: flex;
-		align-items: center;
-		gap: 14rpx;
-		pointer-events: none;
-	}
-
-	.uc-navbar__title {
-		font-size: 32rpx;
-		font-weight: 700;
-		color: #5a3427;
+	.uc-nav-pill__txt {
+		font-size: 22rpx;
+		color: #EAD4BC;
+		white-space: nowrap;
 	}
 
 	/* 连接状态标签的样式由 uni-tag 的 customStyle 提供（见 computed connStyle），
@@ -2100,7 +2065,7 @@ this.ensureRobotVotes()
 		margin-top: 22rpx;
 		font-size: 40rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.uc-hero__desc {
@@ -2108,14 +2073,14 @@ this.ensureRobotVotes()
 		margin-top: 14rpx;
 		font-size: 25rpx;
 		line-height: 1.7;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.uc-label {
 		display: block;
 		margin-bottom: 14rpx;
 		font-size: 24rpx;
-		color: #936d62;
+		color: rgba(216, 176, 140, 0.76);
 	}
 
 	/* 数字步进器改用 uni-number-box；
@@ -2170,7 +2135,7 @@ this.ensureRobotVotes()
 
 	.uc-numbox-row__unit {
 		font-size: 26rpx;
-		color: #917165;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	.uc-word-row {
@@ -2183,12 +2148,12 @@ this.ensureRobotVotes()
 		justify-content: space-between;
 		padding: 20rpx 24rpx;
 		border-radius: 20rpx;
-		background: rgba(255, 250, 247, 0.98);
+		background: rgba(26, 21, 18, 0.94);
 	}
 
 	.uc-word-select__text {
 		font-size: 27rpx;
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 
 	.uc-word-select__arrow {
@@ -2218,7 +2183,7 @@ this.ensureRobotVotes()
 		width: 150rpx;
 		height: 84rpx;
 		border-radius: 22rpx;
-		background: linear-gradient(135deg, #ffb37a 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #ffb37a 0%, #E2643F 100%);
 	}
 
 	.uc-join__btn-text {
@@ -2234,7 +2199,7 @@ this.ensureRobotVotes()
 
 	.uc-link__text {
 		font-size: 24rpx;
-		color: #b98069;
+		color: #D8B08C;
 		text-decoration: underline;
 	}
 
@@ -2247,15 +2212,15 @@ this.ensureRobotVotes()
 		gap: 20rpx;
 		padding: 24rpx 28rpx;
 		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.95);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.1);
+		background: rgba(26, 21, 18, 0.94);
+		box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.uc-room-bar__label {
 		display: block;
 		font-size: 21rpx;
 		letter-spacing: 3rpx;
-		color: #b98069;
+		color: #D8B08C;
 	}
 
 	.uc-room-bar__code {
@@ -2264,7 +2229,7 @@ this.ensureRobotVotes()
 		font-size: 44rpx;
 		font-weight: 700;
 		letter-spacing: 6rpx;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.uc-room-bar__actions {
@@ -2278,12 +2243,12 @@ this.ensureRobotVotes()
 		justify-content: center;
 		padding: 14rpx 24rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 241, 235, 0.98);
+		background: rgba(216, 176, 140, 0.12);
 	}
 
 	.uc-room-bar__action-text {
 		font-size: 24rpx;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	/* 退出是破坏性操作，用描边而不是实底，和「邀请」区分开 */
@@ -2294,46 +2259,85 @@ this.ensureRobotVotes()
 	}
 
 	.uc-room-bar__action-text--leave {
-		color: #c0674d;
+		color: #E5865C;
 	}
 
 	.uc-my-word {
+		position: relative;
 		margin-top: 22rpx;
-		padding: 26rpx 28rpx;
-		border-radius: 30rpx;
-		background: linear-gradient(135deg, rgba(255, 236, 222, 0.98), rgba(255, 246, 236, 0.98));
+		padding: 26rpx 28rpx 24rpx;
+		border-radius: 32rpx;
+		border: 1.5rpx solid rgba(216, 176, 140, 0.34);
+		background: linear-gradient(145deg, rgba(216, 176, 140, 0.14) 0%, rgba(26, 21, 18, 0.96) 100%);
+		box-shadow: 0 18rpx 44rpx rgba(0, 0, 0, 0.46);
 		text-align: center;
 	}
 
 	.uc-my-word--undercover {
-		background: linear-gradient(135deg, rgba(255, 219, 210, 0.98), rgba(255, 240, 234, 0.98));
+		border-color: rgba(226, 100, 63, 0.46);
+		background: linear-gradient(145deg, rgba(226, 100, 63, 0.18) 0%, rgba(26, 21, 18, 0.96) 100%);
 	}
 
-	.uc-my-word__label {
-		display: block;
-		font-size: 23rpx;
-		color: #b98069;
+	.uc-my-word__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
 	}
 
-	.uc-my-word__count {
-		font-size: 21rpx;
-		color: #c0a094;
+	.uc-my-word__kicker {
+		font-size: 20rpx;
+		letter-spacing: 3rpx;
+		color: rgba(216, 176, 140, 0.78);
+	}
+
+	.uc-my-word__badge {
+		padding: 4rpx 16rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.40);
+		background: rgba(226, 100, 63, 0.14);
+		display: flex;
+	}
+
+	.uc-my-word__badge-txt {
+		font-size: 20rpx;
+		font-weight: 600;
+		color: #F5B496;
 	}
 
 	.uc-my-word__value {
 		display: block;
-		margin-top: 14rpx;
-		font-size: 60rpx;
-		font-weight: 700;
-		letter-spacing: 4rpx;
-		color: #5a3427;
+		margin: 26rpx 0 22rpx;
+		font-family: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
+		font-size: 64rpx;
+		font-weight: 600;
+		letter-spacing: 8rpx;
+		line-height: 1.15;
+		color: #FBF4EA;
+	}
+
+	.uc-my-word__value--hidden {
+		font-size: 40rpx;
+		letter-spacing: 12rpx;
+		color: rgba(245, 237, 228, 0.36);
+	}
+
+	.uc-my-word__foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-top: 16rpx;
+		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
 	}
 
 	.uc-my-word__tip {
-		display: block;
-		margin-top: 12rpx;
-		font-size: 22rpx;
-		color: #9a7c70;
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.46);
+	}
+
+	.uc-my-word__toggle {
+		font-size: 21rpx;
+		color: #EAD4BC;
 	}
 
 	.uc-stage {
@@ -2346,14 +2350,14 @@ this.ensureRobotVotes()
 		display: block;
 		font-size: 30rpx;
 		font-weight: 700;
-		color: #5b3529;
+		color: #FBF4EA;
 	}
 
 	.uc-stage__desc {
 		display: block;
 		margin-top: 8rpx;
 		font-size: 23rpx;
-		color: #917165;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	.uc-section-title {
@@ -2361,7 +2365,7 @@ this.ensureRobotVotes()
 		margin-bottom: 12rpx;
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 
 	/* ============ 对局记录时间线（发言 + 投票按轮次整合） ============ */
@@ -2369,8 +2373,8 @@ this.ensureRobotVotes()
 		margin-top: 22rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 28rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+		background: rgba(26, 21, 18, 0.94);
+		box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.uc-timeline__head {
@@ -2397,7 +2401,7 @@ this.ensureRobotVotes()
 	/* 轮次之间的分割线 */
 	.uc-timeline__divider {
 		margin: 20rpx 0 18rpx;
-		border-top: 1rpx dashed rgba(231, 204, 194, 0.9);
+		border-top: 1rpx dashed rgba(255, 255, 255, 0.07);
 	}
 
 	.uc-timeline__round-head {
@@ -2410,17 +2414,18 @@ this.ensureRobotVotes()
 	.uc-timeline__round-title {
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.uc-timeline__round-live {
-		padding: 0 12rpx;
+		padding: 0 14rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 226, 205, 0.98);
+		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		background: rgba(226, 100, 63, 0.16);
 		font-size: 18rpx;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.8;
-		color: #b05b48;
+		color: #F5B496;
 	}
 
 	.uc-timeline__block {
@@ -2436,7 +2441,7 @@ this.ensureRobotVotes()
 		margin-bottom: 8rpx;
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #a07d71;
+		color: rgba(245, 237, 228, 0.44);
 	}
 
 	.uc-timeline__who {
@@ -2449,7 +2454,7 @@ this.ensureRobotVotes()
 	.uc-timeline__name {
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 
 	.uc-timeline__ai {
@@ -2463,13 +2468,14 @@ this.ensureRobotVotes()
 	}
 
 	.uc-timeline__mine {
-		padding: 0 8rpx;
+		padding: 0 10rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 226, 205, 0.98);
+		border: 1rpx solid rgba(216, 176, 140, 0.36);
+		background: rgba(216, 176, 140, 0.14);
 		font-size: 17rpx;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.7;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	/* 发言：名字与内容同一行内容自动换行 */
@@ -2484,7 +2490,7 @@ this.ensureRobotVotes()
 		flex: 1;
 		font-size: 25rpx;
 		line-height: 1.6;
-		color: #6d473a;
+		color: #F5EDE4;
 	}
 
 	/* 投票：名字 → 目标 */
@@ -2504,7 +2510,7 @@ this.ensureRobotVotes()
 	.uc-timeline__target {
 		flex: 1;
 		font-size: 25rpx;
-		color: #c0674d;
+		color: #E5865C;
 	}
 
 	.uc-timeline__empty {
@@ -2529,9 +2535,9 @@ this.ensureRobotVotes()
 		margin-top: 12rpx;
 		padding: 10rpx 16rpx;
 		border-radius: 18rpx;
-		background: rgba(255, 246, 241, 0.98);
+		background: rgba(255, 255, 255, 0.036);
 		font-size: 23rpx;
-		color: #936d62;
+		color: rgba(216, 176, 140, 0.76);
 	}
 
 	.uc-timeline__result--lead {
@@ -2563,10 +2569,10 @@ this.ensureRobotVotes()
 		padding-bottom: constant(safe-area-inset-bottom);
 		padding-bottom: calc(18rpx + constant(safe-area-inset-bottom));
 		padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
-		background: rgba(255, 250, 247, 0.96);
-		box-shadow: 0 -12rpx 36rpx rgba(168, 110, 80, 0.14);
+		background: rgba(26, 21, 18, 0.94);
+		box-shadow: 0 -12rpx 36rpx rgba(0, 0, 0, 0.42);
 		/* 顶部一道暖色细线，与内容区分开 */
-		border-top: 1rpx solid rgba(231, 204, 194, 0.7);
+		border-top: 1rpx solid rgba(255, 255, 255, 0.07);
 	}
 
 	/* 内容区底部占位：高度 = 悬浮栏实测高度（measureOpBar 写入行内 style）。
@@ -2604,19 +2610,19 @@ this.ensureRobotVotes()
 		margin-bottom: 20rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 26rpx;
-		background: rgba(255, 255, 255, 0.95);
-		box-shadow: 0 10rpx 24rpx rgba(168, 110, 80, 0.06);
+		background: rgba(26, 21, 18, 0.94);
+		box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.uc-config__label {
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.uc-config__unit {
 		font-size: 26rpx;
-		color: #917165;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	/* 聚会模式那行：标签靠左、开关靠右（提示文案 width:100% 会自己落到下一行） */
@@ -2628,7 +2634,7 @@ this.ensureRobotVotes()
 	.uc-config__value {
 		font-size: 24rpx;
 		font-weight: 600;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	/* 原生 switch 只能靠 transform 缩一点；用 right 原点保证它仍贴着右边 */
@@ -2655,22 +2661,23 @@ this.ensureRobotVotes()
 	.uc-op__hint {
 		padding: 24rpx 28rpx;
 		border-radius: 24rpx;
-		background: rgba(255, 247, 243, 0.98);
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.036);
 		text-align: center;
 	}
 
 	/* 结算后的信息行：比普通提示更“实”（暖底 + 细边），一眼看到第几局与累计分 */
 	.uc-op__hint--result {
 		padding: 18rpx 24rpx;
-		background: rgba(255, 241, 235, 0.98);
-		border: 1rpx solid rgba(240, 208, 196, 0.9);
+		background: rgba(216, 176, 140, 0.12);
+		border: 1rpx solid rgba(216, 176, 140, 0.34);
 		margin-bottom: 18rpx;
 	}
 
 	.uc-op__hint-text {
 		font-size: 25rpx;
 		line-height: 1.6;
-		color: #936d62;
+		color: rgba(216, 176, 140, 0.76);
 	}
 
 	.uc-btn {
@@ -2679,11 +2686,11 @@ this.ensureRobotVotes()
 		justify-content: center;
 		height: 90rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 241, 235, 0.98);
+		background: rgba(216, 176, 140, 0.12);
 	}
 
 	.uc-btn--primary {
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 		box-shadow: 0 14rpx 26rpx rgba(231, 111, 81, 0.24);
 	}
 
@@ -2691,10 +2698,10 @@ this.ensureRobotVotes()
 		opacity: 0.5;
 	}
 
-	/* 非房主在结算行的「等房主开下一局」：与按钮同排同高，但虚线 + 无底色，明显不可点 */
+	/* 非房主在结算行的「等房主开下一局」：与按钮同排同高，但虚线 + 微弱暗底，明显不可点 */
 	.uc-btn--wait {
-		background: rgba(255, 250, 247, 0.6);
-		border: 1rpx dashed rgba(216, 186, 174, 0.95);
+		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx dashed rgba(216, 176, 140, 0.34);
 	}
 
 	.uc-btn__text {
@@ -2707,7 +2714,7 @@ this.ensureRobotVotes()
 	}
 
 	.uc-btn__text--ghost {
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	.uc-btn__text--muted {
@@ -2729,7 +2736,7 @@ this.ensureRobotVotes()
 		width: 148rpx;
 		height: 88rpx;
 		border-radius: 22rpx;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 	}
 
 	.uc-speak-input__btn-text {

@@ -20,6 +20,7 @@ const {
 	normalizePhotoRecord
 } = require('../lib/media')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 
 const ALLOWED_MEDIA_TYPES = new Set(['image', 'video'])
 
@@ -174,10 +175,21 @@ module.exports = class PhotoService extends Service {
 				extraCondition.media_type = mediaType
 			}
 
+			const tag = String(params.tag || '').trim()
+			if (tag) {
+				extraCondition.tags = tag
+			}
+
 			const whereCondition = andWhereConditions(visibilityCondition, extraCondition)
 
-			const totalRes = await photoCollection.where(whereCondition).count()
+			const [totalRes, videoTotalRes] = await Promise.all([
+				photoCollection.where(whereCondition).count(),
+				page === 1
+					? photoCollection.where(andWhereConditions(whereCondition, { media_type: 'video' })).count()
+					: Promise.resolve(null)
+			])
 			const total = totalRes.total || 0
+			const videoCount = videoTotalRes ? (videoTotalRes.total || 0) : undefined
 
 			const listRes = await photoCollection
 				.where(whereCondition)
@@ -193,6 +205,7 @@ module.exports = class PhotoService extends Service {
 				errCode: 0,
 				data: {
 					list,
+					videoCount,
 					pagination: {
 						page,
 						pageSize,
@@ -456,6 +469,14 @@ module.exports = class PhotoService extends Service {
 				await transaction.collection('love-albums').doc(albumId).update(albumUpdateData)
 
 				await transaction.commit()
+
+				// 心动点：按张计分，日上限由 lib/points 统一裁掉（一次传多张只发一条流水）
+				await pointsLib.awardPoints(uid, 'photo_upload', {
+					count: photoDocs.length,
+					refId: photoIds[0] || albumId,
+					coupleId: activeCouple ? activeCouple._id : '',
+					title: '上传相册'
+				})
 
 				return {
 					errCode: 0,

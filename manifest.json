@@ -57,6 +57,9 @@
             "es6" : true
         },
         "usingComponents" : true,
+        "optimization" : {
+            "subPackages" : true
+        },
         "permission" : {
             "scope.userLocation" : {
                 "desc" : "用户在发表动态时，可手动选择当前位置，发布动态后展示位置"

@@ -155,7 +155,7 @@ export default {
 				borderRadius: this.radius
 			}
 			if (this.shadow) {
-				style.boxShadow = '0 16rpx 38rpx rgba(173, 109, 77, 0.16)'
+				style.boxShadow = '0 16rpx 38rpx rgba(0, 0, 0, 0.42)'
 			}
 			return style
 		}

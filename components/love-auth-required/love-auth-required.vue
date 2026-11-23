@@ -1,41 +1,27 @@
 <template>
-	<fui-card
-		:margin="margin"
-		background="rgba(255, 250, 247, 0.96)"
-		radius="32rpx"
-		shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-		:padding="['0', '0']"
-		:header-line="false"
-	>
-		<view class="love-auth-required">
+	<view class="love-auth-required-wrap" :style="wrapStyle">
+		<noir-card variant="hero" kicker="AUTH REQUIRED" padding="38rpx 34rpx">
 			<text class="love-auth-required__title">{{ title }}</text>
 			<text class="love-auth-required__desc">{{ desc }}</text>
 			<view class="love-auth-required__actions">
-				<fui-button
+				<noir-button
 					:text="loginText"
-					background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-					color="#ffffff"
-					radius="999rpx"
-					height="88rpx"
-					:size="28"
-					:bold="true"
+					variant="primary"
+					size="lg"
+					block
 					@click="$emit('login')"
-				></fui-button>
-				<fui-button
+				/>
+				<noir-button
 					v-if="secondaryText"
 					:text="secondaryText"
-					background="rgba(255, 241, 235, 0.98)"
-					color="#b05b48"
-					border-color="rgba(214, 145, 122, 0.24)"
-					radius="999rpx"
-					height="88rpx"
-					:size="28"
-					:bold="true"
+					variant="ghost"
+					size="lg"
+					block
 					@click="$emit('secondary')"
-				></fui-button>
+				/>
 			</view>
-		</view>
-	</fui-card>
+		</noir-card>
+	</view>
 </template>
 
 <script>
@@ -65,34 +51,42 @@
 					return ['0', '0', '0', '0']
 				}
 			}
+		},
+		computed: {
+			wrapStyle() {
+				const m = this.margin || []
+				return {
+					marginTop: m[0] || 0,
+					marginRight: m[1] || 0,
+					marginBottom: m[2] || m[0] || 0,
+					marginLeft: m[3] || m[1] || 0
+				}
+			}
 		}
 	}
 </script>
 
 <style scoped>
-	.love-auth-required {
-		padding: 38rpx 34rpx;
-	}
-
 	.love-auth-required__title {
 		display: block;
-		font-size: 34rpx;
-		font-weight: 700;
-		color: #5a3427;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
+		font-size: 36rpx;
+		font-weight: 600;
+		color: #FBF4EA;
 	}
 
 	.love-auth-required__desc {
 		display: block;
-		margin-top: 18rpx;
+		margin-top: 16rpx;
 		font-size: 24rpx;
-		line-height: 1.8;
-		color: #906b61;
+		line-height: 1.75;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.love-auth-required__actions {
 		display: flex;
 		flex-direction: column;
-		gap: 22rpx;
+		gap: 20rpx;
 		margin-top: 30rpx;
 	}
 </style>

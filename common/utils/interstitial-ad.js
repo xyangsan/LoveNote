@@ -10,8 +10,10 @@
  *     冷启动脚本重新执行，用户下次打开小程序才有机会再弹一次。
  */
 
-// 首页插屏广告位 id
-export const INTERSTITIAL_AD_UNIT_ID = 'adunit-7da35bd90c83c292'
+import { AD_ID_UNITS } from '../config/ad.js'
+
+// 插屏广告位 id：统一在 common/config/ad.js 维护
+export const INTERSTITIAL_AD_UNIT_ID = AD_ID_UNITS.interstitial
 
 // 素材加载完后延迟多久再弹：太早容易误触，太晚用户已经进到别的页面了
 const SHOW_DELAY = 4000

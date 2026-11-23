@@ -7,6 +7,18 @@ module.exports = class CoupleController extends Controller {
 		return this.service.couple.getCenter()
 	}
 
+	async refreshBindCode() {
+		return this.service.couple.refreshBindCode()
+	}
+
+	async getInvitePreview() {
+		return this.service.couple.getInvitePreview(this.ctx.data || {})
+	}
+
+	async bindByCode() {
+		return this.service.couple.bindByCode(this.ctx.data || {})
+	}
+
 	async sendRequest() {
 		return this.service.couple.sendRequest(this.ctx.data || {})
 	}

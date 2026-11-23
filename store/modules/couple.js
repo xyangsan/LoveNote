@@ -2,6 +2,7 @@ export function getDefaultCoupleCenterData() {
 	return {
 		selfInfo: null,
 		activeCouple: null,
+		bindCodeInfo: null,
 		incomingRequests: [],
 		outgoingRequests: [],
 		historyList: [],
@@ -13,6 +14,7 @@ export function normalizeCoupleCenterResult(result = {}) {
 	return {
 		selfInfo: result.selfInfo || null,
 		activeCouple: result.activeCouple || null,
+		bindCodeInfo: result.bindCodeInfo || null,
 		incomingRequests: Array.isArray(result.incomingRequests) ? result.incomingRequests : [],
 		outgoingRequests: Array.isArray(result.outgoingRequests) ? result.outgoingRequests : [],
 		historyList: Array.isArray(result.historyList) ? result.historyList : [],

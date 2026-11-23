@@ -181,23 +181,24 @@
 
 	.game-seats__cell {
 		box-sizing: border-box;
-		padding: 8rpx;
+		padding: 10rpx 8rpx 16rpx;
 	}
 
 	.game-seats__empty {
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		height: 100%;
-		min-height: 200rpx;
-		border: 2rpx dashed rgba(231, 111, 81, 0.36);
+		height: 256rpx;
+		border: 2rpx dashed rgba(216, 176, 140, 0.28);
 		border-radius: 26rpx;
-		background: rgba(255, 250, 247, 0.8);
+		background: rgba(255, 255, 255, 0.025);
 	}
 
 	.game-seats__empty--small {
-		min-height: 168rpx;
+		height: 224rpx;
+		border-radius: 22rpx;
 	}
 
 	.game-seats__empty-plus {

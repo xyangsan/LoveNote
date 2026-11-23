@@ -6,6 +6,8 @@ const { updateUserProfile, formatUserInfo } = require('../lib/profile')
 const { DEFAULT_NICKNAME } = require('../lib/constants')
 const { getUserById } = require('../lib/user-base')
 const { formatError } = require('../lib/response')
+const { getActiveCoupleByUid } = require('../lib/couple')
+const pointsLib = require('../lib/points')
 
 module.exports = class UserService extends Service {
 	async getMine() {
@@ -41,7 +43,25 @@ module.exports = class UserService extends Service {
 			}
 
 			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
-			const userRecord = await updateUserProfile(authState.authResult.uid, params)
+			const uid = authState.authResult.uid
+			const userRecord = await updateUserProfile(uid, params)
+
+			// 心动点：头像 + 昵称 + 生日齐全时发一次性 +50（账号一生一次，靠流水幂等）
+			const nextUser = userRecord || {}
+			const hasAvatar = Boolean(nextUser.avatar || nextUser.avatar_file_id)
+			if (hasAvatar && nextUser.nickname && nextUser.birthday) {
+				try {
+					const activeCouple = await getActiveCoupleByUid(uid)
+					if (activeCouple) {
+						await pointsLib.awardPoints(uid, 'profile_complete', {
+							coupleId: activeCouple._id,
+							title: '完善个人资料'
+						})
+					}
+				} catch (error) {
+					console.warn('api-router profile points failed', error)
+				}
+			}
 
 			return Object.assign({}, authState.response, {
 				errCode: 0,

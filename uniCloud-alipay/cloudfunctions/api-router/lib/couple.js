@@ -397,11 +397,13 @@ async function getRelationPartnerMeta(uid, relation = {}) {
 	const partnerNickname = partnerRecord
 		? partnerRecord.nickname || partnerRecord.username || DEFAULT_NICKNAME
 		: relation.partner_nickname || ''
+	const partnerGender = Number((partnerRecord && partnerRecord.gender) || 0)
 
 	return {
 		partnerUid,
 		partnerAvatar,
-		partnerNickname
+		partnerNickname,
+		partnerGender
 	}
 }
 
@@ -536,7 +538,7 @@ async function formatCoupleInfo(uid, relation = null) {
 		return null
 	}
 
-	const { partnerUid, partnerAvatar, partnerNickname } = await getRelationPartnerMeta(uid, relation)
+	const { partnerUid, partnerAvatar, partnerNickname, partnerGender } = await getRelationPartnerMeta(uid, relation)
 	const status = Number(relation.status || 0)
 	const requesterUid = getRequesterUid(relation)
 	const metrics = normalizeMetrics(relation.metrics)
@@ -568,6 +570,8 @@ async function formatCoupleInfo(uid, relation = null) {
 		partnerNicknameMasked: maskNickname(partnerNickname),
 		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
 		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		partnerGender: Number(partnerGender || 0),
+		bindSource: String(relation.bind_source || relation.bindSource || '').trim(),
 		bindDate: relation.bind_date || relation.created_at || 0,
 		anniversaryDate: relation.anniversary_date || 0,
 		requestDate: relation.created_at || 0,
@@ -602,7 +606,7 @@ async function formatSelfInfo(record = {}) {
 }
 
 async function formatCoupleRequestItem(uid, relation = {}, { type = 'incoming' } = {}) {
-	const { partnerUid, partnerAvatar, partnerNickname } = await getRelationPartnerMeta(uid, relation)
+	const { partnerUid, partnerAvatar, partnerNickname, partnerGender } = await getRelationPartnerMeta(uid, relation)
 
 	return {
 		requestId: relation._id || '',
@@ -614,13 +618,14 @@ async function formatCoupleRequestItem(uid, relation = {}, { type = 'incoming' }
 		partnerNicknameMasked: maskNickname(partnerNickname),
 		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
 		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		partnerGender: Number(partnerGender || 0),
 		createdAt: relation.created_at || 0,
 		updatedAt: relation.updated_at || 0
 	}
 }
 
 async function formatCoupleHistoryItem(uid, relation = {}) {
-	const { partnerUid, partnerAvatar, partnerNickname } = await getRelationPartnerMeta(uid, relation)
+	const { partnerUid, partnerAvatar, partnerNickname, partnerGender } = await getRelationPartnerMeta(uid, relation)
 	const status = Number(relation.status || 0)
 
 	return {
@@ -631,6 +636,8 @@ async function formatCoupleHistoryItem(uid, relation = {}) {
 		partnerNicknameMasked: maskNickname(partnerNickname),
 		partnerAvatarUrl: partnerAvatar.avatarUrl || '',
 		partnerAvatarFileId: partnerAvatar.avatarFileId || '',
+		partnerGender: Number(partnerGender || 0),
+		bindSource: String(relation.bind_source || relation.bindSource || '').trim(),
 		bindDate: relation.bind_date || relation.created_at || 0,
 		unbindDate: relation.unbind_date || 0,
 		isCurrent: status === COUPLE_STATUS_BOUND
@@ -674,6 +681,84 @@ async function buildCoupleSummary(uid) {
 	})
 }
 
+const BIND_CODE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+function normalizeBindCode(value = '') {
+	return String(value || '').replace(/[^\d]/g, '').slice(0, 6)
+}
+
+function generateSixDigitCode() {
+	return String(100000 + Math.floor(Math.random() * 900000))
+}
+
+async function findUserByBindCode(code = '') {
+	const normalized = normalizeBindCode(code)
+	if (normalized.length !== 6) {
+		return null
+	}
+	const res = await userCollection.where({
+		couple_bind_code: normalized
+	}).limit(1).get()
+	return (res && res.data && res.data[0]) || null
+}
+
+async function ensureUserBindCode(uid, { forceRefresh = false, userRecord = null } = {}) {
+	if (!uid) {
+		return null
+	}
+	const now = Date.now()
+	const record = userRecord || await getUserById(uid)
+	if (!record) {
+		return null
+	}
+
+	const existingCode = normalizeBindCode(record.couple_bind_code)
+	const existingExp = Number(record.couple_bind_code_expires_at || 0)
+	if (!forceRefresh && existingCode.length === 6 && existingExp > now) {
+		return {
+			code: existingCode,
+			expiresAt: existingExp
+		}
+	}
+
+	let nextCode = generateSixDigitCode()
+	for (let attempt = 0; attempt < 8; attempt += 1) {
+		const occupied = await userCollection.where({
+			couple_bind_code: nextCode,
+			couple_bind_code_expires_at: dbCmd.gt(now)
+		}).limit(1).get()
+		if (!occupied || !occupied.data || !occupied.data.length || occupied.data[0]._id === uid) {
+			break
+		}
+		nextCode = generateSixDigitCode()
+	}
+
+	const expiresAt = now + BIND_CODE_TTL_MS
+	await userCollection.doc(uid).update({
+		couple_bind_code: nextCode,
+		couple_bind_code_expires_at: expiresAt
+	})
+
+	return {
+		code: nextCode,
+		expiresAt
+	}
+}
+
+async function clearUserBindCode(uid) {
+	if (!uid) {
+		return
+	}
+	try {
+		await userCollection.doc(uid).update({
+			couple_bind_code: '',
+			couple_bind_code_expires_at: 0
+		})
+	} catch (error) {
+		console.warn('clearUserBindCode failed', error)
+	}
+}
+
 async function buildCoupleCenterPayload(uid) {
 	const userRecord = await getUserById(uid)
 	if (!userRecord) {
@@ -690,6 +775,9 @@ async function buildCoupleCenterPayload(uid) {
 		getCoupleHistoryByUid(uid)
 	])
 	const activeCouple = await enrichActiveCoupleWithStats(activeCoupleRecord, uid)
+	const bindCodeInfo = activeCouple
+		? null
+		: await ensureUserBindCode(uid, { userRecord })
 
 	const historyList = await Promise.all(
 		historyRelations
@@ -700,6 +788,7 @@ async function buildCoupleCenterPayload(uid) {
 	return {
 		selfInfo: await formatSelfInfo(userRecord),
 		activeCouple: activeCouple ? await formatCoupleInfo(uid, activeCouple) : null,
+		bindCodeInfo,
 		incomingRequests: await Promise.all(incomingRequests.map((item) => formatCoupleRequestItem(uid, item, {
 			type: 'incoming'
 		}))),
@@ -712,6 +801,11 @@ async function buildCoupleCenterPayload(uid) {
 }
 
 module.exports = {
+	BIND_CODE_TTL_MS,
+	normalizeBindCode,
+	findUserByBindCode,
+	ensureUserBindCode,
+	clearUserBindCode,
 	COUPLE_STATUS_PENDING,
 	COUPLE_STATUS_BOUND,
 	COUPLE_STATUS_UNBOUND,

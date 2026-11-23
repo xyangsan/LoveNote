@@ -6,7 +6,7 @@
 					<text class="word-editor__title">卧底词库</text>
 					<fui-switch
 						@change="handleSourceToggle"
-						color="#e76f51"
+						color="#E2643F"
 						background="#ffaa7f"
 						:scaleRatio="0.85"
 					>
@@ -87,8 +87,8 @@
 						:value="form.civilianWord"
 						:size="28"
 						:radius="20"
-						background-color="#fffaf7"
-						color="#5a3427"
+						background-color="#1E1814"
+						color="#FBF4EA"
 						:padding="['16rpx', '20rpx']"
 						@input="handleFormInput('civilianWord', $event)"
 					></fui-input>
@@ -97,8 +97,8 @@
 						:value="form.undercoverWord"
 						:size="28"
 						:radius="20"
-						background-color="#fffaf7"
-						color="#5a3427"
+						background-color="#1E1814"
+						color="#FBF4EA"
 						:padding="['16rpx', '20rpx']"
 						@input="handleFormInput('undercoverWord', $event)"
 					></fui-input>
@@ -109,8 +109,8 @@
 						:value="form.category"
 						:size="28"
 						:radius="20"
-						background-color="#fffaf7"
-						color="#5a3427"
+						background-color="#1E1814"
+						color="#FBF4EA"
 						:padding="['16rpx', '20rpx']"
 						@input="handleFormInput('category', $event)"
 					></fui-input>
@@ -123,7 +123,7 @@
 			<view class="word-editor__footer">
 				<fui-button
 					text="知道了"
-					background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
+					background="linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%)"
 					color="#ffffff"
 					height="84rpx"
 					radius="999rpx"
@@ -386,7 +386,7 @@
 		display: flex;
 		flex-direction: column;
 		padding: 12rpx 28rpx 24rpx;
-		background: #ffffff;
+		background: #1A1512;
 	}
 
 	.word-editor__head {
@@ -404,7 +404,7 @@
 		flex-shrink: 0;
 		font-size: 38rpx;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 
@@ -413,7 +413,7 @@
 		margin-top: 10rpx;
 		font-size: 24rpx;
 		line-height: 1.6;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.56);
 	}
 	.fui-switch--text {
 		display: flex;
@@ -442,12 +442,12 @@
 	}
 
 	.word-editor__chip--active {
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 	}
 
 	.word-editor__chip-text {
 		font-size: 23rpx;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	.word-editor__chip--active .word-editor__chip-text {
@@ -467,7 +467,7 @@
 
 	.word-editor__tip-text {
 		font-size: 24rpx;
-		color: #a07d71;
+		color: rgba(245, 237, 228, 0.44);
 	}
 
 	.word-item {
@@ -505,11 +505,11 @@
 	}
 
 	.word-item__word--civilian {
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 
 	.word-item__word--undercover {
-		color: #c0674d;
+		color: #E5865C;
 	}
 
 	.word-item__vs {
@@ -536,7 +536,7 @@
 		width: 60rpx;
 		height: 60rpx;
 		border-radius: 18rpx;
-		background: rgba(255, 241, 235, 0.98);
+		background: rgba(216, 176, 140, 0.12);
 	}
 
 	.word-item__action--danger {
@@ -545,7 +545,7 @@
 
 	.word-item__action-text {
 		font-size: 24rpx;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	.word-editor__more {
@@ -555,7 +555,7 @@
 
 	.word-editor__more-text {
 		font-size: 24rpx;
-		color: #b98069;
+		color: #D8B08C;
 	}
 
 	.word-form {
@@ -575,18 +575,18 @@
 	.word-form__title {
 		font-size: 27rpx;
 		font-weight: 700;
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 
 	.word-form__cancel {
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 255, 255, 0.96);
+		background: rgba(26, 21, 18, 0.94);
 	}
 
 	.word-form__cancel-text {
 		font-size: 21rpx;
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	.word-form__row {
@@ -607,7 +607,7 @@
 		width: 140rpx;
 		height: 76rpx;
 		border-radius: 20rpx;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 	}
 
 	.word-form__submit-text {

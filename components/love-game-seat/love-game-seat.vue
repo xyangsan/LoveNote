@@ -150,10 +150,10 @@
 			 */
 			tagStyle() {
 				const TONES = {
-					normal: { bg: 'rgba(255, 241, 235, 0.98)', border: 'rgba(231, 204, 194, 0.7)', color: '#b05b48' },
-					win: { bg: 'rgba(255, 226, 205, 0.98)', border: 'rgba(231, 111, 81, 0.36)', color: '#b05b48' },
-					warn: { bg: 'rgba(255, 240, 214, 0.98)', border: 'rgba(214, 158, 80, 0.4)', color: '#a8794a' },
-					danger: { bg: 'rgba(255, 220, 214, 0.98)', border: 'rgba(200, 90, 70, 0.36)', color: '#b05b48' }
+					normal: { bg: 'rgba(34, 27, 23, 0.96)', border: 'rgba(216, 176, 140, 0.34)', color: '#EAD4BC' },
+					win: { bg: 'rgba(28, 44, 34, 0.96)', border: 'rgba(132, 190, 156, 0.48)', color: '#9ED6B2' },
+					warn: { bg: 'rgba(46, 34, 22, 0.96)', border: 'rgba(216, 176, 140, 0.50)', color: '#F0C78A' },
+					danger: { bg: 'rgba(54, 24, 20, 0.96)', border: 'rgba(226, 100, 63, 0.54)', color: '#F5B496' }
 				}
 				const tone = TONES[this.tagTone] || TONES.normal
 				return [
@@ -166,7 +166,7 @@
 					'line-height:1.5',
 					'padding:2rpx 14rpx',
 					'border-radius:999rpx',
-					'box-shadow:0 6rpx 16rpx rgba(168, 110, 80, 0.18)'
+					'box-shadow:0 6rpx 16rpx rgba(0, 0, 0, 0.42)'
 				].join(';')
 			}
 		},
@@ -184,31 +184,38 @@
 <style>
 	.game-seat {
 		position: relative;
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 35rpx 8rpx;
+		justify-content: center;
+		width: 100%;
+		height: 256rpx;
+		padding: 24rpx 10rpx;
 		border-radius: 26rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 12rpx 30rpx rgba(168, 110, 80, 0.08);
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(26, 21, 18, 0.94));
+		box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.42);
 		transition: all 0.18s ease;
 	}
 
 	.game-seat--small {
-		padding: 35rpx 6rpx;
+		height: 224rpx;
+		padding: 20rpx 8rpx;
 		border-radius: 22rpx;
 	}
 
 	.game-seat--self {
-		background: rgba(255, 244, 236, 0.98);
+		border-color: rgba(226, 100, 63, 0.46);
+		background: linear-gradient(145deg, rgba(226, 100, 63, 0.18), rgba(26, 21, 18, 0.96));
 	}
 
 	.game-seat--speaker {
-		box-shadow: 0 0 0 4rpx rgba(231, 111, 81, 0.5), 0 12rpx 30rpx rgba(168, 110, 80, 0.14);
+		box-shadow: 0 0 0 4rpx rgba(231, 111, 81, 0.5), 0 12rpx 30rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.game-seat--selected {
-		box-shadow: 0 0 0 5rpx #e76f51, 0 12rpx 30rpx rgba(231, 111, 81, 0.22);
+		box-shadow: 0 0 0 5rpx #E2643F, 0 12rpx 30rpx rgba(231, 111, 81, 0.22);
 	}
 
 	.game-seat--offline {
@@ -236,7 +243,7 @@
 		width: 96rpx;
 		height: 96rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #ffb37a 0%, #E2643F 100%);
 		overflow: hidden;
 	}
 
@@ -291,7 +298,7 @@
 		transform: rotate(35deg);
 		transform-origin: center center;
 		border-radius: 50%;
-		background-color: #ffffff;
+		background-color: #1A1512;
 	}
 
 	/* 机器人：蓝色文字药丸（尺寸由 .game-seat__badge 统一给，这里只做观感） */
@@ -311,12 +318,16 @@
 
 	.game-seat__name {
 		display: block;
-		max-width: 100%;
-		margin-top: 8rpx;
+		width: 100%;
+		margin-top: 10rpx;
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #5d372b;
+		line-height: 1.3;
+		color: #FBF4EA;
 		text-align: center;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.game-seat--small .game-seat__name {
@@ -338,20 +349,22 @@
 		margin-top: 10rpx;
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
-		background: rgba(240, 240, 240, 0.96);
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.05);
 	}
 
 	.game-seat__ready--on {
-		background: rgba(255, 226, 205, 0.98);
+		border-color: rgba(132, 190, 156, 0.36);
+		background: rgba(132, 190, 156, 0.14);
 	}
 
 	.game-seat__ready-text {
 		font-size: 20rpx;
-		color: #a07d71;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.game-seat__ready--on .game-seat__ready-text {
-		color: #b05b48;
+		color: #9ED6B2;
 	}
 
 	.game-seat__status {
@@ -366,6 +379,6 @@
 		margin-top: 8rpx;
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #c0674d;
+		color: #E5865C;
 	}
 </style>

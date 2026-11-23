@@ -17,6 +17,7 @@
 const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
 const { formatError } = require('../lib/response')
+const pointsLib = require('../lib/points')
 const {
 	dbCmd,
 	userCollection,
@@ -134,6 +135,18 @@ const SETTING_KEY_GAME_ITEMS = {
 const DEFAULT_FEED_VISIBLE = false
 const DEFAULT_GAME_VISIBLE = true
 const DEFAULT_GAME_ITEM_VISIBLE = true
+
+// 心动点每日任务开关：键必须和 lib/points.js 的 TASK_DISPLAY_ORDER 一一对应。
+// 默认全部开启；关掉只是心动点页不展示该任务，已经发出去的分不受影响。
+const SETTING_KEY_POINTS_TASKS = {
+	daily_post: 'points_task_daily_post',
+	photo_upload: 'points_task_photo_upload',
+	game_settle: 'points_task_game_settle',
+	anniversary: 'points_task_anniversary',
+	plan_create: 'points_task_plan_create',
+	plan_finish: 'points_task_plan_finish'
+}
+const DEFAULT_POINTS_TASK_VISIBLE = true
 
 // ad_platform 字典（对账用）
 const AD_PLATFORM_TEXT = {
@@ -505,8 +518,10 @@ async function writeAppSetting(key, value, uid) {
  */
 async function readModuleVisibility() {
 	const gameItemTypes = Object.keys(SETTING_KEY_GAME_ITEMS)
+	const pointsTaskTypes = Object.keys(SETTING_KEY_POINTS_TASKS)
 	const keys = [SETTING_KEY_FEED_VISIBLE, SETTING_KEY_GAME_VISIBLE].concat(
-		gameItemTypes.map((type) => SETTING_KEY_GAME_ITEMS[type])
+		gameItemTypes.map((type) => SETTING_KEY_GAME_ITEMS[type]),
+		pointsTaskTypes.map((type) => SETTING_KEY_POINTS_TASKS[type])
 	)
 	let rows = []
 	try {
@@ -533,10 +548,16 @@ async function readModuleVisibility() {
 		gameItems[type] = pickSwitchValue(found[SETTING_KEY_GAME_ITEMS[type]], DEFAULT_GAME_ITEM_VISIBLE)
 	})
 
+	const pointsTasks = {}
+	pointsTaskTypes.forEach((type) => {
+		pointsTasks[type] = pickSwitchValue(found[SETTING_KEY_POINTS_TASKS[type]], DEFAULT_POINTS_TASK_VISIBLE)
+	})
+
 	return {
 		feedVisible: pickSwitchValue(found[SETTING_KEY_FEED_VISIBLE], DEFAULT_FEED_VISIBLE),
 		gameVisible: pickSwitchValue(found[SETTING_KEY_GAME_VISIBLE], DEFAULT_GAME_VISIBLE),
-		gameItems
+		gameItems,
+		pointsTasks
 	}
 }
 
@@ -1561,6 +1582,38 @@ module.exports = class PlatformService extends Service {
 					nextSettings[settingKey] = data.gameItems[type]
 				}
 			}
+			if (data.pointsTasks !== undefined) {
+				if (!data.pointsTasks || typeof data.pointsTasks !== 'object' || Array.isArray(data.pointsTasks)) {
+					return {
+						errCode: 'love-note-invalid-param',
+						errMsg: 'pointsTasks 必须是对象'
+					}
+				}
+				const pointsTaskTypes = Object.keys(data.pointsTasks)
+				if (!pointsTaskTypes.length) {
+					return {
+						errCode: 'love-note-invalid-param',
+						errMsg: 'pointsTasks 里没有要更新的任务'
+					}
+				}
+				for (let index = 0; index < pointsTaskTypes.length; index += 1) {
+					const type = pointsTaskTypes[index]
+					const settingKey = SETTING_KEY_POINTS_TASKS[type]
+					if (!settingKey) {
+						return {
+							errCode: 'love-note-invalid-param',
+							errMsg: `未知的任务类型 ${type}`
+						}
+					}
+					if (typeof data.pointsTasks[type] !== 'boolean') {
+						return {
+							errCode: 'love-note-invalid-param',
+							errMsg: `pointsTasks.${type} 必须是布尔值`
+						}
+					}
+					nextSettings[settingKey] = data.pointsTasks[type]
+				}
+			}
 
 			const settingKeys = Object.keys(nextSettings)
 			if (!settingKeys.length) {
@@ -1580,6 +1633,13 @@ module.exports = class PlatformService extends Service {
 					nextGameItems[type] = nextSettings[settingKey]
 				}
 			})
+			const nextPointsTasks = Object.assign({}, current.pointsTasks)
+			Object.keys(SETTING_KEY_POINTS_TASKS).forEach((type) => {
+				const settingKey = SETTING_KEY_POINTS_TASKS[type]
+				if (nextSettings[settingKey] !== undefined) {
+					nextPointsTasks[type] = nextSettings[settingKey]
+				}
+			})
 			const nextVisibility = {
 				feedVisible: nextSettings[SETTING_KEY_FEED_VISIBLE] !== undefined
 					? nextSettings[SETTING_KEY_FEED_VISIBLE]
@@ -1587,7 +1647,8 @@ module.exports = class PlatformService extends Service {
 				gameVisible: nextSettings[SETTING_KEY_GAME_VISIBLE] !== undefined
 					? nextSettings[SETTING_KEY_GAME_VISIBLE]
 					: current.gameVisible,
-				gameItems: nextGameItems
+				gameItems: nextGameItems,
+				pointsTasks: nextPointsTasks
 			}
 
 			for (let index = 0; index < settingKeys.length; index += 1) {
@@ -1603,6 +1664,81 @@ module.exports = class PlatformService extends Service {
 			}
 		} catch (error) {
 			return formatError(error, '保存权限设置失败')
+		}
+	}
+
+	/**
+	 * 心动点回补（仅 admin）：给历史账号补上「注册 100 / 绑定 1000 / 完善资料 50」。
+	 *
+	 * 按页遍历 uni-id-users（offset / limit），单次最多 200 个，翻页由调用方驱动 ——
+	 * 用户量一大，一次性遍历必然撞云函数超时，只能这样切。
+	 * 已经发过的账号靠流水短路，重复执行安全。
+	 */
+	async backfillPoints(data = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			const offset = Math.max(0, Math.floor(Number(data.offset) || 0))
+			const limit = Math.min(200, Math.max(1, Math.floor(Number(data.limit) || 100)))
+
+			const totalResult = await userCollection.where({}).count()
+			const total = normalizeCount(totalResult && totalResult.total)
+
+			// 预览模式：只报总数，不动任何数据（权限 tab 首屏显示「共多少个注册账号」）
+			if (data.preview === true) {
+				return {
+					errCode: 0,
+					data: {
+						total,
+						scanned: 0,
+						accountsGranted: 0,
+						records: { register: 0, bind: 0, profile: 0 },
+						points: 0,
+						skipped: 0,
+						failed: 0,
+						offset: 0,
+						limit,
+						nextOffset: 0,
+						hasMore: total > 0,
+						preview: true
+					}
+				}
+			}
+
+			// 按 _id 排序翻页，否则 skip/limit 在多页之间会漂
+			const listResult = await userCollection
+				.orderBy('_id', 'asc')
+				.skip(offset)
+				.limit(limit)
+				.field({ _id: true })
+				.get()
+			const list = listResult && Array.isArray(listResult.data) ? listResult.data : []
+			const uids = list.map((item) => item._id).filter(Boolean)
+
+			const backfill = await pointsLib.backfillAccountAwards(uids)
+			const nextOffset = offset + uids.length
+
+			return {
+				errCode: 0,
+				data: Object.assign({}, backfill, {
+					offset,
+					limit,
+					nextOffset,
+					total,
+					hasMore: uids.length > 0 && nextOffset < total
+				})
+			}
+		} catch (error) {
+			return formatError(error, '回补心动点失败')
 		}
 	}
 

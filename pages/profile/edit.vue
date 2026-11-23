@@ -1,226 +1,177 @@
 <template>
-	<view class="love-page edit-page">
-		<view class="love-page__glow love-page__glow--left"></view>
-		<view class="love-page__glow love-page__glow--right"></view>
+	<view class="pe-page">
+		<view class="pe-glow pe-glow--left"></view>
+		<view class="pe-glow pe-glow--right"></view>
 
-		<view class="love-layer">
+		<noir-navbar
+			title="编辑资料"
+			:show-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+		/>
 
-			<fui-section
-				title="编辑资料"
-				descr="头像、昵称与基础信息会同步到个人中心和后续情侣空间展示。"
-				:is-line="true"
-				line-width="10rpx"
-				line-color="#ec7558"
-				:line-right="22"
-				:descr-top="14"
-				:size="40"
-				descr-size="24"
-				color="#5a3427"
-				descr-color="#906b61"
-				:padding="['0', '0']"
-				:margin-top="12"
-				:margin-bottom="28"
-			></fui-section>
-
+		<view class="pe-wrap">
 			<love-auth-required
 				v-if="!isLoggedIn"
+				class="pe-auth"
 				desc="请先完成登录，再继续修改头像和昵称。"
 				secondary-text="返回个人中心"
 				@login="goToLoginPage"
 				@secondary="backToProfile"
 			></love-auth-required>
 
-			<form v-else report-submit="true" @submit="handleFormSubmit">
-				<fui-form-field hidden name="nickname" :value="profileForm.nickname"></fui-form-field>
-				<fui-form-field hidden name="mobile" :value="profileForm.mobile"></fui-form-field>
-				<fui-form-field hidden name="birthday" :value="profileForm.birthday"></fui-form-field>
-
-				<fui-card
-					class="editor-card"
-					:margin="['0', '0', '0', '0']"
-					background="rgba(255, 250, 247, 0.97)"
-					radius="32rpx"
-					shadow="0 20rpx 48rpx rgba(192, 120, 92, 0.12)"
-					:padding="['0', '0']"
-					:header-line="false"
-				>
-					<view class="editor-card__hero">
-						<view class="editor-avatar" @tap="goToAvatarPage">
-							<view class="editor-avatar__frame">
-								<fui-avatar
-									class="editor-avatar__img"
-									:src="displayProfileAvatar"
-									error-src="/static/user-empty.png"
-									:width="136"
-									:height="136"
-									background="#fff1eb"
-								></fui-avatar>
-							</view>
-							<text class="editor-avatar__label">点击更换头像</text>
+			<template v-else>
+				<!-- 顶部头像与昵称概览（对标 s28 .pe-avatar） -->
+				<view class="pe-avatar" @tap="goToAvatarPage">
+					<view class="pe-av-box">
+						<view class="pe-av">
+							<image
+								v-if="displayProfileAvatar && !avatarLoadError"
+								class="pe-av__img"
+								:src="displayProfileAvatar"
+								mode="aspectFill"
+								@error="avatarLoadError = true"
+							></image>
+							<text v-else class="pe-av__txt">{{ avatarFallbackText }}</text>
 						</view>
-
-						<view class="editor-card__hero-body">
-							<view class="editor-card__hero-top">
-								<text class="editor-card__name">{{ profileForm.nickname || currentUserName }}</text>
-								<text class="editor-card__count">{{ nicknameCountText }}</text>
-							</view>
-							<text class="editor-card__summary">资料更新后会自动同步到登录页和个人中心。</text>
-
-							<view class="meta-grid">
-								<view class="meta-grid__item">
-									<text class="meta-grid__label">注册时间</text>
-									<text class="meta-grid__value">{{ registerDateText }}</text>
-								</view>
-							</view>
+						<view class="pe-av-plus">
+							<text class="pe-av-plus__txt">＋</text>
 						</view>
 					</view>
-
-					<fui-divider
-						text="基础资料"
-						width="100%"
-						height="54"
-						divider-color="rgba(231, 204, 194, 0.7)"
-						color="#b36a56"
-						:size="22"
-					></fui-divider>
-
-					<view class="editor-form">
-						<view class="form-block">
-							<view class="form-block__head">
-								<text class="form-block__label">昵称</text>
-								<text class="form-block__meta">必填</text>
-							</view>
-							<fui-input
-								:value="profileForm.nickname"
-								type="text"
-								placeholder="请输入昵称"
-								background-color="#fff7f3"
-								:border-bottom="false"
-								:padding="['28rpx', '24rpx']"
-								:radius="26"
-								:size="28"
-								color="#5a3427"
-								maxlength="20"
-								@input="onProfileNicknameInput"
-								@blur="onProfileNicknameBlur"
-							></fui-input>
-							<text class="form-block__tip">建议填写真实昵称或你希望另一半看到的称呼。</text>
-							<text v-if="formErrors.nickname" class="form-block__error">{{ formErrors.nickname }}</text>
-						</view>
-
-						<view class="form-block">
-							<view class="form-block__head">
-								<text class="form-block__label">性别</text>
-								<text class="form-block__meta">可修改</text>
-							</view>
-							<fui-radio-group name="gender" :value="String(profileForm.gender)" @change="onGenderChange">
-								<view class="gender-grid">
-									<view
-										v-for="(item, index) in genderOptions"
-										:key="item"
-										class="gender-chip"
-										:class="{ 'gender-chip--active': profileForm.gender === index }"
-										@tap="selectGender(index)"
-									>
-										<fui-radio
-											:value="String(index)"
-											color="#ec7558"
-											border-color="#efcbbf"
-											check-mark-color="#ffffff"
-											:scale-ratio="0.9"
-										></fui-radio>
-										<text class="gender-chip__text">{{ item }}</text>
-									</view>
-								</view>
-							</fui-radio-group>
-						</view>
-
-						<view class="form-block">
-							<view class="form-block__head">
-								<text class="form-block__label">手机号</text>
-								<text class="form-block__meta">选填</text>
-							</view>
-							<fui-input
-								:value="profileForm.mobile"
-								type="number"
-								placeholder="请输入手机号"
-								background-color="#fff7f3"
-								:border-bottom="false"
-								:padding="['28rpx', '24rpx']"
-								:radius="26"
-								:size="28"
-								color="#5a3427"
-								maxlength="11"
-								@input="onMobileInput"
-								@blur="onMobileBlur"
-							></fui-input>
-							<text v-if="formErrors.mobile" class="form-block__error">{{ formErrors.mobile }}</text>
-						</view>
-						
-						<view class="form-block">
-							<view class="form-block__head">
-								<text class="form-block__label">生日</text>
-								<text class="form-block__meta">选填</text>
-							</view>
-							<picker
-								mode="date"
-								fields="day"
-								:value="profileForm.birthday || birthdayPickerEnd"
-								:start="birthdayPickerStart"
-								:end="birthdayPickerEnd"
-								@change="onBirthdayChange"
-							>
-								<fui-list-cell
-									:padding="['28rpx', '24rpx']"
-									background="#fff7f3"
-									:bottom-border="false"
-									radius="26rpx"
-									arrow
-									arrow-color="#d2a394"
-								>
-									<view class="date-picker-field">
-										<text class="date-picker-field__value" :class="{ 'date-picker-field__value--placeholder': !profileForm.birthday }">
-											{{ birthdayDisplayText }}
-										</text>
-									</view>
-								</fui-list-cell>
-							</picker>
-							<text class="form-block__tip">可选择你的生日日期，后续会在个人资料和纪念提醒中使用。</text>
-							<text v-if="formErrors.birthday" class="form-block__error">{{ formErrors.birthday }}</text>
-						</view>
+					<view class="pe-av-meta">
+						<text class="pe-av-meta__name">{{ profileForm.nickname || currentUserName }}</text>
+						<text class="pe-av-meta__sub">点击更换头像 · 昵称 {{ nicknameCountText }}</text>
 					</view>
-				</fui-card>
-
-				<view class="edit-actions edit-actions--form">
-					<fui-button
-						form-type="submit"
-						text="保存资料"
-						background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-						color="#ffffff"
-						radius="999rpx"
-						height="90rpx"
-						:size="28"
-						:bold="true"
-						:loading="isSaving"
-					></fui-button>
-					<fui-button
-						text="暂不修改"
-						background="rgba(255, 241, 235, 0.98)"
-						color="#b05b48"
-						border-color="rgba(214, 145, 122, 0.24)"
-						radius="999rpx"
-						height="90rpx"
-						:size="28"
-						:bold="true"
-						@click="backToProfile"
-					></fui-button>
 				</view>
-			</form>
+
+				<!-- 表单行卡片（对标 s28 .pe-form） -->
+				<view class="pe-form">
+					<!-- 昵称 -->
+					<view class="pe-row-block">
+						<view class="pe-row">
+							<text class="pe-row__label">昵称（必填）</text>
+							<view class="pe-row__right">
+								<input
+									class="pe-row__input"
+									type="text"
+									:value="profileForm.nickname"
+									placeholder="请输入昵称"
+									placeholder-class="pe-input-ph"
+									:maxlength="20"
+									@input="onNicknameNativeInput"
+									@blur="onProfileNicknameBlur"
+								/>
+								<text class="pe-chev">›</text>
+							</view>
+						</view>
+						<text v-if="formErrors.nickname" class="pe-row__error">{{ formErrors.nickname }}</text>
+					</view>
+
+					<!-- 性别 -->
+					<view class="pe-row-block">
+						<view class="pe-row">
+							<text class="pe-row__label">性别</text>
+							<view class="pe-gender">
+								<view
+									v-for="(item, index) in genderOptions"
+									:key="item"
+									class="pe-chip"
+									:class="{ 'pe-chip--on': profileForm.gender === index }"
+									@tap="selectGender(index)"
+								>
+									<text class="pe-chip__txt">{{ item }}</text>
+								</view>
+							</view>
+						</view>
+					</view>
+
+					<!-- 手机号 -->
+					<view class="pe-row-block">
+						<view class="pe-row">
+							<text class="pe-row__label">手机号（选填）</text>
+							<view class="pe-row__right">
+								<input
+									class="pe-row__input"
+									type="number"
+									:value="profileForm.mobile"
+									placeholder="选填，留空清除"
+									placeholder-class="pe-input-ph"
+									:maxlength="11"
+									@input="onMobileNativeInput"
+									@blur="onMobileBlur"
+								/>
+								<text class="pe-chev">›</text>
+							</view>
+						</view>
+						<text v-if="formErrors.mobile" class="pe-row__error">{{ formErrors.mobile }}</text>
+					</view>
+
+					<!-- 生日 -->
+					<view class="pe-row-block">
+						<picker
+							mode="date"
+							fields="day"
+							:value="profileForm.birthday || birthdayPickerEnd"
+							:start="birthdayPickerStart"
+							:end="birthdayPickerEnd"
+							@change="onBirthdayChange"
+						>
+							<view class="pe-row">
+								<text class="pe-row__label">生日（选填）</text>
+								<view class="pe-row__right">
+									<text
+										class="pe-row__val"
+										:class="{ 'pe-row__val--placeholder': !profileForm.birthday }"
+									>{{ birthdayDisplayText }}</text>
+									<text class="pe-chev">›</text>
+								</view>
+							</view>
+						</picker>
+						<text v-if="formErrors.birthday" class="pe-row__error">{{ formErrors.birthday }}</text>
+					</view>
+
+					<!-- 注册时间 -->
+					<view class="pe-row-block pe-row-block--last">
+						<view class="pe-row">
+							<text class="pe-row__label">注册时间</text>
+							<text class="pe-row__val pe-row__val--mono">{{ registerDateText }}</text>
+						</view>
+					</view>
+				</view>
+
+				<!-- 完善奖励提示（对标 s28 .pe-bonus） -->
+				<view class="pe-bonus">
+					<text class="pe-bonus__txt">完善奖励：头像、昵称与生日全部填写完成（绑定情侣后），可自动获得一次性 +50 心动点。</text>
+				</view>
+
+				<!-- 底部说明（对标 s28 .pe-note） -->
+				<text class="pe-note">手机号仅为可选联系资料字段，留空将清除；不支持占位昵称「微信用户」。</text>
+			</template>
+		</view>
+
+		<!-- 底部操作栏（对标 s28 .pe-foot） -->
+		<view v-if="isLoggedIn" class="pe-foot-bar">
+			<view class="pe-foot">
+				<view class="pe-btn pe-btn--ghost" hover-class="pe-btn--hover" @tap="backToProfile">
+					<text class="pe-btn__txt pe-btn__txt--ghost">暂不修改</text>
+				</view>
+				<view
+					class="pe-btn pe-btn--primary"
+					:class="{ 'pe-btn--disabled': isSaving }"
+					hover-class="pe-btn--hover"
+					@tap="handleSaveTap"
+				>
+					<text class="pe-btn__txt">{{ isSaving ? '保存中…' : '保存资料' }}</text>
+				</view>
+			</view>
 		</view>
 	</view>
 </template>
 
 <script>
+	import LoveAuthRequired from '@/components/love-auth-required/love-auth-required.vue'
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import {
 		DEFAULT_AVATAR,
 		clearUniIdTokenStorage,
@@ -231,7 +182,7 @@
 	} from '../../common/auth-center.js'
 	import { getUserApi } from '../../common/api/user.js'
 	import { useAppStateStore } from '../../store/app-state.js'
-import { requirePageLogin } from '@/common/auth-entry.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const NICKNAME_MAX_LENGTH = 20
@@ -282,9 +233,14 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	}
 
 	export default {
+		components: {
+			LoveAuthRequired
+		},
 		data() {
 			return {
+				scrollTop: 0,
 				isSaving: false,
+				avatarLoadError: false,
 				appStateStore: null,
 				userInfo: null,
 				genderOptions,
@@ -311,17 +267,18 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			currentUserName() {
 				return this.userInfo && this.userInfo.nickname ? this.userInfo.nickname : '微信用户'
 			},
+			avatarFallbackText() {
+				const name = String(this.profileForm.nickname || this.currentUserName || '我').trim()
+				return name ? name.slice(0, 1) : '我'
+			},
 			displayProfileAvatar() {
 				return this.profileForm.avatarUrl || (this.userInfo && this.userInfo.avatarUrl) || DEFAULT_AVATAR
 			},
 			registerDateText() {
 				return this.userInfo ? formatDateTime(this.userInfo.registerDate) : '暂未记录'
 			},
-			lastLoginDateText() {
-				return this.userInfo ? formatDateTime(this.userInfo.lastLoginDate) : '暂未记录'
-			},
 			nicknameCountText() {
-				return `${(this.profileForm.nickname || '').trim().length}/${NICKNAME_MAX_LENGTH}`
+				return `${(this.profileForm.nickname || '').trim().length} / ${NICKNAME_MAX_LENGTH}`
 			},
 			birthdayPickerStart() {
 				return BIRTHDAY_START
@@ -330,17 +287,24 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				return getTodayDateString()
 			},
 			birthdayDisplayText() {
-				return this.profileForm.birthday ? formatBirthdayText(this.profileForm.birthday) : '请选择生日日期'
+				return this.profileForm.birthday ? formatBirthdayText(this.profileForm.birthday) : '请选择生日'
+			}
+		},
+		watch: {
+			displayProfileAvatar() {
+				this.avatarLoadError = false
 			}
 		},
 		onLoad() {
-			// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
 			if (!requirePageLogin()) return
 			this.ensureAppStateStore()
 			this.syncUserFromStore()
 			this.removeAuthListener = subscribeAuthChanged(() => {
 				this.restoreLoginState()
 			})
+		},
+		onPageScroll(e) {
+			this.scrollTop = e && e.scrollTop ? e.scrollTop : 0
 		},
 		onShow() {
 			this.restoreLoginState()
@@ -495,28 +459,6 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					}
 				}
 			},
-			async fetchCurrentUser({ silent = false, force = false } = {}) {
-				const appStateStore = this.ensureAppStateStore()
-				try {
-					await appStateStore.fetchUserInfo({
-						force
-					})
-					this.syncUserFromStore()
-					saveCachedUserProfile(this.userInfo)
-					this.fillProfileForm(this.userInfo)
-				} catch (error) {
-					console.warn('profile edit fetchCurrentUser failed', error)
-					this.syncUserFromStore()
-					this.resetProfileForm()
-
-					if (!silent) {
-						uni.showToast({
-							title: '登录状态已失效，请重新登录',
-							icon: 'none'
-						})
-					}
-				}
-			},
 			goToLoginPage() {
 				uni.redirectTo({
 					url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/profile/edit')
@@ -527,7 +469,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					url: '/pages/profile/avatar'
 				})
 			},
-			onProfileNicknameInput(value) {
+			onNicknameNativeInput(event) {
+				const value = event && event.detail ? event.detail.value : ''
 				this.profileForm.nickname = `${value || ''}`.slice(0, NICKNAME_MAX_LENGTH)
 				if (this.formErrors.nickname) {
 					this.setFieldError('nickname', '')
@@ -548,9 +491,6 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			selectGender(index) {
 				this.profileForm.gender = Number(index || 0)
 			},
-			onGenderChange(event) {
-				this.profileForm.gender = Number(event.detail.value || 0)
-			},
 			onBirthdayChange(event) {
 				const value = event && event.detail ? event.detail.value : ''
 				this.profileForm.birthday = value || ''
@@ -566,7 +506,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					showToast: false
 				})
 			},
-			onMobileInput(value) {
+			onMobileNativeInput(event) {
+				const value = event && event.detail ? event.detail.value : ''
 				this.profileForm.mobile = `${value || ''}`.replace(/[^\d]/g, '').slice(0, 11)
 				if (this.formErrors.mobile) {
 					this.setFieldError('mobile', '')
@@ -582,6 +523,18 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 					gender: this.profileForm.gender
 				}, {
 					showToast: false
+				})
+			},
+			handleSaveTap() {
+				this.handleFormSubmit({
+					detail: {
+						value: {
+							nickname: this.profileForm.nickname,
+							mobile: this.profileForm.mobile,
+							gender: this.profileForm.gender,
+							birthday: this.profileForm.birthday
+						}
+					}
 				})
 			},
 			async handleFormSubmit(event) {
@@ -675,216 +628,337 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				}
 			},
 			backToProfile() {
-				uni.switchTab({
-					url: '/pages/profile/index'
-				})
+				const pages = getCurrentPages()
+				if (pages && pages.length > 1) {
+					uni.navigateBack()
+					return
+				}
+				navigateToTab('/pages/profile/index')
 			}
 		}
 	}
 </script>
 
-<style>
-	.edit-page {
-		padding: 28rpx 24rpx 52rpx;
-	}
-
-	.editor-card {
+<style scoped>
+	.pe-page {
+		position: relative;
+		box-sizing: border-box;
+		min-height: 100vh;
+		padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
+		background: #110D0B;
 		overflow: hidden;
 	}
 
-	.editor-card__hero {
-		display: flex;
-		align-items: flex-start;
-		padding: 34rpx 32rpx 28rpx;
-	}
-
-	.editor-avatar {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 0;
-	}
-
-	.editor-avatar__frame {
-		padding: 6rpx;
+	.pe-glow {
+		position: fixed;
+		width: 420rpx;
+		height: 420rpx;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.56);
-		box-shadow: 0 14rpx 26rpx rgba(177, 114, 83, 0.14);
+		filter: blur(80rpx);
+		opacity: 0.2;
+		pointer-events: none;
+		z-index: 0;
 	}
 
-	.editor-avatar__img {
-		display: block;
+	.pe-glow--left {
+		top: -120rpx;
+		left: -140rpx;
+		background: #E2643F;
 	}
 
-	.editor-avatar__label {
-		margin-top: 16rpx;
-		font-size: 22rpx;
-		color: #a17567;
+	.pe-glow--right {
+		top: 320rpx;
+		right: -160rpx;
+		background: #D8B08C;
 	}
 
-	.editor-card__hero-body {
-		flex: 1;
-		min-width: 0;
-		margin-left: 24rpx;
+	.pe-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 16rpx 36rpx 0;
 	}
 
-	.editor-card__hero-top {
+	.pe-auth {
+		margin-top: 20rpx;
+	}
+
+	/* 顶部头像区（对标 s28 .pe-avatar） */
+	.pe-avatar {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 18rpx;
+		gap: 28rpx;
+		padding: 8rpx 4rpx 6rpx;
 	}
 
-	.editor-card__name {
-		flex: 1;
-		min-width: 0;
-		font-size: 38rpx;
-		font-weight: 700;
-		color: #5a3427;
-		word-break: break-all;
-	}
-
-	.editor-card__count {
+	.pe-av-box {
+		position: relative;
+		width: 144rpx;
+		height: 144rpx;
 		flex-shrink: 0;
-		padding: 8rpx 14rpx;
-		border-radius: 999rpx;
-		background: rgba(255, 236, 229, 0.96);
-		font-size: 22rpx;
-		color: #c16b55;
 	}
 
-	.editor-card__summary {
-		display: block;
-		margin-top: 16rpx;
-		font-size: 23rpx;
-		line-height: 1.8;
-		color: #906b61;
-	}
-
-	.meta-grid {
-		display: grid;
-		grid-template-columns: repeat(1, minmax(0, 1fr));
-		gap: 16rpx;
-		margin-top: 24rpx;
-	}
-
-	.meta-grid__item {
-		padding: 20rpx 18rpx;
-		border-radius: 24rpx;
-		background: rgba(255, 244, 239, 0.92);
-	}
-
-	.meta-grid__label {
-		display: block;
-		font-size: 21rpx;
-		color: #b08478;
-	}
-
-	.meta-grid__value {
-		display: block;
-		margin-top: 10rpx;
-		font-size: 24rpx;
-		line-height: 1.6;
-		color: #5e3f35;
-		word-break: break-all;
-	}
-
-	.editor-form {
-		padding: 8rpx 32rpx 34rpx;
-	}
-
-	.form-block + .form-block {
-		margin-top: 30rpx;
-	}
-
-	.form-block__head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 16rpx;
-	}
-
-	.form-block__label {
-		font-size: 26rpx;
-		font-weight: 600;
-		color: #5a3427;
-	}
-
-	.form-block__meta {
-		font-size: 22rpx;
-		color: #c07a68;
-	}
-
-	.form-block__tip {
-		display: block;
-		margin-top: 14rpx;
-		font-size: 22rpx;
-		line-height: 1.7;
-		color: #9a766c;
-	}
-
-	.form-block__error {
-		display: block;
-		margin-top: 10rpx;
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: #da5a41;
-	}
-
-	.date-picker-field {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		min-height: 42rpx;
-	}
-
-	.date-picker-field__value {
-		font-size: 28rpx;
-		color: #5a3427;
-	}
-
-	.date-picker-field__value--placeholder {
-		color: #b29a93;
-	}
-
-	.gender-grid {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 16rpx;
-	}
-
-	.gender-chip {
+	.pe-av {
+		width: 144rpx;
+		height: 144rpx;
+		border-radius: 50%;
+		border: 2rpx solid rgba(255, 240, 226, 0.48);
+		background: linear-gradient(135deg, #D9B08A, #9A6347);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 12rpx;
-		padding: 24rpx 16rpx;
-		border-radius: 26rpx;
-		background: #fff7f3;
-		box-shadow: inset 0 0 0 1rpx rgba(239, 203, 191, 0.78);
-		transition: all 0.2s ease;
+		overflow: hidden;
 	}
 
-	.gender-chip--active {
-		background: rgba(255, 236, 229, 0.98);
-		box-shadow: inset 0 0 0 1rpx rgba(236, 117, 88, 0.4);
+	.pe-av__img {
+		width: 100%;
+		height: 100%;
 	}
 
-	.gender-chip__text {
-		font-size: 25rpx;
-		font-weight: 600;
-		color: #6a4337;
+	.pe-av__txt {
+		font-family: "Songti SC", "STSong", Georgia, serif;
+		font-size: 52rpx;
+		color: #FFF6EC;
 	}
 
-	.edit-actions {
+	.pe-av-plus {
+		position: absolute;
+		right: -2rpx;
+		bottom: 0;
+		width: 44rpx;
+		height: 44rpx;
+		border-radius: 50%;
+		background: #E2643F;
+		border: 4rpx solid #110D0B;
 		display: flex;
-		flex-direction: column;
-		gap: 22rpx;
-		margin-top: 30rpx;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.edit-actions--form {
-		margin-top: 34rpx;
-		padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+	.pe-av-plus__txt {
+		font-size: 24rpx;
+		line-height: 1;
+		color: #FFF7EF;
+		font-weight: 700;
+	}
+
+	.pe-av-meta {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.pe-av-meta__name {
+		display: block;
+		font-size: 32rpx;
+		font-weight: 500;
+		color: #F5EDE4;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.pe-av-meta__sub {
+		display: block;
+		margin-top: 10rpx;
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.44);
+	}
+
+	/* 表单行卡片（对标 s28 .pe-form） */
+	.pe-form {
+		margin-top: 32rpx;
+		padding: 0 28rpx;
+		border-radius: 32rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.pe-row-block {
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+	}
+
+	.pe-row-block--last {
+		border-bottom: none;
+	}
+
+	.pe-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20rpx;
+		min-height: 104rpx;
+	}
+
+	.pe-row__label {
+		flex-shrink: 0;
+		font-size: 26rpx;
+		color: rgba(245, 237, 228, 0.68);
+	}
+
+	.pe-row__right {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 10rpx;
+	}
+
+	.pe-row__input {
+		flex: 1;
+		min-width: 0;
+		height: 68rpx;
+		font-size: 26rpx;
+		color: #FBF4EA;
+		text-align: right;
+	}
+
+	.pe-input-ph {
+		color: rgba(245, 237, 228, 0.30);
+	}
+
+	.pe-row__val {
+		font-size: 26rpx;
+		color: #FBF4EA;
+		text-align: right;
+	}
+
+	.pe-row__val--placeholder {
+		color: rgba(245, 237, 228, 0.32);
+	}
+
+	.pe-row__val--mono {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.56);
+	}
+
+	.pe-chev {
+		flex-shrink: 0;
+		font-size: 30rpx;
+		color: rgba(245, 237, 228, 0.30);
+		line-height: 1;
+	}
+
+	.pe-row__error {
+		display: block;
+		padding-bottom: 16rpx;
+		font-size: 21rpx;
+		color: #F08A6C;
+		text-align: right;
+	}
+
+	/* 性别胶囊选择（对标 s28 .pe-gender） */
+	.pe-gender {
+		display: flex;
+		align-items: center;
+		gap: 12rpx;
+	}
+
+	.pe-chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 54rpx;
+		padding: 0 22rpx;
+		border-radius: 27rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.pe-chip--on {
+		border-color: rgba(226, 100, 63, 0.52);
+		background: rgba(226, 100, 63, 0.18);
+	}
+
+	.pe-chip__txt {
+		font-size: 23rpx;
+		color: rgba(245, 237, 228, 0.62);
+	}
+
+	.pe-chip--on .pe-chip__txt {
+		color: #FBF4EA;
+		font-weight: 600;
+	}
+
+	/* 奖励卡与说明（对标 s28 .pe-bonus / .pe-note） */
+	.pe-bonus {
+		margin-top: 26rpx;
+		padding: 22rpx 26rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: rgba(216, 176, 140, 0.06);
+	}
+
+	.pe-bonus__txt {
+		font-size: 22rpx;
+		line-height: 1.65;
+		color: rgba(234, 212, 188, 0.80);
+	}
+
+	.pe-note {
+		display: block;
+		margin-top: 20rpx;
+		padding: 0 6rpx;
+		font-size: 21rpx;
+		line-height: 1.65;
+		color: rgba(245, 237, 228, 0.36);
+	}
+
+	/* 底部操作栏（对标 s28 .pe-foot） */
+	.pe-foot-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 30;
+		padding: 20rpx 36rpx calc(24rpx + env(safe-area-inset-bottom));
+		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: rgba(17, 13, 11, 0.94);
+	}
+
+	.pe-foot {
+		display: flex;
+		align-items: center;
+		gap: 20rpx;
+	}
+
+	.pe-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 88rpx;
+		border-radius: 44rpx;
+	}
+
+	.pe-btn--ghost {
+		flex: 0 0 216rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		background: rgba(216, 176, 140, 0.08);
+	}
+
+	.pe-btn--primary {
+		flex: 1;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
+	}
+
+	.pe-btn--disabled {
+		opacity: 0.6;
+	}
+
+	.pe-btn--hover {
+		opacity: 0.86;
+	}
+
+	.pe-btn__txt {
+		font-size: 28rpx;
+		font-weight: 600;
+		color: #FFF7EF;
+		letter-spacing: 2rpx;
+	}
+
+	.pe-btn__txt--ghost {
+		color: #EAD4BC;
+		letter-spacing: 1rpx;
 	}
 </style>

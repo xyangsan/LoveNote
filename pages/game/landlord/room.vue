@@ -353,8 +353,8 @@
 					:value="joinCode"
 					:size="16"
 					:radius="10"
-					background-color="#fffaf7"
-					color="#5a3427"
+					background-color="#1E1814"
+					color="#FBF4EA"
 					:padding="['10px', '12px']"
 					@input="handleJoinCodeInput"
 				></fui-input>
@@ -392,6 +392,7 @@
 	import LlTimer from './components/ll-timer.vue'
 	import LlActions from './components/ll-actions.vue'
 	import LlRules from './components/ll-rules.vue'
+	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import LlResult from './components/ll-result.vue'
 	import { getGameApi, assertGameResult } from '@/common/api/game.js'
 	import { createRoomSync } from '@/common/game/room-sync.js'
@@ -1640,7 +1641,7 @@
 					title: '退出房间',
 					content: this.buildLeaveConfirmText(),
 					confirmText: '退出',
-					confirmColor: '#e76f51',
+					confirmColor: '#E2643F',
 					success: (res) => {
 						if (res.confirm) {
 							this.doLeaveRoom()
@@ -1730,9 +1731,7 @@
 			},
 			handleBackToHall() {
 				this.resultVisible = false
-				uni.reLaunch({
-					url: '/pages/game/index'
-				})
+				navigateToTab('game')
 			},
 			handleShareTap() {
 				uni.showToast({
@@ -2197,7 +2196,7 @@
 					content: '开启后本局由系统自动叫分、自动出牌，直到你点右上角 🕹️ 取消托管。确定开启吗？',
 					confirmText: '开启托管',
 					cancelText: '再想想',
-					confirmColor: '#e76f51',
+					confirmColor: '#E2643F',
 					success: (res) => {
 						if (!res.confirm) {
 							return
@@ -2357,7 +2356,7 @@
 
 	.ll-top__btn-text {
 		font-size: 12px;
-		color: #fff3ec;
+		color: #231C18;
 	}
 
 	/* 顶栏图标按钮（托管 / 取消托管）：28×28 圆形，与「规则」按钮同高，
@@ -2395,8 +2394,8 @@
 		width: 13px;
 		height: 13px;
 		border-radius: 50%;
-		background: #e76f51;
-		border: 1px solid rgba(255, 255, 255, 0.92);
+		background: #E2643F;
+		border: 1px solid rgba(26, 21, 18, 0.94);
 		font-size: 9px;
 		font-weight: 700;
 		color: #ffffff;
@@ -2446,7 +2445,7 @@
 
 	.ll-top__phase-text {
 		font-size: 11px;
-		color: #fff3ec;
+		color: #231C18;
 	}
 
 	/* 底牌盘：中央的白色托盘（3 张底牌 + 倍数标签），原来挤在顶栏里 */
@@ -2464,9 +2463,10 @@
 		align-items: center;
 		gap: 8px;
 		padding: 4px 12px;
-		border-radius: 6px;
-		background: linear-gradient(180deg, rgba(255, 253, 250, 0.94), rgba(255, 238, 226, 0.9));
-		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65), 0 4px 12px rgba(90, 50, 30, 0.2);
+		border-radius: 8px;
+		border: 1px solid rgba(216, 176, 140, 0.36);
+		background: rgba(17, 13, 11, 0.86);
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.42);
 	}
 
 	.ll-tray__cards {
@@ -2486,7 +2486,7 @@
 		border-left: 1px solid rgba(176, 91, 72, 0.25);
 		font-size: 10px;
 		font-weight: 600;
-		color: #b05b48;
+		color: #EAD4BC;
 		white-space: nowrap;
 	}
 
@@ -2548,7 +2548,7 @@
 	.ll-side__score {
 		font-size: 11px;
 		font-weight: 600;
-		color: #fff3ec;
+		color: #231C18;
 		text-shadow: 0 1px 3px rgba(60, 25, 10, 0.55);
 	}
 
@@ -2610,7 +2610,7 @@
 		display: block;
 		font-size: 14px;
 		font-weight: 700;
-		color: #fff3ec;
+		color: #231C18;
 	}
 
 	.ll-center__waiting-desc {
@@ -2710,7 +2710,7 @@
 		background: rgba(255, 255, 255, 0.22);
 		font-size: 11px;
 		line-height: 1.5;
-		color: #fff3ec;
+		color: #231C18;
 		white-space: nowrap;
 	}
 
@@ -2768,7 +2768,7 @@
 
 	.ll-mybar__count {
 		font-size: 11px;
-		color: #fff3ec;
+		color: #231C18;
 	}
 
 	.ll-mybar__score {
@@ -2844,7 +2844,7 @@
 	}
 
 	.ll-empty-action--ghost {
-		background: rgba(255, 255, 255, 0.92);
+		background: rgba(26, 21, 18, 0.94);
 	}
 
 	.ll-empty-action--primary {
@@ -2872,21 +2872,21 @@
 		margin: 0 auto;
 		box-sizing: border-box;
 		padding: 20px 24px 18px;
-		background: #ffffff;
+		background: #1A1512;
 	}
 
 	.ll-join__title {
 		display: block;
 		font-size: 20px;
 		font-weight: 700;
-		color: #5a3427;
+		color: #FBF4EA;
 	}
 
 	.ll-join__desc {
 		display: block;
 		margin: 8px 0 16px;
 		font-size: 12px;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.ll-join__btn {
@@ -2896,7 +2896,7 @@
 		height: 48px;
 		margin-top: 16px;
 		border-radius: 999px;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 	}
 
 	.ll-join__btn-text {
@@ -2925,7 +2925,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 214, 150, 0.6) 42%, rgba(255, 150, 90, 0) 74%);
+		background: radial-gradient(circle at 50% 46%, rgba(26, 21, 18, 0.94) 0%, rgba(255, 214, 150, 0.6) 42%, rgba(255, 150, 90, 0) 74%);
 		animation: ll-bomb-flash 620ms ease-out both;
 	}
 

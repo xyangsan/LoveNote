@@ -1,702 +1,841 @@
 <template>
-	<view class="page">
-		<view class="page__glow page__glow--left"></view>
-		<view class="page__glow page__glow--right"></view>
+	<view class="photos-page">
+		<view class="photos-glow photos-glow--l"></view>
+		<view class="photos-glow photos-glow--r"></view>
 
-		<view class="header">
-			<text class="header__title">情侣相册</text>
-			<text class="header__subtitle">记录我们的美好瞬间</text>
-		</view>
+		<noir-navbar
+			:show-back="true"
+			:transparent="true"
+			:border="false"
+			:scroll-top="scrollTop"
+		>
+			<template #center>
+				<text class="ph-nav-title">照片</text>
+			</template>
+			<template #right>
+				<view v-if="photoList.length" class="ph-batch-pill" @tap="toggleBatchMode">
+					<text class="ph-batch-pill__txt">{{ batchMode ? '完成' : '批量选择' }}</text>
+				</view>
+			</template>
+		</noir-navbar>
 
-		<view class="album-grid">
-			<view class="album-card album-card--create" @click="handleCreateAlbum">
-				<view class="album-card__create-icon">+</view>
-				<text class="album-card__create-text">新建相册</text>
+		<view class="a-wrap">
+			<!-- 统计头（05 照片与视频流设计稿） -->
+			<view class="a-head">
+				<view class="a-count">
+					<text class="a-count__num">{{ totalCount }}</text>
+					<text class="a-count__unit">项 · 含 {{ videoCount }} 段视频</text>
+				</view>
+				<noir-tag text="单流 · 双人同步" variant="gold" />
+			</view>
+			<text class="a-sub">按时间与标签浏览 · 每次上传自动同步双人空间</text>
+
+			<!-- 筛选标签行 -->
+			<scroll-view scroll-x class="a-filters-scroll" :show-scrollbar="false">
+				<view class="a-filters">
+					<view
+						v-for="chip in filterChips"
+						:key="chip.key"
+						class="a-chip"
+						:class="{ 'is-on': activeFilter === chip.key }"
+						@tap="selectFilter(chip.key)"
+					>
+						<text class="a-chip__txt">{{ chip.label }}</text>
+					</view>
+				</view>
+			</scroll-view>
+
+			<!-- 骨架屏 -->
+			<view v-if="loading && !photoList.length" class="a-grid">
+				<view class="a-col">
+					<view class="a-skel" style="height: 410rpx;"></view>
+					<view class="a-skel" style="height: 310rpx;"></view>
+				</view>
+				<view class="a-col">
+					<view class="a-skel" style="height: 300rpx;"></view>
+					<view class="a-skel" style="height: 400rpx;"></view>
+				</view>
 			</view>
 
-			<block v-if="showAlbumSkeleton">
-				<view
-					v-for="item in skeletonList"
-					:key="`album-skeleton-${item}`"
-					class="album-card album-card--skeleton"
-				>
-					<view class="album-skeleton__shimmer"></view>
-					<view class="album-skeleton__cover"></view>
-					<view class="album-skeleton__info">
-						<view class="album-skeleton__title"></view>
-						<view class="album-skeleton__count"></view>
+			<!-- 空态 -->
+			<noir-empty
+				v-else-if="!loading && !photoList.length"
+				kicker="PHOTOS & VIDEO"
+				:title="activeFilter === 'all' ? '还没有照片或视频' : '该分类下暂无内容'"
+				:desc="activeFilter === 'all' ? '点击下方上传你们的第一张照片或视频，每张可得 +5 心动点' : '切换其他标签，或上传一张带该标签的新照片'"
+				:action-text="activeFilter === 'all' ? '＋ 立即上传' : '查看全部'"
+				@action="activeFilter === 'all' ? goUpload() : selectFilter('all')"
+			/>
+
+			<!-- 双列错落瀑布流（首个分页数据之后展示广告位，后续分页顺延在广告下方） -->
+			<template v-else>
+				<template v-for="section in photoSections" :key="section.key">
+					<view class="a-grid">
+						<view class="a-col">
+							<view
+								v-for="(item, idx) in section.left"
+								:key="item._id"
+								class="a-ph"
+								:class="{ 'is-selected': isSelected(item._id) }"
+								:style="{ height: getCardHeight(item, idx, 'left') }"
+								@tap="handlePhotoTap(item)"
+								@longpress="handlePhotoLongPress(item)"
+							>
+								<image
+									v-if="!isVideo(item) || hasVideoThumb(item)"
+									class="a-ph__img"
+									:src="isVideo(item) ? getVideoThumbUrl(item) : getThumbUrl(item)"
+									mode="aspectFill"
+									lazy-load
+									@error="onMediaThumbError(item)"
+								></image>
+								<video
+									v-else
+									class="a-ph__video"
+									:src="getOriginalUrl(item)"
+									:controls="false"
+									:autoplay="false"
+									:muted="true"
+									:show-center-play-btn="false"
+									:show-play-btn="false"
+									:show-fullscreen-btn="false"
+									:enable-progress-gesture="false"
+									object-fit="cover"
+								></video>
+								<view v-if="isVideo(item)" class="a-vbadge">
+									<text class="a-vbadge__txt">▶ {{ formatDuration(item.duration) }}</text>
+								</view>
+								<view v-if="batchMode" class="a-check" :class="{ 'is-on': isSelected(item._id) }">
+									<text v-if="isSelected(item._id)" class="a-check__tick">✓</text>
+								</view>
+								<view class="a-shade"></view>
+								<text class="a-date">{{ formatDateDot(item.taken_date || item.create_time) }}</text>
+								<text v-if="item.is_favorite" class="a-like">♥</text>
+							</view>
+						</view>
+
+						<view class="a-col">
+							<view
+								v-for="(item, idx) in section.right"
+								:key="item._id"
+								class="a-ph"
+								:class="{ 'is-selected': isSelected(item._id) }"
+								:style="{ height: getCardHeight(item, idx, 'right') }"
+								@tap="handlePhotoTap(item)"
+								@longpress="handlePhotoLongPress(item)"
+							>
+								<image
+									v-if="!isVideo(item) || hasVideoThumb(item)"
+									class="a-ph__img"
+									:src="isVideo(item) ? getVideoThumbUrl(item) : getThumbUrl(item)"
+									mode="aspectFill"
+									lazy-load
+									@error="onMediaThumbError(item)"
+								></image>
+								<video
+									v-else
+									class="a-ph__video"
+									:src="getOriginalUrl(item)"
+									:controls="false"
+									:autoplay="false"
+									:muted="true"
+									:show-center-play-btn="false"
+									:show-play-btn="false"
+									:show-fullscreen-btn="false"
+									:enable-progress-gesture="false"
+									object-fit="cover"
+								></video>
+								<view v-if="isVideo(item)" class="a-vbadge">
+									<text class="a-vbadge__txt">▶ {{ formatDuration(item.duration) }}</text>
+								</view>
+								<view v-if="batchMode" class="a-check" :class="{ 'is-on': isSelected(item._id) }">
+									<text v-if="isSelected(item._id)" class="a-check__tick">✓</text>
+								</view>
+								<view class="a-shade"></view>
+								<text class="a-date">{{ formatDateDot(item.taken_date || item.create_time) }}</text>
+								<text v-if="item.is_favorite" class="a-like">♥</text>
+							</view>
+						</view>
+					</view>
+
+					<!-- 广告位展示在第一个分页数据之后 -->
+					<view v-if="section.showAdAfter" class="ad-view">
+						<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
+					</view>
+				</template>
+			</template>
+
+			<view v-if="loading && photoList.length" class="a-foot-tip">
+				<text class="a-foot-tip__txt">正在加载更多…</text>
+			</view>
+			<view v-else-if="!pagination.hasMore && photoList.length" class="a-foot-tip">
+				<text class="a-foot-tip__txt">已经到底了</text>
+			</view>
+		</view>
+
+		<!-- 底部固定操作栏 -->
+		<view class="a-bottom-bar">
+			<template v-if="batchMode">
+				<view class="a-batch-bar">
+					<text class="a-batch-bar__count">已选 {{ selectedIds.length }} 项</text>
+					<view class="a-batch-bar__acts">
+						<noir-button
+							text="加标签"
+							variant="ghost"
+							size="sm"
+							:disabled="!selectedIds.length"
+							@click="handleBatchAddTag"
+						/>
+						<noir-button
+							text="删除所选"
+							variant="danger"
+							size="sm"
+							:disabled="!selectedIds.length"
+							@click="handleBatchDelete"
+						/>
 					</view>
 				</view>
-			</block>
-
-			<block v-else>
-				<view
-					v-for="album in albumList"
-					:key="album._id"
-					class="album-card"
-					@click="goToAlbumDetail(album._id)"
-				>
-					<image
-						v-if="album.cover_url"
-						class="album-card__cover"
-						:src="album.cover_url"
-						mode="aspectFill"
-					/>
-					<view v-else class="album-card__cover-placeholder"></view>
-					<view class="album-card__overlay"></view>
-					<view class="album-card__info">
-						<text v-if="album.is_self === false" class="album-card__owner">TA 的</text>
-						<text class="album-card__title">{{ album.title }}</text>
-						<text class="album-card__count">{{ album.photo_count || 0 }} 个媒体</text>
-					</view>
-					<view
-						v-if="!album.is_default"
-						class="album-card__menu"
-						@click.stop="showAlbumMenu(album)"
-					>
-						<text class="album-card__menu-icon">⋮</text>
-					</view>
-				</view>
-			</block>
+			</template>
+			<template v-else>
+				<noir-button
+					text="＋ 上传照片 / 视频 (每张 +5点)"
+					variant="primary"
+					size="lg"
+					block
+					@click="goUpload"
+				/>
+			</template>
 		</view>
-
-		<view v-if="loading && albumList.length > 0" class="loading-state">
-			<fui-loading type="rotate" size="48"></fui-loading>
-			<text class="loading-text">加载中...</text>
-		</view>
-
-		<view v-else-if="!loading && albumList.length === 0" class="empty-state">
-			<image class="empty-icon" src="/static/user-empty.png" mode="aspectFit" />
-			<text class="empty-title">还没有相册</text>
-			<text class="empty-desc">{{ noCouple ? '先建一个属于自己的相册，绑定情侣后就能一起记录。' : '创建一个相册，开始记录你们的回忆吧' }}</text>
-			<button class="empty-action" @click="handleCreateAlbum">创建第一个相册</button>
-		</view>
-
-		<view v-else-if="!pagination.hasMore && albumList.length > 0" class="load-more">
-			<text class="load-more__text">已经到底了</text>
-		</view>
-
-		<view class="ad-view">
-			<ad unit-id="adunit-230be1ed0ea4b29b"></ad>
-		</view>
-		
-		<fui-actionsheet
-			:show="actionSheet.show"
-			:item-list="actionSheet.items"
-			@cancel="closeActionSheet"
-			@click="handleActionSheetClick"
-		/>
 
 		<love-couple-guide scene="album" :active="noCouple" />
-
-		<fui-dialog
-			:show="createDialog.show"
-			title="新建相册"
-			:buttons="createDialog.buttons"
-			@cancel="closeCreateDialog"
-			@click="handleCreateConfirm"
-		>
-			<view class="dialog-content">
-				<input
-					class="dialog-input"
-					v-model="createDialog.form.title"
-					placeholder="请输入相册名称"
-					maxlength="50"
-				/>
-				<textarea
-					class="dialog-textarea"
-					v-model="createDialog.form.description"
-					placeholder="添加相册描述（可选）"
-					maxlength="500"
-				/>
-			</view>
-		</fui-dialog>
-
 	</view>
 </template>
 
 <script>
-import { getAlbumApi } from '../../common/api/album.js'
-import { requirePageLogin } from '@/common/auth-entry.js'
-import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
+	import { getPhotoApi } from '../../common/api/photo.js'
+	import { requirePageLogin } from '@/common/auth-entry.js'
+	import { useAppStateStore } from '@/store/app-state.js'
 
-export default {
-	components: {
-		LoveCoupleGuide
-	},
-	data() {
-		return {
-			albumList: [],
-			noCouple: false,
-			loading: false,
-			skeletonList: [1, 2, 3, 4, 5],
-			pagination: {
-				page: 1,
-				pageSize: 20,
-				total: 0,
-				hasMore: true
-			},
-			actionSheet: {
-				show: false,
-				items: [
-					{ key: 'edit', text: '编辑相册', color: '#5a3427' },
-					{ key: 'delete', text: '删除相册', color: '#e76f51' }
-				],
-				currentAlbum: null
-			},
-			createDialog: {
-				show: false,
-				buttons: [
-					{ text: '取消', color: '#8b6659' },
-					{ text: '创建', color: '#e76f51' }
-				],
-				form: {
-					title: '',
-					description: ''
+	const FILTER_CHIPS = [
+		{ key: 'all', label: '全部' },
+		{ key: '旅行', label: '旅行' },
+		{ key: '美食', label: '美食' },
+		{ key: '日常', label: '日常' },
+		{ key: 'favorite', label: '喜欢' },
+		{ key: 'video', label: '视频' }
+	]
+
+	const LEFT_HEIGHTS = [416, 326, 260, 380, 310]
+	const RIGHT_HEIGHTS = [312, 408, 286, 344, 392]
+
+	export default {
+		data() {
+			return {
+				scrollTop: 0,
+				filterChips: FILTER_CHIPS,
+				activeFilter: 'all',
+				photoList: [],
+				totalCount: 0,
+				videoCount: 0,
+				loading: false,
+				noCouple: false,
+				hasInitialized: false,
+				needRefreshOnShow: false,
+				batchMode: false,
+				selectedIds: [],
+				failedThumbMap: {},
+				pagination: {
+					page: 1,
+					pageSize: 20,
+					total: 0,
+					hasMore: true
 				}
 			}
-		}
-	},
-	computed: {
-		showAlbumSkeleton() {
-			return this.loading && this.albumList.length === 0
-		}
-	},
-	onLoad() {
-		// 未登录先跳登录页，登录成功后由登录页 redirect 回本页（分享 / 扫码可直接落地本页）
-		if (!requirePageLogin()) return
-	},
-	onShow() {
-		// onLoad 的闸门只负责跳转，onShow 仍会先跑一次（redirectTo 是异步的），
-		// 这里再挡一刀，避免未登录就发列表请求、在登录页上闪一个错误 toast。
-		if (!requirePageLogin()) return
-		this.loadAlbumList(true)
-	},
-	onReachBottom() {
-		if (this.pagination.hasMore && !this.loading) {
-			this.loadAlbumList()
-		}
-	},
-	onPullDownRefresh() {
-		this.loadAlbumList(true).finally(() => {
-			uni.stopPullDownRefresh()
-		})
-	},
-	methods: {
-		async loadAlbumList(reset = false) {
-			if (this.loading) return
-
-			this.loading = true
-
-			try {
+		},
+		computed: {
+			photoSections() {
+				const size = Math.max(1, Number((this.pagination && this.pagination.pageSize) || 20))
+				const firstPage = this.photoList.slice(0, size)
+				const restPages = this.photoList.slice(size)
+				const sections = []
+				if (firstPage.length) {
+					sections.push({
+						key: 'page-1',
+						left: firstPage.filter((_, i) => i % 2 === 0),
+						right: firstPage.filter((_, i) => i % 2 === 1),
+						showAdAfter: true
+					})
+				}
+				if (restPages.length) {
+					sections.push({
+						key: 'page-more',
+						left: restPages.filter((_, i) => i % 2 === 0),
+						right: restPages.filter((_, i) => i % 2 === 1),
+						showAdAfter: false
+					})
+				}
+				return sections
+			}
+		},
+		onLoad() {
+			if (!requirePageLogin()) return
+			this.syncCoupleGuide()
+			this.loadPhotoList(true).finally(() => {
+				this.hasInitialized = true
+			})
+		},
+		onShow() {
+			if (!this.hasInitialized) return
+			if (this.needRefreshOnShow) {
+				this.needRefreshOnShow = false
+				this.loadPhotoList(true)
+			}
+		},
+		onPageScroll(e) {
+			const next = Math.max(0, Number((e && e.scrollTop) || 0))
+			if (next !== this.scrollTop) {
+				this.scrollTop = next
+			}
+		},
+		onPullDownRefresh() {
+			this.loadPhotoList(true).finally(() => {
+				uni.stopPullDownRefresh()
+			})
+		},
+		onReachBottom() {
+			if (this.pagination.hasMore && !this.loading) {
+				this.loadPhotoList(false)
+			}
+		},
+		methods: {
+			async syncCoupleGuide() {
+				try {
+					const store = useAppStateStore()
+					await store.fetchCoupleCenter({ force: false })
+					this.noCouple = !(store.coupleCenterData && store.coupleCenterData.activeCouple)
+				} catch (e) {
+					// ignore
+				}
+			},
+			isVideo(item) {
+				return String((item && item.media_type) || '').toLowerCase() === 'video'
+			},
+			getOriginalUrl(item = {}) {
+				return String(item.url || item.thumbnail_url || '').trim()
+			},
+			getVideoThumbUrl(item = {}) {
+				return String(item.thumbnail_url || '').trim()
+			},
+			hasVideoThumb(item = {}) {
+				const thumb = this.getVideoThumbUrl(item)
+				if (!thumb) return false
+				if (item._id && this.failedThumbMap[item._id]) return false
+				return true
+			},
+			onMediaThumbError(item = {}) {
+				if (this.isVideo(item) && item._id) {
+					this.failedThumbMap = Object.assign({}, this.failedThumbMap, {
+						[item._id]: true
+					})
+				}
+			},
+			getThumbUrl(item = {}) {
+				return String(item.thumbnail_url || item.url || '').trim()
+			},
+			getCardHeight(item, idx, col) {
+				const w = Number(item && item.width || 0)
+				const h = Number(item && item.height || 0)
+				if (w > 0 && h > 0) {
+					const ratio = Math.min(1.55, Math.max(0.75, h / w))
+					return `${Math.round(330 * ratio)}rpx`
+				}
+				const arr = col === 'left' ? LEFT_HEIGHTS : RIGHT_HEIGHTS
+				return `${arr[idx % arr.length]}rpx`
+			},
+			formatDateDot(val) {
+				if (!val) return ''
+				const d = new Date(val)
+				if (Number.isNaN(d.getTime())) return ''
+				const y = d.getFullYear()
+				const m = `${d.getMonth() + 1}`.padStart(2, '0')
+				const day = `${d.getDate()}`.padStart(2, '0')
+				return `${y}.${m}.${day}`
+			},
+			formatDuration(sec) {
+				const s = Math.max(0, Math.round(Number(sec || 0)))
+				if (!s) return '视频'
+				const mm = `${Math.floor(s / 60)}`.padStart(2, '0')
+				const ss = `${s % 60}`.padStart(2, '0')
+				return `${mm}:${ss}`
+			},
+			async loadPhotoList(reset = false) {
+				if (this.loading) return
 				if (reset) {
 					this.pagination.page = 1
-					this.albumList = []
+					this.pagination.hasMore = true
 				}
-
-				const result = await getAlbumApi().getList({
-					page: this.pagination.page,
-					pageSize: this.pagination.pageSize
-				})
-				if (result && result.errCode && result.errCode !== 0) {
-					throw new Error(result.errMsg || '获取相册列表失败')
-				}
-				const data = result.data || {}
-				const list = data.list || []
-				const pagination = data.pagination || {}
-
-				// 未绑定时列表仍可看自己创建的内容，只是不能新建
-				this.noCouple = data.hasCouple === false
-
-				if (reset) {
-					this.albumList = list
-				} else {
-					this.albumList = [...this.albumList, ...list]
-				}
-
-				this.pagination = {
-					page: pagination.page || this.pagination.page,
-					pageSize: pagination.pageSize || this.pagination.pageSize,
-					total: pagination.total || 0,
-					hasMore: pagination.hasMore || false
-				}
-
-				if (pagination.hasMore) {
-					this.pagination.page++
-				}
-			} catch (error) {
-				console.error('加载相册列表失败:', error)
-				uni.showToast({
-					title: error.message || '加载失败',
-					icon: 'none'
-				})
-			} finally {
-				this.loading = false
-			}
-		},
-
-		goToAlbumDetail(albumId) {
-			uni.navigateTo({
-				url: `/pages/album/detail?albumId=${albumId}`
-			})
-		},
-
-		handleCreateAlbum() {
-			this.createDialog.form = {
-				title: '',
-				description: ''
-			}
-			this.createDialog.show = true
-		},
-
-		goToCouplePage() {
-			uni.navigateTo({
-				url: '/pages/couple/index'
-			})
-		},
-
-		closeCreateDialog() {
-			this.createDialog.show = false
-		},
-
-		async handleCreateConfirm(e) {
-			if (e.index === 0) {
-				this.closeCreateDialog()
-				return
-			}
-
-			const title = this.createDialog.form.title.trim()
-			if (!title) {
-				uni.showToast({
-					title: '请输入相册名称',
-					icon: 'none'
-				})
-				return
-			}
-
-			uni.showLoading({ title: '创建中...', mask: true })
-
-			try {
-				const result = await getAlbumApi().create({
-					title,
-					description: this.createDialog.form.description.trim()
-				})
-
-				// ⚠️ callApiRouter 业务失败不抛异常，只返回 { errCode, errMsg }，
-				// 不判断就会被当成成功（历史 bug：未绑定情侣时提示「创建成功」但列表没变化）
-				if (result && result.errCode && result.errCode !== 0) {
-					if (result.errCode === 'love-note-no-couple') {
-						this.noCouple = true
+				this.loading = true
+				try {
+					const query = {
+						page: this.pagination.page,
+						pageSize: this.pagination.pageSize
 					}
-					throw new Error(result.errMsg || '创建失败')
-				}
+					if (this.activeFilter === 'video') {
+						query.mediaType = 'video'
+					} else if (this.activeFilter === 'favorite') {
+						query.isFavorite = true
+					} else if (this.activeFilter !== 'all') {
+						query.tag = this.activeFilter
+					}
 
-				uni.showToast({
-					title: '创建成功',
-					icon: 'success'
-				})
+					const res = await getPhotoApi().getList(query)
+					if (res && res.errCode && res.errCode !== 0) {
+						throw new Error(res.errMsg || '加载照片失败')
+					}
+					const data = res.data || {}
+					const list = Array.isArray(data.list) ? data.list : []
+					const pg = data.pagination || {}
 
-				this.closeCreateDialog()
-				this.loadAlbumList(true)
-			} catch (error) {
-				console.error('创建相册失败:', error)
-				uni.showToast({
-					title: error.message || '创建失败',
-					icon: 'none'
-				})
-			} finally {
-				uni.hideLoading()
-			}
-		},
-
-		showAlbumMenu(album) {
-			// 删除只对创建者开放（后端也会拦），避免点了才报错
-			const items = [{ key: 'edit', text: '编辑相册', color: '#5a3427' }]
-			if (album.is_self === true) {
-				items.push({ key: 'delete', text: '删除相册', color: '#e76f51' })
-			}
-			this.actionSheet.items = items
-			this.actionSheet.currentAlbum = album
-			this.actionSheet.show = true
-		},
-
-		closeActionSheet() {
-			this.actionSheet.show = false
-			this.actionSheet.currentAlbum = null
-		},
-
-		handleActionSheetClick(e) {
-			const album = this.actionSheet.currentAlbum
-			if (!album) return
-
-			const item = this.actionSheet.items[e.index]
-			const actionKey = item && item.key
-			if (actionKey === 'edit') {
-				this.handleEditAlbum(album)
-			} else if (actionKey === 'delete') {
-				this.handleDeleteAlbum(album)
-			}
-
-			this.closeActionSheet()
-		},
-
-		handleEditAlbum(album) {
-			uni.navigateTo({
-				url: `/pages/album/edit?albumId=${album._id}`
-			})
-		},
-
-		handleDeleteAlbum(album) {
-			uni.showModal({
-				title: '确认删除',
-				content: `确定要删除相册"${album.title}"吗？相册中的照片也会被删除。`,
-				confirmColor: '#e76f51',
-				success: async (res) => {
-					if (res.confirm) {
-						uni.showLoading({ title: '删除中...', mask: true })
-						try {
-							await getAlbumApi().delete({ albumId: album._id })
-							uni.showToast({
-								title: '删除成功',
-								icon: 'success'
-							})
-							this.loadAlbumList(true)
-						} catch (error) {
-							console.error('删除相册失败:', error)
-							uni.showToast({
-								title: error.message || '删除失败',
-								icon: 'none'
-							})
-						} finally {
-							uni.hideLoading()
+					this.photoList = reset ? list : [...this.photoList, ...list]
+					this.pagination = {
+						page: (pg.page || this.pagination.page) + (pg.hasMore ? 1 : 0),
+						pageSize: pg.pageSize || this.pagination.pageSize,
+						total: Number(pg.total || 0),
+						hasMore: Boolean(pg.hasMore)
+					}
+					if (reset) {
+						this.totalCount = Number(pg.total || list.length || 0)
+						if (typeof data.videoCount === 'number') {
+							this.videoCount = data.videoCount
+						} else {
+							this.videoCount = list.filter((item) => this.isVideo(item)).length
 						}
 					}
+				} catch (error) {
+					uni.showToast({ title: error.message || '加载失败', icon: 'none' })
+				} finally {
+					this.loading = false
 				}
-			})
+			},
+			selectFilter(key) {
+				if (this.activeFilter === key) return
+				this.activeFilter = key
+				this.selectedIds = []
+				this.loadPhotoList(true)
+			},
+			toggleBatchMode() {
+				this.batchMode = !this.batchMode
+				this.selectedIds = []
+			},
+			isSelected(id) {
+				return this.selectedIds.includes(id)
+			},
+			toggleSelect(id) {
+				if (!id) return
+				if (this.isSelected(id)) {
+					this.selectedIds = this.selectedIds.filter((x) => x !== id)
+				} else {
+					this.selectedIds = [...this.selectedIds, id]
+				}
+			},
+			handlePhotoTap(item) {
+				if (!item || !item._id) return
+				if (this.batchMode) {
+					this.toggleSelect(item._id)
+					return
+				}
+				this.needRefreshOnShow = true
+				uni.navigateTo({
+					url: `/pages/album/photo-detail?photoId=${encodeURIComponent(item._id)}&filter=${encodeURIComponent(this.activeFilter)}`
+				})
+			},
+			handlePhotoLongPress(item) {
+				if (!item || !item._id) return
+				if (!this.batchMode) {
+					this.batchMode = true
+					this.selectedIds = [item._id]
+				}
+			},
+			goUpload() {
+				this.needRefreshOnShow = true
+				uni.navigateTo({
+					url: '/pages/album/upload'
+				})
+			},
+			handleBatchAddTag() {
+				if (!this.selectedIds.length) return
+				uni.showModal({
+					title: `为 ${this.selectedIds.length} 项添加标签`,
+					editable: true,
+					placeholderText: '例如：旅行、美食、日常',
+					confirmColor: '#E2643F',
+					success: async (res) => {
+						if (!res.confirm) return
+						const tag = String(res.content || '').trim()
+						if (!tag) return
+						uni.showLoading({ title: '处理中...', mask: true })
+						let ok = 0
+						for (const id of this.selectedIds) {
+							const item = this.photoList.find((p) => p._id === id)
+							const prevTags = Array.isArray(item && item.tags) ? item.tags : []
+							if (prevTags.includes(tag)) {
+								ok += 1
+								continue
+							}
+							const nextTags = [...prevTags, tag].slice(0, 10)
+							try {
+								const r = await getPhotoApi().update({ photoId: id, tags: nextTags })
+								if (!r || !r.errCode || r.errCode === 0) {
+									if (item) item.tags = nextTags
+									ok += 1
+								}
+							} catch (e) {
+								// continue
+							}
+						}
+						uni.hideLoading()
+						this.batchMode = false
+						this.selectedIds = []
+						uni.showToast({ title: `已为 ${ok} 项添加标签`, icon: 'success' })
+					}
+				})
+			},
+			handleBatchDelete() {
+				if (!this.selectedIds.length) return
+				const ownIds = this.selectedIds.filter((id) => {
+					const item = this.photoList.find((p) => p._id === id)
+					return item && item.is_self === true
+				})
+				if (!ownIds.length) {
+					uni.showToast({ title: '仅支持删除本人上传的照片', icon: 'none' })
+					return
+				}
+				uni.showModal({
+					title: '批量删除',
+					content: `确定删除选中的 ${ownIds.length} 项本人上传的照片/视频吗？删除后不可恢复。`,
+					confirmColor: '#E2643F',
+					success: async (res) => {
+						if (!res.confirm) return
+						uni.showLoading({ title: '删除中...', mask: true })
+						let deleted = 0
+						for (const id of ownIds) {
+							try {
+								const r = await getPhotoApi().delete({ photoId: id })
+								if (!r || !r.errCode || r.errCode === 0) {
+									deleted += 1
+								}
+							} catch (e) {
+								// continue
+							}
+						}
+						uni.hideLoading()
+						this.batchMode = false
+						this.selectedIds = []
+						uni.showToast({ title: `已删除 ${deleted} 项`, icon: 'success' })
+						this.loadPhotoList(true)
+					}
+				})
+			}
 		}
 	}
-}
 </script>
 
-<style>
-.page {
-	position: relative;
-	min-height: 100vh;
-	padding: 32rpx 24rpx 48rpx;
-	background: linear-gradient(180deg, #FFF7F1 0%, #FFF0E8 100%);
-	overflow: hidden;
-}
-
-.page__glow {
-	position: absolute;
-	width: 320rpx;
-	height: 320rpx;
-	border-radius: 50%;
-	filter: blur(24rpx);
-	opacity: 0.4;
-	z-index: 0;
-}
-
-.page__glow--left {
-	top: -80rpx;
-	left: -120rpx;
-	background: rgba(255, 170, 153, 0.55);
-}
-
-.page__glow--right {
-	top: 240rpx;
-	right: -120rpx;
-	background: rgba(255, 220, 174, 0.55);
-}
-
-.header {
-	position: relative;
-	z-index: 1;
-	margin-bottom: 40rpx;
-}
-
-.header__title {
-	display: block;
-	font-size: 48rpx;
-	font-weight: 700;
-	color: #5a3427;
-}
-
-.header__subtitle {
-	display: block;
-	margin-top: 12rpx;
-	font-size: 26rpx;
-	color: #8b6659;
-}
-
-.album-grid {
-	position: relative;
-	z-index: 1;
-	display: flex;
-	flex-wrap: wrap;
-	margin: 0 -12rpx;
-}
-
-.album-card {
-	position: relative;
-	width: calc(50% - 24rpx);
-	height: 280rpx;
-	margin: 0 12rpx 24rpx;
-	border-radius: 24rpx;
-	overflow: hidden;
-	background: #fff;
-	box-shadow: 0 8rpx 32rpx rgba(173, 109, 77, 0.1);
-}
-
-.album-card--create {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	background: rgba(255, 255, 255, 0.8);
-	border: 2rpx dashed rgba(231, 111, 81, 0.4);
-}
-
-.album-card__create-icon {
-	width: 80rpx;
-	height: 80rpx;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 48rpx;
-	color: #e76f51;
-	background: rgba(231, 111, 81, 0.1);
-	border-radius: 50%;
-	margin-bottom: 16rpx;
-}
-
-.album-card__create-text {
-	font-size: 28rpx;
-	color: #e76f51;
-	font-weight: 500;
-}
-
-.album-card__cover {
-	width: 100%;
-	height: 100%;
-}
-
-.album-card__cover-placeholder {
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(135deg, #fff2eb 0%, #f8dfd4 100%);
-}
-
-.album-card__overlay {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	height: 120rpx;
-	background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
-}
-
-.album-card__info {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	padding: 20rpx;
-}
-
-.album-card__owner {
-	display: inline-block;
-	margin-bottom: 8rpx;
-	padding: 2rpx 12rpx;
-	border-radius: 999rpx;
-	background: rgba(255, 255, 255, 0.22);
-	font-size: 20rpx;
-	line-height: 1.5;
-	color: #fff;
-}
-
-.album-card__title {
-	display: block;
-	font-size: 30rpx;
-	font-weight: 600;
-	color: #fff;
-	margin-bottom: 8rpx;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.album-card__count {
-	display: block;
-	font-size: 22rpx;
-	color: rgba(255, 255, 255, 0.8);
-}
-
-.album-card__menu {
-	position: absolute;
-	top: 12rpx;
-	right: 12rpx;
-	width: 56rpx;
-	height: 56rpx;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: rgba(0, 0, 0, 0.3);
-	border-radius: 50%;
-}
-
-.album-card__menu-icon {
-	font-size: 32rpx;
-	color: #fff;
-}
-
-.album-card--skeleton {
-	background: rgba(255, 255, 255, 0.76);
-	pointer-events: none;
-}
-
-.album-skeleton__shimmer {
-	position: absolute;
-	top: 0;
-	left: -120%;
-	z-index: 2;
-	width: 80%;
-	height: 100%;
-	background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.68) 50%, transparent 100%);
-	animation: albumSkeletonShimmer 1.4s ease-in-out infinite;
-}
-
-.album-skeleton__cover {
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(135deg, #fff2eb 0%, #f8dfd4 100%);
-}
-
-.album-skeleton__info {
-	position: absolute;
-	left: 20rpx;
-	right: 20rpx;
-	bottom: 22rpx;
-}
-
-.album-skeleton__title,
-.album-skeleton__count {
-	height: 24rpx;
-	border-radius: 999rpx;
-	background: rgba(255, 255, 255, 0.72);
-}
-
-.album-skeleton__title {
-	width: 72%;
-	margin-bottom: 16rpx;
-}
-
-.album-skeleton__count {
-	width: 42%;
-	height: 18rpx;
-	opacity: 0.74;
-}
-
-@keyframes albumSkeletonShimmer {
-	0% {
-		transform: translateX(0);
+<style scoped>
+	.photos-page {
+		position: relative;
+		min-height: 100vh;
+		background:
+			radial-gradient(88% 38% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			#110D0B;
+		padding-bottom: calc(164rpx + env(safe-area-inset-bottom));
+		overflow-x: hidden;
 	}
 
-	100% {
-		transform: translateX(280%);
+	.photos-glow {
+		position: fixed;
+		width: 360rpx;
+		height: 360rpx;
+		border-radius: 50%;
+		filter: blur(50rpx);
+		opacity: 0.22;
+		pointer-events: none;
+		z-index: 0;
 	}
-}
 
-.loading-state {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 60rpx 0;
-}
+	.photos-glow--l {
+		top: -120rpx;
+		left: -130rpx;
+		background: rgba(226, 100, 63, 0.36);
+	}
 
-.loading-text {
-	margin-top: 20rpx;
-	font-size: 26rpx;
-	color: #8b6659;
-}
+	.photos-glow--r {
+		top: 240rpx;
+		right: -130rpx;
+		background: rgba(216, 176, 140, 0.24);
+	}
 
-.empty-state {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 100rpx 40rpx;
-}
+	.ph-nav-title {
+		font-family: "Songti SC", "SimSun", Georgia, serif;
+		font-size: 32rpx;
+		font-weight: 600;
+		letter-spacing: 3rpx;
+		color: #FBF4EA;
+	}
 
-.empty-icon {
-	width: 200rpx;
-	height: 200rpx;
-	opacity: 0.6;
-}
+	.ph-batch-pill {
+		height: 50rpx;
+		padding: 0 20rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.44);
+		background: rgba(26, 21, 18, 0.72);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 
-.empty-title {
-	margin-top: 32rpx;
-	font-size: 32rpx;
-	font-weight: 600;
-	color: #5a3427;
-}
+	.ph-batch-pill__txt {
+		font-size: 21rpx;
+		color: #EAD4BC;
+		white-space: nowrap;
+	}
 
-.empty-desc {
-	margin-top: 16rpx;
-	font-size: 26rpx;
-	color: #8b6659;
-	text-align: center;
-}
+	.a-wrap {
+		position: relative;
+		z-index: 1;
+		padding: 12rpx 28rpx 0;
+	}
 
-.empty-action {
-	margin-top: 40rpx;
-	width: 320rpx;
-	height: 88rpx;
-	line-height: 88rpx;
-	background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-	color: #fff;
-	font-size: 30rpx;
-	font-weight: 600;
-	border-radius: 44rpx;
-	border: none;
-}
+	.a-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12rpx;
+	}
 
-.empty-action::after {
-	border: none;
-}
+	.a-count {
+		display: flex;
+		align-items: baseline;
+		gap: 12rpx;
+	}
 
-.load-more {
-	text-align: center;
-	padding: 40rpx 0;
-}
+	.a-count__num {
+		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
+		font-size: 68rpx;
+		line-height: 0.96;
+		font-weight: 500;
+		color: #FBF4EA;
+	}
 
-.load-more__text {
-	font-size: 24rpx;
-	color: #ad8476;
-}
+	.a-count__unit {
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.52);
+	}
 
-.dialog-content {
-	padding: 20rpx 0;
-}
+	.a-sub {
+		display: block;
+		margin-top: 10rpx;
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.44);
+	}
 
-.dialog-input {
-	height: 80rpx;
-	padding: 0 24rpx;
-	background: #f8f4f2;
-	border-radius: 16rpx;
-	font-size: 28rpx;
-	color: #5a3427;
-	margin-bottom: 20rpx;
-}
+	.a-filters-scroll {
+		margin-top: 22rpx;
+		white-space: nowrap;
+	}
 
-.dialog-textarea {
-	width: auto;
-	height: 160rpx;
-	padding: 20rpx 24rpx;
-	background: #f8f4f2;
-	border-radius: 16rpx;
-	font-size: 28rpx;
-	color: #5a3427;
-}
+	.a-filters {
+		display: inline-flex;
+		align-items: center;
+		gap: 12rpx;
+		padding-bottom: 4rpx;
+	}
+
+	.a-chip {
+		height: 56rpx;
+		padding: 0 24rpx;
+		border-radius: 999rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		background: rgba(255, 255, 255, 0.036);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.a-chip.is-on {
+		border-color: rgba(216, 176, 140, 0.56);
+		background: rgba(216, 176, 140, 0.16);
+	}
+
+	.a-chip__txt {
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.64);
+		white-space: nowrap;
+	}
+
+	.a-chip.is-on .a-chip__txt {
+		color: #FBF4EA;
+		font-weight: 500;
+	}
+
+	/* 双列错落瀑布流 */
+	.a-grid {
+		display: flex;
+		align-items: flex-start;
+		gap: 18rpx;
+		margin-top: 22rpx;
+	}
+
+	.a-col {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 18rpx;
+	}
+
+	.a-ph {
+		position: relative;
+		width: 100%;
+		border-radius: 26rpx;
+		overflow: hidden;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: #1A1512;
+		box-sizing: border-box;
+	}
+
+	.a-ph.is-selected {
+		border: 3rpx solid #D8B08C;
+	}
+
+	.a-ph__img,
+	.a-ph__video {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+
+	.a-ph__video {
+		pointer-events: none;
+	}
+
+	.a-shade {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 48%, rgba(17, 13, 11, 0.80) 100%);
+	}
+
+	.a-date {
+		position: absolute;
+		left: 18rpx;
+		bottom: 14rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 19rpx;
+		color: rgba(255, 244, 234, 0.84);
+	}
+
+	.a-like {
+		position: absolute;
+		right: 18rpx;
+		bottom: 12rpx;
+		font-size: 22rpx;
+		color: #F5B496;
+	}
+
+	.a-vbadge {
+		position: absolute;
+		top: 14rpx;
+		right: 14rpx;
+		height: 38rpx;
+		padding: 0 14rpx;
+		border-radius: 999rpx;
+		background: rgba(17, 13, 11, 0.78);
+		border: 1rpx solid rgba(255, 255, 255, 0.22);
+		display: flex;
+		align-items: center;
+	}
+
+	.a-vbadge__txt {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 18rpx;
+		color: #FBF4EA;
+	}
+
+	.a-check {
+		position: absolute;
+		top: 14rpx;
+		left: 14rpx;
+		width: 40rpx;
+		height: 40rpx;
+		border-radius: 50%;
+		border: 2rpx solid rgba(255, 244, 234, 0.8);
+		background: rgba(17, 13, 11, 0.56);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+	}
+
+	.a-check.is-on {
+		border-color: #E2643F;
+		background: #E2643F;
+	}
+
+	.a-check__tick {
+		font-size: 22rpx;
+		font-weight: 700;
+		color: #FFFFFF;
+	}
+
+	.a-skel {
+		width: 100%;
+		border-radius: 26rpx;
+		background: rgba(255, 255, 255, 0.045);
+	}
+
+	.a-foot-tip {
+		padding: 30rpx 0 12rpx;
+		text-align: center;
+	}
+
+	.a-foot-tip__txt {
+		font-size: 21rpx;
+		color: rgba(245, 237, 228, 0.34);
+	}
+
+	.ad-view {
+		margin-top: 18rpx;
+	}
+
+	.a-bottom-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 40;
+		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, #110D0B 100%);
+		box-sizing: border-box;
+	}
+
+	.a-batch-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 16rpx 22rpx;
+		border-radius: 26rpx;
+		border: 1rpx solid rgba(216, 176, 140, 0.28);
+		background: rgba(26, 21, 18, 0.96);
+	}
+
+	.a-batch-bar__count {
+		font-size: 24rpx;
+		color: #EAD4BC;
+	}
+
+	.a-batch-bar__acts {
+		display: flex;
+		align-items: center;
+		gap: 14rpx;
+	}
 </style>

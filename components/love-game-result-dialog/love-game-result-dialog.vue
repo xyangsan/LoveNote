@@ -188,7 +188,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(58, 32, 24, 0.45);
+		background: rgba(8, 5, 4, 0.72);
 	}
 
 	.game-result__panel {
@@ -197,12 +197,13 @@
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
-		width: 620rpx;
-		max-height: 80vh;
+		width: 636rpx;
+		max-height: 82vh;
 		padding: 0 32rpx 32rpx;
 		border-radius: 36rpx;
-		background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(255, 246, 239, 0.98));
-		box-shadow: 0 24rpx 60rpx rgba(120, 70, 50, 0.22);
+		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: linear-gradient(155deg, #211915 0%, #16110E 100%);
+		box-shadow: 0 28rpx 72rpx rgba(0, 0, 0, 0.68);
 		overflow: hidden;
 	}
 
@@ -214,8 +215,21 @@
 	}
 
 	.game-result__hero {
-		padding: 38rpx 0 26rpx;
+		margin: 0 -32rpx;
+		padding: 40rpx 32rpx 28rpx;
 		text-align: center;
+	}
+
+	.game-result__hero--success {
+		background: radial-gradient(circle at 50% 0%, rgba(226, 124, 78, 0.22) 0%, rgba(226, 124, 78, 0) 72%);
+	}
+
+	.game-result__hero--fail {
+		background: radial-gradient(circle at 50% 0%, rgba(132, 160, 194, 0.18) 0%, rgba(132, 160, 194, 0) 72%);
+	}
+
+	.game-result__hero--draw {
+		background: radial-gradient(circle at 50% 0%, rgba(216, 176, 140, 0.18) 0%, rgba(216, 176, 140, 0) 72%);
 	}
 
 	.game-result__emoji {
@@ -227,9 +241,11 @@
 	.game-result__title {
 		display: block;
 		margin-top: 18rpx;
+		font-family: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
 		font-size: 40rpx;
-		font-weight: 700;
-		color: #5a3427;
+		font-weight: 600;
+		color: #FBF4EA;
+		letter-spacing: 2rpx;
 	}
 
 	.game-result__subtitle {
@@ -237,35 +253,45 @@
 		margin-top: 12rpx;
 		font-size: 25rpx;
 		line-height: 1.6;
-		color: #8b6659;
+		color: rgba(245, 237, 228, 0.62);
 	}
 
 	.game-result__lines {
-		padding: 18rpx 24rpx;
+		padding: 12rpx 26rpx;
 		border-radius: 26rpx;
-		background: rgba(255, 247, 241, 0.96);
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.035);
 	}
 
 	.game-result__line {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 10rpx 0;
+		gap: 20rpx;
+		padding: 14rpx 0;
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+	}
+
+	.game-result__line:last-child {
+		border-bottom: none;
 	}
 
 	.game-result__line-label {
-		font-size: 25rpx;
-		color: #917165;
+		font-size: 24rpx;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.game-result__line-value {
 		font-size: 27rpx;
 		font-weight: 600;
-		color: #5d372b;
+		color: #FBF4EA;
+		text-align: right;
 	}
 
 	.game-result__line-value--highlight {
-		color: #c0674d;
+		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
+		font-size: 32rpx;
+		color: #F09A6B;
 	}
 
 	.game-result__players {
@@ -276,9 +302,10 @@
 		display: flex;
 		align-items: center;
 		gap: 16rpx;
-		padding: 14rpx 20rpx;
+		padding: 16rpx 22rpx;
 		border-radius: 24rpx;
-		background: rgba(255, 255, 255, 0.92);
+		border: 1rpx solid rgba(255, 255, 255, 0.07);
+		background: rgba(255, 255, 255, 0.03);
 	}
 
 	.game-result__player + .game-result__player {
@@ -286,17 +313,20 @@
 	}
 
 	.game-result__player--self {
-		background: rgba(255, 240, 232, 0.96);
+		border-color: rgba(226, 100, 63, 0.42);
+		background: linear-gradient(135deg, rgba(226, 100, 63, 0.16), rgba(255, 255, 255, 0.03));
 	}
 
 	.game-result__avatar {
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		width: 64rpx;
 		height: 64rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, #e76f51 100%);
+		border: 2rpx solid rgba(216, 176, 140, 0.32);
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
 		overflow: hidden;
 	}
 
@@ -308,7 +338,7 @@
 	.game-result__avatar-text {
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #ffffff;
+		color: #FFF7EF;
 	}
 
 	.game-result__player-body {
@@ -320,47 +350,57 @@
 		display: block;
 		font-size: 27rpx;
 		font-weight: 600;
-		color: #5d372b;
+		color: #FBF4EA;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.game-result__self-flag {
 		font-size: 22rpx;
 		font-weight: 400;
-		color: #b8604c;
+		color: #F09A6B;
 	}
 
 	.game-result__player-role {
 		display: block;
 		margin-top: 4rpx;
 		font-size: 22rpx;
-		color: #a07d71;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	.game-result__player-score {
-		font-size: 28rpx;
-		font-weight: 700;
-		color: #a07d71;
+		flex-shrink: 0;
+		padding: 6rpx 16rpx;
+		border-radius: 999rpx;
+		font-size: 24rpx;
+		font-weight: 600;
+		color: rgba(245, 237, 228, 0.68);
+		background: rgba(255, 255, 255, 0.06);
 	}
 
 	.game-result__player-score--win {
-		color: #c0674d;
+		color: #9ED6B2;
+		background: rgba(132, 190, 156, 0.14);
 	}
 
 	.game-result__player-score--lose {
-		color: #7f9b8e;
+		color: #F5B496;
+		background: rgba(226, 100, 63, 0.18);
 	}
 
 	.game-result__tips {
 		margin-top: 18rpx;
-		padding: 16rpx 20rpx;
+		padding: 16rpx 22rpx;
 		border-radius: 20rpx;
-		background: rgba(255, 246, 241, 0.96);
+		border: 1rpx solid rgba(216, 176, 140, 0.14);
+		background: rgba(216, 176, 140, 0.05);
 	}
 
 	.game-result__tips-text {
-		font-size: 23rpx;
+		font-size: 22rpx;
 		line-height: 1.6;
-		color: #936d62;
+		color: rgba(234, 212, 188, 0.72);
 	}
 
 	.game-result__actions {
@@ -375,24 +415,26 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 88rpx;
+		height: 86rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 241, 235, 0.96);
+		border: 1rpx solid rgba(216, 176, 140, 0.30);
+		background: rgba(216, 176, 140, 0.08);
 	}
 
 	.game-result__action--primary {
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
-		box-shadow: 0 14rpx 26rpx rgba(231, 111, 81, 0.26);
+		border: none;
+		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
 	}
 
 	.game-result__action-text {
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #ffffff;
+		color: #FFF7EF;
 	}
 
 	.game-result__action-text--ghost {
-		color: #b05b48;
+		color: #EAD4BC;
 	}
 
 	/* ---------------- 横屏（斗地主房间页）----------------
@@ -412,7 +454,8 @@
 	}
 
 	.game-result--landscape .game-result__hero {
-		padding: 11px 0 8px;
+		margin: 0 -18px;
+		padding: 11px 18px 8px;
 	}
 
 	.game-result--landscape .game-result__emoji {

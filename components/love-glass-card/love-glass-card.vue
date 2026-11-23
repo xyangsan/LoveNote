@@ -28,8 +28,8 @@
 </template>
 
 <script>
-	const DEFAULT_BACKGROUND = 'linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 246, 239, 0.96))'
-	const DEFAULT_SHADOW = '0 20rpx 50rpx rgba(177, 114, 83, 0.1)'
+	const DEFAULT_BACKGROUND = 'linear-gradient(145deg, rgba(30, 24, 20, 0.96), rgba(22, 17, 14, 0.96))'
+	const DEFAULT_SHADOW = '0 18rpx 44rpx rgba(0, 0, 0, 0.42)'
 
 	export default {
 		name: 'love-glass-card',
@@ -78,7 +78,7 @@
 			},
 			color: {
 				type: String,
-				default: '#5d372b'
+				default: '#FBF4EA'
 			},
 			tagSize: {
 				type: [Number, String],
@@ -86,7 +86,7 @@
 			},
 			tagColor: {
 				type: String,
-				default: '#b8604c'
+				default: '#D8B08C'
 			},
 			headerLine: {
 				type: Boolean,
@@ -131,12 +131,14 @@
 	}
 
 	.love-glass-card :deep(.fui-card__wrap) {
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
 		backdrop-filter: blur(18rpx);
 		-webkit-backdrop-filter: blur(18rpx);
 	}
 
 	.love-glass-card :deep(.fui-card__header) {
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 245, 240, 0.2));
+		background: linear-gradient(180deg, rgba(216, 176, 140, 0.08), rgba(255, 255, 255, 0.01));
+		border-bottom-color: rgba(255, 255, 255, 0.06);
 	}
 
 	.love-glass-card__content {

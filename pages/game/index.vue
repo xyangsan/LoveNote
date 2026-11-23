@@ -1,11 +1,13 @@
 <template>
-	<view class="love-page">
+	<view class="love-page love-page--compact love-page--with-tabbar">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
+		<noir-navbar title="聚会游戏" subtitle="PARTY GAMES" :show-back="false" />
+
 		<view class="love-layer">
 			<view class="game-head">
-				<text class="love-title-block__eyebrow">LoveNote 聚会游戏</text>
+				<text class="love-title-block__eyebrow">LOVENOTE · PARTY GAMES</text>
 				<text class="love-title-block__title">一起玩点什么</text>
 				<text class="love-title-block__desc">选一个游戏开一局，结果会自动记进战绩。</text>
 			</view>
@@ -111,6 +113,8 @@
 			:game-type="rulesGameType"
 			@close="rulesVisible = false"
 		></love-game-rules>
+
+		<noir-tabbar active="game" @refresh="handleTabRefresh" />
 	</view>
 </template>
 
@@ -119,6 +123,7 @@
 	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
 	import { getGameApi } from '@/common/api/game.js'
 	import { getPlatformApi } from '@/common/api/platform.js'
+	import { readAppSettingsCache, writeAppSettingsCache } from '@/common/app-settings.js'
 	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
 	import { getActiveRoom, clearActiveRoom } from '@/common/game/active-room.js'
 	import {
@@ -152,12 +157,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				appStateStore: null,
 				isLoggedIn: false,
 				gameCards: getGameCardList(),
-				// 每个小游戏是否在大厅展示：默认全开，只有运营显式关闭才隐藏
-				gameItems: {
-					undercover: true,
-					landlord: true,
-					bomb: true
-				},
+				// 每个小游戏是否在大厅展示：先用启动时缓存的配置渲染，onShow 再与服务端对齐
+				gameItems: readAppSettingsCache().gameItems,
 				activeRoom: null,
 				records: [],
 				loadingRecords: false,
@@ -275,6 +276,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 						landlord: source.landlord !== false,
 						bomb: source.bomb !== false
 					}
+					// 顺手刷新公共缓存，其它页面（首页 / 心动点）下次读缓存就能拿到最新值
+					writeAppSettingsCache({ gameItems: this.gameItems })
 				} catch (error) {
 					// 配置接口失败就沿用当前值（默认全开），大厅照常可用
 					console.warn('loadModuleVisibility failed', error)
@@ -408,6 +411,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 				} finally {
 					this.loadingRecords = false
 				}
+			},
+			handleTabRefresh() {
+				this.loadModuleVisibility(true)
+				this.refreshActiveRoom()
+				this.loadRecords()
 			}
 		}
 	}
@@ -415,7 +423,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 
 <style>
 	.game-head {
-		padding: 20rpx 8rpx 30rpx;
+		padding: 18rpx 6rpx 26rpx;
 	}
 
 	.resume-card {
@@ -424,36 +432,36 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		justify-content: space-between;
 		gap: 20rpx;
 		margin-bottom: 24rpx;
-		padding: 28rpx 30rpx;
-		border-radius: 32rpx;
-		background: linear-gradient(135deg, rgba(255, 226, 205, 0.98), rgba(255, 240, 226, 0.98));
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.12);
+		padding: 26rpx 28rpx;
+		border-radius: 30rpx;
+		border: 1rpx solid rgba(226, 100, 63, 0.44);
+		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
 	}
 
 	.resume-card__label {
 		display: block;
-		font-size: 22rpx;
-		letter-spacing: 4rpx;
-		color: #b98069;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		letter-spacing: 3rpx;
+		color: #D8B08C;
 	}
 
 	.resume-card__title {
 		display: block;
-		margin-top: 10rpx;
+		margin-top: 8rpx;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
-		font-weight: 700;
-		color: #5a3427;
+		font-weight: 600;
+		color: #FBF4EA;
 	}
 
 	.resume-card__desc {
 		display: block;
-		margin-top: 8rpx;
-		font-size: 23rpx;
-		color: #8b6659;
+		margin-top: 6rpx;
+		font-size: 22rpx;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
-	/* 「进入」按钮：外观交给 uni-tag（见 computed resumeActionStyle），
-	   这里只保留 flex 布局约束 */
 	.resume-card__action-wrap {
 		flex-shrink: 0;
 	}
@@ -461,18 +469,18 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	.game-grid {
 		display: flex;
 		flex-wrap: wrap;
-		margin: 0 -9rpx;
+		margin: 0 -8rpx;
 	}
 
 	.game-card {
 		position: relative;
 		box-sizing: border-box;
-		width: calc(50% - 18rpx);
-		margin: 0 9rpx 18rpx;
+		width: calc(50% - 16rpx);
+		margin: 0 8rpx 16rpx;
 		padding: 24rpx;
-		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.034);
 	}
 
 	.game-card--hover {
@@ -484,8 +492,6 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		/* 图标由 love-game-icon 按玩法自绘（🕵️ / 三张扑克 / 💣），不再用色块 + 编号占位。
-		   固定 84rpx 见方：图标字形高度在不同机型/字体下不一致，用固定盒子才能保证三张卡片等高。 */
 		width: 84rpx;
 		height: 84rpx;
 	}
@@ -500,74 +506,78 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		width: 44rpx;
 		height: 44rpx;
 		border-radius: 50%;
-		background: rgba(255, 241, 235, 0.96);
+		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		background: rgba(216, 176, 140, 0.1);
 	}
 
 	.game-card__badge-text {
-		font-size: 26rpx;
-		font-weight: 700;
-		color: #b98069;
+		font-size: 24rpx;
+		font-weight: 600;
+		color: #D8B08C;
 	}
 
 	.game-card__title {
 		display: block;
-		margin-top: 22rpx;
+		margin-top: 20rpx;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 30rpx;
-		font-weight: 700;
-		color: #5b3529;
+		font-weight: 600;
+		color: #FBF4EA;
 	}
 
 	.game-card__desc {
 		display: block;
-		margin-top: 10rpx;
-		font-size: 23rpx;
-		line-height: 1.6;
-		color: #917165;
+		margin-top: 8rpx;
+		font-size: 22rpx;
+		line-height: 1.55;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	.game-card__meta {
 		display: block;
-		margin-top: 14rpx;
-		font-size: 22rpx;
-		color: #b98069;
+		margin-top: 12rpx;
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 20rpx;
+		color: #D8B08C;
 	}
 
 	.game-section {
-		margin-top: 14rpx;
+		margin-top: 22rpx;
 	}
 
 	.game-section__header {
 		display: flex;
-		align-items: flex-end;
+		align-items: baseline;
 		justify-content: space-between;
-		margin-bottom: 18rpx;
-		padding: 0 8rpx;
+		margin-bottom: 16rpx;
+		padding: 0 6rpx;
 	}
 
 	.game-section__title {
-		font-size: 34rpx;
-		font-weight: 700;
-		color: #5b3529;
+		font-family: "Songti SC", "SimSun", Georgia, serif;
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #FBF4EA;
 	}
 
 	.game-section__more {
 		font-size: 23rpx;
-		color: #b98069;
+		color: #D8B08C;
 	}
 
 	.game-empty {
-		padding: 34rpx 28rpx;
-		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+		padding: 36rpx 28rpx;
+		border-radius: 28rpx;
+		border: 1rpx dashed rgba(216, 176, 140, 0.22);
+		background: rgba(255, 255, 255, 0.024);
 		text-align: center;
 	}
 
 	.game-empty__title {
 		display: block;
 		font-size: 28rpx;
-		font-weight: 700;
-		color: #5d372b;
+		font-weight: 500;
+		color: #FBF4EA;
 	}
 
 	.game-empty__desc {
@@ -575,14 +585,14 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin-top: 10rpx;
 		font-size: 23rpx;
 		line-height: 1.6;
-		color: #8f6e63;
+		color: rgba(245, 237, 228, 0.46);
 	}
 
 	.record-list {
-		padding: 10rpx 24rpx;
-		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(168, 110, 80, 0.08);
+		padding: 8rpx 24rpx;
+		border-radius: 28rpx;
+		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.032);
 	}
 
 	.record-item {
@@ -593,7 +603,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	}
 
 	.record-item + .record-item {
-		border-top: 1rpx solid rgba(231, 204, 194, 0.6);
+		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
 	}
 
 	.record-item__icon {
@@ -614,15 +624,15 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	.record-item__title {
 		display: block;
 		font-size: 27rpx;
-		font-weight: 600;
-		color: #5d372b;
+		font-weight: 500;
+		color: #FBF4EA;
 	}
 
 	.record-item__summary {
 		display: block;
 		margin-top: 6rpx;
 		font-size: 22rpx;
-		color: #917165;
+		color: rgba(245, 237, 228, 0.50);
 	}
 
 	.record-item__right {
@@ -632,23 +642,24 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 
 	.record-item__result {
 		display: block;
-		font-size: 25rpx;
-		font-weight: 700;
-		color: #a07d71;
+		font-size: 24rpx;
+		font-weight: 600;
+		color: rgba(245, 237, 228, 0.56);
 	}
 
 	.record-item__result--win {
-		color: #c0674d;
+		color: #9ED6B2;
 	}
 
 	.record-item__result--lose {
-		color: #7f9b8e;
+		color: #E5865C;
 	}
 
 	.record-item__time {
 		display: block;
 		margin-top: 6rpx;
+		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: #b0a09a;
+		color: rgba(245, 237, 228, 0.34);
 	}
 </style>

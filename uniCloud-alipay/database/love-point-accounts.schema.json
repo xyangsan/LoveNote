@@ -1,0 +1,79 @@
+{
+	"bsonType": "object",
+	"required": ["uid", "balance"],
+	"permission": {
+		"read": false,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "账户ID，与 uid 相同，一人一条"
+		},
+		"uid": {
+			"bsonType": "string",
+			"title": "用户ID"
+		},
+		"couple_id": {
+			"bsonType": "string",
+			"title": "当前情侣关系ID",
+			"description": "未绑定时为空；解绑清零时同步置空"
+		},
+		"balance": {
+			"bsonType": "int",
+			"title": "心动点余额",
+			"description": "永不为负，解绑清零"
+		},
+		"total_earned": {
+			"bsonType": "int",
+			"title": "累计获得",
+			"description": "历史累计，解绑清零时一并归零"
+		},
+		"today_key": {
+			"bsonType": "string",
+			"title": "当日日期",
+			"description": "东八区自然日 YYYY-MM-DD，用于日切"
+		},
+		"today_earned": {
+			"bsonType": "int",
+			"title": "今日已获点数"
+		},
+		"today_counts": {
+			"bsonType": "object",
+			"title": "今日各任务已计分次数",
+			"description": "按 task_key 记，日切时清空",
+			"properties": {
+				"daily_post": { "bsonType": "int" },
+				"photo_upload": { "bsonType": "int" },
+				"anniversary": { "bsonType": "int" },
+				"plan_create": { "bsonType": "int" },
+				"game_settle": { "bsonType": "int" },
+				"plan_finish": { "bsonType": "int" }
+			}
+		},
+		"today_tasks": {
+			"bsonType": "array",
+			"title": "今日已完成的任务种类",
+			"description": "用于每日挑战档位判定，日切时清空"
+		},
+		"today_challenge": {
+			"bsonType": "array",
+			"title": "今日已发放的挑战档位",
+			"description": "存档位任务数 4/5/6，避免重复发放，日切时清空"
+		},
+		"last_daily_key": {
+			"bsonType": "string",
+			"title": "最近一次发放每日相伴的日期",
+			"description": "绑定状态下每天只发一次 +10"
+		},
+		"created_at": {
+			"bsonType": "long",
+			"title": "创建时间"
+		},
+		"updated_at": {
+			"bsonType": "long",
+			"title": "更新时间"
+		}
+	}
+}

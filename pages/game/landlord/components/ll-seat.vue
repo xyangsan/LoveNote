@@ -226,7 +226,7 @@
 		height: 40px;
 		border-radius: 50%;
 		background: #fffaf2;
-		border: 2px solid rgba(255, 255, 255, 0.85);
+		border: 2px solid rgba(255, 255, 255, 0.05);
 		overflow: hidden;
 	}
 
@@ -284,7 +284,7 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.94);
+		background: rgba(26, 21, 18, 0.94);
 		box-shadow: 0 2px 6px rgba(12, 36, 22, 0.32);
 		line-height: 1;
 	}
@@ -385,12 +385,12 @@
 		max-width: 140px;
 		padding: 4px 10px;
 		border-radius: 12px;
-		background: rgba(255, 255, 255, 0.96);
+		background: rgba(26, 21, 18, 0.94);
 		box-shadow: 0 4px 10px rgba(12, 36, 22, 0.3);
 	}
 
 	.ll-seat__bubble-text {
 		font-size: 11px;
-		color: #5d372b;
+		color: #FBF4EA;
 	}
 </style>

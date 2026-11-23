@@ -9,6 +9,7 @@ export function getDailyApi() {
 			create: 'daily/create',
 			toggleLike: 'daily/toggleLike',
 			addComment: 'daily/addComment',
+			deleteComment: 'daily/deleteComment',
 			delete: 'daily/delete'
 		})
 	}
