@@ -59,10 +59,10 @@
 		subscribeTabChange
 	} from '../../common/utils/tab-nav.js'
 	import { tryShowInterstitialAd } from '../../common/utils/interstitial-ad.js'
-	import TabHome from '../../components/tab-home/tab-home.vue'
-	import TabFeed from '../../components/tab-feed/tab-feed.vue'
-	import TabGame from '../../components/tab-game/tab-game.vue'
-	import TabProfile from '../../components/tab-profile/tab-profile.vue'
+	import TabHome from './tabbar/tab-home.vue'
+	import TabFeed from './tabbar/tab-feed.vue'
+	import TabGame from './tabbar/tab-game.vue'
+	import TabProfile from './tabbar/tab-profile.vue'
 
 	const INTERSTITIAL_AD_SHOW_RATE = 1 / 3
 

@@ -125,21 +125,21 @@
 </template>
 
 <script>
-	import LoveGameRules from '../love-game-rules/love-game-rules.vue'
-	import LoveGameIcon from '../love-game-icon/love-game-icon.vue'
-	import { getGameApi } from '../../common/api/game.js'
-	import { readAppSettingsCache } from '../../common/app-settings.js'
-	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '../../common/game/rules.js'
-	import { getActiveRoom, clearActiveRoom } from '../../common/game/active-room.js'
+	import LoveGameRules from '@/components/love-game-rules/love-game-rules.vue'
+	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
+	import { getGameApi } from '@/common/api/game.js'
+	import { readAppSettingsCache } from '@/common/app-settings.js'
+	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
+	import { getActiveRoom, clearActiveRoom } from '@/common/game/active-room.js'
 	import {
 		normalizeGameRoomBrief,
 		normalizeGameRecordList,
 		formatGameTime,
 		getResultText
-	} from '../../store/modules/game.js'
-	import { useAppStateStore } from '../../store/app-state.js'
-	import { hasValidLogin } from '../../common/auth-center.js'
-	import { openLoginModal } from '../../common/auth-modal.js'
+	} from '@/store/modules/game.js'
+	import { useAppStateStore } from '@/store/app-state.js'
+	import { hasValidLogin } from '@/common/auth-center.js'
+	import { openLoginModal } from '@/common/auth-modal.js'
 
 	const ROOM_PAGE_MAP = {
 		undercover: '/pages/game/undercover/room',

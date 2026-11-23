@@ -191,15 +191,15 @@
 </template>
 
 <script>
-	import { DEFAULT_AVATAR, getCachedUserProfile, hasValidLogin } from '../../common/auth-center.js'
-	import { getDailyApi } from '../../common/api/daily.js'
-	import { getUserApi } from '../../common/api/user.js'
-	import { uploadFileWithModule } from '../../common/utils/file-upload.js'
-	import { openImageViewer } from '../../common/utils/image-viewer.js'
-	import { getNavBarHeight, getNavBarMetrics } from '../../common/utils/nav-bar.js'
-	import { useAppStateStore } from '../../store/app-state.js'
-	import LoveCoupleGuide from '../love-couple-guide/love-couple-guide.vue'
-	import glyph from '../love-editor/glyph.json'
+	import { DEFAULT_AVATAR, getCachedUserProfile, hasValidLogin } from '@/common/auth-center.js'
+	import { getDailyApi } from '@/common/api/daily.js'
+	import { getUserApi } from '@/common/api/user.js'
+	import { uploadFileWithModule } from '@/common/utils/file-upload.js'
+	import { openImageViewer } from '@/common/utils/image-viewer.js'
+	import { getNavBarHeight, getNavBarMetrics } from '@/common/utils/nav-bar.js'
+	import { useAppStateStore } from '@/store/app-state.js'
+	import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
+	import glyph from '@/components/love-editor/glyph.json'
 
 	const DEFAULT_COVER = '/static/images/feed-cover-bg.jpg'
 	const AD_SEED_MAX = 2147483647

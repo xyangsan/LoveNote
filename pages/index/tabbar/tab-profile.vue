@@ -119,11 +119,11 @@
 		getCachedUserProfile,
 		getCurrentUniIdUser,
 		hasValidLogin
-	} from '../../common/auth-center.js'
-	import { getAuthApi } from '../../common/api/auth.js'
-	import { getPointsApi } from '../../common/api/points.js'
-	import { useAppStateStore } from '../../store/app-state.js'
-	import { APP_VERSION_TEXT } from '../../common/version.js'
+	} from '@/common/auth-center.js'
+	import { getAuthApi } from '@/common/api/auth.js'
+	import { getPointsApi } from '@/common/api/points.js'
+	import { useAppStateStore } from '@/store/app-state.js'
+	import { APP_VERSION_TEXT } from '@/common/version.js'
 
 	function formatNum(n) {
 		return String(Math.max(0, Math.floor(Number(n) || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, ',')

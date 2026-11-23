@@ -423,17 +423,17 @@
 </template>
 
 <script>
-	import { DEFAULT_AVATAR, getCachedUserProfile, hasValidLogin } from '../../common/auth-center.js'
-	import { getAnniversaryApi } from '../../common/api/anniversary.js'
-	import { getDailyApi } from '../../common/api/daily.js'
-	import { getPhotoApi } from '../../common/api/photo.js'
-	import { getPlanApi } from '../../common/api/plan.js'
-	import { getPointsApi } from '../../common/api/points.js'
-	import { readAppSettingsCache } from '../../common/app-settings.js'
-	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '../../common/game/rules.js'
-	import { getNavBarHeight, getNavBarMetrics } from '../../common/utils/nav-bar.js'
-	import { useAppStateStore } from '../../store/app-state.js'
-	import LoveGameIcon from '../love-game-icon/love-game-icon.vue'
+	import { DEFAULT_AVATAR, getCachedUserProfile, hasValidLogin } from '@/common/auth-center.js'
+	import { getAnniversaryApi } from '@/common/api/anniversary.js'
+	import { getDailyApi } from '@/common/api/daily.js'
+	import { getPhotoApi } from '@/common/api/photo.js'
+	import { getPlanApi } from '@/common/api/plan.js'
+	import { getPointsApi } from '@/common/api/points.js'
+	import { readAppSettingsCache } from '@/common/app-settings.js'
+	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
+	import { getNavBarHeight, getNavBarMetrics } from '@/common/utils/nav-bar.js'
+	import { useAppStateStore } from '@/store/app-state.js'
+	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
 
 	const DEFAULT_HERO_COVER = '/static/images/home-hero-bg.jpg'
 
