@@ -181,7 +181,7 @@
 		overflow: hidden;
 		border-radius: 20rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.09);
-		background: #1A1512;
+		background: var(--noir-surface);
 	}
 
 	.lpg-cell--hero {
@@ -241,14 +241,14 @@
 	.lpg-badge__icon {
 		font-size: 16rpx;
 		line-height: 1;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.lpg-badge__txt {
 		margin-left: 4rpx;
 		font-size: 17rpx;
 		line-height: 1.2;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.lpg-cap {
@@ -264,7 +264,7 @@
 		display: block;
 		font-size: 22rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -308,7 +308,7 @@
 	.lpg-all__num {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		line-height: 1.2;
 	}
 
@@ -320,7 +320,7 @@
 	.lpg-add__plus {
 		font-size: 28rpx;
 		line-height: 1;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.lpg-add__txt {

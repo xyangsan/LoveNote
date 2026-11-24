@@ -645,7 +645,7 @@
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -663,13 +663,13 @@
 	.pe-glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.pe-glow--right {
 		top: 320rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.pe-wrap {
@@ -727,8 +727,8 @@
 		width: 44rpx;
 		height: 44rpx;
 		border-radius: 50%;
-		background: #E2643F;
-		border: 4rpx solid #110D0B;
+		background: var(--noir-coral);
+		border: 4rpx solid var(--noir-bg);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -737,7 +737,7 @@
 	.pe-av-plus__txt {
 		font-size: 24rpx;
 		line-height: 1;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 		font-weight: 700;
 	}
 
@@ -750,7 +750,7 @@
 		display: block;
 		font-size: 32rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -760,7 +760,7 @@
 		display: block;
 		margin-top: 10rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	/* 表单行卡片（对标 s28 .pe-form） */
@@ -768,7 +768,7 @@
 		margin-top: 32rpx;
 		padding: 0 28rpx;
 		border-radius: 32rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -808,7 +808,7 @@
 		min-width: 0;
 		height: 68rpx;
 		font-size: 26rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-align: right;
 	}
 
@@ -818,7 +818,7 @@
 
 	.pe-row__val {
 		font-size: 26rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-align: right;
 	}
 
@@ -876,7 +876,7 @@
 	}
 
 	.pe-chip--on .pe-chip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 600;
 	}
 
@@ -885,7 +885,7 @@
 		margin-top: 26rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: rgba(216, 176, 140, 0.06);
 	}
 
@@ -938,7 +938,7 @@
 
 	.pe-btn--primary {
 		flex: 1;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
 	}
 
@@ -953,12 +953,12 @@
 	.pe-btn__txt {
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 		letter-spacing: 2rpx;
 	}
 
 	.pe-btn__txt--ghost {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		letter-spacing: 1rpx;
 	}
 </style>

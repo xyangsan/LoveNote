@@ -285,7 +285,7 @@ export default {
 .image-viewer__close-icon {
 	font-size: 44rpx;
 	line-height: 1;
-	color: #ffffff;
+	color: var(--noir-white);
 }
 
 .image-viewer__counter {
@@ -316,7 +316,7 @@ export default {
 	height: 40rpx;
 	border-radius: 50%;
 	border: 4rpx solid rgba(255, 255, 255, 0.28);
-	border-top-color: #ffffff;
+	border-top-color: var(--noir-white);
 	box-sizing: border-box;
 	animation: image-viewer-spin 0.8s linear infinite;
 }

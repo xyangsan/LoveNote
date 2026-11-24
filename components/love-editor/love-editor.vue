@@ -679,7 +679,7 @@
 			
 			.emoji-input {
 				flex: 1;
-				background-color: #ffffff;
+				background-color: var(--noir-white);
 				min-height: 72rpx;
 				max-height: 240rpx;
 				height: 72rpx;
@@ -793,7 +793,7 @@
 				bottom: 40rpx;
 				right: 30rpx;
 				border-radius: 6px;
-				background-color: #ffffff;
+				background-color: var(--noir-white);
 				padding: 10rpx 16rpx;
 			}
 		}

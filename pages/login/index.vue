@@ -354,14 +354,14 @@ import {
 
 <style>
 	page {
-		background: #110D0B;
+		background: var(--noir-bg);
 	}
 
 	.login-page {
 		position: relative;
 		min-height: 100vh;
 		overflow: hidden;
-		background: #110D0B;
+		background: var(--noir-bg);
 	}
 
 	.login-page__bg,
@@ -531,11 +531,11 @@ import {
 	}
 
 	.login-title-block .love-title-block__eyebrow {
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.login-title-block .love-title-block__title {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.45);
 	}
 
@@ -558,7 +558,7 @@ import {
 
 	.login-editor__label {
 		text-align: center;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.login-editor__tip,
@@ -580,7 +580,7 @@ import {
 		margin-top: 56rpx;
 		padding: 24rpx 28rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: rgba(255, 255, 255, 0.04);
 	}
 

@@ -345,7 +345,7 @@
 	.ll-result__multiplier-text {
 		font-size: 12px;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ll-result__spring {
@@ -363,7 +363,7 @@
 
 	.ll-result__spring--anti-spring {
 		background: linear-gradient(180deg, #7fb0d8 0%, #4d7fb8 100%);
-		color: #fff;
+		color: var(--noir-white);
 	}
 
 	/* 3 人横排：地主居中 + 金框，农民两侧 */
@@ -397,7 +397,7 @@
 	}
 
 	.ll-result__player--win .ll-result__avatar {
-		border-color: #E2643F;
+		border-color: var(--noir-coral);
 	}
 
 	/* 输的一方压暗：作用在「头像 + 身份牌」整体上，否则牌还是满色、头像发灰，看着像没对齐 */
@@ -420,7 +420,7 @@
 		width: 36px;
 		height: 36px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, #E2643F 100%);
+		background: linear-gradient(135deg, #ffb37a 0%, var(--noir-coral) 100%);
 		border: 2px solid rgba(255, 255, 255, 0.05);
 		overflow: hidden;
 	}
@@ -438,7 +438,7 @@
 	.ll-result__avatar-text {
 		font-size: 14px;
 		font-weight: 700;
-		color: #fff;
+		color: var(--noir-white);
 	}
 
 	/* 悬浮在头像右下角（压住一点边沿，像徽章）—— 白描边 + 投影保证压在头像上也读得清 */
@@ -469,7 +469,7 @@
 	.ll-result__name {
 		font-size: 12px;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		max-width: 100%;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -479,7 +479,7 @@
 	.ll-result__self-flag {
 		font-size: 10px;
 		font-weight: 400;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ll-result__score-delta {
@@ -489,7 +489,7 @@
 	}
 
 	.ll-result__score-delta--win {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ll-result__score-delta--lose {
@@ -523,7 +523,7 @@
 	}
 
 	.ll-result__action--primary {
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		border: none;
 		box-shadow: 0 4px 12px rgba(222, 95, 60, 0.28);
 	}
@@ -535,10 +535,10 @@
 	.ll-result__action-text {
 		font-size: 14px;
 		font-weight: 700;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.ll-result__action-text--ghost {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 </style>

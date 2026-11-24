@@ -845,7 +845,7 @@
 		font-weight: 600;
 		letter-spacing: 3rpx;
 		line-height: 1.15;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		white-space: nowrap;
 	}
 
@@ -885,7 +885,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 38rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.user-card__meta,
@@ -906,7 +906,7 @@
 		border: 1rpx solid rgba(245, 237, 228, 0.20);
 		background: rgba(255, 255, 255, 0.04);
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.menu-group {
@@ -941,7 +941,7 @@
 	.menu-item__icon-text {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.menu-item__body {
@@ -954,14 +954,14 @@
 		display: block;
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.menu-item__desc {
 		margin-top: 6rpx;
 		font-size: 22rpx;
 		line-height: 1.5;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 		display: -webkit-box;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -991,7 +991,7 @@
 	.menu-item__value-text {
 		max-width: 188rpx;
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		font-weight: 500;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -1072,7 +1072,7 @@
 
 	.heart-card__delta {
 		font-size: 22rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.heart-card__link {
@@ -1088,14 +1088,14 @@
 
 	.heart-card__link-text {
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.heart-card__link-arrow {
 		margin-left: 4rpx;
 		font-size: 18rpx;
 		line-height: 1;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.heart-card__value {
@@ -1108,7 +1108,7 @@
 		font-weight: 500;
 		line-height: 1;
 		letter-spacing: -1rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	@keyframes heart-beat {

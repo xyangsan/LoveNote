@@ -687,7 +687,7 @@
 		font-weight: 600;
 		letter-spacing: 3rpx;
 		line-height: 1.15;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		white-space: nowrap;
 	}
 
@@ -723,7 +723,7 @@
 	.tf-cover-btn__txt {
 		font-size: 21rpx;
 		letter-spacing: 1rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -752,7 +752,7 @@
 		width: 100%;
 		min-height: 360rpx;
 		overflow: hidden;
-		background: #110D0B;
+		background: var(--noir-bg);
 	}
 
 	.tf-cover__img {
@@ -770,7 +770,7 @@
 			rgba(13, 10, 8, 0.52) 0%,
 			rgba(13, 10, 8, 0.16) 44%,
 			rgba(13, 10, 8, 0.72) 78%,
-			#110D0B 100%
+			var(--noir-bg) 100%
 		);
 	}
 
@@ -795,14 +795,14 @@
 		height: 84rpx;
 		border-radius: 50%;
 		border: 2rpx solid rgba(216, 176, 140, 0.56);
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.tf-cover__name {
 		display: block;
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 600;
 	}
 
@@ -816,7 +816,7 @@
 	.tf-cover__date {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 22rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.tf-body {
@@ -830,7 +830,7 @@
 
 	.tf-loading__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.tf-post {
@@ -861,7 +861,7 @@
 		display: block;
 		font-size: 27rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.tf-post__time {
@@ -922,7 +922,7 @@
 	.tf-act {
 		padding: 6rpx 18rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -933,11 +933,11 @@
 
 	.tf-act__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	.tf-act.is-on .tf-act__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.tf-comments {
@@ -958,12 +958,12 @@
 	}
 
 	.tf-citem__name {
-		color: #D8B08C;
+		color: var(--noir-gold);
 		font-weight: 500;
 	}
 
 	.tf-citem__reply {
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.tf-citem__txt {
@@ -984,7 +984,7 @@
 
 	.tf-more__txt {
 		font-size: 23rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.tf-end {
@@ -1006,8 +1006,8 @@
 
 	.tf-comment-sheet {
 		width: 100%;
-		background: #1A1512;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.24);
+		background: var(--noir-surface);
+		border-top: 1rpx solid var(--noir-border-gold);
 		padding-bottom: env(safe-area-inset-bottom);
 		box-sizing: border-box;
 	}
@@ -1028,7 +1028,7 @@
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.1);
 		background: rgba(255, 255, 255, 0.04);
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-family: "Fluent Emoji Flat", "PingFang SC", sans-serif;
 		font-size: 26rpx;
 	}
@@ -1111,7 +1111,7 @@
 
 	.tf-emoji-del__txt {
 		font-size: 28rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1;
 	}
 

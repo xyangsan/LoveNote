@@ -117,7 +117,7 @@ export default {
 	font-family: "SF Mono", "Consolas", monospace;
 	font-size: 20rpx;
 	letter-spacing: 3rpx;
-	color: #D8B08C;
+	color: var(--noir-gold);
 }
 
 .couple-guide__desc {
@@ -139,6 +139,6 @@ export default {
 	display: block;
 	font-size: 22rpx;
 	line-height: 1.6;
-	color: #EAD4BC;
+	color: var(--noir-gold-soft);
 }
 </style>

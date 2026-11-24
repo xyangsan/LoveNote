@@ -2311,7 +2311,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
 		font-weight: 600;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 		letter-spacing: 1rpx;
 		white-space: nowrap;
 	}
@@ -2320,7 +2320,7 @@
 	.ops-tabs {
 		display: flex;
 		align-items: center;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.08);
+		border-bottom: 1rpx solid var(--noir-border);
 	}
 
 	.ops-tabs__item {
@@ -2340,7 +2340,7 @@
 
 	.ops-tabs__label--active {
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-tabs__indicator {
@@ -2351,7 +2351,7 @@
 	}
 
 	.ops-tabs__indicator--active {
-		background: #E5865C;
+		background: var(--noir-coral-soft);
 	}
 
 	/* 时间筛选 */
@@ -2372,7 +2372,7 @@
 	.ops-chip {
 		padding: 10rpx 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 		display: flex;
 	}
@@ -2390,7 +2390,7 @@
 
 	.ops-chip__text--active {
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-date {
@@ -2399,7 +2399,7 @@
 		gap: 6rpx;
 		padding: 10rpx 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: rgba(255, 255, 255, 0.03);
 		line-height: 26rpx;
 	}
@@ -2459,7 +2459,7 @@
 	.ops-card__title {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-card__hint {
@@ -2470,7 +2470,7 @@
 	.ops-card__link {
 		font-size: 20rpx;
 		font-weight: 500;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	/* NOIR 主数据卡（对标 s35 .ov-hero / s37 .ad-hero） */
@@ -2497,7 +2497,7 @@
 	.ops-hero__badge {
 		padding: 6rpx 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 		background: rgba(226, 100, 63, 0.16);
 		display: flex;
 	}
@@ -2505,7 +2505,7 @@
 	.ops-hero__badge-text {
 		font-size: 19rpx;
 		font-weight: 600;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.ops-hero__amount {
@@ -2520,7 +2520,7 @@
 		font-size: 64rpx;
 		font-weight: 500;
 		line-height: 1.05;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-hero__unit,
@@ -2534,7 +2534,7 @@
 		display: block;
 		margin-top: 10rpx;
 		font-size: 20rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ops-hero__divider {
@@ -2565,7 +2565,7 @@
 		font-family: "Georgia", serif;
 		font-size: 32rpx;
 		font-weight: 500;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ops-hero__cell-label {
@@ -2595,7 +2595,7 @@
 
 	.ops-today__label {
 		font-size: 18rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-today__value {
@@ -2603,22 +2603,22 @@
 		font-size: 30rpx;
 		font-weight: 500;
 		line-height: 1.1;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ops-today__delta {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 17rpx;
 		font-weight: 600;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-today__delta--up {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ops-today__delta--down {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	/* 转化步骤：页面自绘占比条（量为 0 / 1 时比漏斗好读） */
@@ -2647,13 +2647,13 @@
 		min-width: 0;
 		font-size: 24rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-step__value {
 		font-size: 28rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-step__track {
@@ -2673,7 +2673,7 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 18rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	/* 图表（xtf-charts：canvas 宽度撑满卡片内容区，高度由 height 传 px） */
@@ -2685,7 +2685,7 @@
 		display: block;
 		margin-top: 12rpx;
 		font-size: 18rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-chart__metrics {
@@ -2705,13 +2705,13 @@
 
 	.ops-chart__metric-label {
 		font-size: 18rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-chart__metric-value {
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	/* 反馈 */
@@ -2731,17 +2731,17 @@
 	.ops-feedback__num {
 		font-size: 40rpx;
 		font-weight: 700;
-		color: #ec7558;
+		color: var(--noir-coral);
 	}
 
 	.ops-feedback__label {
 		font-size: 18rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	.ops-feedback__rest {
 		font-size: 20rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	/* 模块 */
@@ -2761,16 +2761,16 @@
 	.ops-summary-row__value {
 		font-size: 34rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-summary-row__value--accent {
-		color: #ec7558;
+		color: var(--noir-coral);
 	}
 
 	.ops-summary-row__label {
 		font-size: 18rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	.ops-modules {
@@ -2799,13 +2799,13 @@
 	.ops-module__name {
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-module__penetration {
 		font-size: 18rpx;
 		font-weight: 600;
-		color: #ec7558;
+		color: var(--noir-coral);
 	}
 
 	.ops-module__value-row {
@@ -2819,12 +2819,12 @@
 		font-size: 38rpx;
 		font-weight: 700;
 		line-height: 1.1;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-module__unit {
 		font-size: 18rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 		padding-bottom: 4rpx;
 	}
 
@@ -2832,7 +2832,7 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 18rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	.ops-module__track {
@@ -2846,7 +2846,7 @@
 	.ops-module__bar {
 		height: 100%;
 		border-radius: 4rpx;
-		background: linear-gradient(90deg, #ffb199 0%, #ec7558 100%);
+		background: linear-gradient(90deg, #ffb199 0%, var(--noir-coral) 100%);
 	}
 
 	/* 广告：同步状态（对标 s37 .ad-sync） */
@@ -2857,7 +2857,7 @@
 		margin-top: 20rpx;
 		padding: 14rpx 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -2881,11 +2881,11 @@
 	}
 
 	.ops-sync.ops-sync--ok .ops-sync__dot {
-		background: #9ED6B2;
+		background: var(--noir-green);
 	}
 
 	.ops-sync.ops-sync--ok .ops-sync__text {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.ops-sync.ops-sync--wait .ops-sync__dot {
@@ -2893,7 +2893,7 @@
 	}
 
 	.ops-sync.ops-sync--error .ops-sync__dot {
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	/* 广告：多应用未收敛提示 */
@@ -2943,7 +2943,7 @@
 
 	.ops-quick__label--active {
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ops-quick__value {
@@ -2954,11 +2954,11 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 24rpx;
 		font-weight: 600;
-		color: #F5EDE4;
+		color: var(--noir-text);
 	}
 
 	.ops-quick__value--active {
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	/* 广告：筛选 */
@@ -2987,7 +2987,7 @@
 		padding: 10rpx 18rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(236, 117, 88, 0.4);
-		background: #1A1512;
+		background: var(--noir-surface);
 	}
 
 	.ops-pills {
@@ -3051,13 +3051,13 @@
 	}
 
 	.ops-seg__item--active {
-		background: #1A1512;
+		background: var(--noir-surface);
 		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.42);
 	}
 
 	.ops-seg__text {
 		font-size: 19rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	.ops-seg__text--active {
@@ -3076,7 +3076,7 @@
 
 	.ops-table__head {
 		margin-top: 18rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.08);
+		border-bottom: 1rpx solid var(--noir-border);
 	}
 
 	.ops-table__row + .ops-table__row {
@@ -3087,7 +3087,7 @@
 		flex: 1;
 		text-align: right;
 		font-size: 18rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-table__th--wide {
@@ -3111,13 +3111,13 @@
 		flex: 1.2;
 		text-align: left;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-table__td--rev {
 		flex: 1.1;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ops-more {
@@ -3155,12 +3155,12 @@
 	.ops-ad-row__name {
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-ad-row__meta {
 		font-size: 18rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	.ops-ad-row__right {
@@ -3178,7 +3178,7 @@
 
 	.ops-ad-row__sub {
 		font-size: 17rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-ad-total {
@@ -3187,7 +3187,7 @@
 		justify-content: space-between;
 		margin-top: 22rpx;
 		padding-top: 20rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+		border-top: 1rpx solid var(--noir-border);
 	}
 
 	.ops-ad-total__label {
@@ -3201,7 +3201,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 广告：环形图图例（两列） */
@@ -3240,7 +3240,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 广告：类型分布 */
@@ -3258,12 +3258,12 @@
 	.ops-type__name {
 		font-size: 21rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-type__meta {
 		font-size: 18rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ops-type__track {
@@ -3277,7 +3277,7 @@
 	.ops-type__bar {
 		height: 100%;
 		border-radius: 4rpx;
-		background: linear-gradient(90deg, #ffb199 0%, #ec7558 100%);
+		background: linear-gradient(90deg, #ffb199 0%, var(--noir-coral) 100%);
 	}
 
 	/* 广告：数据核对 */
@@ -3327,7 +3327,7 @@
 	.ops-diag__value {
 		font-size: 20rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	/* 状态 */
@@ -3338,7 +3338,7 @@
 
 	.ops-loading__text {
 		font-size: 22rpx;
-		color: #9a766c;
+		color: var(--noir-text-faded);
 	}
 
 	.ops-empty {
@@ -3355,7 +3355,7 @@
 		margin-top: 40rpx;
 		padding: 48rpx 32rpx;
 		border-radius: 32rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 		text-align: center;
 	}
@@ -3364,7 +3364,7 @@
 		display: block;
 		font-size: 28rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-forbidden__desc {
@@ -3380,7 +3380,7 @@
 		margin-top: 14rpx;
 		font-size: 18rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	/* 权限 tab：开关行 */
@@ -3471,7 +3471,7 @@
 	.ops-perm__name {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ops-perm__state {
@@ -3480,12 +3480,12 @@
 		font-size: 17rpx;
 		font-weight: 500;
 		color: rgba(245, 237, 228, 0.48);
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.ops-perm__state--on {
-		color: #9ED6B2;
+		color: var(--noir-green);
 		border-color: rgba(132, 190, 156, 0.34);
 		background: rgba(132, 190, 156, 0.14);
 	}
@@ -3495,7 +3495,7 @@
 		margin-top: 8rpx;
 		font-size: 19rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	/* 权限 tab：云存储清理与心动点回补（对标 s38 .pm-stat3 / .pm-act） */
@@ -3520,11 +3520,11 @@
 		font-size: 32rpx;
 		font-weight: 500;
 		line-height: 1.2;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ops-cleanup__value--warn {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ops-cleanup__label {
@@ -3560,7 +3560,7 @@
 	.ops-cleanup__btn-text {
 		font-size: 24rpx;
 		font-weight: 500;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ops-cleanup__result {
@@ -3568,6 +3568,6 @@
 		margin-top: 14rpx;
 		font-size: 19rpx;
 		line-height: 1.6;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 </style>

@@ -1485,7 +1485,7 @@ export default {
 
 .love-media-uploader__type-text {
 	font-size: 20rpx;
-	color: #FBF4EA;
+	color: var(--noir-text-strong);
 }
 
 .love-media-uploader__remove {
@@ -1505,7 +1505,7 @@ export default {
 .love-media-uploader__remove-icon {
 	font-size: 26rpx;
 	line-height: 1;
-	color: #FBF4EA;
+	color: var(--noir-text-strong);
 }
 
 .love-media-uploader__mask,
@@ -1536,7 +1536,7 @@ export default {
 .love-media-uploader__success-icon,
 .love-media-uploader__error-icon {
 	font-size: 44rpx;
-	color: #FFF7EF;
+	color: var(--noir-text-warm);
 	font-weight: 700;
 }
 

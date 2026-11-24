@@ -231,7 +231,7 @@
 	}
 
 	.noir-navbar__back-icon {
-		color: #F5EDE4;
+		color: var(--noir-text);
 		font-size: 38rpx;
 		line-height: 1;
 		margin-top: -4rpx;
@@ -256,7 +256,7 @@
 		font-size: 32rpx;
 		font-weight: 500;
 		letter-spacing: 3rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

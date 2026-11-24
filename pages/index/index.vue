@@ -234,8 +234,8 @@
 		min-height: 100vh;
 		background:
 			radial-gradient(88% 42% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
-			#110D0B;
-		color: #F5EDE4;
+			var(--noir-bg);
+		color: var(--noir-text);
 		overflow-x: hidden;
 	}
 

@@ -108,8 +108,8 @@
 	}
 
 	.noir-btn--primary {
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
-		color: #FFF7EF;
+		background: var(--noir-btn-gradient);
+		color: var(--noir-text-warm);
 		box-shadow: 0 14rpx 34rpx rgba(222, 95, 60, 0.28);
 		font-weight: 500;
 	}
@@ -129,7 +129,7 @@
 	.noir-btn--pill {
 		background: rgba(216, 176, 140, 0.09);
 		border-color: rgba(216, 176, 140, 0.42);
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.noir-btn.is-disabled {

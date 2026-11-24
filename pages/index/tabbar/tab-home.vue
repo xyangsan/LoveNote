@@ -1039,7 +1039,7 @@
 		font-size: 30rpx;
 		letter-spacing: 5rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-brand__cn {
@@ -1058,7 +1058,7 @@
 		position: relative;
 		width: 100%;
 		overflow: hidden;
-		background: #110D0B;
+		background: var(--noir-bg);
 	}
 
 	.th-hero-bleed {
@@ -1080,7 +1080,7 @@
 			rgba(13, 10, 8, 0.72) 0%,
 			rgba(13, 10, 8, 0.24) 36%,
 			rgba(13, 10, 8, 0.76) 74%,
-			#110D0B 100%
+			var(--noir-bg) 100%
 		);
 	}
 
@@ -1111,7 +1111,7 @@
 			rgba(13, 10, 8, 0.56) 0%,
 			rgba(13, 10, 8, 0.14) 32%,
 			rgba(13, 10, 8, 0.72) 66%,
-			#110D0B 100%
+			var(--noir-bg) 100%
 		);
 	}
 
@@ -1139,14 +1139,14 @@
 		width: 10rpx;
 		height: 10rpx;
 		border-radius: 50%;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.gh-hero__badge-txt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 3rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.gh-hero__headline {
@@ -1159,7 +1159,7 @@
 		font-size: 54rpx;
 		line-height: 1.3;
 		letter-spacing: 2rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 600;
 		text-shadow: 0 6rpx 26rpx rgba(0, 0, 0, 0.62);
 	}
@@ -1197,7 +1197,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.gh-perk__lbl {
@@ -1210,7 +1210,7 @@
 	.gh-cta {
 		padding: 24rpx 24rpx 20rpx;
 		border-radius: 30rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14) 0%, rgba(26, 21, 18, 0.88) 100%);
 	}
 
@@ -1233,7 +1233,7 @@
 		box-sizing: border-box;
 		padding: 24rpx 22rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.034);
 	}
 
@@ -1260,7 +1260,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 29rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.gh-card__desc {
@@ -1298,7 +1298,7 @@
 		font-size: 124rpx;
 		line-height: 0.92;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-shadow: 0 4rpx 30rpx rgba(0, 0, 0, 0.52);
 	}
 
@@ -1349,7 +1349,7 @@
 		border-radius: 50%;
 		overflow: hidden;
 		border: 2rpx solid rgba(255, 240, 226, 0.52);
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.th-gender {
@@ -1358,7 +1358,7 @@
 		width: 24rpx;
 		height: 24rpx;
 		border-radius: 50%;
-		border: 2rpx solid #110D0B;
+		border: 2rpx solid var(--noir-bg);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1386,7 +1386,7 @@
 		font-size: 14rpx;
 		font-weight: 700;
 		line-height: 1;
-		color: #FFFFFF;
+		color: var(--noir-white);
 	}
 
 	.th-ava--empty {
@@ -1398,7 +1398,7 @@
 
 	.th-ava__txt {
 		font-size: 20rpx;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.th-couple__info {
@@ -1410,7 +1410,7 @@
 		display: block;
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-couple__meta {
@@ -1424,7 +1424,7 @@
 		display: flex;
 		margin-top: 24rpx;
 		padding-top: 20rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+		border-top: 1rpx solid var(--noir-border);
 	}
 
 	.th-st {
@@ -1433,7 +1433,7 @@
 	}
 
 	.th-st--sep {
-		border-left: 1rpx solid rgba(255, 255, 255, 0.08);
+		border-left: 1rpx solid var(--noir-border);
 	}
 
 	.th-st__val {
@@ -1441,7 +1441,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-st__lbl {
@@ -1456,7 +1456,7 @@
 	.th-pulse {
 		padding: 24rpx 26rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 100, 63, 0.14), rgba(216, 176, 140, 0.06) 56%, rgba(255, 255, 255, 0.02));
 	}
 
@@ -1477,7 +1477,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.th-pulse__val {
@@ -1492,7 +1492,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 48rpx;
 		line-height: 1;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -1503,7 +1503,7 @@
 
 	.th-pulse__delta {
 		font-size: 21rpx;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	.th-pulse__cta {
@@ -1511,7 +1511,7 @@
 		height: 58rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 10rpx 24rpx rgba(222, 95, 60, 0.28);
 		display: flex;
 		align-items: center;
@@ -1527,12 +1527,12 @@
 	.th-pulse__cta-txt {
 		font-size: 22rpx;
 		font-weight: 500;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 		white-space: nowrap;
 	}
 
 	.th-pulse__cta--done .th-pulse__cta-txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.th-pulse__bar-row {
@@ -1555,7 +1555,7 @@
 	.th-pulse__fill {
 		height: 100%;
 		border-radius: 4rpx;
-		background: linear-gradient(90deg, #D8B08C 0%, #E2643F 100%);
+		background: linear-gradient(90deg, var(--noir-gold) 0%, var(--noir-coral) 100%);
 	}
 
 	.th-pulse__hint {
@@ -1569,7 +1569,7 @@
 		margin-top: 20rpx;
 		padding: 24rpx 26rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.032));
 	}
 
@@ -1591,7 +1591,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-anniv__note {
@@ -1612,7 +1612,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 56rpx;
 		line-height: 1;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.th-anniv__unit {
@@ -1643,7 +1643,7 @@
 
 	.th-anniv__next-days {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* SECTION HEADER WITH ICON */
@@ -1698,7 +1698,7 @@
 		flex: 1;
 		padding: 20rpx 6rpx 18rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.034);
 		display: flex;
 		flex-direction: column;
@@ -1719,7 +1719,7 @@
 	.th-q__glyph {
 		font-family: "Songti SC", "SimSun", serif;
 		font-size: 24rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.th-q__lbl {
@@ -1756,7 +1756,7 @@
 		margin-top: 14rpx;
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-film-empty__desc {
@@ -1795,7 +1795,7 @@
 
 	.th-film-foot__txt {
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.th-film-foot__go {
@@ -1818,7 +1818,7 @@
 		gap: 20rpx;
 		padding: 22rpx 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.032);
 	}
 
@@ -1843,7 +1843,7 @@
 	.th-moment__ava-txt {
 		font-family: "Songti SC", serif;
 		font-size: 30rpx;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.th-moment__body {
@@ -1860,7 +1860,7 @@
 	.th-moment__name {
 		font-size: 26rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-moment__time {
@@ -1873,7 +1873,7 @@
 		margin-top: 8rpx;
 		font-size: 24rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 		overflow: hidden;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
@@ -1908,7 +1908,7 @@
 		min-width: 0;
 		font-size: 27rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1939,13 +1939,13 @@
 	.th-plan-prog__fill {
 		height: 100%;
 		border-radius: 4rpx;
-		background: linear-gradient(90deg, #D8B08C 0%, #F09A6B 100%);
+		background: linear-gradient(90deg, var(--noir-gold) 0%, var(--noir-coral-bright) 100%);
 	}
 
 	.th-plan-prog__pct {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	/* 8. 今晚玩一局 · 聚会游戏速开 */
@@ -1957,7 +1957,7 @@
 		padding: 20rpx 24rpx;
 		margin-bottom: 16rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
 	}
 
@@ -1970,7 +1970,7 @@
 		display: block;
 		font-size: 26rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.th-game-resume__desc {
@@ -1990,7 +1990,7 @@
 		min-width: 0;
 		padding: 22rpx 18rpx 20rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.034);
 	}
 
@@ -2007,7 +2007,7 @@
 		display: block;
 		font-size: 25rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -2017,7 +2017,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -2028,7 +2028,7 @@
 		margin-top: 12rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	/* 9. 宫格广告 & 页尾手札落款 */
@@ -2041,7 +2041,7 @@
 	.th-footer-quote {
 		margin-top: 40rpx;
 		padding: 28rpx 16rpx 8rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.055);
+		border-top: 1rpx solid var(--noir-border-soft);
 		text-align: center;
 	}
 

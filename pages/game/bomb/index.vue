@@ -780,7 +780,7 @@
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -798,13 +798,13 @@
 	.nb-glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.nb-glow--right {
 		top: 320rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.nb-pill-act {
@@ -820,7 +820,7 @@
 
 	.nb-pill-act__txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -849,7 +849,7 @@
 		font-family: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
 		font-size: 46rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		line-height: 1.25;
 	}
 
@@ -882,7 +882,7 @@
 		display: block;
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.nb-resume__desc {
@@ -900,19 +900,19 @@
 		height: 56rpx;
 		padding: 0 26rpx;
 		border-radius: 28rpx;
-		background: linear-gradient(135deg, #F09A6B, #DE5F3C);
+		background: linear-gradient(135deg, var(--noir-coral-bright), var(--noir-coral-deep));
 	}
 
 	.nb-resume__btn-txt {
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.nb-card {
 		padding: 30rpx 28rpx;
 		border-radius: 32rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
 	}
 
@@ -926,14 +926,14 @@
 	.nb-section__label {
 		font-size: 26rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 	}
 
 	.nb-section__val {
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 38rpx;
 		font-weight: 500;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1.1;
 	}
 
@@ -961,7 +961,7 @@
 		height: 58rpx;
 		padding: 0 22rpx;
 		border-radius: 18rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -976,7 +976,7 @@
 	}
 
 	.nb-chip--active .nb-chip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 600;
 	}
 
@@ -1035,7 +1035,7 @@
 	.nb-stepper__btn-txt {
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1;
 	}
 
@@ -1044,7 +1044,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 36rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-align: center;
 	}
 
@@ -1058,7 +1058,7 @@
 		justify-content: center;
 		height: 92rpx;
 		border-radius: 46rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 16rpx 36rpx rgba(222, 95, 60, 0.28);
 	}
 
@@ -1069,7 +1069,7 @@
 	.nb-cta__txt {
 		font-size: 30rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 		letter-spacing: 2rpx;
 	}
 
@@ -1092,20 +1092,20 @@
 		gap: 12rpx;
 		padding: 16rpx 24rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
 	.nb-bar__txt {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	.nb-range {
 		margin-top: 24rpx;
 		padding: 36rpx 28rpx 32rpx;
 		border-radius: 36rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(145deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.025));
 		text-align: center;
 	}
@@ -1122,13 +1122,13 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", "Times New Roman", serif;
 		font-size: 104rpx;
 		line-height: 1;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
 	.nb-nums__dash {
 		font-size: 36rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.nb-turn {
@@ -1140,31 +1140,31 @@
 		padding: 0 24rpx;
 		border-radius: 25rpx;
 		background: rgba(226, 100, 63, 0.18);
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 	}
 
 	.nb-turn__txt {
 		font-size: 22rpx;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.nb-feedback {
 		display: block;
 		margin-top: 16rpx;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	.nb-feedback--low {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.nb-feedback--high {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.nb-feedback--warn {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.nb-input-box {
@@ -1183,7 +1183,7 @@
 	.nb-input-box__val {
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 52rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		letter-spacing: 4rpx;
 		line-height: 1;
 	}
@@ -1219,7 +1219,7 @@
 
 	.nb-backspace__txt {
 		font-size: 26rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.nb-pad {
@@ -1235,7 +1235,7 @@
 		justify-content: center;
 		height: 94rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.035);
 	}
 
@@ -1249,7 +1249,7 @@
 
 	.nb-key--ok {
 		border: none;
-		background: linear-gradient(135deg, #F09A6B, #DE5F3C);
+		background: linear-gradient(135deg, var(--noir-coral-bright), var(--noir-coral-deep));
 		box-shadow: 0 10rpx 24rpx rgba(222, 95, 60, 0.26);
 	}
 
@@ -1260,7 +1260,7 @@
 	.nb-key__txt {
 		font-family: "Georgia", "Times New Roman", serif;
 		font-size: 38rpx;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		line-height: 1;
 	}
 
@@ -1274,7 +1274,7 @@
 		font-family: "PingFang SC", -apple-system, sans-serif;
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.nb-hist {
@@ -1286,7 +1286,7 @@
 	.nb-hist__txt {
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.nb-tools {
@@ -1302,7 +1302,7 @@
 		justify-content: center;
 		height: 68rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.025);
 	}
 

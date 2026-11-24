@@ -74,12 +74,12 @@
 	.noir-card {
 		position: relative;
 		box-sizing: border-box;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.032);
 	}
 
 	.noir-card--hero {
-		border-color: rgba(216, 176, 140, 0.24);
+		border-color: var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 124, 78, 0.16) 0%, rgba(255, 255, 255, 0.032) 100%);
 	}
 
@@ -124,7 +124,7 @@
 	.noir-card__title {
 		font-size: 26rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.noir-card__extra {

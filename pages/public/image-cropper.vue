@@ -156,7 +156,7 @@ page {
 	justify-content: center;
 	border-radius: 28rpx;
 	background: rgba(0, 0, 0, 0.46);
-	color: #fff;
+	color: var(--noir-white);
 	font-size: 26rpx;
 }
 </style>

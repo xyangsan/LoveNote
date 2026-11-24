@@ -193,7 +193,7 @@
 		height: 256rpx;
 		padding: 24rpx 10rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(26, 21, 18, 0.94));
 		box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.42);
 		transition: all 0.18s ease;
@@ -215,7 +215,7 @@
 	}
 
 	.game-seat--selected {
-		box-shadow: 0 0 0 5rpx #E2643F, 0 12rpx 30rpx rgba(231, 111, 81, 0.22);
+		box-shadow: 0 0 0 5rpx var(--noir-coral), 0 12rpx 30rpx rgba(231, 111, 81, 0.22);
 	}
 
 	.game-seat--offline {
@@ -243,7 +243,7 @@
 		width: 96rpx;
 		height: 96rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, #E2643F 100%);
+		background: linear-gradient(135deg, #ffb37a 0%, var(--noir-coral) 100%);
 		overflow: hidden;
 	}
 
@@ -260,7 +260,7 @@
 	.game-seat__avatar-text {
 		font-size: 34rpx;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	/* 房主 / 机器人徽章**共用同一个位置**：头像右上角，整体倾斜 45°。
@@ -298,7 +298,7 @@
 		transform: rotate(35deg);
 		transform-origin: center center;
 		border-radius: 50%;
-		background-color: #1A1512;
+		background-color: var(--noir-surface);
 	}
 
 	/* 机器人：蓝色文字药丸（尺寸由 .game-seat__badge 统一给，这里只做观感） */
@@ -312,7 +312,7 @@
 		font-size: 18rpx;
 		font-weight: 700;
 		line-height: 1;
-		color: #ffffff;
+		color: var(--noir-white);
 		white-space: nowrap;
 	}
 
@@ -323,7 +323,7 @@
 		font-size: 25rpx;
 		font-weight: 600;
 		line-height: 1.3;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-align: center;
 		white-space: nowrap;
 		overflow: hidden;
@@ -349,7 +349,7 @@
 		margin-top: 10rpx;
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.05);
 	}
 
@@ -364,7 +364,7 @@
 	}
 
 	.game-seat__ready--on .game-seat__ready-text {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.game-seat__status {
@@ -379,6 +379,6 @@
 		margin-top: 8rpx;
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 </style>

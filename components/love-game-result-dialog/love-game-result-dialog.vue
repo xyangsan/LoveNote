@@ -201,7 +201,7 @@
 		max-height: 82vh;
 		padding: 0 32rpx 32rpx;
 		border-radius: 36rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(155deg, #211915 0%, #16110E 100%);
 		box-shadow: 0 28rpx 72rpx rgba(0, 0, 0, 0.68);
 		overflow: hidden;
@@ -244,7 +244,7 @@
 		font-family: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
 		font-size: 40rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		letter-spacing: 2rpx;
 	}
 
@@ -259,7 +259,7 @@
 	.game-result__lines {
 		padding: 12rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.035);
 	}
 
@@ -269,7 +269,7 @@
 		justify-content: space-between;
 		gap: 20rpx;
 		padding: 14rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+		border-bottom: 1rpx solid var(--noir-border-soft);
 	}
 
 	.game-result__line:last-child {
@@ -284,14 +284,14 @@
 	.game-result__line-value {
 		font-size: 27rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-align: right;
 	}
 
 	.game-result__line-value--highlight {
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 32rpx;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	.game-result__players {
@@ -313,7 +313,7 @@
 	}
 
 	.game-result__player--self {
-		border-color: rgba(226, 100, 63, 0.42);
+		border-color: var(--noir-border-coral);
 		background: linear-gradient(135deg, rgba(226, 100, 63, 0.16), rgba(255, 255, 255, 0.03));
 	}
 
@@ -326,7 +326,7 @@
 		height: 64rpx;
 		border-radius: 50%;
 		border: 2rpx solid rgba(216, 176, 140, 0.32);
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		overflow: hidden;
 	}
 
@@ -338,7 +338,7 @@
 	.game-result__avatar-text {
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.game-result__player-body {
@@ -350,7 +350,7 @@
 		display: block;
 		font-size: 27rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -359,7 +359,7 @@
 	.game-result__self-flag {
 		font-size: 22rpx;
 		font-weight: 400;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	.game-result__player-role {
@@ -380,12 +380,12 @@
 	}
 
 	.game-result__player-score--win {
-		color: #9ED6B2;
+		color: var(--noir-green);
 		background: rgba(132, 190, 156, 0.14);
 	}
 
 	.game-result__player-score--lose {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 		background: rgba(226, 100, 63, 0.18);
 	}
 
@@ -423,18 +423,18 @@
 
 	.game-result__action--primary {
 		border: none;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
 	}
 
 	.game-result__action-text {
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.game-result__action-text--ghost {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* ---------------- 横屏（斗地主房间页）----------------

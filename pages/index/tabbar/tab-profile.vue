@@ -316,7 +316,7 @@
 		font-weight: 600;
 		letter-spacing: 3rpx;
 		line-height: 1.15;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		white-space: nowrap;
 	}
 
@@ -353,7 +353,7 @@
 		border-radius: 50%;
 		overflow: hidden;
 		border: 2rpx solid rgba(216, 176, 140, 0.56);
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.tp-gender {
@@ -363,7 +363,7 @@
 		width: 32rpx;
 		height: 32rpx;
 		border-radius: 50%;
-		border: 3rpx solid #110D0B;
+		border: 3rpx solid var(--noir-bg);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -382,7 +382,7 @@
 		font-size: 18rpx;
 		font-weight: 700;
 		line-height: 1;
-		color: #FFFFFF;
+		color: var(--noir-white);
 	}
 
 	.tp-user__info {
@@ -395,7 +395,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 40rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.tp-user__meta {
@@ -418,14 +418,14 @@
 
 	.tp-user__edit-txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.tp-points {
 		padding: 26rpx 28rpx;
 		border-radius: 30rpx;
 		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.20) 0%, rgba(255, 255, 255, 0.036) 100%);
+		background: linear-gradient(135deg, rgba(226, 124, 78, 0.20) 0%, var(--noir-surface-glass) 100%);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -448,7 +448,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 62rpx;
 		line-height: 1;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.tp-points__unit {
@@ -458,19 +458,19 @@
 
 	.tp-points__delta {
 		font-size: 22rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.tp-points__link {
 		font-size: 23rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.tp-stats {
 		margin-top: 20rpx;
 		height: 112rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.032);
 		display: flex;
 		align-items: center;
@@ -489,7 +489,7 @@
 		display: block;
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 34rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.tp-stat__lbl {

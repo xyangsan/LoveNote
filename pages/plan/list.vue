@@ -830,7 +830,7 @@
 		min-height: 100vh;
 		background:
 			radial-gradient(88% 36% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
-			#110D0B;
+			var(--noir-bg);
 		padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
 	}
@@ -871,7 +871,7 @@
 
 	.w-mode-pill__txt {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -885,7 +885,7 @@
 	.w-sum {
 		padding: 26rpx 28rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 124, 78, 0.15) 0%, rgba(255, 255, 255, 0.032) 100%);
 		display: flex;
 		align-items: center;
@@ -905,7 +905,7 @@
 		font-size: 64rpx;
 		line-height: 1;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.w-snum__unit {
@@ -951,11 +951,11 @@
 	}
 
 	.w-type-badge--wish .w-type-badge__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.w-type-badge--plan .w-type-badge__txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.w-rec-row__type {
@@ -963,7 +963,7 @@
 		border-radius: 8rpx;
 		border: 1rpx solid rgba(216, 176, 140, 0.34);
 		font-size: 17rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 		flex-shrink: 0;
 	}
 
@@ -972,7 +972,7 @@
 		padding: 0 22rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.10);
-		background: rgba(255, 255, 255, 0.036);
+		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -985,12 +985,12 @@
 
 	.w-chip__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 		white-space: nowrap;
 	}
 
 	.w-chip.is-on .w-chip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -1014,7 +1014,7 @@
 	.w-card {
 		padding: 24rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.032);
 		margin-bottom: 16rpx;
 	}
@@ -1042,7 +1042,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 30rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1053,7 +1053,7 @@
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(216, 176, 140, 0.36);
 		font-size: 17rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 		flex-shrink: 0;
 	}
 
@@ -1083,13 +1083,13 @@
 	.w-prog__fill {
 		height: 100%;
 		border-radius: 999rpx;
-		background: linear-gradient(90deg, #D8B08C 0%, #E2643F 100%);
+		background: linear-gradient(90deg, var(--noir-gold) 0%, var(--noir-coral) 100%);
 	}
 
 	.w-prog__txt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.w-cmeta {
@@ -1102,7 +1102,7 @@
 
 	.w-cmeta__txt {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.w-done-btn {
@@ -1118,19 +1118,19 @@
 
 	.w-done-btn__txt {
 		font-size: 20rpx;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 		white-space: nowrap;
 	}
 
 	.w-expand-txt {
 		font-size: 21rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.w-pts-txt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 21rpx;
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	/* 计划步骤展开区 */
@@ -1164,7 +1164,7 @@
 
 	.w-step__title {
 		font-size: 25rpx;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		font-weight: 500;
 	}
 
@@ -1194,11 +1194,11 @@
 
 	.w-mini-btn__txt {
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.w-mini-btn--primary .w-mini-btn__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.w-scomments {
@@ -1214,7 +1214,7 @@
 	}
 
 	.w-scitem__name {
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.w-scitem__txt {
@@ -1233,9 +1233,9 @@
 		height: 58rpx;
 		padding: 0 18rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.04);
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-size: 22rpx;
 	}
 
@@ -1252,7 +1252,7 @@
 
 	.w-csend__txt {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 推荐愿望 */
@@ -1323,7 +1323,7 @@
 
 	.w-join__txt {
 		font-size: 20rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.ad-view {
@@ -1337,7 +1337,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, #110D0B 100%);
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 
@@ -1358,7 +1358,7 @@
 		padding: 30rpx 32rpx calc(34rpx + env(safe-area-inset-bottom));
 		border-radius: 32rpx 32rpx 0 0;
 		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: #1A1512;
+		background: var(--noir-surface);
 		box-sizing: border-box;
 	}
 
@@ -1376,7 +1376,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.w-sheet__close {
@@ -1407,7 +1407,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 40rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		line-height: 1.35;
 	}
 
@@ -1416,7 +1416,7 @@
 		margin-top: 14rpx;
 		font-size: 24rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	.w-detail-rows {
@@ -1446,11 +1446,11 @@
 
 	.w-drow__val {
 		font-size: 24rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.w-drow__val--coral {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.w-detail-foot {
@@ -1484,9 +1484,9 @@
 		padding: 0 24rpx;
 		box-sizing: border-box;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: rgba(255, 255, 255, 0.04);
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-size: 26rpx;
 		margin-top: 12rpx;
 	}
@@ -1498,8 +1498,8 @@
 		box-sizing: border-box;
 		border-radius: 20rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.10);
-		background: rgba(255, 255, 255, 0.036);
-		color: #FBF4EA;
+		background: var(--noir-surface-glass);
+		color: var(--noir-text-strong);
 		font-size: 25rpx;
 		line-height: 1.6;
 		margin-top: 12rpx;

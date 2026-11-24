@@ -72,7 +72,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 36rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.love-auth-required__desc {

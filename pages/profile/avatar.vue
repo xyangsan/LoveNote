@@ -436,7 +436,7 @@ import {
 		position: relative;
 		padding: 8rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb59f 0%, #E2643F 100%);
+		background: linear-gradient(135deg, #ffb59f 0%, var(--noir-coral) 100%);
 		box-shadow: 0 18rpx 36rpx rgba(0, 0, 0, 0.42);
 	}
 
@@ -449,7 +449,7 @@ import {
 		width: 190rpx;
 		height: 190rpx;
 		border-radius: 50%;
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.avatar-hero__mask {
@@ -476,9 +476,9 @@ import {
 		bottom: 10rpx;
 		padding: 6rpx 16rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		font-size: 20rpx;
-		color: #ffffff;
+		color: var(--noir-white);
 		box-shadow: 0 8rpx 16rpx rgba(199, 116, 88, 0.32);
 	}
 
@@ -486,7 +486,7 @@ import {
 		margin-top: 24rpx;
 		font-size: 34rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.avatar-hero__hint {
@@ -510,7 +510,7 @@ import {
 		background: rgba(255, 236, 229, 0.96);
 		border: 1rpx solid rgba(236, 117, 88, 0.36);
 		font-size: 25rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.wx-avatar-btn::after {
@@ -528,7 +528,7 @@ import {
 	.wx-avatar-btn__text {
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 分组列表 */
@@ -564,13 +564,13 @@ import {
 		width: 10rpx;
 		height: 30rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(180deg, #ff8b72 0%, #E2643F 100%);
+		background: linear-gradient(180deg, #ff8b72 0%, var(--noir-coral) 100%);
 	}
 
 	.avatar-group__title {
 		font-size: 28rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.avatar-group__count {
@@ -600,7 +600,7 @@ import {
 		display: block;
 		width: 100%;
 		height: 150rpx;
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.avatar-cell__check {
@@ -612,9 +612,9 @@ import {
 		line-height: 34rpx;
 		text-align: center;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		font-size: 20rpx;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	/* 底部悬浮保存 */
@@ -647,7 +647,7 @@ import {
 		display: block;
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

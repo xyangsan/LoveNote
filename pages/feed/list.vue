@@ -1241,8 +1241,8 @@ export default {
 <style>
 .moments-page {
 	min-height: 100vh;
-	background: #110D0B;
-	color: #F5EDE4;
+	background: var(--noir-bg);
+	color: var(--noir-text);
 	padding-bottom: calc(184rpx + env(safe-area-inset-bottom));
 }
 
@@ -1329,13 +1329,13 @@ export default {
 
 .moments-topbar__icon-text {
 	font-size: 40rpx;
-	color: #ffffff;
+	color: var(--noir-white);
 	line-height: 1;
 }
 
 .moments-topbar__camera {
 	font-size: 25rpx;
-	color: #ffffff;
+	color: var(--noir-white);
 	line-height: 1;
 }
 
@@ -1373,14 +1373,14 @@ export default {
 	padding-bottom: 78rpx;
 	font-size: 40rpx;
 	font-weight: 700;
-	color: #ffffff;
+	color: var(--noir-white);
 	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.4);
 }
 
 .moments-header__avatar {
 	border-radius: 14rpx;
 	box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.22);
-	border: 4rpx solid #ffffff;
+	border: 4rpx solid var(--noir-white);
 }
 
 .state-block {
@@ -1401,7 +1401,7 @@ export default {
 	margin-top: 22rpx;
 	font-size: 30rpx;
 	font-weight: 600;
-	color: #FBF4EA;
+	color: var(--noir-text-strong);
 }
 
 .state-block__text {
@@ -1440,7 +1440,7 @@ export default {
 	display: block;
 	font-size: 30rpx;
 	font-weight: 600;
-	color: #D8B08C;
+	color: var(--noir-gold);
 	line-height: 1.2;
 }
 
@@ -1449,7 +1449,7 @@ export default {
 	margin-top: 10rpx;
 	font-size: 28rpx;
 	line-height: 1.65;
-	color: #F5EDE4;
+	color: var(--noir-text);
 	white-space: pre-wrap;
 	word-break: break-all;
 }
@@ -1517,7 +1517,7 @@ export default {
 
 .moment-item__delete {
 	font-size: 23rpx;
-	color: #E5865C;
+	color: var(--noir-coral-soft);
 }
 
 .moment-actions {
@@ -1541,7 +1541,7 @@ export default {
 	width: 6rpx;
 	height: 6rpx;
 	border-radius: 50%;
-	background: #D8B08C;
+	background: var(--noir-gold);
 }
 
 .moment-action-panel {
@@ -1562,7 +1562,7 @@ export default {
 .moment-action-panel__item {
 	padding: 0 18rpx;
 	font-size: 24rpx;
-	color: #FBF4EA;
+	color: var(--noir-text-strong);
 	line-height: 62rpx;
 }
 
@@ -1576,7 +1576,7 @@ export default {
 	position: relative;
 	margin-top: 10rpx;
 	border-radius: 14rpx;
-	background: rgba(255, 255, 255, 0.036);
+	background: var(--noir-surface-glass);
 	border: 1rpx solid rgba(255, 255, 255, 0.06);
 	overflow: hidden;
 }
@@ -1594,12 +1594,12 @@ export default {
 
 .moment-like-row__icon {
 	font-size: 22rpx;
-	color: #E5865C;
+	color: var(--noir-coral-soft);
 }
 
 .moment-like-row__text {
 	font-size: 24rpx;
-	color: #D8B08C;
+	color: var(--noir-gold);
 }
 
 .moment-comment-list {
@@ -1634,7 +1634,7 @@ export default {
 
 .moment-comment-item__name {
 	font-size: 24rpx;
-	color: #D8B08C;
+	color: var(--noir-gold);
 	font-weight: 500;
 }
 
@@ -1670,7 +1670,7 @@ export default {
 	border-radius: 999rpx;
 	font-size: 24rpx;
 	line-height: 1.1;
-	color: #ffffff;
+	color: var(--noir-white);
 	background: rgba(255, 255, 255, 0.24);
 	z-index: 1600;
 }

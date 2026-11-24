@@ -268,7 +268,7 @@
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -286,13 +286,13 @@
 	.pr-glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.pr-glow--right {
 		top: 300rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.pr-wrap {
@@ -328,7 +328,7 @@
 	}
 
 	.pr-stat--sep {
-		border-left: 1rpx solid rgba(255, 255, 255, 0.08);
+		border-left: 1rpx solid var(--noir-border);
 	}
 
 	.pr-stat__val {
@@ -336,19 +336,19 @@
 		font-family: "Georgia", serif;
 		font-size: 40rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		line-height: 1.1;
 	}
 
 	.pr-stat__val--coral {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.pr-stat__lbl {
 		display: block;
 		margin-top: 8rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.pr-list {
@@ -377,7 +377,7 @@
 	.pr-date__sum {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 22rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.pr-date__sum--minus {
@@ -397,7 +397,7 @@
 		justify-content: space-between;
 		gap: 16rpx;
 		padding: 20rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+		border-bottom: 1rpx solid var(--noir-border-soft);
 	}
 
 	.pr-item--last {
@@ -428,7 +428,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.pr-val--minus {

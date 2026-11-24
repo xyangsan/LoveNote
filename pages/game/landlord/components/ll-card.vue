@@ -143,7 +143,7 @@
 		position: relative;
 		flex-shrink: 0;
 		box-sizing: border-box;
-		background: #ffffff;
+		background: var(--noir-white);
 		border: 1px solid rgba(128, 122, 112, 0.4);
 		box-shadow: 0 2px 5px rgba(18, 46, 30, 0.28);
 		overflow: hidden;
@@ -356,7 +356,7 @@
 
 	.ll-card__badge-text {
 		font-size: 8px;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	/* QQ 牌背：深红底 + 双向 45° 细线交叉出菱格 + 米白内框 + 中央星徽 */

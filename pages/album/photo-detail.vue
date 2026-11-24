@@ -1242,7 +1242,7 @@
 
 	.ph-play-btn__icon {
 		font-size: 38rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		margin-left: 6rpx;
 	}
 
@@ -1307,7 +1307,7 @@
 
 	.ph-vctrl__glyph {
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1;
 	}
 
@@ -1351,7 +1351,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
 		letter-spacing: 2rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.ph-title {
@@ -1361,7 +1361,7 @@
 		font-size: 42rpx;
 		font-weight: 600;
 		line-height: 1.32;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.55);
 	}
 
@@ -1400,7 +1400,7 @@
 
 	.ph-tag__txt {
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -1441,22 +1441,22 @@
 
 	.ph-abtn__glyph {
 		font-size: 24rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1;
 	}
 
 	.ph-abtn__txt {
 		font-size: 22rpx;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		white-space: nowrap;
 	}
 
 	.ph-abtn--coral .ph-abtn__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.ph-abtn--gold .ph-abtn__txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 底部缩略图胶片条（向下消失 / 向上弹出动画） */
@@ -1501,7 +1501,7 @@
 
 	.ph-thumb.is-on {
 		opacity: 1;
-		border-color: #D8B08C;
+		border-color: var(--noir-gold);
 		box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.48);
 	}
 
@@ -1531,7 +1531,7 @@
 
 	.ph-thumb__v-txt {
 		font-size: 14rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	/* 照片信息底部抽屉 */
@@ -1549,7 +1549,7 @@
 		padding: 30rpx 32rpx calc(34rpx + env(safe-area-inset-bottom));
 		border-radius: 32rpx 32rpx 0 0;
 		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: #1A1512;
+		background: var(--noir-surface);
 		box-sizing: border-box;
 	}
 
@@ -1574,7 +1574,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ph-sheet__close {
@@ -1621,7 +1621,7 @@
 
 	.ph-sheet__val {
 		font-size: 24rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-align: right;
 	}
 
@@ -1636,7 +1636,7 @@
 		height: 40rpx;
 		border-radius: 50%;
 		border: 1.5rpx solid rgba(216, 176, 140, 0.48);
-		background: #231C18;
+		background: var(--noir-surface-2);
 		flex-shrink: 0;
 	}
 
@@ -1646,7 +1646,7 @@
 		border: 1rpx solid rgba(216, 176, 140, 0.42);
 		background: rgba(216, 176, 140, 0.14);
 		font-size: 18rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1.4;
 	}
 
@@ -1660,7 +1660,7 @@
 	/* 描述与标签 NOIR 编辑抽屉 */
 	.ph-desc-box {
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: rgba(255, 255, 255, 0.032);
 		padding: 20rpx 22rpx 16rpx;
 	}
@@ -1670,7 +1670,7 @@
 		height: 200rpx;
 		font-size: 26rpx;
 		line-height: 1.65;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ph-desc-bar {
@@ -1690,7 +1690,7 @@
 
 	.ph-desc-clear {
 		font-size: 21rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.ph-edit-sec {
@@ -1718,7 +1718,7 @@
 	.ph-edit-sec__cnt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.ph-edit-chips {
@@ -1750,20 +1750,20 @@
 
 	.ph-echip__txt {
 		font-size: 22rpx;
-		color: #F5EDE4;
+		color: var(--noir-text);
 	}
 
 	.ph-echip--selected .ph-echip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ph-echip.is-picked .ph-echip__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.ph-echip__x {
 		font-size: 24rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 		line-height: 1;
 	}
 
@@ -1788,7 +1788,7 @@
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.12);
 		background: rgba(255, 255, 255, 0.04);
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-size: 24rpx;
 	}
 
@@ -1807,7 +1807,7 @@
 
 	.ph-tag-add-btn__txt {
 		font-size: 23rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 

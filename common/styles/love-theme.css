@@ -3,6 +3,13 @@
  * Palette:
  *   #110D0B 底色 / #1A1512 浮层 / #231C18 次级浮层
  *   #D8B08C 暖金 / #E2643F 余烬 / #E5865C 柔余烬 / #F5EDE4 月白 / #9ED6B2 柔绿
+ *   #F09A6B 渐变亮端 / #DE5F3C 渐变暗端 / #F5B496 浅余烬
+ *   #FBF4EA 强月白 / #FFF7EF 暖白 / #9A766C 暖灰弱化
+ *
+ * 用法约定：业务样式一律写 var(--noir-*)，不要在页面里硬编码色值。
+ * 例外（保留硬编码，不接主题变量）：纯黑遮罩 #000/#000000、牌桌绿/金币金/水蓝等
+ * 场景固有配色（见 pages/game/**、pages/album/photo-detail.vue）。
+ * 注释里出现色值不受此约束。
  * ========================================================================== */
 
 page {
@@ -16,9 +23,14 @@ page {
 	--noir-coral: #E2643F;
 	--noir-coral-soft: #E5865C;
 	--noir-coral-light: #F5B496;
+	--noir-coral-bright: #F09A6B;
+	--noir-coral-deep: #DE5F3C;
 	--noir-green: #9ED6B2;
+	--noir-white: #FFFFFF;
 	--noir-text: #F5EDE4;
 	--noir-text-strong: #FBF4EA;
+	--noir-text-warm: #FFF7EF;
+	--noir-text-faded: #9A766C;
 	--noir-text-sub: rgba(245, 237, 228, 0.64);
 	--noir-text-muted: rgba(245, 237, 228, 0.44);
 	--noir-text-dim: rgba(245, 237, 228, 0.30);
@@ -27,14 +39,14 @@ page {
 	--noir-border-gold: rgba(216, 176, 140, 0.24);
 	--noir-border-coral: rgba(226, 100, 63, 0.42);
 	--noir-shadow: 0 20rpx 48rpx rgba(0, 0, 0, 0.45);
-	--noir-btn-gradient: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+	--noir-btn-gradient: linear-gradient(135deg, var(--noir-coral-bright) 0%, var(--noir-coral-deep) 100%);
 	--noir-hero-gradient: linear-gradient(135deg, rgba(226, 124, 78, 0.16) 0%, rgba(255, 255, 255, 0.035) 100%);
 
 	min-height: 100vh;
 	background:
 		radial-gradient(88% 42% at 50% 0%, rgba(226, 124, 78, 0.09) 0%, rgba(17, 13, 11, 0) 68%),
-		#110D0B;
-	color: #F5EDE4;
+		var(--noir-bg);
+	color: var(--noir-text);
 	font-family: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei", sans-serif, 'Fluent Emoji Flat', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
@@ -50,10 +62,10 @@ page {
 	padding: 24rpx 28rpx calc(36rpx + env(safe-area-inset-bottom));
 	box-sizing: border-box;
 	overflow-x: hidden;
-	color: #F5EDE4;
+	color: var(--noir-text);
 	background:
 		radial-gradient(88% 42% at 50% 0%, rgba(226, 124, 78, 0.09) 0%, rgba(17, 13, 11, 0) 68%),
-		#110D0B;
+		var(--noir-bg);
 }
 
 .love-page--compact {

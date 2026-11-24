@@ -469,7 +469,7 @@
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -487,13 +487,13 @@
 	.gr-glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.gr-glow--right {
 		top: 320rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.gr-wrap {
@@ -528,7 +528,7 @@
 
 	.gr-seg__item--on {
 		background: linear-gradient(135deg, rgba(226, 100, 63, 0.24), rgba(216, 176, 140, 0.14));
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 	}
 
 	.gr-seg__txt {
@@ -537,7 +537,7 @@
 	}
 
 	.gr-seg__item--on .gr-seg__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 600;
 	}
 
@@ -565,7 +565,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.gr-tip__text {
@@ -589,14 +589,14 @@
 		height: 76rpx;
 		padding: 0 56rpx;
 		border-radius: 38rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.26);
 	}
 
 	.gr-tip__btn-txt {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	/* 战绩列表（对标 s24 .gr-list / .gr-card） */
@@ -645,7 +645,7 @@
 	.gr-top__title {
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		white-space: nowrap;
 	}
 
@@ -672,16 +672,16 @@
 	}
 
 	.gr-tag--green .gr-tag__txt {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.gr-tag--coral {
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 		background: rgba(226, 100, 63, 0.16);
 	}
 
 	.gr-tag--coral .gr-tag__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.gr-tag--muted {
@@ -690,7 +690,7 @@
 	}
 
 	.gr-tag--muted .gr-tag__txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.gr-tag__txt {
@@ -727,7 +727,7 @@
 	}
 
 	.gr-meta__item--role {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.gr-meta__more {
@@ -800,7 +800,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.gr-sh-sub {
@@ -846,7 +846,7 @@
 	.gr-sh-line__val {
 		font-size: 24rpx;
 		font-weight: 500;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		text-align: right;
 	}
 
@@ -883,7 +883,7 @@
 		height: 54rpx;
 		border-radius: 50%;
 		border: 1.5rpx solid rgba(216, 176, 140, 0.30);
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		overflow: hidden;
 	}
 
@@ -895,7 +895,7 @@
 	.gr-sh-ava__txt {
 		font-size: 22rpx;
 		font-weight: 700;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.gr-sh-p__name-wrap {
@@ -917,7 +917,7 @@
 	.gr-sh-p__self {
 		flex-shrink: 0;
 		font-size: 21rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.gr-sh-p__ai {
@@ -932,7 +932,7 @@
 	.gr-sh-p__role {
 		flex-shrink: 0;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.gr-sh-p__score {
@@ -946,7 +946,7 @@
 	}
 
 	.gr-sh-p__score--win {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.gr-sh-p__score--lose {
@@ -964,14 +964,14 @@
 		justify-content: center;
 		height: 82rpx;
 		border-radius: 41rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 12rpx 26rpx rgba(222, 95, 60, 0.24);
 	}
 
 	.gr-sh-btn__txt {
 		font-size: 27rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 		letter-spacing: 2rpx;
 	}
 

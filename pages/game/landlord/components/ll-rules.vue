@@ -308,7 +308,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 19px;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ll-rules__close {
@@ -349,7 +349,7 @@
 		border: 1px solid rgba(216, 176, 140, 0.34);
 		background: rgba(216, 176, 140, 0.10);
 		font-size: 10px;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 正文区：**确切高度** —— JS 算好后绑 height（见 measureBody），
@@ -392,7 +392,7 @@
 		margin-bottom: 7px;
 		font-size: 14px;
 		font-weight: 700;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ll-rules__item {
@@ -415,7 +415,7 @@
 		flex: 1;
 		font-size: 13px;
 		line-height: 1.6;
-		color: #F5EDE4;
+		color: var(--noir-text);
 	}
 
 	.ll-rules__footer {
@@ -429,7 +429,7 @@
 		justify-content: center;
 		height: 38px;
 		border-radius: 999px;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 6px 16px rgba(222, 95, 60, 0.30);
 	}
 

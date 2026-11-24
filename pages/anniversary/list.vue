@@ -475,7 +475,7 @@
 <style scoped>
 	.anniv-page {
 		min-height: 100vh;
-		background: #110D0B;
+		background: var(--noir-bg);
 		padding-bottom: calc(164rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
 	}
@@ -493,7 +493,7 @@
 
 	.n-add-pill__txt {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -502,7 +502,7 @@
 		position: relative;
 		width: 100%;
 		overflow: hidden;
-		background: #110D0B;
+		background: var(--noir-bg);
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
@@ -524,7 +524,7 @@
 			rgba(17, 13, 11, 0.56) 0%,
 			rgba(17, 13, 11, 0.22) 38%,
 			rgba(17, 13, 11, 0.72) 72%,
-			#110D0B 100%
+			var(--noir-bg) 100%
 		);
 	}
 
@@ -546,7 +546,7 @@
 		font-size: 112rpx;
 		line-height: 0.94;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		text-shadow: 0 4rpx 28rpx rgba(0, 0, 0, 0.55);
 	}
 
@@ -570,7 +570,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.n-hero__meta {
@@ -597,7 +597,7 @@
 		padding: 0 24rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.10);
-		background: rgba(255, 255, 255, 0.036);
+		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -610,11 +610,11 @@
 
 	.n-chip__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	.n-chip.is-on .n-chip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -702,7 +702,7 @@
 	.n-info__title {
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -713,7 +713,7 @@
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(216, 176, 140, 0.36);
 		font-size: 17rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 		flex-shrink: 0;
 	}
 
@@ -746,11 +746,11 @@
 		font-size: 46rpx;
 		line-height: 1;
 		font-weight: 500;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.n-right--gold .n-right__num {
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.n-right--muted .n-right__num {
@@ -784,7 +784,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, #110D0B 100%);
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 </style>

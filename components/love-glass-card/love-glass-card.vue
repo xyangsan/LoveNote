@@ -131,7 +131,7 @@
 	}
 
 	.love-glass-card :deep(.fui-card__wrap) {
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		backdrop-filter: blur(18rpx);
 		-webkit-backdrop-filter: blur(18rpx);
 	}

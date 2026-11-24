@@ -190,7 +190,7 @@
 		width: 28rpx;
 		height: 4rpx;
 		border-radius: 999rpx;
-		background: #E5865C;
+		background: var(--noir-coral-soft);
 	}
 
 	.noir-tabbar__icon {
@@ -203,11 +203,11 @@
 		font-size: 20rpx;
 		letter-spacing: 2rpx;
 		line-height: 1;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.noir-tabbar__item.is-active .noir-tabbar__label {
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 		font-weight: 500;
 	}
 </style>

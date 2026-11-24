@@ -546,7 +546,7 @@
 		min-height: 100vh;
 		background:
 			radial-gradient(88% 38% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
-			#110D0B;
+			var(--noir-bg);
 		padding-bottom: calc(164rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
 	}
@@ -579,7 +579,7 @@
 		font-size: 32rpx;
 		font-weight: 600;
 		letter-spacing: 3rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ph-batch-pill {
@@ -595,7 +595,7 @@
 
 	.ph-batch-pill__txt {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -623,7 +623,7 @@
 		font-size: 68rpx;
 		line-height: 0.96;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.a-count__unit {
@@ -635,7 +635,7 @@
 		display: block;
 		margin-top: 10rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.a-filters-scroll {
@@ -655,7 +655,7 @@
 		padding: 0 24rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.10);
-		background: rgba(255, 255, 255, 0.036);
+		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -668,12 +668,12 @@
 
 	.a-chip__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 		white-space: nowrap;
 	}
 
 	.a-chip.is-on .a-chip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -698,13 +698,13 @@
 		width: 100%;
 		border-radius: 26rpx;
 		overflow: hidden;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
-		background: #1A1512;
+		border: 1rpx solid var(--noir-border);
+		background: var(--noir-surface);
 		box-sizing: border-box;
 	}
 
 	.a-ph.is-selected {
-		border: 3rpx solid #D8B08C;
+		border: 3rpx solid var(--noir-gold);
 	}
 
 	.a-ph__img,
@@ -739,7 +739,7 @@
 		right: 18rpx;
 		bottom: 12rpx;
 		font-size: 22rpx;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.a-vbadge {
@@ -758,7 +758,7 @@
 	.a-vbadge__txt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.a-check {
@@ -777,14 +777,14 @@
 	}
 
 	.a-check.is-on {
-		border-color: #E2643F;
-		background: #E2643F;
+		border-color: var(--noir-coral);
+		background: var(--noir-coral);
 	}
 
 	.a-check__tick {
 		font-size: 22rpx;
 		font-weight: 700;
-		color: #FFFFFF;
+		color: var(--noir-white);
 	}
 
 	.a-skel {
@@ -814,7 +814,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, #110D0B 100%);
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 
@@ -830,7 +830,7 @@
 
 	.a-batch-bar__count {
 		font-size: 24rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.a-batch-bar__acts {

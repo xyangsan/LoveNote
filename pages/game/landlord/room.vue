@@ -2356,7 +2356,7 @@
 
 	.ll-top__btn-text {
 		font-size: 12px;
-		color: #231C18;
+		color: var(--noir-surface-2);
 	}
 
 	/* 顶栏图标按钮（托管 / 取消托管）：28×28 圆形，与「规则」按钮同高，
@@ -2394,11 +2394,11 @@
 		width: 13px;
 		height: 13px;
 		border-radius: 50%;
-		background: #E2643F;
+		background: var(--noir-coral);
 		border: 1px solid rgba(26, 21, 18, 0.94);
 		font-size: 9px;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--noir-white);
 		line-height: 1;
 	}
 
@@ -2445,7 +2445,7 @@
 
 	.ll-top__phase-text {
 		font-size: 11px;
-		color: #231C18;
+		color: var(--noir-surface-2);
 	}
 
 	/* 底牌盘：中央的白色托盘（3 张底牌 + 倍数标签），原来挤在顶栏里 */
@@ -2486,7 +2486,7 @@
 		border-left: 1px solid rgba(176, 91, 72, 0.25);
 		font-size: 10px;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -2548,7 +2548,7 @@
 	.ll-side__score {
 		font-size: 11px;
 		font-weight: 600;
-		color: #231C18;
+		color: var(--noir-surface-2);
 		text-shadow: 0 1px 3px rgba(60, 25, 10, 0.55);
 	}
 
@@ -2610,7 +2610,7 @@
 		display: block;
 		font-size: 14px;
 		font-weight: 700;
-		color: #231C18;
+		color: var(--noir-surface-2);
 	}
 
 	.ll-center__waiting-desc {
@@ -2710,7 +2710,7 @@
 		background: rgba(255, 255, 255, 0.22);
 		font-size: 11px;
 		line-height: 1.5;
-		color: #231C18;
+		color: var(--noir-surface-2);
 		white-space: nowrap;
 	}
 
@@ -2768,7 +2768,7 @@
 
 	.ll-mybar__count {
 		font-size: 11px;
-		color: #231C18;
+		color: var(--noir-surface-2);
 	}
 
 	.ll-mybar__score {
@@ -2872,14 +2872,14 @@
 		margin: 0 auto;
 		box-sizing: border-box;
 		padding: 20px 24px 18px;
-		background: #1A1512;
+		background: var(--noir-surface);
 	}
 
 	.ll-join__title {
 		display: block;
 		font-size: 20px;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ll-join__desc {
@@ -2896,13 +2896,13 @@
 		height: 48px;
 		margin-top: 16px;
 		border-radius: 999px;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 	}
 
 	.ll-join__btn-text {
 		font-size: 15px;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 	/* ---------------- 炸弹特效 ----------------
 	   `v-if="bombOn"` 创建节点 → 动画重播；z-index 压在全部内容之上，且不吃点击 */

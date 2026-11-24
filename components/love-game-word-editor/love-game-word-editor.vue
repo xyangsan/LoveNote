@@ -386,7 +386,7 @@
 		display: flex;
 		flex-direction: column;
 		padding: 12rpx 28rpx 24rpx;
-		background: #1A1512;
+		background: var(--noir-surface);
 	}
 
 	.word-editor__head {
@@ -404,7 +404,7 @@
 		flex-shrink: 0;
 		font-size: 38rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 
@@ -442,16 +442,16 @@
 	}
 
 	.word-editor__chip--active {
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 	}
 
 	.word-editor__chip-text {
 		font-size: 23rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.word-editor__chip--active .word-editor__chip-text {
-		color: #ffffff;
+		color: var(--noir-white);
 		font-weight: 600;
 	}
 
@@ -467,7 +467,7 @@
 
 	.word-editor__tip-text {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.word-item {
@@ -505,11 +505,11 @@
 	}
 
 	.word-item__word--civilian {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.word-item__word--undercover {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.word-item__vs {
@@ -545,7 +545,7 @@
 
 	.word-item__action-text {
 		font-size: 24rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.word-editor__more {
@@ -555,7 +555,7 @@
 
 	.word-editor__more-text {
 		font-size: 24rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.word-form {
@@ -575,7 +575,7 @@
 	.word-form__title {
 		font-size: 27rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.word-form__cancel {
@@ -586,7 +586,7 @@
 
 	.word-form__cancel-text {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.word-form__row {
@@ -607,13 +607,13 @@
 		width: 140rpx;
 		height: 76rpx;
 		border-radius: 20rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 	}
 
 	.word-form__submit-text {
 		font-size: 27rpx;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	.word-editor__footer {

@@ -391,6 +391,6 @@
 
 	.ll-seat__bubble-text {
 		font-size: 11px;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 </style>

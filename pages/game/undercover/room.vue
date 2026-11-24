@@ -1996,7 +1996,7 @@ this.ensureRobotVotes()
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding: 0 24rpx 60rpx;
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -2014,13 +2014,13 @@ this.ensureRobotVotes()
 	.uc-page__glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.uc-page__glow--right {
 		top: 300rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.uc-nav-pill {
@@ -2036,7 +2036,7 @@ this.ensureRobotVotes()
 
 	.uc-nav-pill__txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -2065,7 +2065,7 @@ this.ensureRobotVotes()
 		margin-top: 22rpx;
 		font-size: 40rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-hero__desc {
@@ -2153,7 +2153,7 @@ this.ensureRobotVotes()
 
 	.uc-word-select__text {
 		font-size: 27rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-word-select__arrow {
@@ -2183,13 +2183,13 @@ this.ensureRobotVotes()
 		width: 150rpx;
 		height: 84rpx;
 		border-radius: 22rpx;
-		background: linear-gradient(135deg, #ffb37a 0%, #E2643F 100%);
+		background: linear-gradient(135deg, #ffb37a 0%, var(--noir-coral) 100%);
 	}
 
 	.uc-join__btn-text {
 		font-size: 28rpx;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	.uc-link {
@@ -2199,7 +2199,7 @@ this.ensureRobotVotes()
 
 	.uc-link__text {
 		font-size: 24rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 		text-decoration: underline;
 	}
 
@@ -2220,7 +2220,7 @@ this.ensureRobotVotes()
 		display: block;
 		font-size: 21rpx;
 		letter-spacing: 3rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.uc-room-bar__code {
@@ -2229,7 +2229,7 @@ this.ensureRobotVotes()
 		font-size: 44rpx;
 		font-weight: 700;
 		letter-spacing: 6rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-room-bar__actions {
@@ -2248,7 +2248,7 @@ this.ensureRobotVotes()
 
 	.uc-room-bar__action-text {
 		font-size: 24rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 退出是破坏性操作，用描边而不是实底，和「邀请」区分开 */
@@ -2259,7 +2259,7 @@ this.ensureRobotVotes()
 	}
 
 	.uc-room-bar__action-text--leave {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.uc-my-word {
@@ -2302,7 +2302,7 @@ this.ensureRobotVotes()
 	.uc-my-word__badge-txt {
 		font-size: 20rpx;
 		font-weight: 600;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.uc-my-word__value {
@@ -2313,7 +2313,7 @@ this.ensureRobotVotes()
 		font-weight: 600;
 		letter-spacing: 8rpx;
 		line-height: 1.15;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-my-word__value--hidden {
@@ -2337,7 +2337,7 @@ this.ensureRobotVotes()
 
 	.uc-my-word__toggle {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.uc-stage {
@@ -2350,7 +2350,7 @@ this.ensureRobotVotes()
 		display: block;
 		font-size: 30rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-stage__desc {
@@ -2365,7 +2365,7 @@ this.ensureRobotVotes()
 		margin-bottom: 12rpx;
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	/* ============ 对局记录时间线（发言 + 投票按轮次整合） ============ */
@@ -2414,18 +2414,18 @@ this.ensureRobotVotes()
 	.uc-timeline__round-title {
 		font-size: 26rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-timeline__round-live {
 		padding: 0 14rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 		background: rgba(226, 100, 63, 0.16);
 		font-size: 18rpx;
 		font-weight: 600;
 		line-height: 1.8;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.uc-timeline__block {
@@ -2441,7 +2441,7 @@ this.ensureRobotVotes()
 		margin-bottom: 8rpx;
 		font-size: 22rpx;
 		font-weight: 600;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.uc-timeline__who {
@@ -2454,7 +2454,7 @@ this.ensureRobotVotes()
 	.uc-timeline__name {
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-timeline__ai {
@@ -2464,7 +2464,7 @@ this.ensureRobotVotes()
 		font-size: 17rpx;
 		font-weight: 700;
 		line-height: 1.7;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	.uc-timeline__mine {
@@ -2475,7 +2475,7 @@ this.ensureRobotVotes()
 		font-size: 17rpx;
 		font-weight: 600;
 		line-height: 1.7;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 发言：名字与内容同一行内容自动换行 */
@@ -2490,7 +2490,7 @@ this.ensureRobotVotes()
 		flex: 1;
 		font-size: 25rpx;
 		line-height: 1.6;
-		color: #F5EDE4;
+		color: var(--noir-text);
 	}
 
 	/* 投票：名字 → 目标 */
@@ -2510,7 +2510,7 @@ this.ensureRobotVotes()
 	.uc-timeline__target {
 		flex: 1;
 		font-size: 25rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.uc-timeline__empty {
@@ -2535,7 +2535,7 @@ this.ensureRobotVotes()
 		margin-top: 12rpx;
 		padding: 10rpx 16rpx;
 		border-radius: 18rpx;
-		background: rgba(255, 255, 255, 0.036);
+		background: var(--noir-surface-glass);
 		font-size: 23rpx;
 		color: rgba(216, 176, 140, 0.76);
 	}
@@ -2617,7 +2617,7 @@ this.ensureRobotVotes()
 	.uc-config__label {
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.uc-config__unit {
@@ -2634,7 +2634,7 @@ this.ensureRobotVotes()
 	.uc-config__value {
 		font-size: 24rpx;
 		font-weight: 600;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	/* 原生 switch 只能靠 transform 缩一点；用 right 原点保证它仍贴着右边 */
@@ -2661,8 +2661,8 @@ this.ensureRobotVotes()
 	.uc-op__hint {
 		padding: 24rpx 28rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
-		background: rgba(255, 255, 255, 0.036);
+		border: 1rpx solid var(--noir-border);
+		background: var(--noir-surface-glass);
 		text-align: center;
 	}
 
@@ -2690,7 +2690,7 @@ this.ensureRobotVotes()
 	}
 
 	.uc-btn--primary {
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 14rpx 26rpx rgba(231, 111, 81, 0.24);
 	}
 
@@ -2707,14 +2707,14 @@ this.ensureRobotVotes()
 	.uc-btn__text {
 		font-size: 29rpx;
 		font-weight: 600;
-		color: #ffffff;
+		color: var(--noir-white);
 		/* 一行多个按钮时不换行（换行会把按钮顶高、破坏整排对齐） */
 		white-space: nowrap;
 		overflow: hidden;
 	}
 
 	.uc-btn__text--ghost {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.uc-btn__text--muted {
@@ -2736,12 +2736,12 @@ this.ensureRobotVotes()
 		width: 148rpx;
 		height: 88rpx;
 		border-radius: 22rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 	}
 
 	.uc-speak-input__btn-text {
 		font-size: 29rpx;
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 </style>

@@ -361,7 +361,7 @@
 <style scoped>
 	.fl-page {
 		min-height: 100vh;
-		background: #110D0B;
+		background: var(--noir-bg);
 		padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
 	}
 
@@ -376,7 +376,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 		font-weight: 500;
 	}
 
@@ -393,7 +393,7 @@
 		align-items: center;
 		padding: 6rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -418,7 +418,7 @@
 	}
 
 	.fl-seg__item--on .fl-seg__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -469,7 +469,7 @@
 		min-width: 0;
 		font-size: 29rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -489,7 +489,7 @@
 	}
 
 	.fl-status--coral .fl-status__txt {
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	.fl-status--gold {
@@ -498,7 +498,7 @@
 	}
 
 	.fl-status--gold .fl-status__txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.fl-status--green {
@@ -569,7 +569,7 @@
 
 	.fl-cfoot__reply {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.fl-empty-card,
@@ -586,7 +586,7 @@
 		display: block;
 		font-family: "Songti SC", "SimSun", serif;
 		font-size: 32rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.fl-empty__desc,
@@ -617,6 +617,6 @@
 		margin-top: 22rpx;
 		text-align: center;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.3);
+		color: var(--noir-text-dim);
 	}
 </style>

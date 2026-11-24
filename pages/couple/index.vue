@@ -946,7 +946,7 @@
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -968,13 +968,13 @@
 	.cp-glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.cp-glow--right {
 		top: 320rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.cp-nav-pill {
@@ -990,7 +990,7 @@
 
 	.cp-nav-pill__txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -1009,7 +1009,7 @@
 	.ci-hero {
 		padding: 36rpx 28rpx 30rpx;
 		border-radius: 36rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(216, 176, 140, 0.12), rgba(255, 255, 255, 0.025));
 	}
 
@@ -1075,7 +1075,7 @@
 	.ci-gender__txt {
 		font-size: 19rpx;
 		line-height: 1;
-		color: #FFFFFF;
+		color: var(--noir-white);
 		font-weight: 700;
 	}
 
@@ -1094,7 +1094,7 @@
 
 	.ci-heart {
 		font-size: 22rpx;
-		color: #E2643F;
+		color: var(--noir-coral);
 		flex-shrink: 0;
 	}
 
@@ -1108,7 +1108,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 36rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ci-names__sub {
@@ -1140,7 +1140,7 @@
 		font-family: "Georgia", serif;
 		font-size: 36rpx;
 		font-weight: 500;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		line-height: 1.1;
 	}
 
@@ -1148,14 +1148,14 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.ci-card {
 		margin-top: 24rpx;
 		padding: 0 28rpx;
 		border-radius: 30rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -1165,7 +1165,7 @@
 		justify-content: space-between;
 		gap: 20rpx;
 		min-height: 94rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+		border-bottom: 1rpx solid var(--noir-border-soft);
 	}
 
 	.ci-row--last {
@@ -1185,18 +1185,18 @@
 
 	.ci-row__val {
 		font-size: 25rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ci-row__val--mono {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 23rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ci-hist-panel {
 		padding: 12rpx 0 24rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.055);
+		border-top: 1rpx solid var(--noir-border-soft);
 	}
 
 	.ci-hist-empty {
@@ -1281,7 +1281,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 40rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.il-card__desc {
@@ -1308,20 +1308,20 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 24rpx;
 		letter-spacing: 3rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.il-status-warn {
 		margin-top: 24rpx;
 		padding: 20rpx 24rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 		background: rgba(226, 100, 63, 0.12);
 	}
 
 	.il-status-warn__txt {
 		font-size: 23rpx;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.il-feats {
@@ -1346,7 +1346,7 @@
 		width: 10rpx;
 		height: 10rpx;
 		border-radius: 50%;
-		background: #E5865C;
+		background: var(--noir-coral-soft);
 		flex-shrink: 0;
 	}
 
@@ -1368,7 +1368,7 @@
 	.cb-card {
 		padding: 36rpx 28rpx 32rpx;
 		border-radius: 34rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.03));
 		text-align: center;
 	}
@@ -1387,7 +1387,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 64rpx;
 		letter-spacing: 12rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 600;
 		line-height: 1.15;
 	}
@@ -1472,7 +1472,7 @@
 	}
 
 	.cb-slot--active {
-		border-color: #E2643F;
+		border-color: var(--noir-coral);
 		box-shadow: 0 0 0 3rpx rgba(226, 100, 63, 0.22);
 	}
 
@@ -1480,7 +1480,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 40rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.cb-slot--empty .cb-slot__txt {
@@ -1520,7 +1520,7 @@
 	.cb-reward__txt {
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.cb-hist-card {
@@ -1579,7 +1579,7 @@
 	.cp-item__name {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1608,16 +1608,16 @@
 	}
 
 	.cp-tag--green .cp-tag__txt {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.cp-tag--coral {
-		border: 1rpx solid rgba(226, 100, 63, 0.42);
+		border: 1rpx solid var(--noir-border-coral);
 		background: rgba(226, 100, 63, 0.16);
 	}
 
 	.cp-tag--coral .cp-tag__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.cp-tag--gold {
@@ -1626,7 +1626,7 @@
 	}
 
 	.cp-tag--gold .cp-tag__txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.cp-tag--muted {
@@ -1652,7 +1652,7 @@
 	}
 
 	.cp-btn--primary {
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 12rpx 26rpx rgba(222, 95, 60, 0.26);
 	}
 
@@ -1677,11 +1677,11 @@
 	.cp-btn__txt {
 		font-size: 27rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.cp-btn__txt--ghost {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.cp-btn__txt--danger {

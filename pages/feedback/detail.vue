@@ -387,7 +387,7 @@
 <style scoped>
 	.fd-page {
 		min-height: 100vh;
-		background: #110D0B;
+		background: var(--noir-bg);
 		padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 	}
 
@@ -404,7 +404,7 @@
 	}
 
 	.fd-nav-status--coral .fd-nav-status__txt {
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	.fd-nav-status--gold {
@@ -413,7 +413,7 @@
 	}
 
 	.fd-nav-status--gold .fd-nav-status__txt {
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.fd-nav-status--green {
@@ -453,7 +453,7 @@
 		display: block;
 		font-family: "Songti SC", "SimSun", serif;
 		font-size: 32rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.fd-forbidden__desc {
@@ -497,7 +497,7 @@
 		margin-top: 8rpx;
 		font-size: 25rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 		word-break: break-all;
 	}
 
@@ -555,7 +555,7 @@
 		display: block;
 		font-size: 22rpx;
 		font-weight: 500;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.fd-cur__content {
@@ -594,7 +594,7 @@
 		height: 180rpx;
 		font-size: 26rpx;
 		line-height: 1.65;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.fd-textarea__ph {
@@ -621,7 +621,7 @@
 		align-items: center;
 		gap: 20rpx;
 		padding: 20rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0), rgba(17, 13, 11, 0.94) 24%, #110D0B);
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0), rgba(17, 13, 11, 0.94) 24%, var(--noir-bg));
 	}
 
 	.fd-foot__ghost {

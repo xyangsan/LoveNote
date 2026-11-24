@@ -343,7 +343,7 @@
 <style scoped>
 	.fb-page {
 		min-height: 100vh;
-		background: #110D0B;
+		background: var(--noir-bg);
 		padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
 	}
 
@@ -364,7 +364,7 @@
 		font-family: "Songti SC", "SimSun", serif;
 		font-size: 42rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		letter-spacing: 2rpx;
 	}
 
@@ -373,7 +373,7 @@
 		margin-top: 10rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.fb-label {
@@ -414,7 +414,7 @@
 	}
 
 	.fb-chip--on .fb-chip__txt {
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 		font-weight: 500;
 	}
 
@@ -422,7 +422,7 @@
 		position: relative;
 		margin-top: 24rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 		padding: 24rpx 26rpx 54rpx;
 	}
@@ -432,7 +432,7 @@
 		height: 220rpx;
 		font-size: 26rpx;
 		line-height: 1.7;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.fb-textarea__ph {
@@ -494,7 +494,7 @@
 
 	.fb-q-item {
 		padding: 24rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.055);
+		border-bottom: 1rpx solid var(--noir-border-soft);
 	}
 
 	.fb-q-row {
@@ -513,7 +513,7 @@
 	}
 
 	.fb-q-item--open .fb-q-txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 

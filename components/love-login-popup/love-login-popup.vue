@@ -181,7 +181,7 @@
 		transform: translateY(-50%);
 		padding: 36rpx 32rpx;
 		border-radius: 36rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(155deg, #231B16 0%, #16110E 100%);
 		box-shadow: 0 28rpx 68rpx rgba(0, 0, 0, 0.62);
 	}
@@ -198,7 +198,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
 		letter-spacing: 4rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 		margin-bottom: 12rpx;
 	}
 
@@ -208,7 +208,7 @@
 		font-size: 40rpx;
 		font-weight: 600;
 		line-height: 1.3;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.login-popup__desc,
@@ -222,7 +222,7 @@
 	}
 
 	.login-popup__target {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.login-popup__close {
@@ -238,7 +238,7 @@
 		margin-top: 30rpx;
 		padding: 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.035);
 	}
 
@@ -263,13 +263,13 @@
 		height: 116rpx;
 		border-radius: 50%;
 		border: 2rpx solid rgba(216, 176, 140, 0.46);
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.avatar-button__hint {
 		margin-top: 14rpx;
 		font-size: 22rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.editor-card__body {
@@ -290,7 +290,7 @@
 		border: 1rpx solid rgba(255, 255, 255, 0.09);
 		background: rgba(255, 255, 255, 0.04);
 		font-size: 26rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.field-tip,
@@ -299,7 +299,7 @@
 		margin-top: 12rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.primary-button {
@@ -314,8 +314,8 @@
 		font-weight: 500;
 		line-height: 90rpx;
 		letter-spacing: 2rpx;
-		color: #FFF7EF;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		color: var(--noir-text-warm);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 16rpx 32rpx rgba(222, 95, 60, 0.28);
 	}
 

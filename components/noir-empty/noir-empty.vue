@@ -57,7 +57,7 @@
 		margin-top: 14rpx;
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.noir-empty__desc {

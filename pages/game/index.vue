@@ -443,7 +443,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
 		letter-spacing: 3rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.resume-card__title {
@@ -452,7 +452,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.resume-card__desc {
@@ -479,7 +479,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin: 0 8rpx 16rpx;
 		padding: 24rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.034);
 	}
 
@@ -513,7 +513,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	.game-card__badge-text {
 		font-size: 24rpx;
 		font-weight: 600;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.game-card__title {
@@ -522,7 +522,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 30rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.game-card__desc {
@@ -538,7 +538,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin-top: 12rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.game-section {
@@ -557,12 +557,12 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.game-section__more {
 		font-size: 23rpx;
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.game-empty {
@@ -577,7 +577,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		display: block;
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.game-empty__desc {
@@ -591,7 +591,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	.record-list {
 		padding: 8rpx 24rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.032);
 	}
 
@@ -625,7 +625,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		display: block;
 		font-size: 27rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.record-item__summary {
@@ -648,11 +648,11 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	}
 
 	.record-item__result--win {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.record-item__result--lose {
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.record-item__time {

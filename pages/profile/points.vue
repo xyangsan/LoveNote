@@ -757,7 +757,7 @@
 		box-sizing: border-box;
 		min-height: 100vh;
 		padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
-		background: #110D0B;
+		background: var(--noir-bg);
 		overflow: hidden;
 	}
 
@@ -775,13 +775,13 @@
 	.pt-glow--left {
 		top: -120rpx;
 		left: -140rpx;
-		background: #E2643F;
+		background: var(--noir-coral);
 	}
 
 	.pt-glow--right {
 		top: 300rpx;
 		right: -160rpx;
-		background: #D8B08C;
+		background: var(--noir-gold);
 	}
 
 	.pt-nav-pill {
@@ -798,7 +798,7 @@
 
 	.pt-nav-pill__txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -841,7 +841,7 @@
 
 	.pt-skeleton__retry-txt {
 		font-size: 24rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	/* 余额主卡（s11 .pt-hero） */
@@ -852,7 +852,7 @@
 		gap: 16rpx;
 		padding: 26rpx 28rpx;
 		border-radius: 30rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.24);
+		border: 1rpx solid var(--noir-border-gold);
 		background: linear-gradient(135deg, rgba(226, 124, 78, 0.16), rgba(255, 255, 255, 0.03));
 	}
 
@@ -872,7 +872,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 68rpx;
 		line-height: 1;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -885,7 +885,7 @@
 		display: block;
 		margin-top: 12rpx;
 		font-size: 21rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.pt-hlinks {
@@ -910,7 +910,7 @@
 
 	.pt-pill-act__txt {
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -929,7 +929,7 @@
 	}
 
 	.pt-tag--green .pt-tag__txt {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.pt-tag--coral {
@@ -938,7 +938,7 @@
 	}
 
 	.pt-tag--coral .pt-tag__txt {
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.pt-tag--muted {
@@ -978,7 +978,7 @@
 		display: block;
 		font-size: 25rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.pt-bind-tip__desc {
@@ -994,7 +994,7 @@
 		height: 54rpx;
 		padding: 0 24rpx;
 		border-radius: 27rpx;
-		background: linear-gradient(135deg, #F09A6B, #DE5F3C);
+		background: linear-gradient(135deg, var(--noir-coral-bright), var(--noir-coral-deep));
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1003,7 +1003,7 @@
 	.pt-bind-tip__btn-txt {
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	/* 通用区块卡片（s11 .pt-card） */
@@ -1026,7 +1026,7 @@
 	.pt-chead__title {
 		font-size: 24rpx;
 		font-weight: 500;
-		color: #F5EDE4;
+		color: var(--noir-text);
 	}
 
 	.pt-chead__act-wrap {
@@ -1039,11 +1039,11 @@
 	.pt-chead__act {
 		flex-shrink: 0;
 		font-size: 21rpx;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.pt-chead__act--done {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	/* 7 天签到（s11 .pt-sign7） */
@@ -1056,7 +1056,7 @@
 	.pt-d {
 		padding: 14rpx 4rpx;
 		border-radius: 16rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.025);
 		text-align: center;
 	}
@@ -1083,7 +1083,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 21rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	/* 每日挑战 3 档（s11 .pt-tiers） */
@@ -1096,7 +1096,7 @@
 	.pt-t {
 		padding: 18rpx 12rpx;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.025);
 		text-align: center;
 	}
@@ -1116,11 +1116,11 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 30rpx;
 		font-weight: 600;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.pt-t--done .pt-t__pts {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.pt-t__lbl {
@@ -1159,12 +1159,12 @@
 	.pt-task__fill {
 		height: 100%;
 		border-radius: 4rpx;
-		background: linear-gradient(90deg, #F09A6B 0%, #DE5F3C 100%);
+		background: linear-gradient(90deg, var(--noir-coral-bright) 0%, var(--noir-coral-deep) 100%);
 		transition: width 0.25s ease;
 	}
 
 	.pt-task__fill--done {
-		background: linear-gradient(90deg, #84BE9C 0%, #9ED6B2 100%);
+		background: linear-gradient(90deg, #84BE9C 0%, var(--noir-green) 100%);
 	}
 
 	.pt-tl {
@@ -1196,16 +1196,16 @@
 	.pt-tr__num {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 23rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.pt-tr__num--done {
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.pt-tr__done {
 		font-size: 19rpx;
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.pt-tr__go {
@@ -1220,7 +1220,7 @@
 
 	.pt-empty__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	/* 规则警示条（s11 .pt-warn） */
@@ -1296,7 +1296,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ms-sheet__close {
@@ -1311,7 +1311,7 @@
 
 	.ms-sheet__close-txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	.ms-scroll {
@@ -1333,7 +1333,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 36rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ms-hero__desc {
@@ -1358,7 +1358,7 @@
 		gap: 16rpx;
 		padding: 22rpx 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -1376,7 +1376,7 @@
 		display: block;
 		font-size: 26rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ms-item__desc {
@@ -1398,7 +1398,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.ms-rule {
@@ -1437,7 +1437,7 @@
 	.ms-rrow__r {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 21rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		text-align: right;
 	}
 
@@ -1453,7 +1453,7 @@
 		display: block;
 		font-size: 24rpx;
 		font-weight: 600;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.ms-danger__desc {
@@ -1461,7 +1461,7 @@
 		margin-top: 8rpx;
 		font-size: 21rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.64);
+		color: var(--noir-text-sub);
 	}
 
 	/* ==================== 挑战领取弹框 & 动画 ==================== */
@@ -1494,7 +1494,7 @@
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.claim-dialog__points {
@@ -1503,14 +1503,14 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 56rpx;
 		font-weight: 500;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 
 	.claim-dialog__btn {
 		margin-top: 32rpx;
 		height: 84rpx;
 		border-radius: 42rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1519,7 +1519,7 @@
 	.claim-dialog__btn-text {
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.claim-fx {
@@ -1558,6 +1558,6 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Georgia", serif;
 		font-size: 44rpx;
 		font-weight: 600;
-		color: #F09A6B;
+		color: var(--noir-coral-bright);
 	}
 </style>

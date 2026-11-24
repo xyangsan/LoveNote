@@ -45,19 +45,19 @@
 		box-sizing: border-box;
 		border: 1rpx solid rgba(216, 176, 140, 0.34);
 		background: rgba(216, 176, 140, 0.10);
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.noir-tag--coral {
 		border-color: rgba(226, 100, 63, 0.46);
 		background: rgba(226, 100, 63, 0.16);
-		color: #F5B496;
+		color: var(--noir-coral-light);
 	}
 
 	.noir-tag--green {
 		border-color: rgba(158, 214, 178, 0.40);
 		background: rgba(158, 214, 178, 0.12);
-		color: #9ED6B2;
+		color: var(--noir-green);
 	}
 
 	.noir-tag--muted {
@@ -78,7 +78,7 @@
 	.noir-tag--chip.is-active {
 		border-color: rgba(216, 176, 140, 0.52);
 		background: rgba(216, 176, 140, 0.14);
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.noir-tag__text {

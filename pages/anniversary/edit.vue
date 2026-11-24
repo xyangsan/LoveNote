@@ -1210,7 +1210,7 @@ export default {
 		min-height: 100vh;
 		background:
 			radial-gradient(88% 36% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
-			#110D0B;
+			var(--noir-bg);
 		padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
 	}
@@ -1251,7 +1251,7 @@ export default {
 
 	.ae-del-pill__txt {
 		font-size: 21rpx;
-		color: #F5B496;
+		color: var(--noir-coral-light);
 		white-space: nowrap;
 	}
 
@@ -1272,7 +1272,7 @@ export default {
 		margin-top: 20rpx;
 		padding: 20rpx 24rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.032);
 	}
 
@@ -1296,7 +1296,7 @@ export default {
 	.ae-shead__val {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.ae-slider {
@@ -1343,7 +1343,7 @@ export default {
 		min-width: 0;
 		text-align: right;
 		font-size: 26rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.ae-inline-chips,
@@ -1359,7 +1359,7 @@ export default {
 		padding: 0 24rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(255, 255, 255, 0.10);
-		background: rgba(255, 255, 255, 0.036);
+		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1377,7 +1377,7 @@ export default {
 	}
 
 	.ae-chip.is-on .ae-chip__txt {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		font-weight: 500;
 	}
 
@@ -1392,7 +1392,7 @@ export default {
 
 	.ae-row__val {
 		font-size: 25rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		font-family: "SF Mono", "Consolas", monospace;
 	}
 
@@ -1433,7 +1433,7 @@ export default {
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, #110D0B 100%);
+		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 
@@ -1471,7 +1471,7 @@ export default {
 	.picker-field__value {
 		display: block;
 		font-size: 28rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.picker-field__value--placeholder {
@@ -1529,7 +1529,7 @@ export default {
 	.calendar-popup__title {
 		font-size: 30rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.calendar-popup__actions {
@@ -1545,7 +1545,7 @@ export default {
 
 	.calendar-popup__action--primary {
 		font-weight: 700;
-		color: #E2643F;
+		color: var(--noir-coral);
 	}
 
 	.calendar-popup__selector-wrap {
@@ -1566,7 +1566,7 @@ export default {
 	.calendar-popup__selector-value-text {
 		font-size: 24rpx;
 		font-weight: 700;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.calendar-popup__selector-arrow {
@@ -1615,7 +1615,7 @@ export default {
 
 	.calendar-popup__selector-option-text--active {
 		font-weight: 700;
-		color: #E2643F;
+		color: var(--noir-coral);
 	}
 
 	.calendar-popup__summary {
@@ -1626,7 +1626,7 @@ export default {
 		padding: 22rpx 20rpx;
 		margin: 0 0 16rpx;
 		border-radius: 24rpx;
-		background: #231C18;
+		background: var(--noir-surface-2);
 	}
 
 	.calendar-popup__summary-value {
@@ -1635,7 +1635,7 @@ export default {
 		font-size: 30rpx;
 		font-weight: 700;
 		line-height: 1.4;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.background-preview {
@@ -1696,7 +1696,7 @@ export default {
 	}
 
 	.color-item--active {
-		box-shadow: inset 0 0 0 4rpx rgba(26, 21, 18, 0.94), 0 0 0 2rpx #ec7558, 0 10rpx 18rpx rgba(236, 117, 88, 0.25);
+		box-shadow: inset 0 0 0 4rpx rgba(26, 21, 18, 0.94), 0 0 0 2rpx var(--noir-coral), 0 10rpx 18rpx rgba(236, 117, 88, 0.25);
 	}
 
 	.switch-row {
@@ -1713,7 +1713,7 @@ export default {
 		margin-top: 16rpx;
 		padding: 18rpx 16rpx 6rpx;
 		border-radius: 20rpx;
-		background: rgba(255, 255, 255, 0.036);
+		background: var(--noir-surface-glass);
 	}
 
 	.slider-row {

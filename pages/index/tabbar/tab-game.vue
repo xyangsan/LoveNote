@@ -304,7 +304,7 @@
 		font-weight: 600;
 		letter-spacing: 3rpx;
 		line-height: 1.15;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 		white-space: nowrap;
 	}
 
@@ -330,7 +330,7 @@
 
 	.tg-rec-pill__txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -359,7 +359,7 @@
 		display: block;
 		font-size: 27rpx;
 		font-weight: 500;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.tg-resume__desc {
@@ -378,7 +378,7 @@
 	.tg-card {
 		padding: 28rpx 28rpx 24rpx;
 		border-radius: 30rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.034);
 	}
 
@@ -404,7 +404,7 @@
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 600;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.tg-card__desc {
@@ -454,7 +454,7 @@
 
 	.tg-go-btn__txt {
 		font-size: 22rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 	}
 
 	.tg-points-tip {
@@ -486,7 +486,7 @@
 	.tg-rec-row__title {
 		display: block;
 		font-size: 27rpx;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.tg-rec-row__sum {

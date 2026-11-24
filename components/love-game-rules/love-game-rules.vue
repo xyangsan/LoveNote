@@ -179,7 +179,7 @@
 		font-size: 38rpx;
 		font-weight: 600;
 		line-height: 1.28;
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.gr-close {
@@ -226,7 +226,7 @@
 
 	.gr-meta__txt {
 		font-size: 20rpx;
-		color: #EAD4BC;
+		color: var(--noir-gold-soft);
 		white-space: nowrap;
 	}
 
@@ -265,7 +265,7 @@
 	.gr-sec__heading {
 		font-size: 26rpx;
 		font-weight: 600;
-		color: #E5865C;
+		color: var(--noir-coral-soft);
 	}
 
 	.gr-item {
@@ -281,7 +281,7 @@
 		margin-top: 15rpx;
 		margin-right: 14rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #D8B08C 0%, #E2643F 100%);
+		background: linear-gradient(135deg, var(--noir-gold) 0%, var(--noir-coral) 100%);
 	}
 
 	.gr-item__text {
@@ -298,7 +298,7 @@
 	.gr-btn {
 		height: 86rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.30);
 		display: flex;
 		align-items: center;

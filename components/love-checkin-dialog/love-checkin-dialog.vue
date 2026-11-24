@@ -230,7 +230,7 @@
 	.checkin-hd__close-icon {
 		font-size: 30rpx;
 		line-height: 1;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	.checkin-hd__title {
@@ -250,7 +250,7 @@
 	.checkin-hd__title-text {
 		font-size: 36rpx;
 		font-weight: 600;
-		color: #ffffff;
+		color: var(--noir-white);
 	}
 
 	.checkin-hd__sub {
@@ -281,7 +281,7 @@
 		height: 116rpx;
 		padding: 14rpx 0 12rpx;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.08);
+		border: 1rpx solid var(--noir-border);
 		background: rgba(255, 255, 255, 0.03);
 	}
 
@@ -289,7 +289,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
 		line-height: 1;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.checkin-day__heart {
@@ -312,11 +312,11 @@
 	}
 
 	.checkin-day--done .checkin-day__num {
-		color: #D8B08C;
+		color: var(--noir-gold);
 	}
 
 	.checkin-day--done .checkin-day__points {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	/* 今日是唯一的行动点，视觉必须最重 */
@@ -327,11 +327,11 @@
 	}
 
 	.checkin-day--today .checkin-day__num {
-		color: #FBF4EA;
+		color: var(--noir-text-strong);
 	}
 
 	.checkin-day--today .checkin-day__points {
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.checkin-actions {
@@ -347,7 +347,7 @@
 		justify-content: center;
 		height: 92rpx;
 		border-radius: 46rpx;
-		background: linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%);
+		background: var(--noir-btn-gradient);
 		box-shadow: 0 14rpx 32rpx rgba(222, 95, 60, 0.30);
 	}
 
@@ -355,7 +355,7 @@
 		font-size: 28rpx;
 		font-weight: 500;
 		letter-spacing: 2rpx;
-		color: #FFF7EF;
+		color: var(--noir-text-warm);
 	}
 
 	.checkin-btn--disabled {
@@ -369,7 +369,7 @@
 		text-align: center;
 		font-size: 22rpx;
 		line-height: 1.5;
-		color: rgba(245, 237, 228, 0.44);
+		color: var(--noir-text-muted);
 	}
 
 	.checkin-ad {
