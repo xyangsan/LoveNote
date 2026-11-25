@@ -230,10 +230,50 @@ function buildProfileUpdateData(params = {}) {
 	return updateData
 }
 
+/**
+ * 清空封面时要一并删掉的云文件。
+ *
+ * 只认 uploadFileWithModule 传到 `daily/covers` 的 fileID：
+ * 外链、老数据（http 地址或别的目录）一律跳过 —— 删错文件比留个孤儿文件严重得多。
+ */
+function pickDeletableCoverFileId(fileId = '') {
+	const raw = String(fileId || '').trim()
+	if (!/^cloud:\/\//i.test(raw)) {
+		return ''
+	}
+	return raw.includes('/daily/covers/') ? raw : ''
+}
+
 async function updateUserProfile(uid, params = {}) {
+	// 「两个封面字段都传了空串」= 删除封面。此时先把旧 fileID 记下来，
+	// 更新成功后顺手清掉云存储里的图（失败只记日志，不影响接口结果）。
+	const clearsCover = (params.momentsCoverFileId !== undefined || params.momentsCoverUrl !== undefined)
+		&& !String(params.momentsCoverFileId || '').trim()
+		&& !String(params.momentsCoverUrl || '').trim()
+
+	let previousCoverFileId = ''
+	if (clearsCover) {
+		try {
+			const previousRecord = await getUserById(uid)
+			previousCoverFileId = pickDeletableCoverFileId(previousRecord && previousRecord.moments_cover_file_id)
+		} catch (error) {
+			console.warn('读取旧封面失败', error)
+		}
+	}
+
 	const updateData = buildProfileUpdateData(params)
 	if (Object.keys(updateData).length > 1) {
 		await userCollection.doc(uid).update(updateData)
+	}
+
+	if (previousCoverFileId) {
+		try {
+			await uniCloud.deleteFile({
+				fileList: [previousCoverFileId]
+			})
+		} catch (error) {
+			console.warn('删除封面云文件失败', error)
+		}
 	}
 
 	return getUserById(uid)

@@ -560,6 +560,75 @@ page,
 }
 
 
+.theme-pink-5 {
+	/* 樱粉晚风 · SAKURA BLUSH（设计稿 05 页 / 196:1）
+	 * 直取设计稿五个色点：底色 #F6E7EA / 浮层 #FFFFFF / 主金 #B96A85 / 主色 #DD5477 / 浅底 #FFF1F4，
+	 * 正文与弱化色按稿内文字实测：#492A32 正文、#2F1A20 标题、#8D6270 次级、#BF95A2 弱化 */
+	--noir-bg: #F6E7EA;
+	--noir-bg-rgb: 246, 231, 234;
+	--noir-bg-deep: #EDD8DD;
+	--noir-surface: #FFFFFF;
+	--noir-surface-2: #FBEDF1;
+	--noir-surface-glass: var(--noir-glass-1);
+	--noir-glass-1: rgba(255, 255, 255, 0.62);
+	--noir-glass-2: rgba(255, 255, 255, 0.78);
+	--noir-glass-3: rgba(255, 255, 255, 0.92);
+	--noir-gold: #B96A85;
+	--noir-gold-rgb: 185, 106, 133;
+	--noir-gold-soft: #D19BAC;
+	--noir-gold-soft-rgb: 209, 155, 172;
+	--noir-coral: #DD5477;
+	--noir-coral-soft: #E47A95;
+	--noir-coral-light: #F0A9BB;
+	--noir-coral-light-rgb: 240, 169, 187;
+	--noir-coral-bright: #E4698A;
+	--noir-coral-bright-rgb: 228, 105, 138;
+	--noir-coral-deep: #C13B5E;
+	--noir-green: #5F8F72;
+	--noir-green-rgb: 95, 143, 114;
+	--noir-white: #FFFFFF;
+	--noir-white-rgb: 255, 255, 255;
+	--noir-text: #492A32;
+	--noir-text-rgb: 73, 42, 50;
+	--noir-text-strong: #2F1A20;
+	--noir-text-strong-rgb: 47, 26, 32;
+	--noir-text-warm: #FFF7FA;
+	--noir-text-faded: #BF95A2;
+	--noir-text-sub: rgba(73, 42, 50, 0.66);
+	--noir-text-muted: rgba(73, 42, 50, 0.46);
+	--noir-text-dim: rgba(73, 42, 50, 0.30);
+	--noir-border: rgba(73, 42, 50, 0.10);
+	--noir-border-soft: rgba(73, 42, 50, 0.06);
+	--noir-border-gold: rgba(185, 106, 133, 0.32);
+	--noir-border-coral: rgba(221, 84, 119, 0.42);
+	--noir-shadow: 0 20rpx 48rpx rgba(90, 40, 56, 0.15);
+	--noir-btn-gradient: linear-gradient(135deg, #E4698A 0%, #C13B5E 100%);
+	--noir-hero-gradient: linear-gradient(135deg, rgba(221, 84, 119, 0.14) 0%, rgba(255, 255, 255, 0.40) 100%);
+
+	--noir-wash-rgb: 73, 42, 50;
+	--noir-coral-rgb: 221, 84, 119;
+	--noir-shadow-rgb: 90, 40, 56;
+	--noir-surface2-rgb: 251, 237, 241;
+	--noir-sheet-hi: #FFFFFF;
+	--noir-sheet-lo: #FBEDF1;
+	--noir-page-glow: rgba(221, 84, 119, 0.18);
+	--noir-hero-bg: linear-gradient(135deg, #F7C8D4 0%, #DD5477 48%, #A83252 100%);
+	/* 樱粉专属图本身已是粉调，遮罩仍取深玫瑰：顶部留给深色品牌字、底部压暗给白字，
+	   末段过渡到 --noir-bg，Hero 下沿与页面底色自然衔接 */
+	--noir-hero-scrim: linear-gradient(180deg, rgba(106, 43, 60, 0.26) 0%, rgba(106, 43, 60, 0.30) 42%, rgba(106, 43, 60, 0.62) 76%, var(--noir-bg) 100%);
+	--noir-tabbar-bg: rgba(255, 255, 255, 0.94);
+	--noir-tabbar-shadow: 0 22rpx 56rpx rgba(90, 40, 56, 0.14);
+	--noir-on-media: #FFFFFF;
+	--noir-on-media-sub: rgba(255, 255, 255, 0.84);
+	--noir-on-media-dim: rgba(255, 255, 255, 0.62);
+	--noir-on-media-line: rgba(255, 255, 255, 0.18);
+	--noir-on-media-accent: #F6D3DC;
+
+	color: var(--noir-text);
+	background-color: var(--noir-bg);
+}
+
+
 /* ==========================================================================
  * 场景调色板（与主题无关的固定色）
  *
@@ -920,4 +989,19 @@ page {
 	--comp-20: #1C1613;
 	--comp-21: #FFAA7F;
 	--comp-22: #999999;
+}
+/* ==========================================================================
+ * 启动底色：page 不再自己刷一层暗夜
+ *
+ * FirstUI 的 `page { background-color: var(--fui-bg-color-grey) }` 这一条，在 page 上
+ * 会顺着别名链解析成暗夜底色 #241D18（`--fui-bg-color-grey → --noir-bg`，而
+ * `page, .theme-noir` 这组令牌把 page 钉在暗夜默认值上）。主题类只挂在页面根 view 上、
+ * 只覆盖子树，所以冷启动首帧（Vue 还没渲染）一定先闪一屏暗夜，再跳到用户主题。
+ *
+ * 改成透明后，露出来的是原生窗口底色；`applySystemChrome()` 已经在 App.onLaunch 与
+ * 首页 onLoad 里用 `uni.setBackgroundColor(theme.bg)` 把它同步成当前主题。
+ * 浅色主题不受影响：pages.json 的 #EDF1EA 仍是窗口兜底。
+ * ========================================================================== */
+page {
+	background-color: transparent;
 }

@@ -6,8 +6,9 @@
  * 本文件只存元信息（名称 / 描述 / 预览色 / 明暗 / 背景图），不重复存放色值 ——
  * 否则改一次主题要改两处，必然漂移。
  *
- * 5 套主题来自 Ardot 设计稿 `749174707492860` 的 05 页（`05 组件与规范`）：
- * 参考板 `67:1`（暗夜）+ v1 `158:1` / v2 `158:340` / v3 `158:679` / v4 `158:1018`。
+ * 6 套主题来自 Ardot 设计稿 `749174707492860` 的 05 页（`05 组件与规范`）：
+ * 参考板 `67:1`（暗夜）+ v1 `158:1` / v2 `158:340` / v3 `158:679` / v4 `158:1018` /
+ * v5 樱粉晚风 `196:1`（PINK-5 · SAKURA BLUSH）。
  *
  * 背景图（`art` 字段）来自设计稿 01 页「核心四屏」的 Hero 位图：
  * V1~V4 各 3 张归档在 `warm/assets/四主题图片`，压缩后落在 `static/images/theme/`；
@@ -96,6 +97,24 @@ export const THEMES = [
 			feed: '/static/images/theme/v4-feed.jpg',
 			anniv: '/static/images/theme/v4-anniv.jpg'
 		}
+	},
+	{
+		key: 'pink-5',
+		name: '樱粉晚风',
+		en: 'PINK-5 · SAKURA BLUSH',
+		desc: '粉雾奶白底配玫瑰金与樱红，深莓棕正文，柔和里带一点晚霞。',
+		dark: false,
+		// 五个色点直取设计稿 05 页 196:1：底色 / 浮层 / 主金 / 主色 / 浅底
+		bg: '#F6E7EA',
+		swatches: ['#F6E7EA', '#FFFFFF', '#B96A85', '#DD5477', '#FFF1F4'],
+		ink: '#2F1A20',
+		// 樱粉专属配图（720×600 / 720×405，按出图中心裁切压缩）：
+		// home = 室内粉调特写、feed = 樱花大道、anniv = 海边落日
+		art: {
+			home: '/static/images/theme/v5-home.jpg',
+			feed: '/static/images/theme/v5-feed.jpg',
+			anniv: '/static/images/theme/v5-anniv.jpg'
+		}
 	}
 ]
 
@@ -115,7 +134,8 @@ const THEME_CORAL = {
 	'warm-1': '#DE5F3C',
 	'warm-2': '#D95F33',
 	'pale-3': '#C2703E',
-	'green-4': '#5E8A55'
+	'green-4': '#5E8A55',
+	'pink-5': '#DD5477'
 }
 
 /** 当前主题的强调色（仅供小程序 API 传参使用） */
@@ -139,7 +159,8 @@ const THEME_ICON = {
 	'warm-1': { active: '#E37557', idle: 'rgba(46, 30, 18, 0.44)' },
 	'warm-2': { active: '#DE7550', idle: 'rgba(42, 24, 12, 0.44)' },
 	'pale-3': { active: '#CB8459', idle: 'rgba(28, 25, 23, 0.44)' },
-	'green-4': { active: '#759A6D', idle: 'rgba(31, 38, 27, 0.44)' }
+	'green-4': { active: '#759A6D', idle: 'rgba(31, 38, 27, 0.44)' },
+	'pink-5': { active: '#E4698A', idle: 'rgba(73, 42, 50, 0.44)' }
 }
 
 /** 当前主题的图标两档颜色（仅供内联 SVG 使用） */

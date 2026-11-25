@@ -10,7 +10,7 @@
 			<template #right>
 				<view class="tf-nav-actions">
 					<view v-if="isLoggedIn" class="tf-cover-btn" @tap="handleChangeCover">
-						<text class="tf-cover-btn__txt">{{ coverUploading ? '上传中' : '换封面' }}</text>
+						<text class="tf-cover-btn__txt">{{ coverUploading ? '处理中' : '换封面' }}</text>
 					</view>
 					<view class="tf-cam-btn" @tap="goPublish">
 						<fui-icon name="camera" :size="34" color="var(--noir-gold-soft)"></fui-icon>
@@ -186,6 +186,16 @@
 			</view>
 		</view>
 
+		<!-- 封面操作菜单：用 fui-actionsheet 而不是原生 showActionSheet，
+		     因为原生 itemColor 只能整列同色，没法只把「删除封面」标红 -->
+		<fui-actionsheet
+			:show="coverSheetVisible"
+			:item-list="coverSheetItems"
+			:z-index="1200"
+			@cancel="closeCoverSheet"
+			@click="handleCoverSheetClick"
+		></fui-actionsheet>
+
 		<love-couple-guide scene="feed" :active="noCouple" />
 	</view>
 </template>
@@ -205,6 +215,8 @@
 
 	const AD_SEED_MAX = 2147483647
 	const AD_MIN_GAP = 10
+	// 破坏性操作（删除封面）固定用红：主题强调色在青野/樱粉下会变成绿/粉，看不出「危险」
+	const DANGER_TEXT_COLOR = '#D93A34'
 
 	// 广告插入：每 10~20 条动态之间随机插入一条广告（至少间隔 10 条）；总数不足 10 条时在末尾显示一条
 	function buildAdPositions(total = 0, seed = 0, hasMore = false) {
@@ -261,6 +273,7 @@
 				keyboardHeight: 0,
 				emojiList: Array.isArray(glyph) ? glyph : [],
 				coverUploading: false,
+				coverSheetVisible: false,
 				navBarHeight: getNavBarHeight(getNavBarMetrics()),
 				// refresh 的复用句柄，防 mounted 与父页 onShow 同时刷新
 				refreshTask: null
@@ -288,6 +301,25 @@
 				// 用户设置过封面优先，否则用当前主题的兜底图
 				const custom = String((this.headerProfile && this.headerProfile.momentsCoverUrl) || '').trim()
 				return custom || getThemeArt('feed')
+			},
+			hasCustomCover() {
+				return Boolean(
+					String((this.headerProfile && this.headerProfile.momentsCoverUrl) || '').trim()
+					|| String((this.headerProfile && this.headerProfile.momentsCoverFileId) || '').trim()
+				)
+			},
+			coverSheetItems() {
+				// ⚠️ 必须全是对象：fui-actionsheet 只在「第一项不是对象」时按纯文本列表处理，
+				// 混合类型会把后面的对象项渲染成 [object Object]
+				const items = [{ text: '拍照' }, { text: '从相册选择' }]
+				if (this.hasCustomCover) {
+					items.push({
+						text: '删除封面',
+						color: DANGER_TEXT_COLOR,
+						darkColor: DANGER_TEXT_COLOR
+					})
+				}
+				return items
 			},
 			headerAvatar() {
 				return this.headerProfile.avatarUrl || DEFAULT_AVATAR
@@ -344,7 +376,8 @@
 					uid: user._id || '',
 					nickname: user.nickname || '双人手札',
 					avatarUrl: user.avatarUrl || DEFAULT_AVATAR,
-					momentsCoverUrl: user.momentsCoverUrl || ''
+					momentsCoverUrl: user.momentsCoverUrl || '',
+					momentsCoverFileId: user.momentsCoverFileId || ''
 				}
 			},
 			async refresh({ force = true } = {}) {
@@ -586,21 +619,26 @@
 					this.goLogin()
 					return
 				}
-				const hasCustom = Boolean(this.headerProfile && this.headerProfile.momentsCoverUrl)
-				const itemList = hasCustom ? ['拍照', '从相册选择', '恢复默认封面'] : ['拍照', '从相册选择']
-				uni.showActionSheet({
-					itemList,
-					success: (res) => {
-						const idx = Number(res.tapIndex)
-						if (idx === 0) {
-							this.chooseCoverImage('camera')
-						} else if (idx === 1) {
-							this.chooseCoverImage('album')
-						} else if (idx === 2 && hasCustom) {
-							this.resetCoverImage()
-						}
-					}
-				})
+				this.coverSheetVisible = true
+			},
+			closeCoverSheet() {
+				if (!this.coverSheetVisible) return
+				this.coverSheetVisible = false
+			},
+			handleCoverSheetClick(action = {}) {
+				const index = Number(action.index)
+				this.closeCoverSheet()
+				if (index === 0) {
+					this.chooseCoverImage('camera')
+					return
+				}
+				if (index === 1) {
+					this.chooseCoverImage('album')
+					return
+				}
+				if (index === 2 && this.hasCustomCover) {
+					this.deleteCoverImage()
+				}
 			},
 			chooseCoverImage(sourceType = 'album') {
 				uni.chooseImage({
@@ -649,33 +687,48 @@
 					uni.hideLoading()
 				}
 			},
-			async resetCoverImage() {
+			/**
+			 * 删除自定义封面：清空 momentsCoverUrl/FileId 后自动回落到主题兜底图。
+			 * 后端把「两个字段都是空串」当成 remove 处理，客户端不用传 null。
+			 */
+			deleteCoverImage() {
 				if (this.coverUploading) return
-				this.coverUploading = true
-				uni.showLoading({ title: '恢复中...', mask: true })
-				try {
-					const result = await getUserApi().updateProfile({
-						momentsCoverUrl: '',
-						momentsCoverFileId: ''
-					})
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '恢复封面失败')
+				uni.showModal({
+					title: '删除封面',
+					content: '删除后将恢复为主题默认封面，确定删除吗？',
+					confirmText: '删除',
+					confirmColor: DANGER_TEXT_COLOR,
+					cancelText: '取消',
+					success: async (res) => {
+						if (!res.confirm) return
+						this.coverUploading = true
+						uni.showLoading({ title: '删除中...', mask: true })
+						try {
+							const result = await getUserApi().updateProfile({
+								momentsCoverUrl: '',
+								momentsCoverFileId: ''
+							})
+							if (result && result.errCode && result.errCode !== 0) {
+								throw new Error(result.errMsg || '删除封面失败')
+							}
+							if (result && result.userInfo) {
+								this.ensureStore().updateUserInfo(result.userInfo)
+								this.syncHeaderProfile()
+							} else {
+								this.headerProfile = Object.assign({}, this.headerProfile, {
+									momentsCoverUrl: '',
+									momentsCoverFileId: ''
+								})
+							}
+							uni.showToast({ title: '封面已删除', icon: 'success' })
+						} catch (error) {
+							uni.showToast({ title: error.message || '删除封面失败', icon: 'none' })
+						} finally {
+							this.coverUploading = false
+							uni.hideLoading()
+						}
 					}
-					if (result && result.userInfo) {
-						this.ensureStore().updateUserInfo(result.userInfo)
-						this.syncHeaderProfile()
-					} else {
-						this.headerProfile = Object.assign({}, this.headerProfile, {
-							momentsCoverUrl: ''
-						})
-					}
-					uni.showToast({ title: '已恢复默认封面', icon: 'success' })
-				} catch (error) {
-					uni.showToast({ title: error.message || '恢复封面失败', icon: 'none' })
-				} finally {
-					this.coverUploading = false
-					uni.hideLoading()
-				}
+				})
 			},
 			goLogin() {
 				uni.navigateTo({ url: '/pages/login/index' })

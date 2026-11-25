@@ -7,7 +7,7 @@ const DEFAULT_ROLE = 'member'
  * 主题 key 白名单。必须与前端 `common/theme.js` 的 THEMES[].key 完全一致，
  * 前端切主题时会把它原样提交上来。
  */
-const VALID_THEME_KEYS = ['noir', 'warm-1', 'warm-2', 'pale-3', 'green-4']
+const VALID_THEME_KEYS = ['noir', 'warm-1', 'warm-2', 'pale-3', 'green-4', 'pink-5']
 /** 新用户 / 存量用户未设置时的默认主题：青野浅绿 */
 const DEFAULT_THEME_KEY = 'green-4'
 

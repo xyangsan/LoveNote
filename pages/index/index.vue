@@ -45,12 +45,16 @@
 			@change="handleSwitchTab"
 			@refresh="handleRefreshActiveTab"
 		/>
+
+		<!-- 冷启动遮罩：底色跟随当前主题，数据回来前盖住首屏（含原生启动屏的浅色跳变） -->
+		<love-boot-splash :visible="booting" :leaving="bootLeaving" />
 	</view>
 </template>
 
 <script>
 	import { loadAppSettings, readAppSettingsCache } from '../../common/app-settings.js'
 	import { subscribeAuthChanged } from '../../common/auth-center.js'
+	import { applySystemChrome } from '../../common/theme.js'
 	import {
 		getActiveTabKey,
 		getVisibleTabItems,
@@ -63,6 +67,7 @@
 	import TabFeed from './tabbar/tab-feed.vue'
 	import TabGame from './tabbar/tab-game.vue'
 	import TabProfile from './tabbar/tab-profile.vue'
+	import LoveBootSplash from '@/components/love-boot-splash/love-boot-splash.vue'
 
 	const INTERSTITIAL_AD_SHOW_RATE = 1 / 3
 	// 登录事件刷新后，navigateAfterLogin 会延迟 300ms 再回跳、随后 onShow 又刷一次。
@@ -70,12 +75,18 @@
 	// 只对首页生效，其它 tab 的 refresh 会忽略这个参数。
 	const AUTH_REFRESH_COALESCE_MS = 600
 
+	// 启动遮罩：至少显示这么久（避免数据秒回时闪一下），最多等这么久（接口挂了也要放行）
+	const BOOT_MIN_MS = 420
+	const BOOT_MAX_MS = 2500
+	const BOOT_FADE_MS = 260
+
 	export default {
 		components: {
 			TabHome,
 			TabFeed,
 			TabGame,
-			TabProfile
+			TabProfile,
+			LoveBootSplash
 		},
 		data() {
 			return {
@@ -90,10 +101,21 @@
 				scrollTop: 0,
 				hideTabbar: false,
 				unsubTab: null,
-				unsubAuth: null
+				unsubAuth: null,
+				// 启动遮罩：初始就盖住屏幕，首屏数据回来（或超时）后淡出
+				booting: true,
+				bootLeaving: false,
+				bootDataReady: false,
+				bootStartedAt: Date.now(),
+				bootTimer: null,
+				bootReleaseTimer: null
 			}
 		},
 		onLoad(options = {}) {
+			// 首帧就要主题底色：page 已置为透明，窗口底色是那一帧唯一可见的颜色。
+			// App.onLaunch 里虽然已经调过一次，但那时还没有页面实例，部分端会当成 no-op，
+			// 这里带着页面上下文再强制同步一次（换主题时 applySystemChrome 也会自己刷）。
+			applySystemChrome(null, true)
 			// 初始化只确定「当前打开的是哪个 Tab」，数据刷新统一交给 onShow：
 			// onLoad 与 onShow 会连续触发，两边都刷会对同一 Tab 发两轮首屏请求。
 			const initKey = options.tab ? resolveTabKey(options.tab) : getActiveTabKey()
@@ -117,6 +139,9 @@
 			})
 
 			tryShowInterstitialAd(INTERSTITIAL_AD_SHOW_RATE)
+
+			// 遮罩兜底：接口再慢也不能一直盖着（onShow 里的刷新正常返回会更早收起）
+			this.bootTimer = setTimeout(() => this.markBootReady(), BOOT_MAX_MS)
 		},
 		onShow() {
 			this.syncPermissions(false)
@@ -130,12 +155,15 @@
 				this.activateTab(globalKey, { refresh: false })
 			}
 			const flush = () => this.refreshActiveTab(true)
-			if (switched) {
+			const task = switched
 				// 新 Tab 的内容刚被 v-if 挂载，等渲染完再取 ref，否则刷到的是空引用
-				this.$nextTick(flush)
-			} else {
-				flush()
-			}
+				? this.$nextTick(flush)
+				: flush()
+			// 首屏数据落地（或首刷失败）后再收启动遮罩，避免露出还没数据的空壳
+			Promise.resolve(task).then(
+				() => this.markBootReady(),
+				() => this.markBootReady()
+			)
 		},
 		onUnload() {
 			if (this.unsubTab) {
@@ -145,6 +173,14 @@
 			if (this.unsubAuth) {
 				this.unsubAuth()
 				this.unsubAuth = null
+			}
+			if (this.bootTimer) {
+				clearTimeout(this.bootTimer)
+				this.bootTimer = null
+			}
+			if (this.bootReleaseTimer) {
+				clearTimeout(this.bootReleaseTimer)
+				this.bootReleaseTimer = null
 			}
 		},
 		onPageScroll(e) {
@@ -168,6 +204,31 @@
 			}
 		},
 		methods: {
+			/**
+			 * 首屏数据就绪（或兜底超时）→ 收起启动遮罩。
+			 * 内部保证至少显示 BOOT_MIN_MS：数据秒回时也留一点时间，避免闪一下反而更花。
+			 */
+			markBootReady() {
+				if (this.bootDataReady) return
+				this.bootDataReady = true
+				if (this.bootTimer) {
+					clearTimeout(this.bootTimer)
+					this.bootTimer = null
+				}
+				if (this.bootReleaseTimer) {
+					clearTimeout(this.bootReleaseTimer)
+				}
+				const elapsed = Date.now() - this.bootStartedAt
+				this.bootReleaseTimer = setTimeout(() => this.releaseBoot(), Math.max(0, BOOT_MIN_MS - elapsed))
+			},
+			/** 先淡出再卸载：leaving 只负责透明度，元素等过渡结束再交给 v-if 移除 */
+			releaseBoot() {
+				if (!this.booting || this.bootLeaving) return
+				this.bootLeaving = true
+				setTimeout(() => {
+					this.booting = false
+				}, BOOT_FADE_MS)
+			},
 			/**
 			 * 对齐模块权限与当前 Tab。
 			 * @param {boolean} remote 是否向服务端拉一次

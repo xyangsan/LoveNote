@@ -209,7 +209,7 @@
 		></love-editor-picker>
 		<fui-actionsheet
 			:show="coverActionSheet.show"
-			:item-list="coverActionSheet.items"
+			:item-list="coverActionItems"
 			@cancel="closeCoverActionSheet"
 			@click="handleCoverActionSheetClick"
 		></fui-actionsheet>
@@ -253,6 +253,9 @@ const FEED_REFRESH_KEY = 'feed'
 // 用 adSeed 做伪随机，保证同一次加载内插入位置稳定（点赞/评论更新列表时广告不跳动）
 const AD_SEED_MAX = 2147483647
 const AD_MIN_THRESHOLD = 10
+
+// 破坏性操作（删除封面）固定用红：主题强调色在青野/樱粉下会变成绿/粉，看不出「危险」
+const DANGER_TEXT_COLOR = '#D93A34'
 
 function buildAdPositions(total = 0, seed = 0) {
 	if (total <= 0) {
@@ -357,11 +360,7 @@ export default {
 				momentsCoverFileId: ''
 			},
 			coverActionSheet: {
-				show: false,
-				items: [
-					{ text: '拍照' },
-					{ text: '从相册中选择' }
-				]
+				show: false
 			},
 			coverCropperVisible: false,
 			coverCropperSrc: '',
@@ -409,6 +408,28 @@ export default {
 			const mediaCover = firstPost ? resolvePostCover(firstPost) : ''
 			// 第一条带媒体的动态作封面，没有则用当前主题的兜底图
 			return mediaCover || getThemeArt('feed')
+		},
+		hasCustomCover() {
+			// url 与 fileId 任一存在都算「设置过封面」：老数据可能只有 fileId
+			return Boolean(
+				String(this.headerProfile.momentsCoverUrl || '').trim()
+				|| String(this.headerProfile.momentsCoverFileId || '').trim()
+			)
+		},
+		coverActionItems() {
+			const items = [
+				{ text: '拍照' },
+				{ text: '从相册中选择' }
+			]
+			// 只有设置过封面才给「删除」，否则点了也没东西可删
+			if (this.hasCustomCover) {
+				items.push({
+					text: '删除封面',
+					color: DANGER_TEXT_COLOR,
+					darkColor: DANGER_TEXT_COLOR
+				})
+			}
+			return items
 		},
 		commentPlaceholder() {
 			const nickname = String(this.commentReplyNickname || '').trim()
@@ -557,10 +578,17 @@ export default {
 		async handleCoverActionSheetClick(action = {}) {
 			const actionIndex = Number(action.index)
 			this.closeCoverActionSheet()
-			if (![0, 1].includes(actionIndex)) {
+			if (actionIndex === 0) {
+				await this.chooseCoverImage('camera')
 				return
 			}
-			await this.chooseCoverImage(actionIndex === 0 ? 'camera' : 'album')
+			if (actionIndex === 1) {
+				await this.chooseCoverImage('album')
+				return
+			}
+			if (actionIndex === 2 && this.hasCustomCover) {
+				await this.deleteCoverImage()
+			}
 		},
 		async chooseCoverImage(sourceType = 'album') {
 			try {
@@ -673,6 +701,73 @@ export default {
 				console.error('saveCoverImage failed', error)
 				uni.showToast({
 					title: error.message || '更新封面失败',
+					icon: 'none'
+				})
+			} finally {
+				this.coverUploading = false
+				uni.hideLoading()
+			}
+		},
+		/**
+		 * 删除自定义封面。
+		 *
+		 * 后端 updateProfile 收到「两个字段都是空串」时会把 moments_cover_url /
+		 * moments_cover_file_id 一起 remove（见 lib/profile.js），客户端不需要自己拼 null。
+		 * 删完 coverImage 会自动回落到「第一条带媒体的日常」或主题兜底图。
+		 */
+		async deleteCoverImage() {
+			if (this.coverUploading) {
+				return
+			}
+
+			const confirmed = await new Promise((resolve) => {
+				uni.showModal({
+					title: '删除封面',
+					content: '删除后将恢复为主题默认封面，确定删除吗？',
+					confirmText: '删除',
+					confirmColor: DANGER_TEXT_COLOR,
+					cancelText: '取消',
+					success: (res) => resolve(Boolean(res && res.confirm)),
+					fail: () => resolve(false)
+				})
+			})
+			if (!confirmed) {
+				return
+			}
+
+			this.coverUploading = true
+			uni.showLoading({
+				title: '删除中...',
+				mask: true
+			})
+			try {
+				const result = await getUserApi().updateProfile({
+					momentsCoverUrl: '',
+					momentsCoverFileId: ''
+				})
+				if (result && result.errCode && result.errCode !== 0) {
+					throw new Error(result.errMsg || '删除封面失败')
+				}
+
+				const latestUserInfo = result && result.userInfo ? result.userInfo : null
+				if (latestUserInfo) {
+					this.ensureStore().updateUserInfo(latestUserInfo)
+					this.syncHeaderProfile()
+				} else {
+					this.headerProfile = Object.assign({}, this.headerProfile, {
+						momentsCoverUrl: '',
+						momentsCoverFileId: ''
+					})
+				}
+
+				uni.showToast({
+					title: '封面已删除',
+					icon: 'success'
+				})
+			} catch (error) {
+				console.error('deleteCoverImage failed', error)
+				uni.showToast({
+					title: error.message || '删除封面失败',
 					icon: 'none'
 				})
 			} finally {
