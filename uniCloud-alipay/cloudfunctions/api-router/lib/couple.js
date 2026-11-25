@@ -26,6 +26,44 @@ const {
 	buildCreatorVisibilityCondition
 } = require('./content-scope')
 
+/**
+ * 单次请求内的情侣关系缓存。
+ *
+ * 首页聚合接口（home/getDashboard）一次调用里要跑 7 个 service，而每个 service 都会
+ * 自己 `getActiveCoupleByUid(uid)` 查一遍同一条记录。用 AsyncLocalStorage 把这一层的
+ * 结果在「同一次云函数调用」内共享，调用方不需要改签名；两个请求并发也不会串数据。
+ *
+ * 运行时不提供 async_hooks 时自动退化为不缓存（行为与改造前一致）。
+ */
+let coupleScope = null
+try {
+	const { AsyncLocalStorage } = require('async_hooks')
+	if (typeof AsyncLocalStorage === 'function') {
+		coupleScope = new AsyncLocalStorage()
+	}
+} catch (error) {
+	coupleScope = null
+}
+
+/** 在「情侣关系可复用」的作用域里执行任务；不支持 async_hooks 时直接执行 */
+function runWithCoupleCache(task) {
+	if (!coupleScope || typeof task !== 'function') {
+		return task()
+	}
+	return coupleScope.run(new Map(), task)
+}
+
+function readCoupleScope() {
+	if (!coupleScope) {
+		return null
+	}
+	try {
+		return coupleScope.getStore() || null
+	} catch (error) {
+		return null
+	}
+}
+
 function getCoupleStatusText(status) {
 	return COUPLE_STATUS_TEXT[Number(status)] || '未知状态'
 }
@@ -144,8 +182,14 @@ async function getActiveCoupleByUid(uid) {
 		return null
 	}
 
+	const scope = readCoupleScope()
+	if (scope && scope.has(uid)) {
+		return scope.get(uid)
+	}
+
+	let activeCouple = null
 	try {
-		return await getSingleCoupleByCondition(
+		activeCouple = await getSingleCoupleByCondition(
 			dbCmd.and([
 				buildCoupleParticipantCondition(uid),
 				{ status: COUPLE_STATUS_BOUND }
@@ -156,8 +200,14 @@ async function getActiveCoupleByUid(uid) {
 		)
 	} catch (error) {
 		console.warn('api-router getActiveCoupleByUid failed', error)
-		return null
+		activeCouple = null
 	}
+
+	if (scope) {
+		scope.set(uid, activeCouple)
+	}
+
+	return activeCouple
 }
 
 async function getIncomingPendingCouples(uid) {
@@ -814,6 +864,7 @@ module.exports = {
 	getRequesterUid,
 	getCoupleById,
 	getActiveCoupleByUid,
+	runWithCoupleCache,
 	getOutgoingPendingCouples,
 	getExistingPendingRelationBetween,
 	getCoupleParticipantUids,

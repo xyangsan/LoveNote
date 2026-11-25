@@ -261,7 +261,9 @@
 				keyboardHeight: 0,
 				emojiList: Array.isArray(glyph) ? glyph : [],
 				coverUploading: false,
-				navBarHeight: getNavBarHeight(getNavBarMetrics())
+				navBarHeight: getNavBarHeight(getNavBarMetrics()),
+				// refresh 的复用句柄，防 mounted 与父页 onShow 同时刷新
+				refreshTask: null
 			}
 		},
 		computed: {
@@ -346,6 +348,17 @@
 				}
 			},
 			async refresh({ force = true } = {}) {
+				// mounted 与父页 onShow 会各调一次，复用同一个任务避免重复请求
+				if (this.refreshTask) return this.refreshTask
+				const task = this.runRefresh({ force }).catch((error) => {
+					console.warn('tab-feed refresh failed', error)
+				}).finally(() => {
+					if (this.refreshTask === task) this.refreshTask = null
+				})
+				this.refreshTask = task
+				return task
+			},
+			async runRefresh({ force = true } = {}) {
 				const store = this.ensureStore()
 				this.syncHeaderProfile()
 				if (!this.isLoggedIn) {

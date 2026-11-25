@@ -160,7 +160,9 @@
 				featureStats: {},
 				pointsLoaded: false,
 				pointsSummary: { balance: 0, todayEarned: 0, isBound: false },
-				appVersion: APP_VERSION_TEXT
+				appVersion: APP_VERSION_TEXT,
+				// refresh 的复用句柄，防 mounted 与父页 onShow 同时刷新
+				refreshTask: null
 			}
 		},
 		computed: {
@@ -223,6 +225,17 @@
 				return this.isLoggedIn
 			},
 			async refresh({ force = true } = {}) {
+				// mounted 与父页 onShow 会各调一次，复用同一个任务避免重复请求
+				if (this.refreshTask) return this.refreshTask
+				const task = this.runRefresh({ force }).catch((error) => {
+					console.warn('tab-profile refresh failed', error)
+				}).finally(() => {
+					if (this.refreshTask === task) this.refreshTask = null
+				})
+				this.refreshTask = task
+				return task
+			},
+			async runRefresh({ force = true } = {}) {
 				const store = this.ensureStore()
 				// 先按此刻的 token 定登录态，再看 store 里有没有用户：
 				// 登录成功但 store 还没拉到 userInfo 时，用本地缓存的昵称/头像先把界面点亮，

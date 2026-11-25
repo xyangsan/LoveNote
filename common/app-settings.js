@@ -108,18 +108,59 @@ function writeAppSettingsCache(patch = {}) {
 /**
  * 拉服务端配置并写缓存。失败时返回缓存值、不抛错 —— 调用方是 App 启动流程，
  * 配置读不到不该影响启动。
+ *
+ * 去重策略（冷启动时 App.onLaunch 与首页 onLoad 会各要一次）：
+ *   - 有请求在飞 → 直接复用同一个 Promise，不再发第二次；
+ *   - 默认 5s 内复用上次结果（`loadedAt`），避免各页面挂载时各拉一遍；
+ *   - 需要「一定要最新」时传 `{ force: true }`：只跳过 TTL，仍然复用飞行中的请求。
  */
-async function loadAppSettings() {
+const LOAD_TTL = 5 * 1000
+
+let pendingLoad = null
+let loadedAt = 0
+
+async function fetchAppSettings() {
 	try {
 		const result = await getPlatformApi().getModuleVisibility()
 		if (!result || (result.errCode && result.errCode !== 0)) {
-			return readAppSettingsCache()
+			return { ok: false, settings: readAppSettingsCache() }
 		}
-		return writeAppSettingsCache(result.data || {})
+		return { ok: true, settings: writeAppSettingsCache(result.data || {}) }
 	} catch (error) {
 		console.warn('loadAppSettings failed', error)
-		return readAppSettingsCache()
+		return { ok: false, settings: readAppSettingsCache() }
 	}
+}
+
+function loadAppSettings(options = {}) {
+	const force = Boolean(options && options.force)
+	if (pendingLoad) {
+		return pendingLoad
+	}
+	if (!force && loadedAt && Date.now() - loadedAt < LOAD_TTL) {
+		return Promise.resolve(readAppSettingsCache())
+	}
+
+	const settle = (outcome) => {
+		if (pendingLoad === task) {
+			pendingLoad = null
+			// 失败不记时间戳：首页 onLoad 紧接着还会要一次，得让它能立刻重试
+			loadedAt = outcome.ok ? Date.now() : 0
+		}
+		return outcome.settings
+	}
+	const task = fetchAppSettings().then(settle, (error) => {
+		console.warn('loadAppSettings failed', error)
+		return settle({ ok: false, settings: readAppSettingsCache() })
+	})
+	pendingLoad = task
+	return task
+}
+
+/** 只给回归脚本 / 调试用：把节流状态清干净 */
+function resetAppSettingsLoadState() {
+	pendingLoad = null
+	loadedAt = 0
 }
 
 /** 心动点任务开关：没配置过按开启处理；依赖的页面关掉了，任务也不展示 */
@@ -143,5 +184,6 @@ export {
 	readAppSettingsCache,
 	writeAppSettingsCache,
 	loadAppSettings,
+	resetAppSettingsLoadState,
 	isPointsTaskEnabled
 }

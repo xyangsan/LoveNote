@@ -65,6 +65,10 @@
 	import TabProfile from './tabbar/tab-profile.vue'
 
 	const INTERSTITIAL_AD_SHOW_RATE = 1 / 3
+	// 登录事件刷新后，navigateAfterLogin 会延迟 300ms 再回跳、随后 onShow 又刷一次。
+	// 用 600ms 聚合窗口（300ms 延时 + 跳转耗时留余量）把这两次并成一次请求；
+	// 只对首页生效，其它 tab 的 refresh 会忽略这个参数。
+	const AUTH_REFRESH_COALESCE_MS = 600
 
 	export default {
 		components: {
@@ -108,7 +112,8 @@
 				this.activateTab(key, { refresh })
 			})
 			this.unsubAuth = subscribeAuthChanged(() => {
-				this.refreshActiveTab(true)
+				// 登录 / 登出后紧跟着 onShow 还会刷一次，聚合窗口把两次并成一次
+				this.refreshActiveTab(true, { coalesce: AUTH_REFRESH_COALESCE_MS })
 			})
 
 			tryShowInterstitialAd(INTERSTITIAL_AD_SHOW_RATE)
@@ -151,7 +156,7 @@
 		async onPullDownRefresh() {
 			try {
 				// 先对齐权限（可能把已关闭的 Tab 切回首页），再刷「最终」当前 Tab
-				await this.syncPermissions(true)
+				await this.syncPermissions(true, { force: true })
 				await this.refreshActiveTab(true)
 			} finally {
 				uni.stopPullDownRefresh()
@@ -165,13 +170,16 @@
 		methods: {
 			/**
 			 * 对齐模块权限与当前 Tab。
-			 * @param {boolean} remote 是否强制向服务端拉一次最新配置
+			 * @param {boolean} remote 是否向服务端拉一次
+			 * @param {object} options force=true 时绕过节流（下拉刷新 / 点当前 tab 这类用户主动行为）
 			 * @returns {Promise<boolean>} 当前 Tab 因被关闭而强制切回首页时返回 true
 			 */
-			async syncPermissions(remote = false) {
+			async syncPermissions(remote = false, options = {}) {
 				this.appSettings = readAppSettingsCache()
 				if (remote) {
-					const latest = await loadAppSettings()
+					// 首次对齐不 force：App.onLaunch 刚拉过的那次会被 TTL / 飞行中复用，
+					// 只有用户主动刷新才绕过节流，避免冷启动发两次 getModuleVisibility
+					const latest = await loadAppSettings({ force: options.force === true })
 					if (latest) this.appSettings = latest
 				}
 				const visibleKeys = getVisibleTabItems(this.appSettings).map((t) => t.key)
@@ -209,10 +217,10 @@
 			},
 			async handleRefreshActiveTab() {
 				// 点 tabbar 当前项：权限可能刚被运营端改过，先对齐再刷同一个 Tab
-				await this.syncPermissions(true)
+				await this.syncPermissions(true, { force: true })
 				await this.refreshActiveTab(true)
 			},
-			async refreshActiveTab(force = true) {
+			async refreshActiveTab(force = true, options = {}) {
 				const refMap = {
 					home: this.$refs.tabHome,
 					feed: this.$refs.tabFeed,
@@ -221,7 +229,7 @@
 				}
 				const comp = refMap[this.activeTab]
 				if (comp && typeof comp.refresh === 'function') {
-					await comp.refresh({ force })
+					await comp.refresh(Object.assign({ force }, options))
 				}
 			}
 		}

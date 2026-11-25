@@ -127,7 +127,7 @@
 			async syncPermissions(remote = false) {
 				this.localSettings = readAppSettingsCache()
 				if (remote) {
-					const latest = await loadAppSettings()
+					const latest = await loadAppSettings({ force: true })
 					if (latest) {
 						this.localSettings = latest
 					}

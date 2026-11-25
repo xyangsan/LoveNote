@@ -170,7 +170,9 @@
 				activeRoom: null,
 				records: [],
 				rulesVisible: false,
-				rulesGameType: ''
+				rulesGameType: '',
+				// refresh 的复用句柄，防 mounted 与父页 onShow 同时刷新
+				refreshTask: null
 			}
 		},
 		computed: {
@@ -205,6 +207,17 @@
 				return this.appStateStore
 			},
 			async refresh({ force = false } = {}) {
+				// mounted 与父页 onShow 会各调一次，复用同一个任务避免重复请求
+				if (this.refreshTask) return this.refreshTask
+				const task = this.runRefresh({ force }).catch((error) => {
+					console.warn('tab-game refresh failed', error)
+				}).finally(() => {
+					if (this.refreshTask === task) this.refreshTask = null
+				})
+				this.refreshTask = task
+				return task
+			},
+			async runRefresh({ force = false } = {}) {
 				const store = this.ensureStore()
 				const userInfo = store.userInfo || null
 				this.isLoggedIn = Boolean(userInfo && userInfo._id) || hasValidLogin()

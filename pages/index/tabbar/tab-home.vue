@@ -414,15 +414,18 @@
 	import { DEFAULT_AVATAR, getCachedUserProfile, hasValidLogin } from '@/common/auth-center.js'
 	import { getAnniversaryApi } from '@/common/api/anniversary.js'
 	import { getDailyApi } from '@/common/api/daily.js'
+	import { getHomeApi } from '@/common/api/home.js'
 	import { getPhotoApi } from '@/common/api/photo.js'
 	import { getPlanApi } from '@/common/api/plan.js'
 	import { getPointsApi } from '@/common/api/points.js'
+	import { clearUniIdTokenStorage, isAuthErrorResult } from '@/common/api/router.js'
 	import { readAppSettingsCache } from '@/common/app-settings.js'
 	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
 	import { getThemeArt } from '@/common/theme.js'
 	import { getNavBarHeight, getNavBarMetrics } from '@/common/utils/nav-bar.js'
 	import { getPhotoGridSession } from '@/common/utils/photo-grid-selector.js'
 	import { useAppStateStore } from '@/store/app-state.js'
+	import { buildOverviewStats } from '@/store/modules/overview.js'
 	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
 	import LovePhotoGrid from '@/components/love-photo-grid/love-photo-grid.vue'
 
@@ -538,6 +541,11 @@
 				latestMoment: null,
 				plans: [],
 				activeGameRoom: null,
+				// refresh 的复用句柄（Promise 不会被 Vue 代理，比对引用是安全的）
+				refreshTask: null,
+				lastRefreshAt: 0,
+				// 登录事件发起的刷新，在窗口期内吸收紧随其后的 onShow 刷新
+				coalesceUntil: 0,
 				allGames: getGameCardList(),
 				navBarHeight: getNavBarHeight(getNavBarMetrics())
 			}
@@ -746,7 +754,36 @@
 				this.isLoggedIn = hasValidLogin()
 				return this.isLoggedIn
 			},
-			async refresh({ force = false } = {}) {
+			/**
+			 * @param {boolean} force 绕过 1s 冷却
+			 * @param {number} coalesce 聚合窗口（ms）：本次刷新之后的这段时间内，再来的刷新直接吸收
+			 *   登录事件会立刻刷一次、紧接着 onShow 又刷一次，用 600ms 窗口把两次并成一次
+			 */
+			async refresh({ force = false, coalesce = 0 } = {}) {
+				// mounted 与父页 onShow 会几乎同时各调一次 refresh，
+				// 这里复用同一个任务，避免 5 个卡片请求打两遍（这是首屏重复请求的主要来源）
+				if (this.refreshTask) return this.refreshTask
+				// 聚合窗口内：上一次刷新已经把数据取回来了，这次不再发请求
+				if (this.coalesceUntil && Date.now() < this.coalesceUntil) return
+				// 兜底：父页 onShow 刚刷完、mounted 才补跑（force=false）时不要再拉一轮
+				if (!force && this.lastRefreshAt && Date.now() - this.lastRefreshAt < 1000) return
+				if (coalesce > 0) {
+					this.coalesceUntil = Date.now() + coalesce
+				}
+				const task = this.runRefresh({ force }).catch((error) => {
+					// 刷新失败就别继续吸收后续请求，让 onShow 那一次正常重试
+					this.coalesceUntil = 0
+					console.warn('tab-home refresh failed', error)
+				}).finally(() => {
+					if (this.refreshTask === task) {
+						this.refreshTask = null
+						this.lastRefreshAt = Date.now()
+					}
+				})
+				this.refreshTask = task
+				return task
+			},
+			async runRefresh({ force = false } = {}) {
 				const store = this.ensureStore()
 				// 先按此刻的 token 定登录态，再用 store / 本地缓存的资料点亮界面
 				const loggedIn = this.syncLoginState()
@@ -759,166 +796,271 @@
 					this.coupleCenter = null
 					return
 				}
+
+				let dashboard = null
 				try {
-					await Promise.all([
-						store.fetchUserInfo({ force }).catch(() => {}),
-						store.fetchCoupleCenter({ force }).catch(() => {}),
-						store.fetchOverviewStats({ force }).catch(() => {})
-					])
-					this.userInfo = store.userInfo || getCachedUserProfile() || null
-					this.coupleCenter = store.coupleCenterData || null
-					const s = store.profileFeatureStats || {}
-					this.stats = {
-						anniversaryTotal: s.anniversaryTotal ?? null,
-						dailyTotal: s.dailyTotal ?? null,
-						albumTotal: s.albumTotal ?? null,
-						wishTotal: s.wishTotal ?? null
+					// 一次调用取回整页数据（home/getDashboard），原来这里是 8 个并发请求
+					const result = await getHomeApi().getDashboard({
+						feed: this.feedVisible,
+						game: this.gameVisible
+					})
+					if (isAuthErrorResult(result)) {
+						// token 过期：清干净登录态，下次进页面走登录流程
+						clearUniIdTokenStorage()
+						store.clearAllState()
+						this.syncLoginState()
+						this.userInfo = null
+						this.coupleCenter = null
+						return
+					}
+					if (result && (!result.errCode || result.errCode === 0)) {
+						dashboard = result.data || {}
 					}
 				} catch (error) {
-					console.warn('tab-home store refresh failed', error)
+					// 云函数还没部署 / 网络异常：整页退回分块请求，保证首页不白屏
+					console.warn('home/getDashboard failed, fallback to blocks', error)
 				}
 
-				this.loadSummaryCards(force)
+				if (!dashboard) {
+					await this.loadLegacyBlocks(null, force)
+					return
+				}
+
+				this.applyDashboard(dashboard)
+				// 聚合接口里个别块失败（服务内部超时等）→ 只补这几块
+				const missing = Array.isArray(dashboard.partial) ? dashboard.partial : []
+				if (missing.length) {
+					await this.loadLegacyBlocks(missing, force)
+				}
 			},
-			loadPointsSummary() {
-				return getPointsApi().getSummary().then((res) => {
-					if (res && res.data) {
-						const d = res.data
-						this.pointsSummary = {
-							isBound: Boolean(d.isBound),
-							balance: Number(d.balance || 0),
-							todayEarned: Number(d.todayEarned || 0),
-							dailyLimitPoints: Number(d.dailyLimitPoints || 180),
-							taskCount: Number(d.taskCount || 0),
-							totalTaskCount: Number(d.totalTaskCount || 6),
-							nextTierGap: Number(d.nextTierGap || 0),
-							nextTierPoints: Number(d.nextTierPoints || 0),
-							dailyBonusClaimed: Boolean(d.dailyBonusClaimed),
-							signStreak: Number(d.signStreak || 0),
-							signCycleDay: Number(d.signCycleDay || 1),
-							signPoints: Number(d.signPoints || d.dailyBonusPoints || 10),
-							signTiers: Array.isArray(d.signTiers) ? d.signTiers : []
-						}
-						this.pointsLoaded = true
-					}
-				}).catch(() => {})
-			},
-			async loadSummaryCards(force = false) {
+			/**
+			 * 聚合面板写回：口径与单接口完全一致，其它 tab 继续读 store 里的同一份数据。
+			 * 缺块（null）一律跳过，不要把已有数据冲掉。
+			 */
+			applyDashboard(dashboard = {}) {
 				const store = this.ensureStore()
+				if (dashboard.userInfo) {
+					store.updateUserInfo(dashboard.userInfo)
+					this.userInfo = store.userInfo || this.userInfo
+				}
+				if (dashboard.couple) {
+					store.updateCoupleCenterData(dashboard.couple)
+					this.coupleCenter = store.coupleCenterData
+				}
+				if (dashboard.overview) {
+					store.updateOverviewStats(buildOverviewStats({ data: dashboard.overview }))
+					this.applyStatsFromStore()
+				}
+				if (dashboard.points) {
+					this.applyPointsSummary(dashboard.points)
+				}
+				if (dashboard.anniversary) {
+					this.applyAnniversaries(dashboard.anniversary)
+				}
+				if (dashboard.photo) {
+					this.applyPhotos(dashboard.photo)
+				}
+				if (dashboard.daily && this.feedVisible) {
+					this.applyLatestMoment(dashboard.daily)
+				}
+				if (dashboard.plan) {
+					this.applyPlans(dashboard.plan)
+				}
+				if (this.gameVisible) {
+					store.updateGameActiveRoom(dashboard.room || null)
+					this.activeGameRoom = store.gameActiveRoom || null
+				}
+			},
+			/**
+			 * 分块拉取：聚合接口不可用时整页回退，个别块失败时只补这几块。
+			 * @param {string[]|null} names 需要补的块；传 null 表示整页重拉
+			 */
+			async loadLegacyBlocks(names = null, force = false) {
+				const want = (name) => !names || names.indexOf(name) >= 0
+				const store = this.ensureStore()
+				const tasks = []
 
-				// 1. 心动点 + 签到 + 每日任务进度
-				this.loadPointsSummary()
-
-				// 2. 最近纪念日（取前 2 条：主卡 + 下一程）
-				getAnniversaryApi().getList({ page: 1, pageSize: 5 }).then((res) => {
-					const list = (res && res.data && Array.isArray(res.data.list)) ? res.data.list : []
-					this.nextAnniversary = list.length ? normalizeAnniversaryItem(list[0]) : null
-					this.secondAnniversary = list.length > 1 ? normalizeAnniversaryItem(list[1]) : null
-				}).catch(() => {})
-
-				// 3. 时光胶片 · 最近 10 张照片（宫格最多放 7 块，照片超量时末块变「+N 全部」，其余只统计数量）
-				getPhotoApi().getList({ page: 1, pageSize: 10 }).then((res) => {
-					const list = (res && res.data && Array.isArray(res.data.list)) ? res.data.list : []
-					const total = Number(res && res.data && res.data.pagination && res.data.pagination.total)
-					this.photoTotal = Number.isFinite(total) && total > 0 ? total : list.length
-					this.recentPhotos = list
-						.map((item) => {
-							const loc = item.location && item.location.name ? String(item.location.name).trim() : ''
-							const tags = Array.isArray(item.tags)
-								? item.tags.map((t) => String(t || '').trim()).filter(Boolean).slice(0, 2)
-								: []
-							return {
-								id: item._id,
-								thumb: String(item.thumbnail_url || item.url || '').trim(),
-								url: String(item.url || item.thumbnail_url || '').trim(),
-								title: String(item.description || '').trim() || '双人时光',
-								date: formatShortDate(item.shoot_time || item.create_time),
-								location: loc.length > 8 ? `${loc.slice(0, 8)}…` : loc,
-								tags,
-								likeCount: Number(item.like_count || 0),
-								isVideo: String(item.media_type || '').toLowerCase() === 'video'
-							}
-						})
-						.filter((item) => Boolean(item.thumb))
-						.slice(0, 8)
-				}).catch(() => {})
-
-				// 4. 最新双人日常
-				if (this.feedVisible) {
-					getDailyApi().getList({ page: 1, pageSize: 1 }).then((res) => {
-						const list = (res && res.data && Array.isArray(res.data.list)) ? res.data.list : []
-						if (!list.length) {
-							this.latestMoment = null
-							return
-						}
-						const p = list[0]
-						const author = (p.author_snapshot && p.author_snapshot.nickname) || '恋人'
-						const avatar = (p.author_snapshot && p.author_snapshot.avatar_url) || ''
-						const media = Array.isArray(p.media_list) && p.media_list[0] ? p.media_list[0] : null
-						const loc = p.location && p.location.name ? String(p.location.name).trim() : ''
-						this.latestMoment = {
-							author,
-							avatar,
-							authorShort: author.slice(0, 1),
-							time: formatTimeShort(p.create_time),
-							content: String(p.content || '分享了一条新动态').trim(),
-							cover: media ? (media.thumbnail_url || media.url || '') : '',
-							likeCount: Number(p.like_count || 0),
-							commentCount: Array.isArray(p.comment_list) ? p.comment_list.length : Number(p.comment_count || 0),
-							location: loc
-						}
-					}).catch(() => {})
+				if (want('user') || want('couple') || want('overview')) {
+					const storeTasks = []
+					if (want('user')) storeTasks.push(store.fetchUserInfo({ force }).catch(() => {}))
+					if (want('couple')) storeTasks.push(store.fetchCoupleCenter({ force }).catch(() => {}))
+					if (want('overview')) storeTasks.push(store.fetchOverviewStats({ force }).catch(() => {}))
+					tasks.push(Promise.all(storeTasks).then(() => {
+						this.userInfo = store.userInfo || getCachedUserProfile() || null
+						this.coupleCenter = store.coupleCenterData || null
+						this.applyStatsFromStore()
+					}))
 				}
 
-				// 5. 愿望与计划（含步骤进度）
-				getPlanApi().getList({ page: 1, pageSize: 3 }).then((res) => {
-					const list = (res && res.data && Array.isArray(res.data.list)) ? res.data.list : []
-					this.plans = list.slice(0, 3).map((item) => {
-						const steps = Array.isArray(item.steps) ? item.steps : (Array.isArray(item.step_list) ? item.step_list : [])
-						const totalSteps = Number(item.total_steps || item.step_count || steps.length || 0)
-						const doneSteps = Number(
-							item.completed_steps ??
-							item.done_step_count ??
-							steps.filter((s) => s && (s.status === 'completed' || s.done)).length
-						)
-						const isPlan = item.type === 'plan' || totalSteps > 0
-						const isDone = item.status === 'completed'
-						const percent = totalSteps > 0 ? Math.min(100, Math.round((doneSteps / totalSteps) * 100)) : 0
-						let statusText = '心愿'
-						let tagVariant = 'coral'
-						if (isDone) {
-							statusText = '已完成'
-							tagVariant = 'green'
-						} else if (item.status === 'skipped') {
-							statusText = '已跳过'
-							tagVariant = 'muted'
-						} else if (isPlan && totalSteps > 0) {
-							statusText = `计划 ${doneSteps}/${totalSteps}`
-							tagVariant = 'gold'
-						} else if (isPlan) {
-							statusText = '进行中'
-							tagVariant = 'gold'
-						}
+				if (want('points')) tasks.push(this.loadPointsBlock())
+				if (want('anniversary')) tasks.push(this.loadAnniversaryBlock())
+				if (want('photo')) tasks.push(this.loadPhotoBlock())
+				if (want('daily') && this.feedVisible) tasks.push(this.loadDailyBlock())
+				if (want('plan')) tasks.push(this.loadPlanBlock())
+				if (want('game') && this.gameVisible) tasks.push(this.loadGameBlock(force))
+
+				await Promise.all(tasks)
+			},
+			applyStatsFromStore() {
+				const s = this.ensureStore().profileFeatureStats || {}
+				this.stats = {
+					anniversaryTotal: s.anniversaryTotal ?? null,
+					dailyTotal: s.dailyTotal ?? null,
+					albumTotal: s.albumTotal ?? null,
+					wishTotal: s.wishTotal ?? null
+				}
+			},
+			/** 心动点面板：d 是 points/getSummary 的 data，两条取数路径共用 */
+			applyPointsSummary(d = null) {
+				if (!d) return
+				this.pointsSummary = {
+					isBound: Boolean(d.isBound),
+					balance: Number(d.balance || 0),
+					todayEarned: Number(d.todayEarned || 0),
+					dailyLimitPoints: Number(d.dailyLimitPoints || 180),
+					taskCount: Number(d.taskCount || 0),
+					totalTaskCount: Number(d.totalTaskCount || 6),
+					nextTierGap: Number(d.nextTierGap || 0),
+					nextTierPoints: Number(d.nextTierPoints || 0),
+					dailyBonusClaimed: Boolean(d.dailyBonusClaimed),
+					signStreak: Number(d.signStreak || 0),
+					signCycleDay: Number(d.signCycleDay || 1),
+					signPoints: Number(d.signPoints || d.dailyBonusPoints || 10),
+					signTiers: Array.isArray(d.signTiers) ? d.signTiers : []
+				}
+				this.pointsLoaded = true
+			},
+			loadPointsBlock() {
+				return getPointsApi().getSummary().then((res) => {
+					if (res && res.data) this.applyPointsSummary(res.data)
+				}).catch(() => {})
+			},
+			// ===== 分块取数（聚合接口不可用 / 个别块失败时的回退路径） =====
+			loadAnniversaryBlock() {
+				return getAnniversaryApi().getList({ page: 1, pageSize: 2 }).then((res) => {
+					this.applyAnniversaries(res && res.data)
+				}).catch(() => {})
+			},
+			loadPhotoBlock() {
+				return getPhotoApi().getList({ page: 1, pageSize: 8 }).then((res) => {
+					this.applyPhotos(res && res.data)
+				}).catch(() => {})
+			},
+			loadDailyBlock() {
+				return getDailyApi().getList({ page: 1, pageSize: 1 }).then((res) => {
+					this.applyLatestMoment(res && res.data)
+				}).catch(() => {})
+			},
+			loadPlanBlock() {
+				return getPlanApi().getList({ page: 1, pageSize: 3 }).then((res) => {
+					this.applyPlans(res && res.data)
+				}).catch(() => {})
+			},
+			loadGameBlock(force = false) {
+				const store = this.ensureStore()
+				return store.fetchGameActiveRoom({ force }).then(() => {
+					this.activeGameRoom = store.gameActiveRoom || null
+				}).catch(() => {
+					this.activeGameRoom = null
+				})
+			},
+
+			// ===== 卡片写回：聚合面板与分块请求共用同一套格式化 =====
+			/** 纪念日：只展示前 2 条（主卡 + 下一程），所以只取 2 条 */
+			applyAnniversaries(data = null) {
+				const list = data && Array.isArray(data.list) ? data.list : []
+				this.nextAnniversary = list.length ? normalizeAnniversaryItem(list[0]) : null
+				this.secondAnniversary = list.length > 1 ? normalizeAnniversaryItem(list[1]) : null
+			},
+			/** 时光胶片：宫格最多放 7 块，照片超量时末块变「+N 全部」，其余只统计数量 */
+			applyPhotos(data = null) {
+				const list = data && Array.isArray(data.list) ? data.list : []
+				const total = Number(data && data.pagination && data.pagination.total)
+				this.photoTotal = Number.isFinite(total) && total > 0 ? total : list.length
+				this.recentPhotos = list
+					.map((item) => {
+						const loc = item.location && item.location.name ? String(item.location.name).trim() : ''
+						const tags = Array.isArray(item.tags)
+							? item.tags.map((t) => String(t || '').trim()).filter(Boolean).slice(0, 2)
+							: []
 						return {
 							id: item._id,
-							title: item.title || '心愿',
-							desc: item.description || (isPlan ? '多步骤协作计划' : '愿望一键完成 · 双方各得 +10 心动点'),
-							status: statusText,
-							tagVariant,
-							hasProgress: isPlan && totalSteps > 0 && !isDone,
-							percent
+							thumb: String(item.thumbnail_url || item.url || '').trim(),
+							url: String(item.url || item.thumbnail_url || '').trim(),
+							title: String(item.description || '').trim() || '双人时光',
+							date: formatShortDate(item.shoot_time || item.create_time),
+							location: loc.length > 8 ? `${loc.slice(0, 8)}…` : loc,
+							tags,
+							likeCount: Number(item.like_count || 0),
+							isVideo: String(item.media_type || '').toLowerCase() === 'video'
 						}
 					})
-				}).catch(() => {})
-
-				// 6. 进行中的聚会游戏房间
-				if (this.gameVisible) {
-					store.fetchGameActiveRoom({ force }).then(() => {
-						this.activeGameRoom = store.gameActiveRoom || null
-					}).catch(() => {
-						this.activeGameRoom = null
-					})
+					.filter((item) => Boolean(item.thumb))
+					.slice(0, 8)
+			},
+			/** 最新双人日常 */
+			applyLatestMoment(data = null) {
+				const list = data && Array.isArray(data.list) ? data.list : []
+				if (!list.length) {
+					this.latestMoment = null
+					return
 				}
+				const p = list[0]
+				const author = (p.author_snapshot && p.author_snapshot.nickname) || '恋人'
+				const avatar = (p.author_snapshot && p.author_snapshot.avatar_url) || ''
+				const media = Array.isArray(p.media_list) && p.media_list[0] ? p.media_list[0] : null
+				const loc = p.location && p.location.name ? String(p.location.name).trim() : ''
+				this.latestMoment = {
+					author,
+					avatar,
+					authorShort: author.slice(0, 1),
+					time: formatTimeShort(p.create_time),
+					content: String(p.content || '分享了一条新动态').trim(),
+					cover: media ? (media.thumbnail_url || media.url || '') : '',
+					likeCount: Number(p.like_count || 0),
+					commentCount: Array.isArray(p.comment_list) ? p.comment_list.length : Number(p.comment_count || 0),
+					location: loc
+				}
+			},
+			/** 愿望与计划（含步骤进度） */
+			applyPlans(data = null) {
+				const list = data && Array.isArray(data.list) ? data.list : []
+				this.plans = list.slice(0, 3).map((item) => {
+					const steps = Array.isArray(item.steps) ? item.steps : (Array.isArray(item.step_list) ? item.step_list : [])
+					const totalSteps = Number(item.total_steps || item.step_count || steps.length || 0)
+					const doneSteps = Number(
+						item.completed_steps ??
+						item.done_step_count ??
+						steps.filter((s) => s && (s.status === 'completed' || s.done)).length
+					)
+					const isPlan = item.type === 'plan' || totalSteps > 0
+					const isDone = item.status === 'completed'
+					const percent = totalSteps > 0 ? Math.min(100, Math.round((doneSteps / totalSteps) * 100)) : 0
+					let statusText = '心愿'
+					let tagVariant = 'coral'
+					if (isDone) {
+						statusText = '已完成'
+						tagVariant = 'green'
+					} else if (item.status === 'skipped') {
+						statusText = '已跳过'
+						tagVariant = 'muted'
+					} else if (isPlan && totalSteps > 0) {
+						statusText = `计划 ${doneSteps}/${totalSteps}`
+						tagVariant = 'gold'
+					} else if (isPlan) {
+						statusText = '进行中'
+						tagVariant = 'gold'
+					}
+					return {
+						id: item._id,
+						title: item.title || '心愿',
+						desc: item.description || (isPlan ? '多步骤协作计划' : '愿望一键完成 · 双方各得 +10 心动点'),
+						status: statusText,
+						tagVariant,
+						hasProgress: isPlan && totalSteps > 0 && !isDone,
+						percent
+					}
+				})
 			},
 			handlePulseCta() {
 				// 签到不依赖情侣关系：未绑定也直接弹签到框
@@ -942,7 +1084,7 @@
 						icon: 'none'
 					})
 					this.signDialogVisible = false
-					await this.loadPointsSummary()
+					await this.loadPointsBlock()
 				} catch (error) {
 					uni.showToast({
 						title: error.message || '签到失败',
