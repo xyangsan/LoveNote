@@ -6,8 +6,8 @@
 					<text class="word-editor__title">卧底词库</text>
 					<fui-switch
 						@change="handleSourceToggle"
-						color="#E2643F"
-						background="#ffaa7f"
+						color="var(--noir-coral)"
+						background="var(--comp-21)"
 						:scaleRatio="0.85"
 					>
 						<text class="fui-switch--text">{{source === 'mine'?'我的':'系统'}}</text>
@@ -87,8 +87,8 @@
 						:value="form.civilianWord"
 						:size="28"
 						:radius="20"
-						background-color="#1E1814"
-						color="#FBF4EA"
+						background-color="var(--noir-sheet-hi)"
+						color="var(--noir-text-strong)"
 						:padding="['16rpx', '20rpx']"
 						@input="handleFormInput('civilianWord', $event)"
 					></fui-input>
@@ -97,8 +97,8 @@
 						:value="form.undercoverWord"
 						:size="28"
 						:radius="20"
-						background-color="#1E1814"
-						color="#FBF4EA"
+						background-color="var(--noir-sheet-hi)"
+						color="var(--noir-text-strong)"
 						:padding="['16rpx', '20rpx']"
 						@input="handleFormInput('undercoverWord', $event)"
 					></fui-input>
@@ -109,8 +109,8 @@
 						:value="form.category"
 						:size="28"
 						:radius="20"
-						background-color="#1E1814"
-						color="#FBF4EA"
+						background-color="var(--noir-sheet-hi)"
+						color="var(--noir-text-strong)"
 						:padding="['16rpx', '20rpx']"
 						@input="handleFormInput('category', $event)"
 					></fui-input>
@@ -123,8 +123,8 @@
 			<view class="word-editor__footer">
 				<fui-button
 					text="知道了"
-					background="linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%)"
-					color="#ffffff"
+					background="var(--noir-btn-gradient)"
+					color="var(--noir-white)"
 					height="84rpx"
 					radius="999rpx"
 					:size="29"
@@ -413,7 +413,7 @@
 		margin-top: 10rpx;
 		font-size: 24rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 	.fui-switch--text {
 		display: flex;
@@ -436,7 +436,7 @@
 		padding: 10rpx 22rpx;
 		margin-right: 14rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 247, 243, 0.98);
+		background: rgba(var(--comp-16-rgb), 0.98);
 		display: flex;
 		align-items: center;
 	}
@@ -476,7 +476,7 @@
 		gap: 16rpx;
 		padding: 18rpx 20rpx;
 		border-radius: 22rpx;
-		background: rgba(255, 251, 248, 0.98);
+		background: rgba(var(--comp-17-rgb), 0.98);
 	}
 
 	.word-item + .word-item {
@@ -484,8 +484,8 @@
 	}
 
 	.word-item--selected {
-		background: rgba(255, 240, 232, 0.98);
-		box-shadow: 0 0 0 2rpx rgba(231, 111, 81, 0.4);
+		background: rgba(var(--comp-15-rgb), 0.98);
+		box-shadow: 0 0 0 2rpx rgba(var(--comp-07-rgb), 0.4);
 	}
 
 	.word-item__body {
@@ -514,14 +514,14 @@
 
 	.word-item__vs {
 		font-size: 24rpx;
-		color: #cfb3a6;
+		color: var(--comp-13);
 	}
 
 	.word-item__meta {
 		display: block;
 		margin-top: 6rpx;
 		font-size: 21rpx;
-		color: #b0a09a;
+		color: var(--comp-10);
 	}
 
 	.word-item__actions {
@@ -536,11 +536,11 @@
 		width: 60rpx;
 		height: 60rpx;
 		border-radius: 18rpx;
-		background: rgba(216, 176, 140, 0.12);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 	}
 
 	.word-item__action--danger {
-		background: rgba(255, 232, 228, 0.98);
+		background: rgba(var(--comp-14-rgb), 0.98);
 	}
 
 	.word-item__action-text {
@@ -562,7 +562,7 @@
 		margin-top: 20rpx;
 		padding: 22rpx;
 		border-radius: 26rpx;
-		background: rgba(255, 247, 243, 0.98);
+		background: rgba(var(--comp-16-rgb), 0.98);
 	}
 
 	.word-form__head {
@@ -581,7 +581,7 @@
 	.word-form__cancel {
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
-		background: rgba(26, 21, 18, 0.94);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
 	}
 
 	.word-form__cancel-text {

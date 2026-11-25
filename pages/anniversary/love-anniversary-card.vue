@@ -20,8 +20,8 @@
 						v-if="repeatTypeText"
 						:text="repeatTypeText"
 						:is-border="false"
-						background="rgba(255,255,255,0.24)"
-						color="#ffffff"
+						background="rgba(var(--noir-wash-rgb), 0.24)"
+						color="var(--noir-white)"
 						radius="999"
 						:padding="['6rpx', '14rpx']"
 					></fui-tag>
@@ -45,8 +45,8 @@
 							v-if="dateTypeText"
 							:text="dateTypeText"
 							:is-border="false"
-							background="rgba(255,255,255,0.18)"
-							color="#ffffff"
+							background="rgba(var(--noir-wash-rgb), 0.18)"
+							color="var(--noir-white)"
 							radius="999"
 							:padding="['6rpx', '14rpx']"
 						></fui-tag>
@@ -155,7 +155,7 @@ export default {
 				borderRadius: this.radius
 			}
 			if (this.shadow) {
-				style.boxShadow = '0 16rpx 38rpx rgba(0, 0, 0, 0.42)'
+				style.boxShadow = '0 16rpx 38rpx rgba(var(--noir-shadow-rgb), 0.42)'
 			}
 			return style
 		}
@@ -233,7 +233,7 @@ export default {
 		flex: none;
 		padding: 2rpx 12rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 255, 255, 0.22);
+		background: rgba(var(--noir-wash-rgb), 0.22);
 		font-size: 20rpx;
 		line-height: 1.5;
 		white-space: nowrap;

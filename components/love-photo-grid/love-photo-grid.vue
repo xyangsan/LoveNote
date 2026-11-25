@@ -180,7 +180,7 @@
 		box-sizing: border-box;
 		overflow: hidden;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.09);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.09);
 		background: var(--noir-surface);
 	}
 
@@ -198,8 +198,8 @@
 
 	.lpg-cell--empty {
 		border-style: dashed;
-		border-color: rgba(216, 176, 140, 0.28);
-		background: rgba(255, 255, 255, 0.025);
+		border-color: rgba(var(--noir-gold-rgb), 0.28);
+		background: var(--noir-glass-1);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -213,8 +213,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 2rpx;
-		border-color: rgba(216, 176, 140, 0.34);
-		background: linear-gradient(145deg, rgba(216, 176, 140, 0.16), rgba(23, 18, 15, 0.96));
+		border-color: rgba(var(--noir-gold-rgb), 0.34);
+		background: linear-gradient(145deg, rgba(var(--noir-gold-rgb), 0.16), rgba(var(--comp-02-rgb), 0.96));
 	}
 
 	.lpg-img {
@@ -231,7 +231,7 @@
 		align-items: center;
 		padding: 3rpx 10rpx;
 		border-radius: 999rpx;
-		background: rgba(17, 13, 11, 0.72);
+		background: rgba(var(--noir-bg-rgb), 0.72);
 	}
 
 	.lpg-badge--sm {
@@ -257,7 +257,7 @@
 		right: 0;
 		bottom: 0;
 		padding: 44rpx 16rpx 14rpx;
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0), rgba(17, 13, 11, 0.88));
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0), rgba(var(--noir-bg-rgb), 0.88));
 	}
 
 	.lpg-cap__title {
@@ -281,7 +281,7 @@
 		flex-shrink: 0;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 17rpx;
-		color: rgba(216, 176, 140, 0.82);
+		color: rgba(var(--noir-gold-rgb), 0.82);
 	}
 
 	.lpg-cap__loc {
@@ -289,7 +289,7 @@
 		min-width: 0;
 		margin-left: 6rpx;
 		font-size: 17rpx;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -301,8 +301,8 @@
 		bottom: 8rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 16rpx;
-		color: rgba(251, 244, 234, 0.92);
-		text-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.7);
+		color: rgba(var(--noir-text-strong-rgb), 0.92);
+		text-shadow: 0 1rpx 6rpx rgba(var(--noir-shadow-rgb), 0.7);
 	}
 
 	.lpg-all__num {
@@ -314,7 +314,7 @@
 
 	.lpg-all__txt {
 		font-size: 17rpx;
-		color: rgba(216, 176, 140, 0.9);
+		color: rgba(var(--noir-gold-rgb), 0.9);
 	}
 
 	.lpg-add__plus {
@@ -325,6 +325,6 @@
 
 	.lpg-add__txt {
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 </style>

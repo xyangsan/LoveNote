@@ -1,5 +1,5 @@
 <template>
-	<view class="moments-page" @click="closeActionPanel">
+	<view class="moments-page" :class="themeClass" @click="closeActionPanel">
 		<uv-navbar
 			:bg-color="navBarBgColor"
 			:border="navBarOpaque"
@@ -49,7 +49,7 @@
 						error-src="/static/user-empty.png"
 						width="120"
 						height="120"
-						background="#f2f2f2"
+						background="var(--comp-18)"
 						radius="14"
 					></fui-avatar>
 				</view>
@@ -78,7 +78,7 @@
 							error-src="/static/user-empty.png"
 							width="84"
 							height="84"
-							background="#f3f3f3"
+							background="var(--editor-03)"
 							radius="12"
 						></fui-avatar>
 
@@ -172,7 +172,7 @@
 											error-src="/static/user-empty.png"
 											width="44"
 											height="44"
-											background="#f4f4f4"
+											background="var(--comp-19)"
 											radius="8"
 										></fui-avatar>
 
@@ -242,10 +242,10 @@ import { uploadFileWithModule } from '../../common/utils/file-upload.js'
 import { openImageViewer } from '../../common/utils/image-viewer.js'
 import { useAppStateStore } from '../../store/app-state.js'
 import { requirePageLogin } from '@/common/auth-entry.js'
+import { getThemeCoral, getThemeArt } from '@/common/theme.js'
 import { consumePageRefresh } from '@/common/utils/page-refresh.js'
 import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
-const DEFAULT_COVER_IMAGE = '/static/images/feed-cover-bg.jpg'
 // 发布页保存成功后会打这个标记，列表页在 onShow 里消费并重拉首屏
 const FEED_REFRESH_KEY = 'feed'
 
@@ -407,7 +407,8 @@ export default {
 			}
 			const firstPost = this.postList.find((item) => Array.isArray(item.media_list) && item.media_list.length)
 			const mediaCover = firstPost ? resolvePostCover(firstPost) : ''
-			return mediaCover || DEFAULT_COVER_IMAGE
+			// 第一条带媒体的动态作封面，没有则用当前主题的兜底图
+			return mediaCover || getThemeArt('feed')
 		},
 		commentPlaceholder() {
 			const nickname = String(this.commentReplyNickname || '').trim()
@@ -429,10 +430,11 @@ export default {
 			return list
 		},
 		navBarBgColor() {
-			return this.navBarOpaque ? 'rgba(17, 13, 11, 0.94)' : 'rgba(17, 13, 11, 0)'
+			return this.navBarOpaque ? 'rgba(var(--noir-bg-rgb), 0.94)' : 'rgba(var(--noir-bg-rgb), 0)'
 		},
 		navTextColor() {
-			return '#FBF4EA'
+			// 透明态压在封面上用媒体层白字；滚动变实底后回到页面文字色
+			return this.navBarOpaque ? 'var(--noir-text-strong)' : 'var(--noir-on-media)'
 		}
 	},
 	onShow() {
@@ -1199,7 +1201,7 @@ export default {
 			uni.showModal({
 				title: '删除动态',
 				content: '删除后不可恢复，确定删除这条动态吗？',
-				confirmColor: '#e76f51',
+				confirmColor: getThemeCoral(),
 				success: async (res) => {
 					if (!res.confirm) {
 						return
@@ -1254,14 +1256,14 @@ export default {
 	width: 64rpx;
 	height: 64rpx;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.34);
+	background: rgba(var(--noir-shadow-rgb), 0.34);
 	flex-shrink: 0;
 }
 
 .feed-navbar__title {
 	font-size: 32rpx;
 	font-weight: 700;
-	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.32);
+	text-shadow: 0 2rpx 8rpx rgba(var(--noir-shadow-rgb), 0.32);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1285,7 +1287,7 @@ export default {
 	height: 64rpx;
 	padding: 0 22rpx;
 	border-radius: 999rpx;
-	background: rgba(0, 0, 0, 0.34);
+	background: rgba(var(--noir-shadow-rgb), 0.34);
 }
 
 .feed-navbar__cover-text {
@@ -1297,8 +1299,8 @@ export default {
 .feed-navbar__cover-action--opaque,
 .feed-navbar__left--opaque,
 .feed-navbar__publish--opaque {
-	background: rgba(26, 21, 18, 0.88);
-	border: 1rpx solid rgba(216, 176, 140, 0.28);
+	background: rgba(var(--noir-surface2-rgb), 0.88);
+	border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
 }
 
 .moments-shell {
@@ -1324,7 +1326,7 @@ export default {
 	width: 58rpx;
 	height: 58rpx;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.28);
+	background: rgba(var(--noir-shadow-rgb), 0.28);
 }
 
 .moments-topbar__icon-text {
@@ -1356,7 +1358,7 @@ export default {
 	right: 0;
 	bottom: 0;
 	height: 200rpx;
-	background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 100%);
+	background: linear-gradient(180deg, rgba(var(--noir-shadow-rgb), 0) 0%, rgba(var(--noir-shadow-rgb), 0.28) 100%);
 }
 
 .moments-header__user {
@@ -1374,12 +1376,12 @@ export default {
 	font-size: 40rpx;
 	font-weight: 700;
 	color: var(--noir-white);
-	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.4);
+	text-shadow: 0 2rpx 8rpx rgba(var(--noir-shadow-rgb), 0.4);
 }
 
 .moments-header__avatar {
 	border-radius: 14rpx;
-	box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.22);
+	box-shadow: 0 10rpx 24rpx rgba(var(--noir-shadow-rgb), 0.22);
 	border: 4rpx solid var(--noir-white);
 }
 
@@ -1408,7 +1410,7 @@ export default {
 	margin-top: 14rpx;
 	font-size: 24rpx;
 	line-height: 1.6;
-	color: rgba(245, 237, 228, 0.48);
+	color: rgba(var(--noir-text-rgb), 0.48);
 	text-align: center;
 }
 
@@ -1422,13 +1424,13 @@ export default {
 	align-items: flex-start;
 	gap: 16rpx;
 	padding: 26rpx 24rpx 24rpx;
-	border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+	border-bottom: 1rpx solid rgba(var(--noir-white-rgb), 0.06);
 	background: transparent;
 }
 
 .ad-view {
 	padding: 0 24rpx;
-	border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+	border-bottom: 1rpx solid rgba(var(--noir-white-rgb), 0.06);
 }
 
 .moment-item__main {
@@ -1490,7 +1492,7 @@ export default {
 	margin-top: 10rpx;
 	max-width: 100%;
 	font-size: 22rpx;
-	color: #8e8e8e;
+	color: var(--page-04);
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -1512,7 +1514,7 @@ export default {
 
 .moment-item__time {
 	font-size: 22rpx;
-	color: rgba(245, 237, 228, 0.38);
+	color: rgba(var(--noir-text-rgb), 0.38);
 }
 
 .moment-item__delete {
@@ -1534,7 +1536,7 @@ export default {
 	width: 52rpx;
 	height: 36rpx;
 	border-radius: 10rpx;
-	background: rgba(255, 255, 255, 0.06);
+	background: rgba(var(--noir-white-rgb), 0.06);
 }
 
 .moment-action-trigger__dot {
@@ -1554,8 +1556,8 @@ export default {
 	height: 62rpx;
 	padding: 0 8rpx;
 	border-radius: 12rpx;
-	border: 1rpx solid rgba(216, 176, 140, 0.28);
-	background: #231B16;
+	border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+	background: var(--noir-sheet-hi);
 	white-space: nowrap;
 }
 
@@ -1569,7 +1571,7 @@ export default {
 .moment-action-panel__divider {
 	width: 1rpx;
 	height: 24rpx;
-	background: rgba(255, 255, 255, 0.18);
+	background: rgba(var(--noir-white-rgb), 0.18);
 }
 
 .moment-interactions {
@@ -1577,7 +1579,7 @@ export default {
 	margin-top: 10rpx;
 	border-radius: 14rpx;
 	background: var(--noir-surface-glass);
-	border: 1rpx solid rgba(255, 255, 255, 0.06);
+	border: 1rpx solid rgba(var(--noir-white-rgb), 0.06);
 	overflow: hidden;
 }
 
@@ -1607,7 +1609,7 @@ export default {
 }
 
 .moment-comment-list--with-like {
-	border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+	border-top: 1rpx solid rgba(var(--noir-white-rgb), 0.06);
 }
 
 .moment-comment-item {
@@ -1640,7 +1642,7 @@ export default {
 
 .moment-comment-item__time {
 	font-size: 21rpx;
-	color: rgba(245, 237, 228, 0.36);
+	color: rgba(var(--noir-text-rgb), 0.36);
 }
 
 .moment-comment-item__content {
@@ -1648,7 +1650,7 @@ export default {
 	margin-top: 4rpx;
 	font-size: 24rpx;
 	line-height: 1.58;
-	color: rgba(245, 237, 228, 0.84);
+	color: rgba(var(--noir-text-rgb), 0.84);
 	word-break: break-all;
 }
 
@@ -1659,7 +1661,7 @@ export default {
 
 .load-more__text {
 	font-size: 22rpx;
-	color: #ababab;
+	color: var(--page-09);
 }
 
 .cover-cropper__cancel {
@@ -1671,7 +1673,7 @@ export default {
 	font-size: 24rpx;
 	line-height: 1.1;
 	color: var(--noir-white);
-	background: rgba(255, 255, 255, 0.24);
+	background: rgba(var(--noir-white-rgb), 0.24);
 	z-index: 1600;
 }
 </style>

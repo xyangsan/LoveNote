@@ -53,18 +53,18 @@
 		font-size: 26rpx;
 		font-weight: 500;
 		letter-spacing: 2rpx;
-		color: rgba(245, 237, 228, 0.88);
+		color: rgba(var(--noir-text-rgb), 0.88);
 	}
 
 	.noir-sec-head__kicker {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.56);
+		color: rgba(var(--noir-gold-rgb), 0.56);
 	}
 
 	.noir-sec-head__action {
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 	}
 </style>

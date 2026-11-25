@@ -26,13 +26,19 @@
 <script>
 	import { loadAppSettings, readAppSettingsCache } from '../../common/app-settings.js'
 	import { getVisibleTabItems, navigateToTab } from '../../common/utils/tab-nav.js'
+	import { themeState, getThemeIconColors } from '../../common/theme.js'
 
 	function encodeSvg(svg) {
 		return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 	}
 
-	function buildIcon(key, active) {
-		const color = active ? '#F09A6B' : 'rgba(245,237,228,0.44)'
+	/**
+	 * ⚠️ 图标颜色必须是字面值：SVG 走 `data:image/svg+xml` 作为独立图片文档加载，
+	 * 不继承页面的 CSS 变量，`stroke="var(--x)"` 会失效导致图标不显示。
+	 * 颜色按当前主题从 theme.js 取，这里只负责拼 SVG。
+	 */
+	function buildIcon(key, active, colors) {
+		const color = active ? colors.active : colors.idle
 		const sw = active ? '1.8' : '1.5'
 		if (key === 'home') {
 			return encodeSvg(
@@ -54,11 +60,16 @@
 		)
 	}
 
-	const ICON_CACHE = {
-		home: { on: buildIcon('home', true), off: buildIcon('home', false) },
-		feed: { on: buildIcon('feed', true), off: buildIcon('feed', false) },
-		game: { on: buildIcon('game', true), off: buildIcon('game', false) },
-		profile: { on: buildIcon('profile', true), off: buildIcon('profile', false) }
+	/** 按一套颜色生成 4 个 Tab 的两态图标 */
+	function buildIconSet(colors) {
+		const set = {}
+		for (const key of ['home', 'feed', 'game', 'profile']) {
+			set[key] = {
+				on: buildIcon(key, true, colors),
+				off: buildIcon(key, false, colors)
+			}
+		}
+		return set
 	}
 
 	export default {
@@ -96,6 +107,13 @@
 			},
 			visibleTabs() {
 				return getVisibleTabItems(this.effectiveSettings)
+			},
+			/**
+			 * 图标随主题重建：依赖 themeState.key，切换主题时 computed 失效并重新生成，
+			 * 已挂载的页面也会立即换色（不需要重新进入）。
+			 */
+			iconSrcMap() {
+				return buildIconSet(getThemeIconColors(themeState.key))
 			}
 		},
 		mounted() {
@@ -103,7 +121,7 @@
 		},
 		methods: {
 			getIconSrc(key, isActive) {
-				const entry = ICON_CACHE[key] || ICON_CACHE.home
+				const entry = this.iconSrcMap[key] || this.iconSrcMap.home
 				return isActive ? entry.on : entry.off
 			},
 			async syncPermissions(remote = false) {
@@ -157,9 +175,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		background: rgba(24, 19, 16, 0.94);
-		border: 1rpx solid rgba(216, 176, 140, 0.22);
-		box-shadow: 0 22rpx 56rpx rgba(0, 0, 0, 0.58);
+		background: var(--noir-tabbar-bg);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.22);
+		box-shadow: var(--noir-tabbar-shadow);
 		backdrop-filter: blur(22rpx);
 		-webkit-backdrop-filter: blur(22rpx);
 		box-sizing: border-box;
@@ -180,8 +198,8 @@
 	}
 
 	.noir-tabbar__item.is-active {
-		background: linear-gradient(180deg, rgba(226, 100, 63, 0.16), rgba(216, 176, 140, 0.06));
-		border-color: rgba(226, 100, 63, 0.30);
+		background: linear-gradient(180deg, rgba(var(--noir-coral-rgb), 0.16), rgba(var(--noir-gold-rgb), 0.06));
+		border-color: rgba(var(--noir-coral-rgb), 0.30);
 	}
 
 	.noir-tabbar__dot {

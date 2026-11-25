@@ -1,5 +1,5 @@
 <template>
-	<view class="wish-page">
+	<view class="wish-page" :class="themeClass">
 		<view class="wish-glow wish-glow--l"></view>
 		<view class="wish-glow wish-glow--r"></view>
 
@@ -50,7 +50,7 @@
 
 				<!-- 加载态 -->
 				<view v-if="loading && !list.length" class="w-loading">
-					<fui-loading type="rotate" size="44" color="#D8B08C"></fui-loading>
+					<fui-loading type="rotate" size="44" color="var(--noir-gold)"></fui-loading>
 					<text class="w-loading__txt">正在加载清单…</text>
 				</view>
 
@@ -156,7 +156,7 @@
 										class="w-cinput"
 										:value="commentDraft(item._id, step.step_id)"
 										placeholder="给这一步留言…"
-										placeholder-style="color: rgba(245, 237, 228, 0.30);"
+										placeholder-style="color: rgba(var(--noir-text-rgb), 0.30);"
 										confirm-type="send"
 										@input="setCommentDraft(item._id, step.step_id, $event)"
 										@confirm="submitComment(item._id, step.step_id)"
@@ -306,7 +306,7 @@
 					class="w-field-input"
 					v-model="createForm.title"
 					:placeholder="createForm.type === 'wish' ? '例如：一起去冰岛看极光' : '例如：周末短途旅行计划'"
-					placeholder-style="color: rgba(245, 237, 228, 0.30);"
+					placeholder-style="color: rgba(var(--noir-text-rgb), 0.30);"
 					maxlength="60"
 				/>
 
@@ -330,7 +330,7 @@
 					class="w-field-textarea"
 					v-model="createForm.description"
 					placeholder="写下心愿细节或小目标（可选）…"
-					placeholder-style="color: rgba(245, 237, 228, 0.30);"
+					placeholder-style="color: rgba(var(--noir-text-rgb), 0.30);"
 					maxlength="300"
 				/>
 
@@ -339,7 +339,7 @@
 					class="w-field-input"
 					v-model="createForm.stepsText"
 					placeholder="执行步骤（用 / 分隔，如：订票/订酒店/出发）"
-					placeholder-style="color: rgba(245, 237, 228, 0.30);"
+					placeholder-style="color: rgba(var(--noir-text-rgb), 0.30);"
 					maxlength="200"
 				/>
 
@@ -382,6 +382,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import { getCurrentUniIdUser } from '../../common/auth-center.js'
 	import { getPlanApi } from '../../common/api/plan.js'
@@ -654,7 +655,7 @@
 				uni.showModal({
 					title: '删除愿望',
 					content: `确定删除「${item.title}」吗？`,
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						try {
@@ -754,7 +755,7 @@
 					title: '新增步骤',
 					editable: true,
 					placeholderText: '例如：预订车票与酒店',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						const title = String(res.content || '').trim()
@@ -829,7 +830,7 @@
 		position: relative;
 		min-height: 100vh;
 		background:
-			radial-gradient(88% 36% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			radial-gradient(88% 40% at 50% 0%, var(--noir-page-glow) 0%, rgba(var(--noir-bg-rgb), 0) 68%),
 			var(--noir-bg);
 		padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
@@ -849,21 +850,21 @@
 	.wish-glow--l {
 		top: -120rpx;
 		left: -130rpx;
-		background: rgba(226, 100, 63, 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.36);
 	}
 
 	.wish-glow--r {
 		top: 240rpx;
 		right: -130rpx;
-		background: rgba(216, 176, 140, 0.24);
+		background: rgba(var(--noir-gold-rgb), 0.24);
 	}
 
 	.w-mode-pill {
 		height: 50rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.48);
-		background: rgba(26, 21, 18, 0.76);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.48);
+		background: rgba(var(--noir-surface2-rgb), 0.76);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -886,7 +887,7 @@
 		padding: 26rpx 28rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.15) 0%, rgba(255, 255, 255, 0.032) 100%);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.15) 0%, var(--noir-glass-1) 100%);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -910,7 +911,7 @@
 
 	.w-snum__unit {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.w-filters-scroll {
@@ -935,13 +936,13 @@
 	}
 
 	.w-type-badge--wish {
-		border: 1rpx solid rgba(226, 100, 63, 0.48);
-		background: rgba(226, 100, 63, 0.16);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.48);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.w-type-badge--plan {
-		border: 1rpx solid rgba(216, 176, 140, 0.48);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.48);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 	}
 
 	.w-type-badge__txt {
@@ -961,7 +962,7 @@
 	.w-rec-row__type {
 		padding: 2rpx 10rpx;
 		border-radius: 8rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
 		font-size: 17rpx;
 		color: var(--noir-gold);
 		flex-shrink: 0;
@@ -971,7 +972,7 @@
 		height: 54rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
@@ -979,8 +980,8 @@
 	}
 
 	.w-chip.is-on {
-		border-color: rgba(216, 176, 140, 0.58);
-		background: rgba(216, 176, 140, 0.16);
+		border-color: rgba(var(--noir-gold-rgb), 0.58);
+		background: rgba(var(--noir-gold-rgb), 0.16);
 	}
 
 	.w-chip__txt {
@@ -1004,7 +1005,7 @@
 
 	.w-loading__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.w-list {
@@ -1015,7 +1016,7 @@
 		padding: 24rpx 26rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 		margin-bottom: 16rpx;
 	}
 
@@ -1051,7 +1052,7 @@
 	.w-owner-tag {
 		padding: 2rpx 10rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
 		font-size: 17rpx;
 		color: var(--noir-gold);
 		flex-shrink: 0;
@@ -1062,7 +1063,7 @@
 		margin-top: 10rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.w-prog {
@@ -1076,7 +1077,7 @@
 		flex: 1;
 		height: 10rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--noir-glass-3);
 		overflow: hidden;
 	}
 
@@ -1109,8 +1110,8 @@
 		height: 48rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.50);
-		background: rgba(226, 100, 63, 0.16);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.50);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1137,21 +1138,21 @@
 	.w-steps {
 		margin-top: 18rpx;
 		padding-top: 16rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.w-step-empty {
 		display: block;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 		padding: 8rpx 0 14rpx;
 	}
 
 	.w-step {
 		padding: 18rpx 18rpx;
 		border-radius: 18rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: var(--noir-glass-1);
 		margin-bottom: 12rpx;
 	}
 
@@ -1180,16 +1181,16 @@
 		height: 48rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.w-mini-btn--primary {
-		border-color: rgba(226, 100, 63, 0.56);
-		background: rgba(226, 100, 63, 0.22);
+		border-color: rgba(var(--noir-coral-rgb), 0.56);
+		background: rgba(var(--noir-coral-rgb), 0.22);
 	}
 
 	.w-mini-btn__txt {
@@ -1205,7 +1206,7 @@
 		margin-top: 12rpx;
 		padding: 12rpx 14rpx;
 		border-radius: 14rpx;
-		background: rgba(17, 13, 11, 0.54);
+		background: rgba(var(--noir-bg-rgb), 0.54);
 	}
 
 	.w-scitem {
@@ -1218,7 +1219,7 @@
 	}
 
 	.w-scitem__txt {
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.w-cinput-row {
@@ -1234,7 +1235,7 @@
 		padding: 0 18rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--noir-glass-2);
 		color: var(--noir-text-strong);
 		font-size: 22rpx;
 	}
@@ -1243,8 +1244,8 @@
 		height: 58rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1265,14 +1266,14 @@
 		margin-bottom: 12rpx;
 		padding-left: 4rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.w-rec-card {
 		padding: 0 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.18);
-		background: rgba(216, 176, 140, 0.045);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.18);
+		background: rgba(var(--noir-gold-rgb), 0.045);
 	}
 
 	.w-rec-row {
@@ -1281,7 +1282,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 14rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.w-rec-row--last {
@@ -1298,7 +1299,7 @@
 
 	.w-rec-row__title {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.86);
+		color: rgba(var(--noir-text-rgb), 0.86);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -1306,7 +1307,7 @@
 
 	.w-rec-row__cat {
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.40);
+		color: rgba(var(--noir-text-rgb), 0.40);
 		flex-shrink: 0;
 	}
 
@@ -1314,7 +1315,7 @@
 		height: 46rpx;
 		padding: 0 18rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.46);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.46);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1337,7 +1338,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 0%, rgba(var(--noir-bg-rgb), 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 
@@ -1346,7 +1347,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 120;
-		background: rgba(8, 6, 5, 0.72);
+		background: rgba(var(--comp-01-rgb), 0.72);
 		display: flex;
 		align-items: flex-end;
 	}
@@ -1357,7 +1358,7 @@
 		overflow-y: auto;
 		padding: 30rpx 32rpx calc(34rpx + env(safe-area-inset-bottom));
 		border-radius: 32rpx 32rpx 0 0;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
+		border-top: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
 		background: var(--noir-surface);
 		box-sizing: border-box;
 	}
@@ -1383,8 +1384,8 @@
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1393,7 +1394,7 @@
 
 	.w-sheet__close-txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.7);
+		color: rgba(var(--noir-text-rgb), 0.7);
 	}
 
 	.w-detail-tags {
@@ -1423,8 +1424,8 @@
 		margin-top: 22rpx;
 		padding: 0 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.07);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
+		background: var(--noir-glass-1);
 	}
 
 	.w-drow {
@@ -1432,7 +1433,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 20rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.w-drow--last {
@@ -1441,7 +1442,7 @@
 
 	.w-drow__lbl {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.w-drow__val {
@@ -1468,7 +1469,7 @@
 		display: block;
 		margin-bottom: 10rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.w-form-chips {
@@ -1485,7 +1486,7 @@
 		box-sizing: border-box;
 		border-radius: 20rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--noir-glass-2);
 		color: var(--noir-text-strong);
 		font-size: 26rpx;
 		margin-top: 12rpx;
@@ -1497,7 +1498,7 @@
 		padding: 18rpx 22rpx;
 		box-sizing: border-box;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 		background: var(--noir-surface-glass);
 		color: var(--noir-text-strong);
 		font-size: 25rpx;

@@ -104,7 +104,7 @@
 				return this.safeAreaInput && this.safeKeyboardHeight <= 0
 			},
 			backdropBackground() {
-				return this.showMask ? 'rgba(0, 0, 0, 0.6)' : 'transparent'
+				return this.showMask ? 'rgba(var(--noir-shadow-rgb), 0.6)' : 'transparent'
 			}
 		},
 		watch: {
@@ -199,7 +199,7 @@
 		position: relative;
 		z-index: 1;
 		width: 100%;
-		background: #f8f8f8;
+		background: var(--editor-04);
 		box-sizing: border-box;
 	}
 </style>

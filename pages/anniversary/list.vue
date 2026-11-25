@@ -1,5 +1,5 @@
 <template>
-	<view class="anniv-page">
+	<view class="anniv-page" :class="themeClass">
 		<noir-navbar
 			title="纪念日"
 			:show-back="true"
@@ -79,7 +79,7 @@
 
 				<!-- 加载态 -->
 				<view v-if="loading && !anniversaryList.length" class="n-loading">
-					<fui-loading type="rotate" size="44" color="#D8B08C"></fui-loading>
+					<fui-loading type="rotate" size="44" color="var(--noir-gold)"></fui-loading>
 					<text class="n-loading__txt">正在加载纪念日…</text>
 				</view>
 
@@ -157,6 +157,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import { navigateToTab } from '@/common/utils/tab-nav.js'
 	import {
 		clearUniIdTokenStorage,
@@ -167,8 +168,7 @@
 	import { getNavBarHeight, getNavBarMetrics } from '../../common/utils/nav-bar.js'
 	import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 	import { requirePageLogin } from '@/common/auth-entry.js'
-
-	const DEFAULT_ANNIV_HERO = '/static/images/anniv-hero-bg.jpg'
+	import { getThemeArt } from '@/common/theme.js'
 
 	const MONTH_EN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
@@ -242,7 +242,8 @@
 				const custom = item && item.background_type === 'image' && item.background_image && item.background_image.url
 					? String(item.background_image.url).trim()
 					: ''
-				return custom || DEFAULT_ANNIV_HERO
+				// 用户给纪念日设过背景图优先，否则用当前主题的兜底图
+				return custom || getThemeArt('anniv')
 			},
 			heroCountdown() {
 				return this.getCountdownDisplay(this.heroAnniversary || {})
@@ -446,7 +447,7 @@
 				uni.showModal({
 					title: '删除纪念日',
 					content: `确定要删除「${item.title || '该纪念日'}」吗？删除后无法恢复。`,
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						try {
@@ -484,8 +485,8 @@
 		height: 50rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.52);
-		background: rgba(26, 21, 18, 0.72);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.52);
+		background: rgba(var(--noir-surface2-rgb), 0.72);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -521,9 +522,9 @@
 		inset: 0;
 		background: linear-gradient(
 			180deg,
-			rgba(17, 13, 11, 0.56) 0%,
-			rgba(17, 13, 11, 0.22) 38%,
-			rgba(17, 13, 11, 0.72) 72%,
+			rgba(var(--noir-shadow-rgb), 0.56) 0%,
+			rgba(var(--noir-shadow-rgb), 0.22) 38%,
+			rgba(var(--noir-shadow-rgb), 0.72) 72%,
 			var(--noir-bg) 100%
 		);
 	}
@@ -532,6 +533,11 @@
 		position: relative;
 		z-index: 2;
 		padding: 0 36rpx 24rpx;
+	}
+
+	/* hero 上的 kicker 压在照片上：全局 .noir-kicker 的暖金在浅色主题下偏暗 */
+	.n-hero .noir-kicker {
+		color: var(--noir-on-media-accent);
 	}
 
 	.n-dayrow {
@@ -546,14 +552,14 @@
 		font-size: 112rpx;
 		line-height: 0.94;
 		font-weight: 500;
-		color: var(--noir-text-strong);
-		text-shadow: 0 4rpx 28rpx rgba(0, 0, 0, 0.55);
+		color: var(--noir-on-media);
+		text-shadow: 0 4rpx 28rpx rgba(var(--noir-shadow-rgb), 0.55);
 	}
 
 	.n-dayrow__unit {
 		font-size: 24rpx;
 		letter-spacing: 3rpx;
-		color: rgba(245, 237, 228, 0.68);
+		color: var(--noir-on-media-sub);
 	}
 
 	.n-hero__title-row {
@@ -563,19 +569,19 @@
 		gap: 16rpx;
 		margin-top: 18rpx;
 		padding-top: 16rpx;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.30);
+		border-top: 1rpx solid rgba(var(--noir-gold-rgb), 0.30);
 	}
 
 	.n-hero__title {
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 600;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.n-hero__meta {
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: var(--noir-on-media-dim);
 		text-align: right;
 		flex-shrink: 0;
 	}
@@ -596,7 +602,7 @@
 		height: 54rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
@@ -604,8 +610,8 @@
 	}
 
 	.n-chip.is-on {
-		border-color: rgba(216, 176, 140, 0.58);
-		background: rgba(216, 176, 140, 0.16);
+		border-color: rgba(var(--noir-gold-rgb), 0.58);
+		background: rgba(var(--noir-gold-rgb), 0.16);
 	}
 
 	.n-chip__txt {
@@ -629,14 +635,14 @@
 		font-size: 24rpx;
 		font-weight: 500;
 		letter-spacing: 2rpx;
-		color: rgba(245, 237, 228, 0.86);
+		color: rgba(var(--noir-text-rgb), 0.86);
 	}
 
 	.n-sec__cnt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: rgba(245, 237, 228, 0.36);
+		color: rgba(var(--noir-text-rgb), 0.36);
 	}
 
 	.n-loading {
@@ -649,7 +655,7 @@
 
 	.n-loading__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	/* 时间线列表行 */
@@ -658,7 +664,7 @@
 		align-items: center;
 		gap: 24rpx;
 		padding: 26rpx 0;
-		border-bottom: 1rpx solid rgba(216, 176, 140, 0.14);
+		border-bottom: 1rpx solid rgba(var(--noir-gold-rgb), 0.14);
 	}
 
 	.n-row--last {
@@ -676,7 +682,7 @@
 		font-size: 48rpx;
 		line-height: 1;
 		font-weight: 500;
-		color: #F0DCC4;
+		color: var(--anniv-16);
 	}
 
 	.n-date__ym {
@@ -685,7 +691,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 16rpx;
 		letter-spacing: 1rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.n-info {
@@ -711,7 +717,7 @@
 	.n-info__owner {
 		padding: 2rpx 10rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
 		font-size: 17rpx;
 		color: var(--noir-gold);
 		flex-shrink: 0;
@@ -721,7 +727,7 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -755,14 +761,14 @@
 
 	.n-right--muted .n-right__num {
 		font-size: 38rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.n-right__unit {
 		display: block;
 		margin-top: 6rpx;
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.n-note {
@@ -770,7 +776,7 @@
 		margin-top: 24rpx;
 		text-align: center;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.32);
+		color: rgba(var(--noir-text-rgb), 0.32);
 	}
 
 	.ad-view {
@@ -784,7 +790,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 0%, rgba(var(--noir-bg-rgb), 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 </style>

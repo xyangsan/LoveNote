@@ -1,5 +1,5 @@
 <template>
-	<view class="up-page">
+	<view class="up-page" :class="themeClass">
 		<view class="up-glow up-glow--l"></view>
 		<view class="up-glow up-glow--r"></view>
 
@@ -82,7 +82,7 @@
 						class="up-custom-input"
 						v-model="customTagDraft"
 						placeholder="输入自定义标签（如：青岛、周末）"
-						placeholder-style="color: rgba(245, 237, 228, 0.34);"
+						placeholder-style="color: rgba(var(--noir-text-rgb), 0.34);"
 						maxlength="16"
 						confirm-type="done"
 						@confirm="confirmCustomTag"
@@ -101,7 +101,7 @@
 						<view class="up-row" :class="{ 'up-row--no-border': Boolean(locationAddress) }" @tap="handleChooseLocation">
 							<text class="up-row__lbl">拍摄地点</text>
 							<view class="up-row__val-wrap">
-								<fui-icon name="location" :size="28" color="#D8B08C"></fui-icon>
+								<fui-icon name="location" :size="28" color="var(--noir-gold)"></fui-icon>
 								<text class="up-row__val" :class="{ 'is-placeholder': !locationName }">
 									{{ locationName || '点击定位选择地点' }}
 								</text>
@@ -133,7 +133,7 @@
 							class="up-textarea"
 							v-model="commonDescription"
 							placeholder="写下这一刻的故事、心情或小确幸（可选）…"
-							placeholder-style="color: rgba(245, 237, 228, 0.30);"
+							placeholder-style="color: rgba(var(--noir-text-rgb), 0.30);"
 							maxlength="500"
 						/>
 					</view>
@@ -166,6 +166,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import { getAlbumApi } from '../../common/api/album.js'
 	import { getPhotoApi } from '../../common/api/photo.js'
 	import { requirePageLogin } from '@/common/auth-entry.js'
@@ -349,7 +350,7 @@
 							title: '需要定位权限',
 							content: '请开启位置权限以通过定位服务选择拍摄地点',
 							confirmText: '去设置',
-							confirmColor: '#E2643F',
+							confirmColor: getThemeCoral(),
 							success: (res) => resolve(res || {}),
 							fail: () => resolve({})
 						})
@@ -501,7 +502,7 @@
 					uni.showModal({
 						title: '确认返回',
 						content: '媒体正在上传中，确定要离开吗？',
-						confirmColor: '#E2643F',
+						confirmColor: getThemeCoral(),
 						success: (res) => {
 							if (res.confirm) uni.navigateBack()
 						}
@@ -519,7 +520,7 @@
 		position: relative;
 		min-height: 100vh;
 		background:
-			radial-gradient(88% 36% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			radial-gradient(88% 40% at 50% 0%, var(--noir-page-glow) 0%, rgba(var(--noir-bg-rgb), 0) 68%),
 			var(--noir-bg);
 		padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
@@ -539,21 +540,21 @@
 	.up-glow--l {
 		top: -120rpx;
 		left: -130rpx;
-		background: rgba(226, 100, 63, 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.36);
 	}
 
 	.up-glow--r {
 		top: 240rpx;
 		right: -130rpx;
-		background: rgba(216, 176, 140, 0.24);
+		background: rgba(var(--noir-gold-rgb), 0.24);
 	}
 
 	.up-count-pill {
 		height: 48rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.48);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.48);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -588,13 +589,13 @@
 	/* 适配内置 love-media-uploader 为暗夜 NOIR 视觉 */
 	:deep(.love-media-uploader__item) {
 		border-radius: 20rpx !important;
-		border: 1rpx solid rgba(255, 255, 255, 0.10) !important;
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10) !important;
 		background: var(--noir-surface) !important;
 	}
 
 	:deep(.love-media-uploader__item--add) {
-		border: 1.5rpx dashed rgba(216, 176, 140, 0.44) !important;
-		background: rgba(216, 176, 140, 0.06) !important;
+		border: 1.5rpx dashed rgba(var(--noir-gold-rgb), 0.44) !important;
+		background: rgba(var(--noir-gold-rgb), 0.06) !important;
 	}
 
 	:deep(.love-media-uploader__add-text) {
@@ -603,7 +604,7 @@
 	}
 
 	:deep(.love-media-uploader__add-hint) {
-		color: rgba(245, 237, 228, 0.40) !important;
+		color: rgba(var(--noir-text-rgb), 0.40) !important;
 		font-size: 19rpx !important;
 	}
 
@@ -621,7 +622,7 @@
 
 	.up-sec__lbl {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 		letter-spacing: 1rpx;
 	}
 
@@ -641,7 +642,7 @@
 		height: 56rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
@@ -649,19 +650,19 @@
 	}
 
 	.up-chip.is-on {
-		border-color: rgba(216, 176, 140, 0.62);
-		background: rgba(216, 176, 140, 0.18);
+		border-color: rgba(var(--noir-gold-rgb), 0.62);
+		background: rgba(var(--noir-gold-rgb), 0.18);
 	}
 
 	.up-chip--custom {
 		border-style: dashed;
-		border-color: rgba(216, 176, 140, 0.36);
+		border-color: rgba(var(--noir-gold-rgb), 0.36);
 		background: transparent;
 	}
 
 	.up-chip__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.66);
+		color: rgba(var(--noir-text-rgb), 0.66);
 		white-space: nowrap;
 	}
 
@@ -686,8 +687,8 @@
 		height: 68rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.32);
-		background: rgba(26, 21, 18, 0.92);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.32);
+		background: rgba(var(--noir-surface2-rgb), 0.92);
 		color: var(--noir-text-strong);
 		font-size: 24rpx;
 	}
@@ -696,8 +697,8 @@
 		height: 68rpx;
 		padding: 0 28rpx;
 		border-radius: 999rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.56);
-		background: rgba(216, 176, 140, 0.16);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.56);
+		background: rgba(var(--noir-gold-rgb), 0.16);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -715,7 +716,7 @@
 		justify-content: space-between;
 		gap: 20rpx;
 		min-height: 92rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.up-row--no-border {
@@ -728,12 +729,12 @@
 		font-size: 21rpx;
 		line-height: 1.5;
 		color: var(--noir-text-muted);
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.up-row__lbl {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.68);
+		color: rgba(var(--noir-text-rgb), 0.68);
 		flex-shrink: 0;
 	}
 
@@ -755,7 +756,7 @@
 	}
 
 	.up-row__val.is-placeholder {
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
 	.up-row__val--mono {
@@ -766,12 +767,12 @@
 	.up-row__clear {
 		padding: 6rpx 10rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.up-row__chev {
 		font-size: 32rpx;
-		color: rgba(216, 176, 140, 0.56);
+		color: rgba(var(--noir-gold-rgb), 0.56);
 	}
 
 	.up-desc-row {
@@ -788,7 +789,7 @@
 	.up-desc-row__cnt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 	}
 
 	.up-textarea {
@@ -798,7 +799,7 @@
 		box-sizing: border-box;
 		border-radius: 18rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 		color: var(--noir-text-strong);
 		font-size: 25rpx;
 		line-height: 1.6;
@@ -810,7 +811,7 @@
 		padding: 0 6rpx;
 		font-size: 21rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.40);
+		color: rgba(var(--noir-text-rgb), 0.40);
 	}
 
 	.ad-view {
@@ -824,7 +825,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 0%, rgba(var(--noir-bg-rgb), 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 </style>

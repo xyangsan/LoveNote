@@ -2,12 +2,12 @@
 	<fui-dialog
 		:show="visible"
 		:title="content.title"
-		:color="'#FBF4EA'"
-		background="#1C1613"
+		:color="'var(--noir-text-strong)'"
+		background="var(--comp-20)"
 		:buttons="buttons"
 		:radius="32"
 		:mask-closable="true"
-		mask-background="rgba(8, 6, 5, 0.74)"
+		mask-background="rgba(var(--comp-01-rgb), 0.74)"
 		@click="handleButtonClick"
 		@close="handleClose"
 	>
@@ -55,8 +55,8 @@ export default {
 		},
 		buttons() {
 			return [
-				{ text: '稍后再说', color: 'rgba(245, 237, 228, 0.56)' },
-				{ text: '去绑定', color: '#E5865C' }
+				{ text: '稍后再说', color: 'rgba(var(--noir-text-rgb), 0.56)' },
+				{ text: '去绑定', color: 'var(--noir-coral-soft)' }
 			]
 		}
 	},
@@ -109,8 +109,8 @@ export default {
 	margin-bottom: 18rpx;
 	padding: 4rpx 16rpx;
 	border-radius: 999rpx;
-	border: 1rpx solid rgba(216, 176, 140, 0.32);
-	background: rgba(216, 176, 140, 0.12);
+	border: 1rpx solid rgba(var(--noir-gold-rgb), 0.32);
+	background: rgba(var(--noir-gold-rgb), 0.12);
 }
 
 .couple-guide__badge-text {
@@ -124,15 +124,15 @@ export default {
 	display: block;
 	font-size: 26rpx;
 	line-height: 1.7;
-	color: rgba(245, 237, 228, 0.72);
+	color: rgba(var(--noir-text-rgb), 0.72);
 }
 
 .couple-guide__hint {
 	margin-top: 20rpx;
 	padding: 16rpx 20rpx;
 	border-radius: 18rpx;
-	background: rgba(216, 176, 140, 0.06);
-	border: 1rpx dashed rgba(216, 176, 140, 0.28);
+	background: rgba(var(--noir-gold-rgb), 0.06);
+	border: 1rpx dashed rgba(var(--noir-gold-rgb), 0.28);
 }
 
 .couple-guide__hint-text {

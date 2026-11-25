@@ -1,5 +1,5 @@
 <template>
-	<view class="love-page love-page--compact love-page--with-tabbar">
+	<view class="love-page love-page--compact love-page--with-tabbar" :class="themeClass">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -201,10 +201,10 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			resumeActionStyle() {
 				return [
 					'display:inline-block',
-					'background-color:#e76f51',
-					'background-image:linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)',
-					'border-color:#e76f51',
-					'color:#ffffff',
+					'background-color:var(--noir-coral)',
+					'background-image:var(--noir-btn-gradient)',
+					'border-color:var(--noir-coral)',
+					'color:var(--noir-white)',
 					'font-size:25rpx',
 					'font-weight:600',
 					'line-height:1.2',
@@ -289,7 +289,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 			},
 			gradientOf(gameType) {
 				const meta = getGameMeta(gameType)
-				return meta ? meta.gradient : 'linear-gradient(135deg, #ffb37a 0%, #e76f51 100%)'
+				return meta ? meta.gradient : 'var(--noir-btn-gradient)'
 			},
 			resultText(item) {
 				return getResultText(item.myResult)
@@ -434,8 +434,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin-bottom: 24rpx;
 		padding: 26rpx 28rpx;
 		border-radius: 30rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.44);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.44);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.18), var(--noir-glass-1));
 	}
 
 	.resume-card__label {
@@ -459,7 +459,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		display: block;
 		margin-top: 6rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.resume-card__action-wrap {
@@ -480,7 +480,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		padding: 24rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.034);
+		background: var(--noir-glass-1);
 	}
 
 	.game-card--hover {
@@ -506,8 +506,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		width: 44rpx;
 		height: 44rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.1);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.1);
 	}
 
 	.game-card__badge-text {
@@ -530,7 +530,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin-top: 8rpx;
 		font-size: 22rpx;
 		line-height: 1.55;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	.game-card__meta {
@@ -568,8 +568,8 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	.game-empty {
 		padding: 36rpx 28rpx;
 		border-radius: 28rpx;
-		border: 1rpx dashed rgba(216, 176, 140, 0.22);
-		background: rgba(255, 255, 255, 0.024);
+		border: 1rpx dashed rgba(var(--noir-gold-rgb), 0.22);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
@@ -585,14 +585,14 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin-top: 10rpx;
 		font-size: 23rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.record-list {
 		padding: 8rpx 24rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 	}
 
 	.record-item {
@@ -603,7 +603,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 	}
 
 	.record-item + .record-item {
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.record-item__icon {
@@ -632,7 +632,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		display: block;
 		margin-top: 6rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	.record-item__right {
@@ -644,7 +644,7 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		display: block;
 		font-size: 24rpx;
 		font-weight: 600;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.record-item__result--win {
@@ -660,6 +660,6 @@ import { requirePageLogin } from '@/common/auth-entry.js'
 		margin-top: 6rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 </style>

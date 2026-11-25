@@ -227,7 +227,7 @@ export default {
 .image-viewer {
 	position: fixed;
 	inset: 0;
-	background: #000000;
+	background: var(--viewer-01);
 	overflow: hidden;
 }
 
@@ -278,7 +278,7 @@ export default {
 	width: 64rpx;
 	height: 64rpx;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.42);
+	background: rgba(var(--noir-shadow-rgb), 0.42);
 	pointer-events: auto;
 }
 
@@ -290,7 +290,7 @@ export default {
 
 .image-viewer__counter {
 	font-size: 26rpx;
-	color: rgba(255, 255, 255, 0.86);
+	color: rgba(var(--noir-white-rgb), 0.86);
 }
 
 /* 原图没加载完时挂在图中间：深色圆底保证在浅色照片上也看得清 */
@@ -306,7 +306,7 @@ export default {
 	height: 96rpx;
 	margin: -48rpx 0 0 -48rpx;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.38);
+	background: rgba(var(--noir-shadow-rgb), 0.38);
 	/* 别挡住「点图关闭」 */
 	pointer-events: none;
 }
@@ -315,7 +315,7 @@ export default {
 	width: 40rpx;
 	height: 40rpx;
 	border-radius: 50%;
-	border: 4rpx solid rgba(255, 255, 255, 0.28);
+	border: 4rpx solid rgba(var(--noir-wash-rgb), 0.28);
 	border-top-color: var(--noir-white);
 	box-sizing: border-box;
 	animation: image-viewer-spin 0.8s linear infinite;
@@ -343,6 +343,6 @@ export default {
 .image-viewer__empty-text {
 	font-size: 26rpx;
 	line-height: 1.6;
-	color: rgba(255, 255, 255, 0.7);
+	color: rgba(var(--noir-white-rgb), 0.7);
 }
 </style>

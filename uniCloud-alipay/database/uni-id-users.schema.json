@@ -66,6 +66,12 @@
 			"title": "性别",
 			"description": "0 未知 1 男 2 女"
 		},
+		"theme_key": {
+			"bsonType": "string",
+			"title": "主题",
+			"description": "用户选择的主题 key：noir / warm-1 / warm-2 / pale-3 / green-4",
+			"defaultValue": "green-4"
+		},
 		"birthday": {
 			"bsonType": "string",
 			"title": "生日",

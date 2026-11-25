@@ -199,8 +199,8 @@
 		height: 34px;
 		padding: 0 14px;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.92);
-		box-shadow: 0 2px 5px rgba(12, 36, 22, 0.32);
+		background: rgba(var(--noir-white-rgb), 0.92);
+		box-shadow: 0 2px 5px rgba(var(--poker-07-rgb), 0.32);
 	}
 
 	.ll-action--wide {
@@ -208,13 +208,13 @@
 	}
 
 	.ll-action--primary {
-		background: linear-gradient(180deg, #ffdf8e 0%, #ffb84d 55%, #f59b2a 100%);
-		border-bottom: 2px solid #b86a14;
-		box-shadow: 0 4px 10px rgba(120, 60, 20, 0.32);
+		background: linear-gradient(180deg, var(--poker-82) 0%, var(--poker-67) 55%, var(--poker-56) 100%);
+		border-bottom: 2px solid var(--poker-43);
+		box-shadow: 0 4px 10px rgba(var(--poker-30-rgb), 0.32);
 	}
 
 	.ll-action--on {
-		background: linear-gradient(180deg, #ffe7a8 0%, #f5c95c 100%);
+		background: linear-gradient(180deg, var(--poker-85) 0%, var(--poker-69) 100%);
 	}
 
 	.ll-action--disabled {
@@ -224,10 +224,10 @@
 	.ll-action__text {
 		font-size: 13px;
 		font-weight: 700;
-		color: #5a3a10;
+		color: var(--poker-25);
 	}
 
 	.ll-action__text--ghost {
-		color: #1c4f33;
+		color: var(--poker-24);
 	}
 </style>

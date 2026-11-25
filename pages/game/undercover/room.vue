@@ -1,5 +1,5 @@
 <template>
-	<view class="uc-page">
+	<view class="uc-page" :class="themeClass">
 		<view class="uc-page__glow uc-page__glow--left"></view>
 		<view class="uc-page__glow uc-page__glow--right"></view>
 
@@ -36,8 +36,8 @@
 							:min="minPlayers"
 							:max="maxPlayersLimit"
 							:width="64"
-							background="rgba(216, 176, 140, 0.12)"
-							color="#EAD4BC"
+							background="rgba(var(--noir-gold-rgb), 0.12)"
+							color="var(--noir-gold-soft)"
 							@change="handleMaxPlayersChange"
 						></uni-number-box>
 						<text class="uc-numbox-row__unit">人</text>
@@ -55,8 +55,8 @@
 				<view class="uc-actions">
 					<fui-button
 						text="创建房间"
-						background="linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%)"
-						color="#ffffff"
+						background="var(--noir-btn-gradient)"
+						color="var(--noir-white)"
 						height="92rpx"
 						radius="999rpx"
 						:size="32"
@@ -74,8 +74,8 @@
 							:value="joinCode"
 							:size="30"
 							:radius="20"
-							background-color="#1E1814"
-							color="#FBF4EA"
+							background-color="var(--noir-sheet-hi)"
+							color="var(--noir-text-strong)"
 							:padding="['20rpx', '24rpx']"
 							@input="handleJoinCodeInput"
 						></fui-input>
@@ -248,8 +248,8 @@
 							:min="1"
 							:max="2"
 							:width="56"
-							background="rgba(216, 176, 140, 0.12)"
-							color="#EAD4BC"
+							background="rgba(var(--noir-gold-rgb), 0.12)"
+							color="var(--noir-gold-soft)"
 							@change="handleUndercoverCountChange"
 						></uni-number-box>
 						<text class="uc-config__unit">个</text>
@@ -269,7 +269,7 @@
 							v-if="isHost"
 							class="uc-switch"
 							:checked="partyModeInput"
-							color="#E2643F"
+							color="var(--noir-coral)"
 							@change="handlePartyModeChange"
 						/>
 						<text v-else class="uc-config__value">{{ partyModeOn ? '已开启' : '已关闭' }}</text>
@@ -340,8 +340,8 @@
 									:value="speakText"
 									:size="28"
 									:radius="20"
-									background-color="#1E1814"
-									color="#FBF4EA"
+									background-color="var(--noir-sheet-hi)"
+									color="var(--noir-text-strong)"
 									:padding="['20rpx', '24rpx']"
 									:maxlength="60"
 									@input="handleSpeakInput"
@@ -455,6 +455,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import LoveGlassCard from '@/components/love-glass-card/love-glass-card.vue'
 	import LoveGameSeats from '@/components/love-game-seats/love-game-seats.vue'
 	import LoveGameRules from '@/components/love-game-rules/love-game-rules.vue'
@@ -934,9 +935,9 @@
 			 */
 			connStyle() {
 				const TONES = {
-					ok: { bg: 'rgba(132, 190, 156, 0.14)', border: 'rgba(132, 190, 156, 0.42)', color: '#9ED6B2' },
-					warn: { bg: 'rgba(216, 176, 140, 0.14)', border: 'rgba(216, 176, 140, 0.42)', color: '#EAD4BC' },
-					pending: { bg: 'rgba(255, 255, 255, 0.06)', border: 'rgba(255, 255, 255, 0.14)', color: 'rgba(245, 237, 228, 0.62)' }
+					ok: { bg: 'rgba(var(--noir-green-rgb), 0.14)', border: 'rgba(var(--noir-green-rgb), 0.42)', color: 'var(--noir-green)' },
+					warn: { bg: 'rgba(var(--noir-gold-rgb), 0.14)', border: 'rgba(var(--noir-gold-rgb), 0.42)', color: 'var(--noir-gold-soft)' },
+					pending: { bg: 'rgba(var(--noir-wash-rgb), 0.06)', border: 'rgba(var(--noir-wash-rgb), 0.14)', color: 'rgba(var(--noir-text-rgb), 0.62)' }
 				}
 				const tone = TONES[this.connTone] || TONES.pending
 				return [
@@ -1296,7 +1297,7 @@
 					title: '退出房间',
 					content: this.buildLeaveConfirmText(),
 					confirmText: '退出',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: (res) => {
 						if (res.confirm) {
 							this.doLeaveRoom()
@@ -2030,8 +2031,8 @@ this.ensureRobotVotes()
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 	}
 
 	.uc-nav-pill__txt {
@@ -2073,14 +2074,14 @@ this.ensureRobotVotes()
 		margin-top: 14rpx;
 		font-size: 25rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.uc-label {
 		display: block;
 		margin-bottom: 14rpx;
 		font-size: 24rpx;
-		color: rgba(216, 176, 140, 0.76);
+		color: rgba(var(--noir-gold-rgb), 0.76);
 	}
 
 	/* 数字步进器改用 uni-number-box；
@@ -2135,7 +2136,7 @@ this.ensureRobotVotes()
 
 	.uc-numbox-row__unit {
 		font-size: 26rpx;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	.uc-word-row {
@@ -2148,7 +2149,7 @@ this.ensureRobotVotes()
 		justify-content: space-between;
 		padding: 20rpx 24rpx;
 		border-radius: 20rpx;
-		background: rgba(26, 21, 18, 0.94);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
 	}
 
 	.uc-word-select__text {
@@ -2158,7 +2159,7 @@ this.ensureRobotVotes()
 
 	.uc-word-select__arrow {
 		font-size: 30rpx;
-		color: #c9a99a;
+		color: var(--spy-05);
 	}
 
 	.uc-actions {
@@ -2183,7 +2184,7 @@ this.ensureRobotVotes()
 		width: 150rpx;
 		height: 84rpx;
 		border-radius: 22rpx;
-		background: linear-gradient(135deg, #ffb37a 0%, var(--noir-coral) 100%);
+		background: linear-gradient(135deg, var(--poker-68) 0%, var(--noir-coral) 100%);
 	}
 
 	.uc-join__btn-text {
@@ -2212,8 +2213,8 @@ this.ensureRobotVotes()
 		gap: 20rpx;
 		padding: 24rpx 28rpx;
 		border-radius: 30rpx;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 16rpx 40rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.uc-room-bar__label {
@@ -2243,7 +2244,7 @@ this.ensureRobotVotes()
 		justify-content: center;
 		padding: 14rpx 24rpx;
 		border-radius: 999rpx;
-		background: rgba(216, 176, 140, 0.12);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 	}
 
 	.uc-room-bar__action-text {
@@ -2255,7 +2256,7 @@ this.ensureRobotVotes()
 	.uc-room-bar__action--leave {
 		padding: 12rpx 22rpx;
 		background: transparent;
-		border: 2rpx solid rgba(231, 111, 81, 0.34);
+		border: 2rpx solid rgba(var(--comp-07-rgb), 0.34);
 	}
 
 	.uc-room-bar__action-text--leave {
@@ -2267,15 +2268,15 @@ this.ensureRobotVotes()
 		margin-top: 22rpx;
 		padding: 26rpx 28rpx 24rpx;
 		border-radius: 32rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.34);
-		background: linear-gradient(145deg, rgba(216, 176, 140, 0.14) 0%, rgba(26, 21, 18, 0.96) 100%);
-		box-shadow: 0 18rpx 44rpx rgba(0, 0, 0, 0.46);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: linear-gradient(145deg, rgba(var(--noir-gold-rgb), 0.14) 0%, rgba(var(--noir-surface2-rgb), 0.96) 100%);
+		box-shadow: 0 18rpx 44rpx rgba(var(--noir-shadow-rgb), 0.46);
 		text-align: center;
 	}
 
 	.uc-my-word--undercover {
-		border-color: rgba(226, 100, 63, 0.46);
-		background: linear-gradient(145deg, rgba(226, 100, 63, 0.18) 0%, rgba(26, 21, 18, 0.96) 100%);
+		border-color: rgba(var(--noir-coral-rgb), 0.46);
+		background: linear-gradient(145deg, rgba(var(--noir-coral-rgb), 0.18) 0%, rgba(var(--noir-surface2-rgb), 0.96) 100%);
 	}
 
 	.uc-my-word__head {
@@ -2288,14 +2289,14 @@ this.ensureRobotVotes()
 	.uc-my-word__kicker {
 		font-size: 20rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 	}
 
 	.uc-my-word__badge {
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.40);
-		background: rgba(226, 100, 63, 0.14);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.40);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 		display: flex;
 	}
 
@@ -2319,7 +2320,7 @@ this.ensureRobotVotes()
 	.uc-my-word__value--hidden {
 		font-size: 40rpx;
 		letter-spacing: 12rpx;
-		color: rgba(245, 237, 228, 0.36);
+		color: rgba(var(--noir-text-rgb), 0.36);
 	}
 
 	.uc-my-word__foot {
@@ -2327,12 +2328,12 @@ this.ensureRobotVotes()
 		align-items: center;
 		justify-content: space-between;
 		padding-top: 16rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.uc-my-word__tip {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.uc-my-word__toggle {
@@ -2357,7 +2358,7 @@ this.ensureRobotVotes()
 		display: block;
 		margin-top: 8rpx;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	.uc-section-title {
@@ -2373,8 +2374,8 @@ this.ensureRobotVotes()
 		margin-top: 22rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 28rpx;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 16rpx 40rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.uc-timeline__head {
@@ -2391,7 +2392,7 @@ this.ensureRobotVotes()
 	.uc-timeline__hint {
 		flex-shrink: 0;
 		font-size: 22rpx;
-		color: #a58479;
+		color: var(--spy-02);
 	}
 
 	.uc-timeline__round {
@@ -2401,7 +2402,7 @@ this.ensureRobotVotes()
 	/* 轮次之间的分割线 */
 	.uc-timeline__divider {
 		margin: 20rpx 0 18rpx;
-		border-top: 1rpx dashed rgba(255, 255, 255, 0.07);
+		border-top: 1rpx dashed rgba(var(--noir-wash-rgb), 0.07);
 	}
 
 	.uc-timeline__round-head {
@@ -2421,7 +2422,7 @@ this.ensureRobotVotes()
 		padding: 0 14rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid var(--noir-border-coral);
-		background: rgba(226, 100, 63, 0.16);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 		font-size: 18rpx;
 		font-weight: 600;
 		line-height: 1.8;
@@ -2460,7 +2461,7 @@ this.ensureRobotVotes()
 	.uc-timeline__ai {
 		padding: 0 8rpx;
 		border-radius: 999rpx;
-		background: #6cb8ff;
+		background: var(--home-06);
 		font-size: 17rpx;
 		font-weight: 700;
 		line-height: 1.7;
@@ -2470,8 +2471,8 @@ this.ensureRobotVotes()
 	.uc-timeline__mine {
 		padding: 0 10rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 		font-size: 17rpx;
 		font-weight: 600;
 		line-height: 1.7;
@@ -2504,7 +2505,7 @@ this.ensureRobotVotes()
 	.uc-timeline__arrow {
 		flex-shrink: 0;
 		font-size: 24rpx;
-		color: #c8a99d;
+		color: var(--spy-06);
 	}
 
 	.uc-timeline__target {
@@ -2519,14 +2520,14 @@ this.ensureRobotVotes()
 
 	.uc-timeline__empty-text {
 		font-size: 23rpx;
-		color: #a58479;
+		color: var(--spy-02);
 	}
 
 	.uc-timeline__pending {
 		display: block;
 		margin-top: 12rpx;
 		font-size: 22rpx;
-		color: #a58479;
+		color: var(--spy-02);
 	}
 
 	/* 本轮结果：现在是独立的一整块（放一轮最上），`--lead` 去掉原 margin-top（已由 block 提供） */
@@ -2537,7 +2538,7 @@ this.ensureRobotVotes()
 		border-radius: 18rpx;
 		background: var(--noir-surface-glass);
 		font-size: 23rpx;
-		color: rgba(216, 176, 140, 0.76);
+		color: rgba(var(--noir-gold-rgb), 0.76);
 	}
 
 	.uc-timeline__result--lead {
@@ -2569,10 +2570,10 @@ this.ensureRobotVotes()
 		padding-bottom: constant(safe-area-inset-bottom);
 		padding-bottom: calc(18rpx + constant(safe-area-inset-bottom));
 		padding-bottom: calc(18rpx + env(safe-area-inset-bottom));
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 -12rpx 36rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 -12rpx 36rpx rgba(var(--noir-shadow-rgb), 0.42);
 		/* 顶部一道暖色细线，与内容区分开 */
-		border-top: 1rpx solid rgba(255, 255, 255, 0.07);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
 	}
 
 	/* 内容区底部占位：高度 = 悬浮栏实测高度（measureOpBar 写入行内 style）。
@@ -2610,8 +2611,8 @@ this.ensureRobotVotes()
 		margin-bottom: 20rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 26rpx;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 10rpx 24rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.uc-config__label {
@@ -2622,7 +2623,7 @@ this.ensureRobotVotes()
 
 	.uc-config__unit {
 		font-size: 26rpx;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	/* 聚会模式那行：标签靠左、开关靠右（提示文案 width:100% 会自己落到下一行） */
@@ -2651,11 +2652,11 @@ this.ensureRobotVotes()
 	}
 
 	.uc-config__warn {
-		color: #d0523c;
+		color: var(--spy-01);
 	}
 
 	.uc-config__tip {
-		color: #b0938a;
+		color: var(--spy-04);
 	}
 
 	.uc-op__hint {
@@ -2669,15 +2670,15 @@ this.ensureRobotVotes()
 	/* 结算后的信息行：比普通提示更“实”（暖底 + 细边），一眼看到第几局与累计分 */
 	.uc-op__hint--result {
 		padding: 18rpx 24rpx;
-		background: rgba(216, 176, 140, 0.12);
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.12);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
 		margin-bottom: 18rpx;
 	}
 
 	.uc-op__hint-text {
 		font-size: 25rpx;
 		line-height: 1.6;
-		color: rgba(216, 176, 140, 0.76);
+		color: rgba(var(--noir-gold-rgb), 0.76);
 	}
 
 	.uc-btn {
@@ -2686,12 +2687,12 @@ this.ensureRobotVotes()
 		justify-content: center;
 		height: 90rpx;
 		border-radius: 999rpx;
-		background: rgba(216, 176, 140, 0.12);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 	}
 
 	.uc-btn--primary {
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 14rpx 26rpx rgba(231, 111, 81, 0.24);
+		box-shadow: 0 14rpx 26rpx rgba(var(--comp-07-rgb), 0.24);
 	}
 
 	.uc-btn--disabled {
@@ -2700,8 +2701,8 @@ this.ensureRobotVotes()
 
 	/* 非房主在结算行的「等房主开下一局」：与按钮同排同高，但虚线 + 微弱暗底，明显不可点 */
 	.uc-btn--wait {
-		background: rgba(255, 255, 255, 0.03);
-		border: 1rpx dashed rgba(216, 176, 140, 0.34);
+		background: var(--noir-glass-1);
+		border: 1rpx dashed rgba(var(--noir-gold-rgb), 0.34);
 	}
 
 	.uc-btn__text {
@@ -2719,7 +2720,7 @@ this.ensureRobotVotes()
 
 	.uc-btn__text--muted {
 		font-weight: 500;
-		color: #a68b78;
+		color: var(--spy-03);
 	}
 
 	.uc-speak-input {

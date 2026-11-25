@@ -25,7 +25,7 @@
 
 			<!-- 使用 fui-icon 作为表情按钮 -->
 			<view class="love-editor-bar__emoji-toggle" @touchend.prevent="toggleEmojiPanel">
-				<fui-icon name="face" :size="56" color="#333333"></fui-icon>
+				<fui-icon name="face" :size="56" color="var(--editor-01)"></fui-icon>
 			</view>
 			
 			<!-- 发送按钮 -->
@@ -67,7 +67,7 @@
 				</view>
 			</scroll-view>
 			<view class="love-editor__delete" v-if="deleteable">
-				<fui-icon name="backspace" :size="50" :color="sendable ? '#333' : '#999'" @touchend.prevent="delLastText"></fui-icon>
+				<fui-icon name="backspace" :size="50" :color="sendable ? 'var(--editor-01)' : 'var(--comp-22)'" @touchend.prevent="delLastText"></fui-icon>
 			</view>
 		</view>
 	</view>
@@ -663,7 +663,7 @@
 	}
 	/* 编辑器容器 */
 	.love-editor {
-		background: #f8f8f8;
+		background: var(--editor-04);
 		box-sizing: border-box;
 		
 		&.safe-area-input {
@@ -684,7 +684,7 @@
 				max-height: 240rpx;
 				height: 72rpx;
 				box-sizing: border-box;
-				color: #333333;
+				color: var(--editor-01);
 				border-radius: 12rpx;
 			}
 
@@ -729,9 +729,9 @@
 				max-width: calc(100vw - 20px);
 				box-sizing: border-box;
 				padding: 16rpx 8rpx 10rpx;
-				background: rgba(255, 255, 255, 0.98);
+				background: rgba(var(--noir-white-rgb), 0.98);
 				border-radius: 14rpx;
-				box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.12);
+				box-shadow: 0 12rpx 24rpx rgba(var(--noir-shadow-rgb), 0.12);
 				pointer-events: none;
 				display: inline-flex;
 				flex-direction: column;
@@ -745,7 +745,7 @@
 					bottom: 0;
 					width: 16rpx;
 					height: 16rpx;
-					background: rgba(255, 255, 255, 0.98);
+					background: rgba(var(--noir-white-rgb), 0.98);
 					transform: translate(-50%, 50%) rotate(45deg);
 					border-radius: 3rpx;
 				}
@@ -760,7 +760,7 @@
 				margin-top: 8rpx;
 				font-size: 28rpx;
 				line-height: 1.2;
-				color: #666666;
+				color: var(--editor-02);
 				text-align: center;
 				white-space: nowrap;
 			}
@@ -806,7 +806,7 @@
 			overflow: visible;
 			pointer-events: auto;
 			border-top: 0.5px solid transparent;
-			border-image: linear-gradient(to right, #f3f3f3, #f3f3f3) 1;
+			border-image: linear-gradient(to right, var(--editor-03), var(--editor-03)) 1;
 		}
 	}
 </style>

@@ -110,25 +110,25 @@
 	.noir-btn--primary {
 		background: var(--noir-btn-gradient);
 		color: var(--noir-text-warm);
-		box-shadow: 0 14rpx 34rpx rgba(222, 95, 60, 0.28);
+		box-shadow: 0 14rpx 34rpx rgba(var(--noir-coral-rgb), 0.28);
 		font-weight: 500;
 	}
 
 	.noir-btn--ghost {
-		background: rgba(255, 255, 255, 0.03);
-		border-color: rgba(216, 176, 140, 0.28);
-		color: rgba(245, 237, 228, 0.78);
+		background: var(--noir-glass-1);
+		border-color: rgba(var(--noir-gold-rgb), 0.28);
+		color: rgba(var(--noir-text-rgb), 0.78);
 	}
 
 	.noir-btn--danger {
-		background: rgba(220, 53, 69, 0.18);
-		border-color: rgba(235, 87, 87, 0.56);
-		color: #FF7B7B;
+		background: rgba(var(--comp-05-rgb), 0.18);
+		border-color: rgba(var(--comp-06-rgb), 0.56);
+		color: var(--comp-09);
 	}
 
 	.noir-btn--pill {
-		background: rgba(216, 176, 140, 0.09);
-		border-color: rgba(216, 176, 140, 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.09);
+		border-color: rgba(var(--noir-gold-rgb), 0.42);
 		color: var(--noir-gold-soft);
 	}
 

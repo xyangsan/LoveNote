@@ -12,10 +12,10 @@
 				"navigationBarTitleText": "恋人手札",
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "light",
-				"backgroundColor": "#110D0B",
-				"backgroundColorTop": "#110D0B",
-				"backgroundColorBottom": "#110D0B"
+				"backgroundTextStyle": "dark",
+				"backgroundColor": "#EDF1EA",
+				"backgroundColorTop": "#EDF1EA",
+				"backgroundColorBottom": "#EDF1EA"
 			}
 		},
 		{
@@ -23,10 +23,10 @@
 			"style": {
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "light",
-				"backgroundColor": "#110D0B",
-				"backgroundColorTop": "#110D0B",
-				"backgroundColorBottom": "#110D0B"
+				"backgroundTextStyle": "dark",
+				"backgroundColor": "#EDF1EA",
+				"backgroundColorTop": "#EDF1EA",
+				"backgroundColorBottom": "#EDF1EA"
 			}
 		},
 		{
@@ -34,7 +34,7 @@
 			"style": {
 				"navigationBarTitleText": "微信登录",
 				"navigationStyle": "custom",
-				"backgroundColor": "#110D0B"
+				"backgroundColor": "#EDF1EA"
 			}
 		},
 		{
@@ -55,10 +55,10 @@
 			"style": {
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "light",
-				"backgroundColor": "#110D0B",
-				"backgroundColorTop": "#110D0B",
-				"backgroundColorBottom": "#110D0B"
+				"backgroundTextStyle": "dark",
+				"backgroundColor": "#EDF1EA",
+				"backgroundColorTop": "#EDF1EA",
+				"backgroundColorBottom": "#EDF1EA"
 			}
 		},
 		{
@@ -66,10 +66,10 @@
 			"style": {
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "light",
-				"backgroundColor": "#110D0B",
-				"backgroundColorTop": "#110D0B",
-				"backgroundColorBottom": "#110D0B"
+				"backgroundTextStyle": "dark",
+				"backgroundColor": "#EDF1EA",
+				"backgroundColorTop": "#EDF1EA",
+				"backgroundColorBottom": "#EDF1EA"
 			}
 		},
 		{
@@ -95,10 +95,10 @@
 				"navigationBarTitleText": "双人日常",
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true,
-				"backgroundTextStyle": "light",
-				"backgroundColor": "#110D0B",
-				"backgroundColorTop": "#110D0B",
-				"backgroundColorBottom": "#110D0B",
+				"backgroundTextStyle": "dark",
+				"backgroundColor": "#EDF1EA",
+				"backgroundColorTop": "#EDF1EA",
+				"backgroundColorBottom": "#EDF1EA",
 				// #ifdef MP-BAIDU
 				"usingComponents": {
 					"editor": "dynamicLib://editorLib/editor"
@@ -112,6 +112,16 @@
 				"navigationBarTitleText": "发布日常",
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/theme/index",
+			"style": {
+				"navigationBarTitleText": "主题",
+				"navigationStyle": "custom",
+				"backgroundColor": "#EDF1EA",
+				"backgroundColorTop": "#EDF1EA",
+				"backgroundColorBottom": "#EDF1EA"
+			}
 		}
 	],
 	"subPackages": [
@@ -124,7 +134,7 @@
 						"navigationBarTitleText": "情侣信息",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light"
+						"backgroundTextStyle": "dark"
 					}
 				}
 			]
@@ -138,10 +148,10 @@
 						"navigationBarTitleText": "照片",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				},
 				{
@@ -160,9 +170,9 @@
 					"style": {
 						"navigationBarTitleText": "上传照片",
 						"navigationStyle": "custom",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				}
 			]
@@ -176,10 +186,10 @@
 						"navigationBarTitleText": "愿望单",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				}
 			]
@@ -193,10 +203,10 @@
 						"navigationBarTitleText": "纪念日",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				},
 				{
@@ -204,9 +214,9 @@
 					"style": {
 						"navigationBarTitleText": "编辑纪念日",
 						"navigationStyle": "custom",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				}
 			]
@@ -219,9 +229,9 @@
 					"style": {
 						"navigationBarTitleText": "反馈与帮助",
 						"navigationStyle": "custom",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				},
 				{
@@ -230,10 +240,10 @@
 						"navigationBarTitleText": "反馈列表",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				},
 				{
@@ -241,9 +251,9 @@
 					"style": {
 						"navigationBarTitleText": "反馈详情",
 						"navigationStyle": "custom",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				}
 			]
@@ -257,10 +267,10 @@
 						"navigationBarTitleText": "聚会游戏",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				},
 				{
@@ -269,7 +279,7 @@
 						"navigationBarTitleText": "游戏战绩",
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light"
+						"backgroundTextStyle": "dark"
 					}
 				},
 				{
@@ -308,10 +318,10 @@
 					"style": {
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,
-						"backgroundTextStyle": "light",
-						"backgroundColor": "#110D0B",
-						"backgroundColorTop": "#110D0B",
-						"backgroundColorBottom": "#110D0B"
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				}
 			]
@@ -320,11 +330,11 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "white",
 		"navigationBarTitleText": "",
-		"navigationBarBackgroundColor": "#110D0B",
-		"backgroundColor": "#110D0B",
-		"backgroundColorTop": "#110D0B",
-		"backgroundColorBottom": "#110D0B",
-		"backgroundTextStyle": "light"
+		"navigationBarBackgroundColor": "#EDF1EA",
+		"backgroundColor": "#EDF1EA",
+		"backgroundColorTop": "#EDF1EA",
+		"backgroundColorBottom": "#EDF1EA",
+		"backgroundTextStyle": "dark"
 	},
 	"uniIdRouter": {}
 }

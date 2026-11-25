@@ -257,7 +257,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(8, 6, 5, 0.74);
+		background: rgba(var(--comp-01-rgb), 0.74);
 	}
 
 	.ll-rules__panel {
@@ -271,9 +271,9 @@
 		max-height: 86vh;
 		padding: 0 18px 14px;
 		border-radius: 18px;
-		border: 1px solid rgba(216, 176, 140, 0.32);
-		background: linear-gradient(180deg, #1E1814 0%, #15110E 100%);
-		box-shadow: 0 18px 42px rgba(0, 0, 0, 0.58);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.32);
+		background: linear-gradient(180deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
+		box-shadow: 0 18px 42px rgba(var(--noir-shadow-rgb), 0.58);
 		overflow: hidden;
 	}
 
@@ -299,7 +299,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 9px;
 		letter-spacing: 2px;
-		color: rgba(216, 176, 140, 0.68);
+		color: rgba(var(--noir-gold-rgb), 0.68);
 	}
 
 	.ll-rules__title {
@@ -315,8 +315,8 @@
 		width: 28px;
 		height: 28px;
 		border-radius: 50%;
-		border: 1px solid rgba(255, 255, 255, 0.14);
-		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(var(--noir-wash-rgb), 0.14);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -325,7 +325,7 @@
 
 	.ll-rules__close-txt {
 		font-size: 12px;
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.ll-rules__subtitle {
@@ -333,7 +333,7 @@
 		margin-top: 5px;
 		font-size: 12px;
 		line-height: 1.5;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.ll-rules__meta {
@@ -346,8 +346,8 @@
 	.ll-rules__meta-tag {
 		padding: 2px 9px;
 		border-radius: 999px;
-		border: 1px solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		font-size: 10px;
 		color: var(--noir-gold-soft);
 	}
@@ -379,8 +379,8 @@
 	.ll-rules__section {
 		padding: 10px 12px;
 		border-radius: 12px;
-		border: 1px solid rgba(255, 255, 255, 0.07);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(var(--noir-wash-rgb), 0.07);
+		background: var(--noir-glass-1);
 	}
 
 	.ll-rules__section + .ll-rules__section {
@@ -408,7 +408,7 @@
 		margin-top: 7px;
 		margin-right: 8px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ff9a76 0%, #f4b183 100%);
+		background: linear-gradient(135deg, var(--poker-62) 0%, var(--poker-66) 100%);
 	}
 
 	.ll-rules__text {
@@ -430,13 +430,13 @@
 		height: 38px;
 		border-radius: 999px;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 6px 16px rgba(222, 95, 60, 0.30);
+		box-shadow: 0 6px 16px rgba(var(--noir-coral-rgb), 0.30);
 	}
 
 	.ll-rules__btn-text {
 		font-size: 13px;
 		font-weight: 700;
 		letter-spacing: 1px;
-		color: #FFF9F4;
+		color: var(--poker-99);
 	}
 </style>

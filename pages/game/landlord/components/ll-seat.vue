@@ -78,9 +78,9 @@
 	 * ⚠️ 文字牌只在 role ∈ {landlord, farmer} 时显示 —— 卧底页的身份保密靠图标，不加文字。
 	 */
 	const BODY_GRADIENTS = [
-		'linear-gradient(165deg, #8fb9e6 0%, #4d7fb8 100%)',
-		'linear-gradient(165deg, #a9d59a 0%, #5f9e57 100%)',
-		'linear-gradient(165deg, #e0b07d 0%, #b57f4a 100%)'
+		'linear-gradient(165deg, var(--poker-105) 0%, var(--poker-42) 100%)',
+		'linear-gradient(165deg, var(--poker-106) 0%, var(--poker-107) 100%)',
+		'linear-gradient(165deg, var(--poker-108) 0%, var(--poker-109) 100%)'
 	]
 
 	const ROLE_TAG_TEXT = {
@@ -209,7 +209,7 @@
 		height: 62px;
 		padding-top: 5px;
 		border-radius: 36px 36px 14px 14px;
-		box-shadow: 0 6px 14px rgba(12, 36, 22, 0.4);
+		box-shadow: 0 6px 14px rgba(var(--poker-07-rgb), 0.4);
 	}
 
 	.ll-seat--small .ll-seat__body {
@@ -225,8 +225,8 @@
 		width: 40px;
 		height: 40px;
 		border-radius: 50%;
-		background: #fffaf2;
-		border: 2px solid rgba(255, 255, 255, 0.05);
+		background: var(--poker-102);
+		border: 2px solid rgba(var(--noir-wash-rgb), 0.05);
 		overflow: hidden;
 	}
 
@@ -239,8 +239,8 @@
 	   地主：金色头像框 + 金色光晕 —— 全桌唯一；
 	   农民：保持白框。 */
 	.ll-seat--landlord .ll-seat__head {
-		border: 2px solid #ffd166;
-		box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.38);
+		border: 2px solid var(--poker-73);
+		box-shadow: 0 0 0 2px rgba(var(--poker-73-rgb), 0.38);
 	}
 
 	.ll-seat__avatar-img {
@@ -251,11 +251,11 @@
 	.ll-seat__avatar-text {
 		font-size: 17px;
 		font-weight: 700;
-		color: #7a4a33;
+		color: var(--poker-33);
 	}
 
 	.ll-seat--current .ll-seat__body {
-		box-shadow: 0 0 0 2px #ffe9a8, 0 6px 14px rgba(12, 36, 22, 0.44);
+		box-shadow: 0 0 0 2px var(--poker-88), 0 6px 14px rgba(var(--poker-07-rgb), 0.44);
 	}
 
 	/* ---------------- 角标：相对布局的容器 + 绝对定位的 emoji ---------------- */
@@ -284,8 +284,8 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 2px 6px rgba(12, 36, 22, 0.32);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 2px 6px rgba(var(--poker-07-rgb), 0.32);
 		line-height: 1;
 	}
 
@@ -318,22 +318,22 @@
 
 	/* 地主：金底深棕字；农民：青绿底白字 —— 一眼分阵营 */
 	.ll-seat__role-tag--landlord {
-		background: linear-gradient(180deg, #ffd873 0%, #f5a623 100%);
-		color: #5a3a10;
-		box-shadow: 0 1px 3px rgba(60, 40, 5, 0.4);
+		background: linear-gradient(180deg, var(--poker-75) 0%, var(--poker-60) 100%);
+		color: var(--poker-25);
+		box-shadow: 0 1px 3px rgba(var(--poker-18-rgb), 0.4);
 	}
 
 	.ll-seat__role-tag--farmer {
-		background: linear-gradient(180deg, #6cb87a 0%, #3f8a56 100%);
-		color: #f4fff4;
-		box-shadow: 0 1px 3px rgba(10, 40, 18, 0.4);
+		background: linear-gradient(180deg, var(--poker-53) 0%, var(--poker-40) 100%);
+		color: var(--poker-101);
+		box-shadow: 0 1px 3px rgba(var(--poker-08-rgb), 0.4);
 	}
 
 	.ll-seat__name {
 		font-size: 12px;
 		font-weight: 600;
-		color: #fff6ef;
-		text-shadow: 0 1px 3px rgba(8, 30, 18, 0.6);
+		color: var(--poker-98);
+		text-shadow: 0 1px 3px rgba(var(--poker-04-rgb), 0.6);
 	}
 
 	/* 状态位：昵称正下方 / 头像正下方的那一行。
@@ -342,8 +342,8 @@
 		margin-top: 4px;
 		padding: 2px 9px;
 		border-radius: 999px;
-		background: rgba(12, 40, 26, 0.46);
-		border: 1px solid rgba(255, 255, 255, 0.22);
+		background: rgba(var(--poker-09-rgb), 0.46);
+		border: 1px solid rgba(var(--noir-wash-rgb), 0.22);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -351,16 +351,16 @@
 
 	/* 已准备：亮绿底 + 白字，扫一眼就知道谁卡着不开局 */
 	.ll-seat__ready--on {
-		background: linear-gradient(180deg, #6fd08a 0%, #3f9e5c 100%);
-		border-color: rgba(255, 255, 255, 0.6);
-		box-shadow: 0 2px 6px rgba(10, 46, 24, 0.36);
+		background: linear-gradient(180deg, var(--poker-58) 0%, var(--poker-45) 100%);
+		border-color: rgba(var(--noir-white-rgb), 0.6);
+		box-shadow: 0 2px 6px rgba(var(--poker-12-rgb), 0.36);
 	}
 
 	.ll-seat__ready-text {
 		font-size: 10px;
 		font-weight: 700;
 		line-height: 1.3;
-		color: #f4fff6;
+		color: var(--poker-103);
 		white-space: nowrap;
 	}
 
@@ -368,14 +368,14 @@
 		margin-top: 4px;
 		padding: 2px 8px;
 		border-radius: 999px;
-		background: rgba(16, 44, 30, 0.6);
+		background: rgba(var(--poker-15-rgb), 0.6);
 		display: flex;
 		align-items: center;
 	}
 
 	.ll-seat__cards-text {
 		font-size: 10px;
-		color: #f6efe8;
+		color: var(--poker-93);
 	}
 
 	.ll-seat__bubble {
@@ -385,8 +385,8 @@
 		max-width: 140px;
 		padding: 4px 10px;
 		border-radius: 12px;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 4px 10px rgba(12, 36, 22, 0.3);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 4px 10px rgba(var(--poker-07-rgb), 0.3);
 	}
 
 	.ll-seat__bubble-text {

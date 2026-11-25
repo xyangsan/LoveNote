@@ -150,10 +150,10 @@
 			 */
 			tagStyle() {
 				const TONES = {
-					normal: { bg: 'rgba(34, 27, 23, 0.96)', border: 'rgba(216, 176, 140, 0.34)', color: '#EAD4BC' },
-					win: { bg: 'rgba(28, 44, 34, 0.96)', border: 'rgba(132, 190, 156, 0.48)', color: '#9ED6B2' },
-					warn: { bg: 'rgba(46, 34, 22, 0.96)', border: 'rgba(216, 176, 140, 0.50)', color: '#F0C78A' },
-					danger: { bg: 'rgba(54, 24, 20, 0.96)', border: 'rgba(226, 100, 63, 0.54)', color: '#F5B496' }
+					normal: { bg: 'rgba(34, 27, 23, 0.96)', border: 'rgba(var(--noir-gold-rgb), 0.34)', color: 'var(--noir-gold-soft)' },
+					win: { bg: 'rgba(28, 44, 34, 0.96)', border: 'rgba(var(--noir-green-rgb), 0.48)', color: 'var(--noir-green)' },
+					warn: { bg: 'rgba(46, 34, 22, 0.96)', border: 'rgba(var(--noir-gold-rgb), 0.50)', color: 'var(--ops-07)' },
+					danger: { bg: 'rgba(54, 24, 20, 0.96)', border: 'rgba(var(--noir-coral-rgb), 0.54)', color: 'var(--noir-coral-light)' }
 				}
 				const tone = TONES[this.tagTone] || TONES.normal
 				return [
@@ -166,7 +166,7 @@
 					'line-height:1.5',
 					'padding:2rpx 14rpx',
 					'border-radius:999rpx',
-					'box-shadow:0 6rpx 16rpx rgba(0, 0, 0, 0.42)'
+					'box-shadow:0 6rpx 16rpx rgba(var(--noir-shadow-rgb), 0.42)'
 				].join(';')
 			}
 		},
@@ -194,8 +194,8 @@
 		padding: 24rpx 10rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(26, 21, 18, 0.94));
-		box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.42);
+		background: linear-gradient(145deg, var(--noir-glass-2), rgba(var(--noir-surface2-rgb), 0.94));
+		box-shadow: 0 12rpx 30rpx rgba(var(--noir-shadow-rgb), 0.42);
 		transition: all 0.18s ease;
 	}
 
@@ -206,16 +206,16 @@
 	}
 
 	.game-seat--self {
-		border-color: rgba(226, 100, 63, 0.46);
-		background: linear-gradient(145deg, rgba(226, 100, 63, 0.18), rgba(26, 21, 18, 0.96));
+		border-color: rgba(var(--noir-coral-rgb), 0.46);
+		background: linear-gradient(145deg, rgba(var(--noir-coral-rgb), 0.18), rgba(var(--noir-surface2-rgb), 0.96));
 	}
 
 	.game-seat--speaker {
-		box-shadow: 0 0 0 4rpx rgba(231, 111, 81, 0.5), 0 12rpx 30rpx rgba(0, 0, 0, 0.42);
+		box-shadow: 0 0 0 4rpx rgba(var(--comp-07-rgb), 0.5), 0 12rpx 30rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.game-seat--selected {
-		box-shadow: 0 0 0 5rpx var(--noir-coral), 0 12rpx 30rpx rgba(231, 111, 81, 0.22);
+		box-shadow: 0 0 0 5rpx var(--noir-coral), 0 12rpx 30rpx rgba(var(--comp-07-rgb), 0.22);
 	}
 
 	.game-seat--offline {
@@ -243,7 +243,7 @@
 		width: 96rpx;
 		height: 96rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, var(--noir-coral) 100%);
+		background: linear-gradient(135deg, var(--poker-68) 0%, var(--noir-coral) 100%);
 		overflow: hidden;
 	}
 
@@ -304,8 +304,8 @@
 	/* 机器人：蓝色文字药丸（尺寸由 .game-seat__badge 统一给，这里只做观感） */
 	.game-seat__robot {
 		border-radius: 999rpx;
-		background: #6cb8ff;
-		box-shadow: 0 4rpx 10rpx rgba(108, 184, 255, 0.36);
+		background: var(--home-06);
+		box-shadow: 0 4rpx 10rpx rgba(var(--home-06-rgb), 0.36);
 	}
 
 	.game-seat__robot-text {
@@ -350,17 +350,17 @@
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--noir-glass-2);
 	}
 
 	.game-seat__ready--on {
-		border-color: rgba(132, 190, 156, 0.36);
-		background: rgba(132, 190, 156, 0.14);
+		border-color: rgba(var(--noir-green-rgb), 0.36);
+		background: rgba(var(--noir-green-rgb), 0.14);
 	}
 
 	.game-seat__ready-text {
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.game-seat__ready--on .game-seat__ready-text {
@@ -371,7 +371,7 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 20rpx;
-		color: #b0a09a;
+		color: var(--comp-10);
 	}
 
 	.game-seat__score {

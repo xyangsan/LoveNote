@@ -169,7 +169,7 @@
 	.login-popup__mask {
 		position: absolute;
 		inset: 0;
-		background: rgba(8, 6, 5, 0.72);
+		background: rgba(var(--comp-01-rgb), 0.72);
 		backdrop-filter: blur(12rpx);
 	}
 
@@ -182,8 +182,8 @@
 		padding: 36rpx 32rpx;
 		border-radius: 36rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(155deg, #231B16 0%, #16110E 100%);
-		box-shadow: 0 28rpx 68rpx rgba(0, 0, 0, 0.62);
+		background: linear-gradient(155deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
+		box-shadow: 0 28rpx 68rpx rgba(var(--noir-shadow-rgb), 0.62);
 	}
 
 	.login-popup__header {
@@ -217,7 +217,7 @@
 		margin-top: 14rpx;
 		font-size: 24rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 		word-break: break-all;
 	}
 
@@ -228,7 +228,7 @@
 	.login-popup__close {
 		flex-shrink: 0;
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.editor-card {
@@ -239,7 +239,7 @@
 		padding: 24rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.035);
+		background: var(--noir-glass-1);
 	}
 
 	.avatar-button {
@@ -262,7 +262,7 @@
 		width: 116rpx;
 		height: 116rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(216, 176, 140, 0.46);
+		border: 2rpx solid rgba(var(--noir-gold-rgb), 0.46);
 		background: var(--noir-surface-2);
 	}
 
@@ -279,7 +279,7 @@
 	.field-label {
 		display: block;
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 		margin-bottom: 12rpx;
 	}
 
@@ -287,8 +287,8 @@
 		height: 82rpx;
 		padding: 0 22rpx;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.09);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.09);
+		background: var(--noir-glass-2);
 		font-size: 26rpx;
 		color: var(--noir-text-strong);
 	}
@@ -316,15 +316,15 @@
 		letter-spacing: 2rpx;
 		color: var(--noir-text-warm);
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 16rpx 32rpx rgba(222, 95, 60, 0.28);
+		box-shadow: 0 16rpx 32rpx rgba(var(--noir-coral-rgb), 0.28);
 	}
 
 	.notice-card {
 		margin-top: 26rpx;
 		padding: 24rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.22);
-		background: rgba(216, 176, 140, 0.06);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.22);
+		background: rgba(var(--noir-gold-rgb), 0.06);
 	}
 
 	.button-hover {

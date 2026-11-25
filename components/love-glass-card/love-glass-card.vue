@@ -29,7 +29,7 @@
 
 <script>
 	const DEFAULT_BACKGROUND = 'linear-gradient(145deg, rgba(30, 24, 20, 0.96), rgba(22, 17, 14, 0.96))'
-	const DEFAULT_SHADOW = '0 18rpx 44rpx rgba(0, 0, 0, 0.42)'
+	const DEFAULT_SHADOW = '0 18rpx 44rpx rgba(var(--noir-shadow-rgb), 0.42)'
 
 	export default {
 		name: 'love-glass-card',
@@ -78,7 +78,7 @@
 			},
 			color: {
 				type: String,
-				default: '#FBF4EA'
+				default: 'var(--noir-text-strong)'
 			},
 			tagSize: {
 				type: [Number, String],
@@ -86,7 +86,7 @@
 			},
 			tagColor: {
 				type: String,
-				default: '#D8B08C'
+				default: 'var(--noir-gold)'
 			},
 			headerLine: {
 				type: Boolean,
@@ -137,8 +137,8 @@
 	}
 
 	.love-glass-card :deep(.fui-card__header) {
-		background: linear-gradient(180deg, rgba(216, 176, 140, 0.08), rgba(255, 255, 255, 0.01));
-		border-bottom-color: rgba(255, 255, 255, 0.06);
+		background: linear-gradient(180deg, rgba(var(--noir-gold-rgb), 0.08), var(--noir-glass-1));
+		border-bottom-color: rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.love-glass-card__content {

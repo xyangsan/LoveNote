@@ -1,5 +1,5 @@
 <template>
-	<view class="love-page fd-page">
+	<view class="love-page fd-page" :class="themeClass">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -399,8 +399,8 @@
 	}
 
 	.fd-nav-status--coral {
-		background: rgba(226, 100, 63, 0.16);
-		border-color: rgba(226, 100, 63, 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.36);
 	}
 
 	.fd-nav-status--coral .fd-nav-status__txt {
@@ -408,8 +408,8 @@
 	}
 
 	.fd-nav-status--gold {
-		background: rgba(216, 176, 140, 0.14);
-		border-color: rgba(216, 176, 140, 0.28);
+		background: rgba(var(--noir-gold-rgb), 0.14);
+		border-color: rgba(var(--noir-gold-rgb), 0.28);
 	}
 
 	.fd-nav-status--gold .fd-nav-status__txt {
@@ -417,12 +417,12 @@
 	}
 
 	.fd-nav-status--green {
-		background: rgba(104, 196, 140, 0.14);
-		border-color: rgba(104, 196, 140, 0.3);
+		background: rgba(var(--page-07-rgb), 0.14);
+		border-color: rgba(var(--page-07-rgb), 0.3);
 	}
 
 	.fd-nav-status--green .fd-nav-status__txt {
-		color: #7ED4A2;
+		color: var(--page-10);
 	}
 
 	.fd-nav-status__txt {
@@ -444,8 +444,8 @@
 	.fd-forbidden {
 		padding: 64rpx 36rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
@@ -460,7 +460,7 @@
 		display: block;
 		margin-top: 12rpx;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.fd-loading {
@@ -473,7 +473,7 @@
 	.fd-loading__txt {
 		margin-top: 16rpx;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.fd-grid {
@@ -482,14 +482,14 @@
 		gap: 20rpx;
 		padding: 24rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.fd-cell__label {
 		display: block;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 	}
 
 	.fd-cell__val {
@@ -515,7 +515,7 @@
 		display: block;
 		font-size: 22rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 	}
 
 	.fd-content {
@@ -523,7 +523,7 @@
 		margin-top: 14rpx;
 		font-size: 26rpx;
 		line-height: 1.75;
-		color: rgba(245, 237, 228, 0.78);
+		color: rgba(var(--noir-text-rgb), 0.78);
 		white-space: pre-wrap;
 		word-break: break-all;
 	}
@@ -539,16 +539,16 @@
 		width: 148rpx;
 		height: 148rpx;
 		border-radius: 20rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.1);
-		background: #1A1411;
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.1);
+		background: var(--noir-sheet-hi);
 	}
 
 	.fd-cur {
 		margin-top: 28rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.22);
-		background: rgba(216, 176, 140, 0.06);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.22);
+		background: rgba(var(--noir-gold-rgb), 0.06);
 	}
 
 	.fd-cur__title {
@@ -563,7 +563,7 @@
 		margin-top: 10rpx;
 		font-size: 25rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.78);
+		color: rgba(var(--noir-text-rgb), 0.78);
 		white-space: pre-wrap;
 		word-break: break-all;
 	}
@@ -573,7 +573,7 @@
 		margin-top: 12rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.4);
+		color: rgba(var(--noir-text-rgb), 0.4);
 	}
 
 	.fd-reply {
@@ -584,8 +584,8 @@
 		position: relative;
 		margin-top: 14rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.09);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.09);
+		background: var(--noir-glass-1);
 		padding: 22rpx 24rpx 52rpx;
 	}
 
@@ -598,7 +598,7 @@
 	}
 
 	.fd-textarea__ph {
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 		font-size: 26rpx;
 	}
 
@@ -608,7 +608,7 @@
 		bottom: 16rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
 	.fd-foot {
@@ -621,7 +621,7 @@
 		align-items: center;
 		gap: 20rpx;
 		padding: 20rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0), rgba(17, 13, 11, 0.94) 24%, var(--noir-bg));
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0), rgba(var(--noir-bg-rgb), 0.94) 24%, var(--noir-bg));
 	}
 
 	.fd-foot__ghost {

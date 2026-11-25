@@ -6,6 +6,7 @@ import { PUBLIC_PAGE_PATHS, PUBLIC_PAGE_PREFIXES } from './common/auth-entry.js'
 
 import uvUI from '@/uni_modules/uv-ui-tools'
 import shareMixin from './common/mixins/share.js'
+import themeMixin from './common/mixins/theme.js'
 
 /**
  * 无需登录即可访问的页面白名单（hh-router-guard 认 `*` 后缀通配）。
@@ -30,6 +31,8 @@ Vue.use(uvUI);
 // 全局注册分享 mixin，让所有页面右上角胶囊都可转发/分享朋友圈
 // 必须在 new Vue 之前注册（页面级同名钩子优先级更高）
 Vue.mixin(shareMixin)
+// 全局主题 mixin：给每个页面注入 themeClass / themeKey
+Vue.mixin(themeMixin)
 App.mpType = 'app'
 const pinia = createVue2Pinia()
 const app = new Vue({
@@ -77,6 +80,10 @@ export function createApp() {
   // 全局注册分享 mixin：必须在首个页面创建前执行
   // （uni Vue3 运行时用 findMixinRuntimeHooks() 读取全局 mixin，且带 once() 缓存）
   app.mixin(shareMixin)
+
+  // 全局主题 mixin：注入 themeClass / themeKey，并在 onShow 同步状态栏前景色。
+  // ⚠️ 必须在首个页面创建前注册，否则先打开的页面拿不到 themeClass。
+  app.mixin(themeMixin)
 
   app.config.globalProperties.fui = fui;
   app.use(pinia)

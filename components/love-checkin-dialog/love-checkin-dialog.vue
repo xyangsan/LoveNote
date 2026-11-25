@@ -178,7 +178,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(8, 6, 5, 0.74);
+		background: rgba(var(--comp-01-rgb), 0.74);
 		animation: checkin-fade 0.2s ease-out;
 	}
 
@@ -187,9 +187,9 @@
 		width: 660rpx;
 		border-radius: 36rpx;
 		overflow: hidden;
-		border: 1rpx solid rgba(216, 176, 140, 0.26);
-		background: linear-gradient(160deg, #231B16 0%, #16110E 100%);
-		box-shadow: 0 36rpx 80rpx rgba(0, 0, 0, 0.62);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.26);
+		background: linear-gradient(160deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
+		box-shadow: 0 36rpx 80rpx rgba(var(--noir-shadow-rgb), 0.62);
 		animation: checkin-pop 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 	}
 
@@ -198,8 +198,8 @@
 		height: 184rpx;
 		padding: 32rpx 36rpx 0;
 		overflow: hidden;
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.26) 0%, rgba(216, 176, 140, 0.1) 100%);
-		border-bottom: 1rpx solid rgba(216, 176, 140, 0.16);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.26) 0%, rgba(var(--noir-gold-rgb), 0.1) 100%);
+		border-bottom: 1rpx solid rgba(var(--noir-gold-rgb), 0.16);
 	}
 
 	/* 装饰心：压到右下角再溢出裁掉，只留一个弧形轮廓 */
@@ -224,7 +224,7 @@
 		width: 48rpx;
 		height: 48rpx;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.26);
+		background: rgba(var(--noir-wash-rgb), 0.26);
 	}
 
 	.checkin-hd__close-icon {
@@ -261,7 +261,7 @@
 		padding-right: 80rpx;
 		font-size: 24rpx;
 		line-height: 1.5;
-		color: rgba(255, 255, 255, 0.86);
+		color: rgba(var(--noir-white-rgb), 0.86);
 	}
 
 	.checkin-body {
@@ -282,7 +282,7 @@
 		padding: 14rpx 0 12rpx;
 		border-radius: 20rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.checkin-day__num {
@@ -303,12 +303,12 @@
 		font-size: 20rpx;
 		font-weight: 500;
 		line-height: 1;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.checkin-day--done {
-		border-color: rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.14);
+		border-color: rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 	}
 
 	.checkin-day--done .checkin-day__num {
@@ -321,9 +321,9 @@
 
 	/* 今日是唯一的行动点，视觉必须最重 */
 	.checkin-day--today {
-		border-color: rgba(226, 100, 63, 0.62);
-		background: linear-gradient(145deg, rgba(240, 154, 107, 0.28), rgba(222, 95, 60, 0.24));
-		box-shadow: 0 10rpx 24rpx rgba(222, 95, 60, 0.24);
+		border-color: rgba(var(--noir-coral-rgb), 0.62);
+		background: linear-gradient(145deg, rgba(var(--noir-coral-bright-rgb), 0.28), rgba(var(--noir-coral-rgb), 0.24));
+		box-shadow: 0 10rpx 24rpx rgba(var(--noir-coral-rgb), 0.24);
 	}
 
 	.checkin-day--today .checkin-day__num {
@@ -348,7 +348,7 @@
 		height: 92rpx;
 		border-radius: 46rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 14rpx 32rpx rgba(222, 95, 60, 0.30);
+		box-shadow: 0 14rpx 32rpx rgba(var(--noir-coral-rgb), 0.30);
 	}
 
 	.checkin-btn__text {

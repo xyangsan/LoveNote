@@ -1,5 +1,5 @@
 <template>
-	<view class="pe-page">
+	<view class="pe-page" :class="themeClass">
 		<view class="pe-glow pe-glow--left"></view>
 		<view class="pe-glow pe-glow--right"></view>
 
@@ -701,8 +701,8 @@
 		width: 144rpx;
 		height: 144rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(255, 240, 226, 0.48);
-		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		border: 2rpx solid rgba(var(--avatar-17-rgb), 0.48);
+		background: linear-gradient(135deg, var(--avatar-11), var(--avatar-03));
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -717,7 +717,7 @@
 	.pe-av__txt {
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 52rpx;
-		color: #FFF6EC;
+		color: var(--avatar-18);
 	}
 
 	.pe-av-plus {
@@ -769,11 +769,11 @@
 		padding: 0 28rpx;
 		border-radius: 32rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.pe-row-block {
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.pe-row-block--last {
@@ -791,7 +791,7 @@
 	.pe-row__label {
 		flex-shrink: 0;
 		font-size: 26rpx;
-		color: rgba(245, 237, 228, 0.68);
+		color: rgba(var(--noir-text-rgb), 0.68);
 	}
 
 	.pe-row__right {
@@ -813,7 +813,7 @@
 	}
 
 	.pe-input-ph {
-		color: rgba(245, 237, 228, 0.30);
+		color: rgba(var(--noir-text-rgb), 0.30);
 	}
 
 	.pe-row__val {
@@ -823,19 +823,19 @@
 	}
 
 	.pe-row__val--placeholder {
-		color: rgba(245, 237, 228, 0.32);
+		color: rgba(var(--noir-text-rgb), 0.32);
 	}
 
 	.pe-row__val--mono {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.pe-chev {
 		flex-shrink: 0;
 		font-size: 30rpx;
-		color: rgba(245, 237, 228, 0.30);
+		color: rgba(var(--noir-text-rgb), 0.30);
 		line-height: 1;
 	}
 
@@ -843,7 +843,7 @@
 		display: block;
 		padding-bottom: 16rpx;
 		font-size: 21rpx;
-		color: #F08A6C;
+		color: var(--avatar-10);
 		text-align: right;
 	}
 
@@ -861,18 +861,18 @@
 		height: 54rpx;
 		padding: 0 22rpx;
 		border-radius: 27rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
+		background: var(--noir-glass-1);
 	}
 
 	.pe-chip--on {
-		border-color: rgba(226, 100, 63, 0.52);
-		background: rgba(226, 100, 63, 0.18);
+		border-color: rgba(var(--noir-coral-rgb), 0.52);
+		background: rgba(var(--noir-coral-rgb), 0.18);
 	}
 
 	.pe-chip__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.pe-chip--on .pe-chip__txt {
@@ -886,13 +886,13 @@
 		padding: 22rpx 26rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: rgba(216, 176, 140, 0.06);
+		background: rgba(var(--noir-gold-rgb), 0.06);
 	}
 
 	.pe-bonus__txt {
 		font-size: 22rpx;
 		line-height: 1.65;
-		color: rgba(234, 212, 188, 0.80);
+		color: rgba(var(--noir-gold-soft-rgb), 0.80);
 	}
 
 	.pe-note {
@@ -901,7 +901,7 @@
 		padding: 0 6rpx;
 		font-size: 21rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.36);
+		color: rgba(var(--noir-text-rgb), 0.36);
 	}
 
 	/* 底部操作栏（对标 s28 .pe-foot） */
@@ -912,8 +912,8 @@
 		bottom: 0;
 		z-index: 30;
 		padding: 20rpx 36rpx calc(24rpx + env(safe-area-inset-bottom));
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(17, 13, 11, 0.94);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: rgba(var(--noir-bg-rgb), 0.94);
 	}
 
 	.pe-foot {
@@ -932,14 +932,14 @@
 
 	.pe-btn--ghost {
 		flex: 0 0 216rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.08);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.08);
 	}
 
 	.pe-btn--primary {
 		flex: 1;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
+		box-shadow: 0 12rpx 28rpx rgba(var(--noir-coral-rgb), 0.28);
 	}
 
 	.pe-btn--disabled {

@@ -191,9 +191,9 @@
 		align-items: center;
 		justify-content: center;
 		height: 256rpx;
-		border: 2rpx dashed rgba(216, 176, 140, 0.28);
+		border: 2rpx dashed rgba(var(--noir-gold-rgb), 0.28);
 		border-radius: 26rpx;
-		background: rgba(255, 255, 255, 0.025);
+		background: var(--noir-glass-1);
 	}
 
 	.game-seats__empty--small {
@@ -204,13 +204,13 @@
 	.game-seats__empty-plus {
 		font-size: 44rpx;
 		line-height: 1;
-		color: #e0a08a;
+		color: var(--comp-12);
 	}
 
 	.game-seats__empty-text {
 		display: block;
 		margin-top: 10rpx;
 		font-size: 21rpx;
-		color: #c0a094;
+		color: var(--comp-11);
 	}
 </style>

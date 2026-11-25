@@ -45,7 +45,7 @@
 				</view>
 
 				<view v-if="file.status === 'uploading'" class="love-media-uploader__mask">
-					<fui-loading type="rotate" size="32" color="#fff"></fui-loading>
+					<fui-loading type="rotate" size="32" color="var(--noir-white)"></fui-loading>
 				</view>
 				<view v-if="file.status === 'success'" class="love-media-uploader__success">
 					<text class="love-media-uploader__success-icon">✓</text>
@@ -1142,7 +1142,7 @@ export default {
 				// jpg 不支持透明通道，透明 png 直接导出会变黑块：先只把「内容区域」铺白，
 				// 不铺整块画布，所以不会多出白边。
 				if (fileType !== 'png') {
-					context.setFillStyle('#ffffff')
+					context.setFillStyle('#FFFFFF')
 					context.fillRect(0, 0, targetWidth, targetHeight)
 				}
 				context.drawImage(sourcePath, 0, 0, targetWidth, targetHeight)
@@ -1445,7 +1445,7 @@ export default {
 	display: block;
 	font-size: 22rpx;
 	line-height: 1.7;
-	color: rgba(245, 237, 228, 0.48);
+	color: rgba(var(--noir-text-rgb), 0.48);
 }
 
 .love-media-uploader__grid {
@@ -1459,9 +1459,9 @@ export default {
 	box-sizing: border-box;
 	margin: 0 8rpx 16rpx;
 	border-radius: 22rpx;
-	border: 1rpx solid rgba(255, 255, 255, 0.10);
+	border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 	overflow: hidden;
-	background: #1B1512;
+	background: var(--noir-sheet-hi);
 }
 
 .love-media-uploader__image,
@@ -1476,8 +1476,8 @@ export default {
 	bottom: 10rpx;
 	padding: 4rpx 12rpx;
 	border-radius: 12rpx;
-	border: 1rpx solid rgba(255, 255, 255, 0.12);
-	background: rgba(17, 13, 11, 0.78);
+	border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+	background: rgba(var(--noir-bg-rgb), 0.78);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -1497,8 +1497,8 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border: 1rpx solid rgba(255, 255, 255, 0.14);
-	background: rgba(17, 13, 11, 0.74);
+	border: 1rpx solid rgba(var(--noir-wash-rgb), 0.14);
+	background: rgba(var(--noir-bg-rgb), 0.74);
 	border-radius: 50%;
 }
 
@@ -1518,7 +1518,7 @@ export default {
 }
 
 .love-media-uploader__mask {
-	background: rgba(17, 13, 11, 0.55);
+	background: rgba(var(--noir-bg-rgb), 0.55);
 }
 
 .love-media-uploader__success {
@@ -1530,7 +1530,7 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: rgba(132, 190, 156, 0.86);
+	background: rgba(var(--noir-green-rgb), 0.86);
 }
 
 .love-media-uploader__success-icon,
@@ -1546,7 +1546,7 @@ export default {
 }
 
 .love-media-uploader__error {
-	background: rgba(226, 100, 63, 0.86);
+	background: rgba(var(--noir-coral-rgb), 0.86);
 }
 
 .love-media-uploader__item--add {
@@ -1554,14 +1554,14 @@ export default {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	background: rgba(255, 255, 255, 0.03);
-	border: 1.5rpx dashed rgba(216, 176, 140, 0.36);
+	background: var(--noir-glass-1);
+	border: 1.5rpx dashed rgba(var(--noir-gold-rgb), 0.36);
 }
 
 .love-media-uploader__add-icon {
 	font-size: 46rpx;
 	line-height: 1;
-	color: rgba(216, 176, 140, 0.84);
+	color: rgba(var(--noir-gold-rgb), 0.84);
 }
 
 .love-media-uploader__add-icon-image {
@@ -1572,14 +1572,14 @@ export default {
 .love-media-uploader__add-text {
 	margin-top: 8rpx;
 	font-size: 22rpx;
-	color: rgba(234, 212, 188, 0.82);
+	color: rgba(var(--noir-gold-soft-rgb), 0.82);
 }
 
 .love-media-uploader__add-hint {
 	margin-top: 6rpx;
 	font-family: "SF Mono", "Consolas", monospace;
 	font-size: 20rpx;
-	color: rgba(216, 176, 140, 0.52);
+	color: rgba(var(--noir-gold-rgb), 0.52);
 }
 
 .love-media-uploader__thumbnail-canvas {

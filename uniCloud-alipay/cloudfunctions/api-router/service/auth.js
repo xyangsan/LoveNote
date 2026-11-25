@@ -51,6 +51,7 @@ module.exports = class AuthService extends Service {
 				params.mobile !== undefined ||
 				params.birthday !== undefined ||
 				params.age !== undefined ||
+				params.themeKey !== undefined ||
 				params.avatarFileId ||
 				params.avatarUrl
 			)

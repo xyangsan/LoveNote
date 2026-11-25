@@ -1,5 +1,5 @@
 <template>
-	<view class="love-page love-page--compact profile-page">
+	<view class="love-page love-page--compact profile-page" :class="themeClass">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -28,7 +28,7 @@
 							error-src="/static/user-empty.png"
 							width="120"
 							height="120"
-							background="#231C18"
+							background="var(--noir-surface-2)"
 						></fui-avatar>
 						<view class="user-card__body">
 							<text class="user-card__name">{{ displayNickname }}</text>
@@ -91,9 +91,9 @@
 							:padding="['24rpx', '26rpx']"
 							background="transparent"
 							:bottom-border="index !== group.items.length - 1"
-							border-color="rgba(255, 255, 255, 0.06)"
+							border-color="rgba(var(--noir-wash-rgb), 0.06)"
 							arrow
-							arrow-color="rgba(245, 237, 228, 0.34)"
+							arrow-color="rgba(var(--noir-text-rgb), 0.34)"
 							@click="handleCardClick(item)"
 						>
 							<view class="menu-item">
@@ -147,6 +147,7 @@
 	import { getPointsApi } from '../../common/api/points.js'
 	import { useAppStateStore } from '../../store/app-state.js'
 	import { APP_VERSION_TEXT } from '../../common/version.js'
+	import { getTheme } from '../../common/theme.js'
 
 	const genderOptions = ['保密', '男', '女']
 	const PROFILE_DEFAULT_AVATAR = '/static/user-empty.png'
@@ -219,6 +220,10 @@
 			}
 		},
 		computed: {
+			/** 当前主题名（主题外观卡片的右侧值），themeKey 来自全局主题 mixin */
+			currentThemeName() {
+				return getTheme(this.themeKey).name
+			},
 			isLoggedIn() {
 				return Boolean(this.userInfo && this.userInfo._id)
 			},
@@ -421,7 +426,7 @@
 						desc: this.coupleCardDesc,
 						value: this.coupleStatusText,
 						iconText: '伴',
-						iconBg: 'linear-gradient(135deg, #ffd3c2 0%, #ffb199 100%)'
+						iconBg: 'linear-gradient(135deg, var(--avatar-21) 0%, var(--ops-06) 100%)'
 					},
 					{
 						key: 'anniversary',
@@ -429,7 +434,7 @@
 						desc: '记录相恋、生日与重要时刻',
 						value: this.anniversaryCardValue,
 						iconText: '纪',
-						iconBg: 'linear-gradient(135deg, #ffe29f 0%, #ffa99f 100%)'
+						iconBg: 'linear-gradient(135deg, var(--avatar-22) 0%, var(--avatar-23) 100%)'
 					},
 					{
 						key: 'album',
@@ -437,7 +442,7 @@
 						desc: '保存你们的照片和回忆片段',
 						value: this.albumCardValue,
 						iconText: '册',
-						iconBg: 'linear-gradient(135deg, #ffd8f1 0%, #f6b7d2 100%)'
+						iconBg: 'linear-gradient(135deg, var(--avatar-24) 0%, var(--avatar-25) 100%)'
 					},
 					{
 						key: 'plan',
@@ -445,12 +450,22 @@
 						desc: '同步愿望与计划，查看双方进度',
 						value: this.planCardValue,
 						iconText: '计',
-						iconBg: 'linear-gradient(135deg, #d7f5c6 0%, #98d8aa 100%)'
+						iconBg: 'linear-gradient(135deg, var(--avatar-26) 0%, var(--avatar-27) 100%)'
 					}
 				]
 			},
 			supportCards() {
 				const cards = []
+
+				// 主题外观：放最前（游客也能换），右侧直接显示当前主题名，点进去即时切换
+				cards.push({
+					key: 'theme',
+					title: '主题外观',
+					desc: '换一套配色与背景图，立即生效',
+					value: this.currentThemeName,
+					iconText: '色',
+					iconBg: 'linear-gradient(135deg, var(--avatar-14) 0%, var(--avatar-15) 100%)'
+				})
 
 				// 运营管理：仅 admin 角色可见（role 数组含 admin）
 				if (this.isAdmin) {
@@ -460,7 +475,7 @@
 						desc: '用户、模块与广告收益数据',
 						value: 'ADMIN',
 						iconText: '运',
-						iconBg: 'linear-gradient(135deg, #f0d3a8 0%, #d9a86c 100%)'
+						iconBg: 'linear-gradient(135deg, var(--avatar-28) 0%, var(--avatar-29) 100%)'
 					})
 				}
 
@@ -470,7 +485,7 @@
 					desc: '遇到问题或有建议都可以告诉我们',
 					value: '',
 					iconText: '助',
-					iconBg: 'linear-gradient(135deg, #d7e8ff 0%, #afcfff 100%)'
+					iconBg: 'linear-gradient(135deg, var(--avatar-30) 0%, var(--avatar-31) 100%)'
 				})
 				cards.push({
 					key: 'version',
@@ -478,7 +493,7 @@
 					desc: '查看当前应用版本和更新状态',
 					value: APP_VERSION_TEXT,
 					iconText: '版',
-					iconBg: 'linear-gradient(135deg, #f6ddc3 0%, #eac6a3 100%)'
+					iconBg: 'linear-gradient(135deg, var(--avatar-32) 0%, var(--avatar-33) 100%)'
 				})
 
 				return cards
@@ -732,6 +747,12 @@
 				}
 
 				switch (item.key) {
+					case 'theme':
+						// 主题页是公开页（未登录也能进），不需要登录闸门
+						uni.navigateTo({
+							url: '/pages/theme/index'
+						})
+						break
 					case 'couple':
 						uni.navigateTo({
 							url: '/pages/couple/index'
@@ -854,7 +875,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 15rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.58);
+		color: rgba(var(--noir-gold-rgb), 0.58);
 		white-space: nowrap;
 	}
 
@@ -871,7 +892,7 @@
 
 	.user-card__avatar {
 		flex-shrink: 0;
-		border: 2rpx solid rgba(216, 176, 140, 0.52);
+		border: 2rpx solid rgba(var(--noir-gold-rgb), 0.52);
 		border-radius: 50%;
 	}
 
@@ -894,7 +915,7 @@
 		margin-top: 8rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 		word-break: break-all;
 	}
 
@@ -903,8 +924,8 @@
 		align-self: center;
 		padding: 10rpx 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(245, 237, 228, 0.20);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-text-rgb), 0.20);
+		background: var(--noir-glass-2);
 		font-size: 22rpx;
 		color: var(--noir-gold-soft);
 	}
@@ -935,7 +956,7 @@
 		height: 68rpx;
 		border-radius: 20rpx;
 		flex-shrink: 0;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
 	}
 
 	.menu-item__icon-text {
@@ -984,8 +1005,8 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.14) !important;
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.14) !important;
 	}
 
 	.menu-item__value-text {
@@ -1010,9 +1031,9 @@
 		padding: 22rpx 30rpx 0;
 		box-sizing: border-box;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.22) 0%, rgba(255, 255, 255, 0.04) 100%);
-		box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.36);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.22) 0%, var(--noir-glass-2) 100%);
+		box-shadow: 0 18rpx 40rpx rgba(var(--noir-shadow-rgb), 0.36);
 		overflow: hidden;
 	}
 
@@ -1062,7 +1083,7 @@
 		font-size: 24rpx;
 		font-weight: 500;
 		letter-spacing: 2rpx;
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.heart-card__aside {
@@ -1082,8 +1103,8 @@
 		margin-left: 16rpx;
 		padding: 0 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
-		background: rgba(216, 176, 140, 0.12);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 	}
 
 	.heart-card__link-text {

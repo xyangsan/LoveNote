@@ -1,5 +1,5 @@
 <template>
-	<view class="gr-page">
+	<view class="gr-page" :class="themeClass">
 		<view class="gr-glow gr-glow--left"></view>
 		<view class="gr-glow gr-glow--right"></view>
 
@@ -512,8 +512,8 @@
 		align-items: center;
 		padding: 6rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.gr-seg__item {
@@ -527,13 +527,13 @@
 	}
 
 	.gr-seg__item--on {
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.24), rgba(216, 176, 140, 0.14));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.24), rgba(var(--noir-gold-rgb), 0.14));
 		border: 1rpx solid var(--noir-border-coral);
 	}
 
 	.gr-seg__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.gr-seg__item--on .gr-seg__txt {
@@ -546,8 +546,8 @@
 		margin-top: 36rpx;
 		padding: 64rpx 36rpx;
 		border-radius: 32rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
@@ -556,7 +556,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
 		letter-spacing: 4rpx;
-		color: rgba(216, 176, 140, 0.66);
+		color: rgba(var(--noir-gold-rgb), 0.66);
 	}
 
 	.gr-tip__title {
@@ -570,7 +570,7 @@
 
 	.gr-tip__text {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.gr-tip__desc {
@@ -578,7 +578,7 @@
 		margin-top: 12rpx;
 		font-size: 24rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	.gr-tip__btn {
@@ -590,7 +590,7 @@
 		padding: 0 56rpx;
 		border-radius: 38rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.26);
+		box-shadow: 0 12rpx 28rpx rgba(var(--noir-coral-rgb), 0.26);
 	}
 
 	.gr-tip__btn-txt {
@@ -607,13 +607,13 @@
 	.gr-card {
 		padding: 24rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 		margin-bottom: 18rpx;
 	}
 
 	.gr-card--hover {
-		background: rgba(255, 255, 255, 0.055);
+		background: var(--noir-glass-2);
 	}
 
 	.gr-top {
@@ -639,7 +639,7 @@
 		width: 48rpx;
 		height: 48rpx;
 		border-radius: 14rpx;
-		background: rgba(216, 176, 140, 0.10);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 	}
 
 	.gr-top__title {
@@ -652,7 +652,7 @@
 	.gr-top__time {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 		white-space: nowrap;
 	}
 
@@ -667,8 +667,8 @@
 	}
 
 	.gr-tag--green {
-		border: 1rpx solid rgba(132, 190, 156, 0.38);
-		background: rgba(132, 190, 156, 0.14);
+		border: 1rpx solid rgba(var(--noir-green-rgb), 0.38);
+		background: rgba(var(--noir-green-rgb), 0.14);
 	}
 
 	.gr-tag--green .gr-tag__txt {
@@ -677,7 +677,7 @@
 
 	.gr-tag--coral {
 		border: 1rpx solid var(--noir-border-coral);
-		background: rgba(226, 100, 63, 0.16);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.gr-tag--coral .gr-tag__txt {
@@ -685,8 +685,8 @@
 	}
 
 	.gr-tag--muted {
-		border: 1rpx solid rgba(216, 176, 140, 0.32);
-		background: rgba(216, 176, 140, 0.12);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.32);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 	}
 
 	.gr-tag--muted .gr-tag__txt {
@@ -703,7 +703,7 @@
 		margin-top: 14rpx;
 		font-size: 24rpx;
 		line-height: 1.55;
-		color: rgba(245, 237, 228, 0.58);
+		color: rgba(var(--noir-text-rgb), 0.58);
 	}
 
 	.gr-meta {
@@ -712,7 +712,7 @@
 		justify-content: space-between;
 		margin-top: 14rpx;
 		padding-top: 12rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.045);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.045);
 	}
 
 	.gr-meta__left {
@@ -723,7 +723,7 @@
 
 	.gr-meta__item {
 		font-size: 21rpx;
-		color: rgba(216, 176, 140, 0.66);
+		color: rgba(var(--noir-gold-rgb), 0.66);
 	}
 
 	.gr-meta__item--role {
@@ -732,7 +732,7 @@
 
 	.gr-meta__more {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 	}
 
 	.gr-more {
@@ -742,7 +742,7 @@
 
 	.gr-more__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.36);
+		color: rgba(var(--noir-text-rgb), 0.36);
 	}
 
 	/* ---------- 战绩详情底部弹层（s24 .gr-sheet） ---------- */
@@ -765,7 +765,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(8, 5, 4, 0.72);
+		background: rgba(var(--page-01-rgb), 0.72);
 	}
 
 	.gr-sheet {
@@ -776,9 +776,9 @@
 		max-height: 82vh;
 		padding: 16rpx 36rpx calc(28rpx + env(safe-area-inset-bottom));
 		border-radius: 40rpx 40rpx 0 0;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(180deg, #1E1713 0%, #140F0D 100%);
-		box-shadow: 0 -20rpx 60rpx rgba(0, 0, 0, 0.64);
+		border-top: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(180deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
+		box-shadow: 0 -20rpx 60rpx rgba(var(--noir-shadow-rgb), 0.64);
 	}
 
 	.gr-sheet__bar {
@@ -786,7 +786,7 @@
 		height: 8rpx;
 		margin: 0 auto 22rpx;
 		border-radius: 4rpx;
-		background: rgba(245, 237, 228, 0.16);
+		background: rgba(var(--noir-text-rgb), 0.16);
 	}
 
 	.gr-sh-head {
@@ -808,7 +808,7 @@
 		margin-top: 10rpx;
 		font-size: 23rpx;
 		line-height: 1.55;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.gr-sh-scroll {
@@ -821,8 +821,8 @@
 	.gr-sh-lines {
 		padding: 14rpx 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: var(--noir-glass-1);
 	}
 
 	.gr-sh-line {
@@ -831,7 +831,7 @@
 		justify-content: space-between;
 		gap: 20rpx;
 		padding: 10rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.045);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.045);
 	}
 
 	.gr-sh-line:last-child {
@@ -840,7 +840,7 @@
 
 	.gr-sh-line__label {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.gr-sh-line__val {
@@ -853,8 +853,8 @@
 	.gr-sh-players {
 		margin-top: 18rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(255, 255, 255, 0.02);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: var(--noir-glass-1);
 		overflow: hidden;
 	}
 
@@ -863,7 +863,7 @@
 		align-items: center;
 		gap: 16rpx;
 		padding: 16rpx 20rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.gr-sh-p:last-child {
@@ -871,7 +871,7 @@
 	}
 
 	.gr-sh-p--self {
-		background: rgba(226, 100, 63, 0.10);
+		background: rgba(var(--noir-coral-rgb), 0.10);
 	}
 
 	.gr-sh-ava {
@@ -882,7 +882,7 @@
 		width: 54rpx;
 		height: 54rpx;
 		border-radius: 50%;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.30);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.30);
 		background: var(--noir-btn-gradient);
 		overflow: hidden;
 	}
@@ -908,7 +908,7 @@
 
 	.gr-sh-p__name {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.86);
+		color: rgba(var(--noir-text-rgb), 0.86);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -924,9 +924,9 @@
 		flex-shrink: 0;
 		padding: 0 8rpx;
 		border-radius: 8rpx;
-		background: rgba(108, 184, 255, 0.18);
+		background: rgba(var(--home-06-rgb), 0.18);
 		font-size: 18rpx;
-		color: #8AC8FF;
+		color: var(--game-01);
 	}
 
 	.gr-sh-p__role {
@@ -941,7 +941,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 25rpx;
 		font-weight: 600;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 		text-align: right;
 	}
 
@@ -950,7 +950,7 @@
 	}
 
 	.gr-sh-p__score--lose {
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.gr-sh-foot {
@@ -965,7 +965,7 @@
 		height: 82rpx;
 		border-radius: 41rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 12rpx 26rpx rgba(222, 95, 60, 0.24);
+		box-shadow: 0 12rpx 26rpx rgba(var(--noir-coral-rgb), 0.24);
 	}
 
 	.gr-sh-btn__txt {
@@ -982,7 +982,7 @@
 	.gr-ad-card {
 		border-radius: 26rpx;
 		overflow: hidden;
-		border: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: var(--noir-glass-1);
 	}
 </style>

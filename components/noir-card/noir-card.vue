@@ -75,23 +75,23 @@
 		position: relative;
 		box-sizing: border-box;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 	}
 
 	.noir-card--hero {
 		border-color: var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.16) 0%, rgba(255, 255, 255, 0.032) 100%);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.16) 0%, var(--noir-glass-1) 100%);
 	}
 
 	.noir-card--dashed {
 		border-style: dashed;
-		border-color: rgba(216, 176, 140, 0.28);
-		background: rgba(216, 176, 140, 0.045);
+		border-color: rgba(var(--noir-gold-rgb), 0.28);
+		background: rgba(var(--noir-gold-rgb), 0.045);
 	}
 
 	.noir-card--danger {
-		border-color: rgba(226, 100, 63, 0.36);
-		background: rgba(226, 100, 63, 0.08);
+		border-color: rgba(var(--noir-coral-rgb), 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.08);
 	}
 
 	.noir-card.is-clickable:active {
@@ -118,7 +118,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 	}
 
 	.noir-card__title {
@@ -129,7 +129,7 @@
 
 	.noir-card__extra {
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 		flex-shrink: 0;
 	}
 </style>

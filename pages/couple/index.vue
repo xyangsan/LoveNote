@@ -1,5 +1,5 @@
 <template>
-	<view class="cp-page" :class="{ 'cp-page--bound': Boolean(activeCouple) }">
+	<view class="cp-page" :class="[{ 'cp-page--bound': Boolean(activeCouple) }, themeClass]">
 		<view class="cp-glow cp-glow--left"></view>
 		<view class="cp-glow cp-glow--right"></view>
 
@@ -122,7 +122,7 @@
 							<fui-icon
 								:name="historyExpanded ? 'arrowdown' : 'arrowright'"
 								:size="28"
-								color="rgba(245, 237, 228, 0.42)"
+								color="rgba(var(--noir-text-rgb), 0.42)"
 							/>
 						</view>
 					</view>
@@ -314,7 +314,7 @@
 							<fui-icon
 								:name="historyExpanded ? 'arrowdown' : 'arrowright'"
 								:size="28"
-								color="rgba(245, 237, 228, 0.42)"
+								color="rgba(var(--noir-text-rgb), 0.42)"
 							/>
 						</view>
 					</view>
@@ -984,8 +984,8 @@
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 	}
 
 	.cp-nav-pill__txt {
@@ -1010,7 +1010,7 @@
 		padding: 36rpx 28rpx 30rpx;
 		border-radius: 36rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(216, 176, 140, 0.12), rgba(255, 255, 255, 0.025));
+		background: linear-gradient(135deg, rgba(var(--noir-gold-rgb), 0.12), var(--noir-glass-1));
 	}
 
 	.ci-avs {
@@ -1028,8 +1028,8 @@
 		width: 112rpx;
 		height: 112rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(255, 240, 226, 0.50);
-		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		border: 2rpx solid rgba(var(--avatar-17-rgb), 0.50);
+		background: linear-gradient(135deg, var(--avatar-11), var(--avatar-03));
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1037,7 +1037,7 @@
 	}
 
 	.ci-av--alt {
-		background: linear-gradient(135deg, #6D7C74, #3F4C46);
+		background: linear-gradient(135deg, var(--avatar-04), var(--avatar-02));
 	}
 
 	.ci-av__img {
@@ -1048,7 +1048,7 @@
 	.ci-av__txt {
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 38rpx;
-		color: #FFF6EC;
+		color: var(--avatar-18);
 	}
 
 	.ci-gender {
@@ -1058,18 +1058,18 @@
 		width: 34rpx;
 		height: 34rpx;
 		border-radius: 50%;
-		border: 3rpx solid #181310;
+		border: 3rpx solid var(--noir-sheet-hi);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.ci-gender--m {
-		background: #4A8FE2;
+		background: var(--avatar-06);
 	}
 
 	.ci-gender--f {
-		background: #E26478;
+		background: var(--avatar-08);
 	}
 
 	.ci-gender__txt {
@@ -1089,7 +1089,7 @@
 	.ci-line {
 		flex: 1;
 		height: 1rpx;
-		background: rgba(216, 176, 140, 0.46);
+		background: rgba(var(--noir-gold-rgb), 0.46);
 	}
 
 	.ci-heart {
@@ -1116,14 +1116,14 @@
 		margin-top: 8rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 21rpx;
-		color: rgba(216, 176, 140, 0.74);
+		color: rgba(var(--noir-gold-rgb), 0.74);
 	}
 
 	.ci-stats {
 		display: flex;
 		margin-top: 28rpx;
 		padding-top: 22rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.07);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
 	}
 
 	.ci-stat {
@@ -1132,7 +1132,7 @@
 	}
 
 	.ci-stat + .ci-stat {
-		border-left: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-left: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.ci-stat__val {
@@ -1156,7 +1156,7 @@
 		padding: 0 28rpx;
 		border-radius: 30rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.ci-row {
@@ -1174,7 +1174,7 @@
 
 	.ci-row__label {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.60);
+		color: rgba(var(--noir-text-rgb), 0.60);
 	}
 
 	.ci-row__right {
@@ -1204,21 +1204,21 @@
 		padding: 20rpx 0 4rpx;
 		text-align: center;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.40);
+		color: rgba(var(--noir-text-rgb), 0.40);
 	}
 
 	.ci-warn {
 		margin-top: 24rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.28);
-		background: rgba(226, 100, 63, 0.07);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.28);
+		background: rgba(var(--noir-coral-rgb), 0.07);
 	}
 
 	.ci-warn__txt {
 		font-size: 22rpx;
 		line-height: 1.65;
-		color: rgba(240, 176, 140, 0.86);
+		color: rgba(var(--avatar-13-rgb), 0.86);
 	}
 
 	.ci-foot-bar {
@@ -1228,8 +1228,8 @@
 		bottom: 0;
 		z-index: 30;
 		padding: 20rpx 36rpx calc(24rpx + env(safe-area-inset-bottom));
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(17, 13, 11, 0.94);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: rgba(var(--noir-bg-rgb), 0.94);
 	}
 
 	/* ==================== 绑定邀请落地 s16 ==================== */
@@ -1242,13 +1242,13 @@
 	.il-card {
 		padding: 44rpx 36rpx;
 		border-radius: 38rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(155deg, rgba(226, 124, 78, 0.16), rgba(255, 255, 255, 0.03));
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(155deg, rgba(var(--noir-coral-rgb), 0.16), var(--noir-glass-1));
 	}
 
 	.il-loading {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.il-av {
@@ -1256,8 +1256,8 @@
 		height: 136rpx;
 		margin: 0 auto;
 		border-radius: 50%;
-		border: 3rpx solid rgba(255, 240, 226, 0.55);
-		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		border: 3rpx solid rgba(var(--avatar-17-rgb), 0.55);
+		background: linear-gradient(135deg, var(--avatar-11), var(--avatar-03));
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1272,7 +1272,7 @@
 	.il-av__txt {
 		font-family: "Songti SC", "STSong", Georgia, serif;
 		font-size: 52rpx;
-		color: #FFF7EC;
+		color: var(--avatar-19);
 	}
 
 	.il-card__title {
@@ -1289,7 +1289,7 @@
 		margin-top: 16rpx;
 		font-size: 24rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.58);
+		color: rgba(var(--noir-text-rgb), 0.58);
 	}
 
 	.il-code-pill {
@@ -1300,8 +1300,8 @@
 		height: 56rpx;
 		padding: 0 28rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.40);
-		background: rgba(17, 13, 11, 0.55);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.40);
+		background: rgba(var(--noir-bg-rgb), 0.55);
 	}
 
 	.il-code-pill__txt {
@@ -1316,7 +1316,7 @@
 		padding: 20rpx 24rpx;
 		border-radius: 24rpx;
 		border: 1rpx solid var(--noir-border-coral);
-		background: rgba(226, 100, 63, 0.12);
+		background: rgba(var(--noir-coral-rgb), 0.12);
 	}
 
 	.il-status-warn__txt {
@@ -1338,8 +1338,8 @@
 		gap: 16rpx;
 		padding: 20rpx 24rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.028);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.il-dot {
@@ -1352,7 +1352,7 @@
 
 	.il-feat__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.78);
+		color: rgba(var(--noir-text-rgb), 0.78);
 		line-height: 1.5;
 	}
 
@@ -1369,7 +1369,7 @@
 		padding: 36rpx 28rpx 32rpx;
 		border-radius: 34rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.03));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.14), var(--noir-glass-1));
 		text-align: center;
 	}
 
@@ -1378,7 +1378,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 	}
 
 	.cb-code {
@@ -1397,7 +1397,7 @@
 		margin-top: 16rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.cb-acts {
@@ -1431,19 +1431,19 @@
 	.cb-div__line {
 		flex: 1;
 		height: 1rpx;
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--noir-glass-3);
 	}
 
 	.cb-div__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.40);
+		color: rgba(var(--noir-text-rgb), 0.40);
 	}
 
 	.cb-label {
 		display: block;
 		margin-bottom: 18rpx;
 		font-size: 24rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 	}
 
 	.cb-slots-wrap {
@@ -1459,21 +1459,21 @@
 	.cb-slot {
 		height: 94rpx;
 		border-radius: 22rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.36);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.36);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.cb-slot--empty {
-		border-color: rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.025);
+		border-color: rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-1);
 	}
 
 	.cb-slot--active {
 		border-color: var(--noir-coral);
-		box-shadow: 0 0 0 3rpx rgba(226, 100, 63, 0.22);
+		box-shadow: 0 0 0 3rpx rgba(var(--noir-coral-rgb), 0.22);
 	}
 
 	.cb-slot__txt {
@@ -1484,7 +1484,7 @@
 	}
 
 	.cb-slot--empty .cb-slot__txt {
-		color: rgba(245, 237, 228, 0.20);
+		color: rgba(var(--noir-text-rgb), 0.20);
 	}
 
 	.cb-hidden-input {
@@ -1501,7 +1501,7 @@
 		display: block;
 		margin-top: 14rpx;
 		font-size: 22rpx;
-		color: #F08A6C;
+		color: var(--avatar-10);
 	}
 
 	.cb-submit {
@@ -1512,8 +1512,8 @@
 		margin-top: 28rpx;
 		padding: 20rpx 24rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(132, 190, 156, 0.28);
-		background: rgba(132, 190, 156, 0.07);
+		border: 1rpx solid rgba(var(--noir-green-rgb), 0.28);
+		background: rgba(var(--noir-green-rgb), 0.07);
 		text-align: center;
 	}
 
@@ -1545,8 +1545,8 @@
 		width: 72rpx;
 		height: 72rpx;
 		border-radius: 50%;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.34);
-		background: linear-gradient(135deg, #D9B08A, #9A6347);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: linear-gradient(135deg, var(--avatar-11), var(--avatar-03));
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1560,7 +1560,7 @@
 
 	.cp-item__ava-txt {
 		font-size: 26rpx;
-		color: #FFF6EC;
+		color: var(--avatar-18);
 		font-weight: 600;
 	}
 
@@ -1589,7 +1589,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.cp-tag {
@@ -1603,8 +1603,8 @@
 	}
 
 	.cp-tag--green {
-		border: 1rpx solid rgba(132, 190, 156, 0.38);
-		background: rgba(132, 190, 156, 0.14);
+		border: 1rpx solid rgba(var(--noir-green-rgb), 0.38);
+		background: rgba(var(--noir-green-rgb), 0.14);
 	}
 
 	.cp-tag--green .cp-tag__txt {
@@ -1613,7 +1613,7 @@
 
 	.cp-tag--coral {
 		border: 1rpx solid var(--noir-border-coral);
-		background: rgba(226, 100, 63, 0.16);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.cp-tag--coral .cp-tag__txt {
@@ -1621,8 +1621,8 @@
 	}
 
 	.cp-tag--gold {
-		border: 1rpx solid rgba(216, 176, 140, 0.40);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.40);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 	}
 
 	.cp-tag--gold .cp-tag__txt {
@@ -1630,12 +1630,12 @@
 	}
 
 	.cp-tag--muted {
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.05);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 	}
 
 	.cp-tag--muted .cp-tag__txt {
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.cp-tag__txt {
@@ -1653,17 +1653,17 @@
 
 	.cp-btn--primary {
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 12rpx 26rpx rgba(222, 95, 60, 0.26);
+		box-shadow: 0 12rpx 26rpx rgba(var(--noir-coral-rgb), 0.26);
 	}
 
 	.cp-btn--ghost {
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
-		background: rgba(216, 176, 140, 0.08);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
+		background: rgba(var(--noir-gold-rgb), 0.08);
 	}
 
 	.cp-btn--danger {
-		border: 1rpx solid rgba(226, 100, 63, 0.46);
-		background: rgba(226, 100, 63, 0.14);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.46);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 	}
 
 	.cp-btn--disabled {
@@ -1685,7 +1685,7 @@
 	}
 
 	.cp-btn__txt--danger {
-		color: #F5A384;
+		color: var(--avatar-12);
 	}
 
 	.ad-view {

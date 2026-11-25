@@ -313,7 +313,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 15rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.58);
+		color: rgba(var(--noir-gold-rgb), 0.58);
 		white-space: nowrap;
 	}
 
@@ -321,8 +321,8 @@
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		display: flex;
 		align-items: center;
 		flex-shrink: 0;
@@ -346,8 +346,8 @@
 		margin-bottom: 22rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.46);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.20), rgba(255, 255, 255, 0.03));
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.46);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.20), var(--noir-glass-1));
 	}
 
 	.tg-resume__body {
@@ -366,7 +366,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.58);
+		color: rgba(var(--noir-text-rgb), 0.58);
 	}
 
 	.tg-cards {
@@ -379,12 +379,12 @@
 		padding: 28rpx 28rpx 24rpx;
 		border-radius: 30rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.034);
+		background: var(--noir-glass-1);
 	}
 
 	.tg-card--hi {
-		border-color: rgba(216, 176, 140, 0.30);
-		background: linear-gradient(135deg, rgba(216, 176, 140, 0.12), rgba(255, 255, 255, 0.03));
+		border-color: rgba(var(--noir-gold-rgb), 0.30);
+		background: linear-gradient(135deg, rgba(var(--noir-gold-rgb), 0.12), var(--noir-glass-1));
 	}
 
 	.tg-card__head {
@@ -412,7 +412,7 @@
 		margin-top: 14rpx;
 		font-size: 23rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.tg-card__foot {
@@ -432,22 +432,22 @@
 		height: 40rpx;
 		padding: 0 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.14);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.14);
 		display: flex;
 		align-items: center;
 	}
 
 	.tg-rule-btn__txt {
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.tg-go-btn {
 		height: 54rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.46);
-		background: rgba(216, 176, 140, 0.09);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.46);
+		background: rgba(var(--noir-gold-rgb), 0.09);
 		display: flex;
 		align-items: center;
 	}
@@ -462,7 +462,7 @@
 		margin-top: 22rpx;
 		text-align: center;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 	}
 
 	.tg-rec-row {
@@ -471,7 +471,7 @@
 		justify-content: space-between;
 		gap: 16rpx;
 		padding: 22rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.tg-rec-row--last {
@@ -493,7 +493,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.tg-rec-row__r {
@@ -507,7 +507,7 @@
 	.tg-rec-row__time {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
 	.tg-ad-grid {

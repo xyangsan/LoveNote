@@ -1,7 +1,7 @@
 <template>
 	<view
 		class="ae-page"
-		:class="{ 'anniversary-edit-page--locked': calendarPopupVisible }"
+		:class="[{ 'anniversary-edit-page--locked': calendarPopupVisible }, themeClass]"
 	>
 		<view class="ae-glow ae-glow--l"></view>
 		<view class="ae-glow ae-glow--r"></view>
@@ -56,7 +56,7 @@
 							<text v-if="form.maskEnabled" class="ae-shead__val">{{ maskOpacityPercent }}%</text>
 							<fui-switch
 								:checked="form.maskEnabled"
-								color="#E2643F"
+								color="var(--noir-coral)"
 								scale-ratio="0.82"
 								@change="handleMaskEnabledChange"
 							></fui-switch>
@@ -69,9 +69,9 @@
 							max="100"
 							step="1"
 							:value="maskOpacityPercent"
-							activeColor="#D8B08C"
-							backgroundColor="rgba(255, 255, 255, 0.12)"
-							block-color="#FBF4EA"
+							activeColor="var(--noir-gold)"
+							backgroundColor="rgba(var(--noir-wash-rgb), 0.12)"
+							block-color="var(--noir-text-strong)"
 							:block-size="16"
 							@changing="handleMaskOpacityChange"
 							@change="handleMaskOpacityChange"
@@ -100,7 +100,7 @@
 								:value="form.title"
 								type="text"
 								placeholder="例如：第一次旅行"
-								placeholder-style="color: rgba(245, 237, 228, 0.30);"
+								placeholder-style="color: rgba(var(--noir-text-rgb), 0.30);"
 								maxlength="50"
 								@input="onNativeTitleInput"
 							/>
@@ -318,21 +318,22 @@
 			ref="backgroundColorPicker"
 			:color="backgroundPickerColor"
 			title="选择背景色"
-			confirm-color="#ec7558"
+			confirm-color="var(--noir-coral)"
 			@confirm="handleCustomColorConfirm('backgroundColor', $event)"
 		></uv-pick-color>
 		<uv-pick-color
 			ref="fontColorPicker"
 			:color="fontPickerColor"
 			title="选择字体色"
-			confirm-color="#ec7558"
+			confirm-color="var(--noir-coral)"
 			@confirm="handleCustomColorConfirm('fontColor', $event)"
 		></uv-pick-color>
 	</view>
 </template>
 
 <script>
-import {
+import { getThemeCoral } from '@/common/theme.js'
+	import {
 	clearUniIdTokenStorage,
 	getCurrentUniIdUser
 } from '../../common/auth-center.js'
@@ -1178,7 +1179,7 @@ export default {
 			uni.showModal({
 				title: '删除纪念日',
 				content: `确定删除「${this.form.title || '该纪念日'}」吗？删除后无法恢复。`,
-				confirmColor: '#E2643F',
+				confirmColor: getThemeCoral(),
 				success: async (res) => {
 					if (!res.confirm) return
 					try {
@@ -1209,7 +1210,7 @@ export default {
 		position: relative;
 		min-height: 100vh;
 		background:
-			radial-gradient(88% 36% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			radial-gradient(88% 40% at 50% 0%, var(--noir-page-glow) 0%, rgba(var(--noir-bg-rgb), 0) 68%),
 			var(--noir-bg);
 		padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
@@ -1229,21 +1230,21 @@ export default {
 	.ae-glow--l {
 		top: -120rpx;
 		left: -130rpx;
-		background: rgba(226, 100, 63, 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.36);
 	}
 
 	.ae-glow--r {
 		top: 240rpx;
 		right: -130rpx;
-		background: rgba(216, 176, 140, 0.24);
+		background: rgba(var(--noir-gold-rgb), 0.24);
 	}
 
 	.ae-del-pill {
 		height: 48rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.44);
-		background: rgba(226, 100, 63, 0.14);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.44);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1264,8 +1265,8 @@ export default {
 	.ae-preview {
 		border-radius: 28rpx;
 		overflow: hidden;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		box-shadow: 0 18rpx 44rpx rgba(0, 0, 0, 0.42);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		box-shadow: 0 18rpx 44rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.ae-slider-card {
@@ -1273,7 +1274,7 @@ export default {
 		padding: 20rpx 24rpx;
 		border-radius: 24rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 	}
 
 	.ae-shead {
@@ -1284,7 +1285,7 @@ export default {
 
 	.ae-shead__lbl {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.68);
+		color: rgba(var(--noir-text-rgb), 0.68);
 	}
 
 	.ae-shead__right {
@@ -1316,7 +1317,7 @@ export default {
 		margin-bottom: 14rpx;
 		padding-left: 4rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.ae-row {
@@ -1325,7 +1326,7 @@ export default {
 		justify-content: space-between;
 		gap: 20rpx;
 		min-height: 94rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.ae-row--last {
@@ -1334,7 +1335,7 @@ export default {
 
 	.ae-row__lbl {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.66);
+		color: rgba(var(--noir-text-rgb), 0.66);
 		flex-shrink: 0;
 	}
 
@@ -1358,7 +1359,7 @@ export default {
 		height: 54rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
@@ -1366,13 +1367,13 @@ export default {
 	}
 
 	.ae-chip.is-on {
-		border-color: rgba(216, 176, 140, 0.62);
-		background: rgba(216, 176, 140, 0.18);
+		border-color: rgba(var(--noir-gold-rgb), 0.62);
+		background: rgba(var(--noir-gold-rgb), 0.18);
 	}
 
 	.ae-chip__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.66);
+		color: rgba(var(--noir-text-rgb), 0.66);
 		white-space: nowrap;
 	}
 
@@ -1397,13 +1398,13 @@ export default {
 	}
 
 	.ae-row__val.is-placeholder {
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 		font-family: inherit;
 	}
 
 	.ae-row__chev {
 		font-size: 32rpx;
-		color: rgba(216, 176, 140, 0.56);
+		color: rgba(var(--noir-gold-rgb), 0.56);
 	}
 
 	.ae-block {
@@ -1414,7 +1415,7 @@ export default {
 		display: block;
 		margin-bottom: 14rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.color-item--sm {
@@ -1433,7 +1434,7 @@ export default {
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 0%, rgba(var(--noir-bg-rgb), 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 
@@ -1475,7 +1476,7 @@ export default {
 	}
 
 	.picker-field__value--placeholder {
-		color: #b18a7d;
+		color: var(--anniv-12);
 	}
 
 	.picker-field__tag {
@@ -1484,13 +1485,13 @@ export default {
 		justify-content: center;
 		padding: 8rpx 18rpx;
 		border-radius: 999rpx;
-		background: rgba(236, 117, 88, 0.12);
+		background: rgba(var(--noir-coral-rgb), 0.12);
 	}
 
 	.picker-field__tag-text {
 		font-size: 22rpx;
 		font-weight: 600;
-		color: #d56448;
+		color: var(--anniv-08);
 	}
 
 	.calendar-popup {
@@ -1502,7 +1503,7 @@ export default {
 	.calendar-popup__mask {
 		position: absolute;
 		inset: 0;
-		background: rgba(55, 31, 24, 0.42);
+		background: rgba(var(--anniv-01-rgb), 0.42);
 	}
 
 	.calendar-popup__panel {
@@ -1513,8 +1514,8 @@ export default {
 		max-height: calc(100vh - 120rpx);
 		padding: 28rpx 24rpx 24rpx;
 		border-radius: 32rpx;
-		background: #1E1814;
-		box-shadow: 0 22rpx 60rpx rgba(103, 58, 45, 0.22);
+		background: var(--noir-sheet-hi);
+		box-shadow: 0 22rpx 60rpx rgba(var(--anniv-02-rgb), 0.22);
 		overflow: hidden auto;
 	}
 
@@ -1540,7 +1541,7 @@ export default {
 
 	.calendar-popup__action {
 		font-size: 26rpx;
-		color: #8b6a60;
+		color: var(--anniv-05);
 	}
 
 	.calendar-popup__action--primary {
@@ -1559,8 +1560,8 @@ export default {
 		gap: 12rpx;
 		padding: 12rpx 18rpx;
 		border-radius: 999rpx;
-		background: rgba(26, 21, 18, 0.94);
-		border: 1px solid rgba(236, 117, 88, 0.2);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		border: 1px solid rgba(var(--noir-coral-rgb), 0.2);
 	}
 
 	.calendar-popup__selector-value-text {
@@ -1571,7 +1572,7 @@ export default {
 
 	.calendar-popup__selector-arrow {
 		font-size: 18rpx;
-		color: #d27761;
+		color: var(--anniv-11);
 		transition: transform 0.2s ease;
 	}
 
@@ -1586,9 +1587,9 @@ export default {
 		min-width: 140rpx;
 		padding: 10rpx;
 		border-radius: 20rpx;
-		background: rgba(26, 21, 18, 0.94);
-		border: 1px solid rgba(236, 117, 88, 0.14);
-		box-shadow: 0 14rpx 36rpx rgba(115, 67, 52, 0.16);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		border: 1px solid rgba(var(--noir-coral-rgb), 0.14);
+		box-shadow: 0 14rpx 36rpx rgba(var(--anniv-03-rgb), 0.16);
 		z-index: 8;
 	}
 
@@ -1602,14 +1603,14 @@ export default {
 	}
 
 	.calendar-popup__selector-option--active {
-		background: rgba(236, 117, 88, 0.14);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 	}
 
 	.calendar-popup__selector-option-text {
 		display: block;
 		font-size: 24rpx;
 		line-height: 1.4;
-		color: #6f4a3f;
+		color: var(--anniv-04);
 		text-align: center;
 	}
 
@@ -1644,7 +1645,7 @@ export default {
 		height: 230rpx;
 		border-radius: 22rpx;
 		overflow: hidden;
-		background: #f5efeb;
+		background: var(--anniv-17);
 	}
 
 	.background-preview__image,
@@ -1665,7 +1666,7 @@ export default {
 		display: block;
 		padding-bottom: 8rpx;
 		font-size: 22rpx;
-		color: #9f7568;
+		color: var(--anniv-07);
 	}
 
 	.color-list {
@@ -1678,12 +1679,12 @@ export default {
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.04), 0 6rpx 12rpx rgba(0, 0, 0, 0.08);
+		box-shadow: inset 0 0 0 2rpx rgba(var(--noir-wash-rgb), 0.04), 0 6rpx 12rpx rgba(var(--noir-shadow-rgb), 0.08);
 	}
 
 	.color-item--custom {
 		position: relative;
-		background: conic-gradient(from 90deg, #ff4d6d, #ffcc33, #55d17a, #36c5ff, #8f6bff, #ff4d6d);
+		background: conic-gradient(from 90deg, var(--anniv-09), var(--anniv-15), var(--anniv-14), var(--anniv-13), var(--anniv-10), var(--anniv-09));
 	}
 
 	.color-item--custom::after {
@@ -1691,12 +1692,12 @@ export default {
 		position: absolute;
 		inset: 12rpx;
 		border-radius: 50%;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: inset 0 0 0 1rpx rgba(236, 117, 88, 0.12);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: inset 0 0 0 1rpx rgba(var(--noir-coral-rgb), 0.12);
 	}
 
 	.color-item--active {
-		box-shadow: inset 0 0 0 4rpx rgba(26, 21, 18, 0.94), 0 0 0 2rpx var(--noir-coral), 0 10rpx 18rpx rgba(236, 117, 88, 0.25);
+		box-shadow: inset 0 0 0 4rpx rgba(var(--noir-surface2-rgb), 0.94), 0 0 0 2rpx var(--noir-coral), 0 10rpx 18rpx rgba(var(--noir-coral-rgb), 0.25);
 	}
 
 	.switch-row {
@@ -1726,7 +1727,7 @@ export default {
 	.slider-row__label,
 	.slider-row__value {
 		font-size: 22rpx;
-		color: #8f6a61;
+		color: var(--anniv-06);
 	}
 
 	.slider-row__slider {

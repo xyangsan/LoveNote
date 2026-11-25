@@ -117,31 +117,31 @@
 		min-width: 40px;
 		padding: 3px 10px 5px;
 		border-radius: 999px;
-		background: rgba(255, 250, 244, 0.96);
-		box-shadow: 0 2px 6px rgba(12, 36, 22, 0.28);
+		background: rgba(var(--poker-104-rgb), 0.96);
+		box-shadow: 0 2px 6px rgba(var(--poker-07-rgb), 0.28);
 		position: relative;
 	}
 
 	.ll-timer--warn {
-		background: rgba(255, 236, 168, 0.98);
+		background: rgba(var(--poker-89-rgb), 0.98);
 	}
 
 	.ll-timer--danger {
-		background: rgba(255, 210, 200, 0.98);
+		background: rgba(var(--poker-80-rgb), 0.98);
 	}
 
 	.ll-timer__text {
 		font-size: 12px;
 		font-weight: 700;
-		color: #c0674d;
+		color: var(--poker-47);
 	}
 
 	.ll-timer--warn .ll-timer__text {
-		color: #d8642f;
+		color: var(--poker-48);
 	}
 
 	.ll-timer--danger .ll-timer__text {
-		color: #b8412c;
+		color: var(--poker-38);
 	}
 
 	.ll-timer__bar {
@@ -152,14 +152,14 @@
 		height: 3px;
 		margin-top: 3px;
 		border-radius: 999px;
-		background: rgba(179, 158, 150, 0.7);
+		background: rgba(var(--poker-54-rgb), 0.7);
 		overflow: hidden;
 	}
 
 	.ll-timer__fill {
 		height: 100%;
 		border-radius: inherit;
-		background: linear-gradient(135deg, #ffb84d 0%, #f59b2a 100%);
+		background: linear-gradient(135deg, var(--poker-67) 0%, var(--poker-56) 100%);
 		transition: width 0.2s linear;
 	}
 </style>

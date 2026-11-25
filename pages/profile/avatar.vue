@@ -1,5 +1,5 @@
 <template>
-	<view class="love-page avatar-page">
+	<view class="love-page avatar-page" :class="themeClass">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -84,8 +84,8 @@
 			</view>
 			<fui-button
 				text="保存头像"
-				background="linear-gradient(135deg, #F09A6B 0%, #DE5F3C 100%)"
-				color="#ffffff"
+				background="var(--noir-btn-gradient)"
+				color="var(--noir-white)"
 				radius="999rpx"
 				height="88rpx"
 				width="240rpx"
@@ -428,16 +428,16 @@ import {
 		align-items: center;
 		padding: 40rpx 32rpx 34rpx;
 		border-radius: 36rpx;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 20rpx 48rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 20rpx 48rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.avatar-hero__ring {
 		position: relative;
 		padding: 8rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb59f 0%, var(--noir-coral) 100%);
-		box-shadow: 0 18rpx 36rpx rgba(0, 0, 0, 0.42);
+		background: linear-gradient(135deg, var(--avatar-14) 0%, var(--noir-coral) 100%);
+		box-shadow: 0 18rpx 36rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.avatar-hero__ring--busy {
@@ -462,12 +462,12 @@ import {
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%;
-		background: rgba(90, 52, 39, 0.52);
+		background: rgba(var(--avatar-01-rgb), 0.52);
 	}
 
 	.avatar-hero__mask-text {
 		font-size: 22rpx;
-		color: #fff7f3;
+		color: var(--comp-16);
 	}
 
 	.avatar-hero__badge {
@@ -479,7 +479,7 @@ import {
 		background: var(--noir-btn-gradient);
 		font-size: 20rpx;
 		color: var(--noir-white);
-		box-shadow: 0 8rpx 16rpx rgba(199, 116, 88, 0.32);
+		box-shadow: 0 8rpx 16rpx rgba(var(--avatar-07-rgb), 0.32);
 	}
 
 	.avatar-hero__name {
@@ -494,7 +494,7 @@ import {
 		font-size: 23rpx;
 		line-height: 1.7;
 		text-align: center;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.wx-avatar-btn {
@@ -507,8 +507,8 @@ import {
 		height: 72rpx;
 		line-height: 72rpx;
 		border-radius: 999rpx;
-		background: rgba(255, 236, 229, 0.96);
-		border: 1rpx solid rgba(236, 117, 88, 0.36);
+		background: rgba(var(--avatar-16-rgb), 0.96);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.36);
 		font-size: 25rpx;
 		color: var(--noir-gold-soft);
 	}
@@ -539,8 +539,8 @@ import {
 	.avatar-group {
 		padding: 26rpx 24rpx 28rpx;
 		border-radius: 32rpx;
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 14rpx 34rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 14rpx 34rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.avatar-group + .avatar-group {
@@ -564,7 +564,7 @@ import {
 		width: 10rpx;
 		height: 30rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(180deg, #ff8b72 0%, var(--noir-coral) 100%);
+		background: linear-gradient(180deg, var(--home-07) 0%, var(--noir-coral) 100%);
 	}
 
 	.avatar-group__title {
@@ -575,7 +575,7 @@ import {
 
 	.avatar-group__count {
 		font-size: 21rpx;
-		color: #b08478;
+		color: var(--avatar-09);
 	}
 
 	.avatar-grid {
@@ -588,12 +588,12 @@ import {
 		position: relative;
 		border-radius: 24rpx;
 		overflow: hidden;
-		box-shadow: inset 0 0 0 1rpx rgba(239, 203, 191, 0.7);
+		box-shadow: inset 0 0 0 1rpx rgba(var(--avatar-15-rgb), 0.7);
 		transition: transform 0.16s ease;
 	}
 
 	.avatar-cell--active {
-		box-shadow: inset 0 0 0 4rpx rgba(236, 117, 88, 0.92), 0 10rpx 20rpx rgba(0, 0, 0, 0.42);
+		box-shadow: inset 0 0 0 4rpx rgba(var(--noir-coral-rgb), 0.92), 0 10rpx 20rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.avatar-cell__img {
@@ -634,8 +634,8 @@ import {
 		gap: 24rpx;
 		padding: 20rpx 28rpx;
 		padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-		background: rgba(255, 247, 241, 0.98);
-		box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.42);
+		background: rgba(var(--avatar-20-rgb), 0.98);
+		box-shadow: 0 -10rpx 30rpx rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.avatar-savebar__meta {
@@ -657,6 +657,6 @@ import {
 		display: block;
 		margin-top: 6rpx;
 		font-size: 21rpx;
-		color: #a17567;
+		color: var(--avatar-05);
 	}
 </style>

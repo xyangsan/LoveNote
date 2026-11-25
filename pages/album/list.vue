@@ -1,5 +1,5 @@
 <template>
-	<view class="photos-page">
+	<view class="photos-page" :class="themeClass">
 		<view class="photos-glow photos-glow--l"></view>
 		<view class="photos-glow photos-glow--r"></view>
 
@@ -212,6 +212,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import { getPhotoApi } from '../../common/api/photo.js'
 	import { requirePageLogin } from '@/common/auth-entry.js'
 	import { useAppStateStore } from '@/store/app-state.js'
@@ -468,7 +469,7 @@
 					title: `为 ${this.selectedIds.length} 项添加标签`,
 					editable: true,
 					placeholderText: '例如：旅行、美食、日常',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						const tag = String(res.content || '').trim()
@@ -513,7 +514,7 @@
 				uni.showModal({
 					title: '批量删除',
 					content: `确定删除选中的 ${ownIds.length} 项本人上传的照片/视频吗？删除后不可恢复。`,
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						uni.showLoading({ title: '删除中...', mask: true })
@@ -545,7 +546,7 @@
 		position: relative;
 		min-height: 100vh;
 		background:
-			radial-gradient(88% 38% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			radial-gradient(88% 40% at 50% 0%, var(--noir-page-glow) 0%, rgba(var(--noir-bg-rgb), 0) 68%),
 			var(--noir-bg);
 		padding-bottom: calc(164rpx + env(safe-area-inset-bottom));
 		overflow-x: hidden;
@@ -565,13 +566,13 @@
 	.photos-glow--l {
 		top: -120rpx;
 		left: -130rpx;
-		background: rgba(226, 100, 63, 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.36);
 	}
 
 	.photos-glow--r {
 		top: 240rpx;
 		right: -130rpx;
-		background: rgba(216, 176, 140, 0.24);
+		background: rgba(var(--noir-gold-rgb), 0.24);
 	}
 
 	.ph-nav-title {
@@ -586,8 +587,8 @@
 		height: 50rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(26, 21, 18, 0.72);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-surface2-rgb), 0.72);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -628,7 +629,7 @@
 
 	.a-count__unit {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.a-sub {
@@ -654,7 +655,7 @@
 		height: 56rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.10);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.10);
 		background: var(--noir-surface-glass);
 		display: inline-flex;
 		align-items: center;
@@ -662,8 +663,8 @@
 	}
 
 	.a-chip.is-on {
-		border-color: rgba(216, 176, 140, 0.56);
-		background: rgba(216, 176, 140, 0.16);
+		border-color: rgba(var(--noir-gold-rgb), 0.56);
+		background: rgba(var(--noir-gold-rgb), 0.16);
 	}
 
 	.a-chip__txt {
@@ -722,7 +723,7 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 48%, rgba(17, 13, 11, 0.80) 100%);
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 48%, rgba(var(--noir-bg-rgb), 0.80) 100%);
 	}
 
 	.a-date {
@@ -731,7 +732,7 @@
 		bottom: 14rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
-		color: rgba(255, 244, 234, 0.84);
+		color: rgba(var(--page-18-rgb), 0.84);
 	}
 
 	.a-like {
@@ -749,8 +750,8 @@
 		height: 38rpx;
 		padding: 0 14rpx;
 		border-radius: 999rpx;
-		background: rgba(17, 13, 11, 0.78);
-		border: 1rpx solid rgba(255, 255, 255, 0.22);
+		background: rgba(var(--noir-bg-rgb), 0.78);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.22);
 		display: flex;
 		align-items: center;
 	}
@@ -768,8 +769,8 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(255, 244, 234, 0.8);
-		background: rgba(17, 13, 11, 0.56);
+		border: 2rpx solid rgba(var(--page-18-rgb), 0.8);
+		background: rgba(var(--noir-bg-rgb), 0.56);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -790,7 +791,7 @@
 	.a-skel {
 		width: 100%;
 		border-radius: 26rpx;
-		background: rgba(255, 255, 255, 0.045);
+		background: var(--noir-glass-2);
 	}
 
 	.a-foot-tip {
@@ -800,7 +801,7 @@
 
 	.a-foot-tip__txt {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
 	.ad-view {
@@ -814,7 +815,7 @@
 		bottom: 0;
 		z-index: 40;
 		padding: 18rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
-		background: linear-gradient(180deg, rgba(17, 13, 11, 0) 0%, rgba(17, 13, 11, 0.94) 30%, var(--noir-bg) 100%);
+		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 0%, rgba(var(--noir-bg-rgb), 0.94) 30%, var(--noir-bg) 100%);
 		box-sizing: border-box;
 	}
 
@@ -824,8 +825,8 @@
 		justify-content: space-between;
 		padding: 16rpx 22rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: rgba(26, 21, 18, 0.96);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: rgba(var(--noir-surface2-rgb), 0.96);
 	}
 
 	.a-batch-bar__count {

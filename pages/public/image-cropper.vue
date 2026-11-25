@@ -136,12 +136,12 @@ export default {
 
 <style>
 page {
-	background: #000;
+	background: var(--viewer-01);
 }
 
 .image-cropper-page {
 	min-height: 100vh;
-	background: #000;
+	background: var(--viewer-01);
 }
 
 .cropper-cancel {
@@ -155,7 +155,7 @@ page {
 	align-items: center;
 	justify-content: center;
 	border-radius: 28rpx;
-	background: rgba(0, 0, 0, 0.46);
+	background: rgba(var(--noir-shadow-rgb), 0.46);
 	color: var(--noir-white);
 	font-size: 26rpx;
 }

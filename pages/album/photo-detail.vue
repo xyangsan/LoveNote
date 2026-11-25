@@ -81,7 +81,7 @@
 		>
 			<template #right>
 				<view class="ph-more-btn" @tap="openMoreMenu">
-					<fui-icon name="more" :size="36" color="#F5EDE4"></fui-icon>
+					<fui-icon name="more" :size="36" color="var(--noir-text)"></fui-icon>
 				</view>
 			</template>
 		</noir-navbar>
@@ -110,9 +110,9 @@
 					:max="videoDuration > 0 ? videoDuration : 1"
 					:value="videoSliderValue"
 					:step="0.2"
-					activeColor="#D8B08C"
-					backgroundColor="rgba(255,255,255,0.18)"
-					block-color="#FBF4EA"
+					activeColor="var(--noir-gold)"
+					backgroundColor="rgba(var(--noir-wash-rgb), 0.18)"
+					block-color="var(--noir-text-strong)"
 					:block-size="13"
 					@changing="onVideoSliderChanging"
 					@change="onVideoSliderChange"
@@ -162,7 +162,7 @@
 						<fui-icon
 							:name="currentPhoto.is_favorite ? 'like-fill' : 'like'"
 							:size="28"
-							:color="currentPhoto.is_favorite ? '#F5B496' : '#F5EDE4'"
+							:color="currentPhoto.is_favorite ? 'var(--noir-coral-light)' : 'var(--noir-text)'"
 						></fui-icon>
 						<text class="ph-abtn__txt">{{ currentPhoto.is_favorite ? '已赞' : '喜欢' }}</text>
 					</view>
@@ -315,7 +315,7 @@
 							class="ph-desc-textarea"
 							v-model="editDescDraft"
 							placeholder="写下这一刻的故事、心情或小确幸…"
-							placeholder-style="color: rgba(245, 237, 228, 0.32);"
+							placeholder-style="color: rgba(var(--noir-text-rgb), 0.32);"
 							maxlength="500"
 							:fixed="true"
 							:cursor-spacing="24"
@@ -380,7 +380,7 @@
 							class="ph-tag-input"
 							v-model="customTagDraft"
 							placeholder="输入自定义标签…"
-							placeholder-style="color: rgba(245, 237, 228, 0.34);"
+							placeholder-style="color: rgba(var(--noir-text-rgb), 0.34);"
 							maxlength="16"
 							confirm-type="done"
 							@confirm="appendCustomDraftTag"
@@ -419,6 +419,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import { getAlbumApi } from '../../common/api/album.js'
 	import { getPhotoApi } from '../../common/api/photo.js'
 	import { requirePageLogin } from '@/common/auth-entry.js'
@@ -986,7 +987,7 @@
 				if (!photo || !photo._id) return
 				uni.showActionSheet({
 					itemList: [`删除标签「${tag}」`],
-					itemColor: '#E2643F',
+					itemColor: 'var(--noir-coral)',
 					success: async (res) => {
 						if (Number(res.tapIndex) !== 0) return
 						const nextTags = this.currentTags.filter((item) => item !== tag)
@@ -1118,7 +1119,7 @@
 				uni.showModal({
 					title: '删除照片',
 					content: '删除后不可恢复，确定删除这张照片吗？',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						try {
@@ -1152,7 +1153,7 @@
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
-		background: #0A0807;
+		background: var(--page-02);
 	}
 
 	.ph-swiper,
@@ -1174,7 +1175,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #0A0807;
+		background: var(--page-02);
 	}
 
 	.ph-zoom-area,
@@ -1199,10 +1200,10 @@
 		z-index: 4;
 		background: linear-gradient(
 			180deg,
-			rgba(10, 8, 7, 0.56) 0%,
-			rgba(10, 8, 7, 0) 22%,
-			rgba(10, 8, 7, 0) 58%,
-			rgba(10, 8, 7, 0.90) 100%
+			rgba(var(--page-02-rgb), 0.56) 0%,
+			rgba(var(--page-02-rgb), 0) 22%,
+			rgba(var(--page-02-rgb), 0) 58%,
+			rgba(var(--page-02-rgb), 0.90) 100%
 		);
 		transition: opacity 0.28s ease;
 	}
@@ -1215,8 +1216,8 @@
 		width: 60rpx;
 		height: 60rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(245, 237, 228, 0.22);
-		background: rgba(17, 13, 11, 0.52);
+		border: 1rpx solid rgba(var(--noir-text-rgb), 0.22);
+		background: rgba(var(--noir-bg-rgb), 0.52);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1232,9 +1233,9 @@
 		width: 112rpx;
 		height: 112rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(216, 176, 140, 0.72);
-		background: rgba(17, 13, 11, 0.68);
-		box-shadow: 0 10rpx 32rpx rgba(0, 0, 0, 0.48);
+		border: 2rpx solid rgba(var(--noir-gold-rgb), 0.72);
+		background: rgba(var(--noir-bg-rgb), 0.68);
+		box-shadow: 0 10rpx 32rpx rgba(var(--noir-shadow-rgb), 0.48);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1258,7 +1259,7 @@
 
 	.ph-center-tip__txt {
 		font-size: 26rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	/* 底部悬浮容器：自定义视频控制栏 + 文案区 + 缩略图条 */
@@ -1279,9 +1280,9 @@
 		margin: 0 28rpx 18rpx;
 		padding: 12rpx 18rpx;
 		border-radius: 999rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.36);
-		background: rgba(20, 16, 14, 0.86);
-		box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.45);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.36);
+		background: rgba(var(--page-03-rgb), 0.86);
+		box-shadow: 0 10rpx 28rpx rgba(var(--noir-shadow-rgb), 0.45);
 		display: flex;
 		align-items: center;
 		gap: 12rpx;
@@ -1297,8 +1298,8 @@
 		width: 48rpx;
 		height: 48rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.12);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1314,7 +1315,7 @@
 	.ph-vctrl__time {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.78);
+		color: rgba(var(--noir-text-rgb), 0.78);
 		flex-shrink: 0;
 	}
 
@@ -1362,7 +1363,7 @@
 		font-weight: 600;
 		line-height: 1.32;
 		color: var(--noir-text-strong);
-		text-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.55);
+		text-shadow: 0 4rpx 20rpx rgba(var(--noir-shadow-rgb), 0.55);
 	}
 
 	.ph-text {
@@ -1370,7 +1371,7 @@
 		margin-top: 12rpx;
 		font-size: 24rpx;
 		line-height: 1.68;
-		color: rgba(245, 237, 228, 0.68);
+		color: rgba(var(--noir-text-rgb), 0.68);
 	}
 
 	.ph-tags {
@@ -1385,8 +1386,8 @@
 		height: 44rpx;
 		padding: 0 18rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.12);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1394,8 +1395,8 @@
 
 	.ph-tag--add {
 		border-style: dashed;
-		border-color: rgba(245, 237, 228, 0.24);
-		background: rgba(17, 13, 11, 0.42);
+		border-color: rgba(var(--noir-text-rgb), 0.24);
+		background: rgba(var(--noir-bg-rgb), 0.42);
 	}
 
 	.ph-tag__txt {
@@ -1405,7 +1406,7 @@
 	}
 
 	.ph-tag--add .ph-tag__txt {
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.ph-acts {
@@ -1419,8 +1420,8 @@
 		height: 60rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(245, 237, 228, 0.22);
-		background: rgba(17, 13, 11, 0.58);
+		border: 1rpx solid rgba(var(--noir-text-rgb), 0.22);
+		background: rgba(var(--noir-bg-rgb), 0.58);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1429,14 +1430,14 @@
 	}
 
 	.ph-abtn--coral {
-		border-color: rgba(226, 100, 63, 0.56);
-		background: rgba(226, 100, 63, 0.20);
+		border-color: rgba(var(--noir-coral-rgb), 0.56);
+		background: rgba(var(--noir-coral-rgb), 0.20);
 	}
 
 	.ph-abtn--gold {
 		margin-left: auto;
-		border-color: rgba(216, 176, 140, 0.52);
-		background: rgba(26, 21, 18, 0.72);
+		border-color: rgba(var(--noir-gold-rgb), 0.52);
+		background: rgba(var(--noir-surface2-rgb), 0.72);
 	}
 
 	.ph-abtn__glyph {
@@ -1493,7 +1494,7 @@
 		height: 98rpx;
 		border-radius: 16rpx;
 		overflow: hidden;
-		border: 2rpx solid rgba(255, 255, 255, 0.14);
+		border: 2rpx solid rgba(var(--noir-wash-rgb), 0.14);
 		opacity: 0.62;
 		flex-shrink: 0;
 		box-sizing: border-box;
@@ -1502,7 +1503,7 @@
 	.ph-thumb.is-on {
 		opacity: 1;
 		border-color: var(--noir-gold);
-		box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.48);
+		box-shadow: 0 6rpx 18rpx rgba(var(--noir-shadow-rgb), 0.48);
 	}
 
 	.ph-thumb__img,
@@ -1523,7 +1524,7 @@
 		width: 30rpx;
 		height: 30rpx;
 		border-radius: 50%;
-		background: rgba(17, 13, 11, 0.74);
+		background: rgba(var(--noir-bg-rgb), 0.74);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1539,7 +1540,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 120;
-		background: rgba(8, 6, 5, 0.68);
+		background: rgba(var(--comp-01-rgb), 0.68);
 		display: flex;
 		align-items: flex-end;
 	}
@@ -1548,7 +1549,7 @@
 		width: 100%;
 		padding: 30rpx 32rpx calc(34rpx + env(safe-area-inset-bottom));
 		border-radius: 32rpx 32rpx 0 0;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
+		border-top: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
 		background: var(--noir-surface);
 		box-sizing: border-box;
 	}
@@ -1565,7 +1566,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 17rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.66);
+		color: rgba(var(--noir-gold-rgb), 0.66);
 	}
 
 	.ph-sheet__title {
@@ -1581,8 +1582,8 @@
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1590,13 +1591,13 @@
 
 	.ph-sheet__close-txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.7);
+		color: rgba(var(--noir-text-rgb), 0.7);
 	}
 
 	.ph-sheet__rows {
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.07);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
+		background: var(--noir-glass-1);
 		padding: 0 24rpx;
 	}
 
@@ -1606,7 +1607,7 @@
 		justify-content: space-between;
 		gap: 20rpx;
 		padding: 22rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.ph-sheet__row--last {
@@ -1615,7 +1616,7 @@
 
 	.ph-sheet__lbl {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 		flex-shrink: 0;
 	}
 
@@ -1635,7 +1636,7 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 50%;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.48);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.48);
 		background: var(--noir-surface-2);
 		flex-shrink: 0;
 	}
@@ -1643,8 +1644,8 @@
 	.ph-sheet__me {
 		padding: 2rpx 10rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 		font-size: 18rpx;
 		color: var(--noir-gold-soft);
 		line-height: 1.4;
@@ -1661,7 +1662,7 @@
 	.ph-desc-box {
 		border-radius: 22rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 		padding: 20rpx 22rpx 16rpx;
 	}
 
@@ -1679,13 +1680,13 @@
 		justify-content: space-between;
 		margin-top: 10rpx;
 		padding-top: 10rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.ph-desc-count {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.ph-desc-clear {
@@ -1707,7 +1708,7 @@
 	.ph-edit-sec__lbl {
 		display: block;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 		margin-bottom: 12rpx;
 	}
 
@@ -1731,21 +1732,21 @@
 		height: 54rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 		display: inline-flex;
 		align-items: center;
 		gap: 8rpx;
 	}
 
 	.ph-echip--selected {
-		border-color: rgba(216, 176, 140, 0.56);
-		background: rgba(216, 176, 140, 0.16);
+		border-color: rgba(var(--noir-gold-rgb), 0.56);
+		background: rgba(var(--noir-gold-rgb), 0.16);
 	}
 
 	.ph-echip.is-picked {
-		border-color: rgba(226, 100, 63, 0.52);
-		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.52);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.ph-echip__txt {
@@ -1770,7 +1771,7 @@
 	.ph-edit-empty {
 		display: block;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 		padding: 6rpx 0;
 	}
 
@@ -1786,8 +1787,8 @@
 		height: 70rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 		color: var(--noir-text-strong);
 		font-size: 24rpx;
 	}
@@ -1796,8 +1797,8 @@
 		height: 70rpx;
 		padding: 0 26rpx;
 		border-radius: 999rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.54);
-		background: rgba(216, 176, 140, 0.14);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.54);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 		display: flex;
 		align-items: center;
 		justify-content: center;

@@ -80,7 +80,7 @@
 		margin-top: 16rpx;
 		font-size: 24rpx;
 		line-height: 1.75;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.love-auth-required__actions {

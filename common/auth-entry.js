@@ -33,7 +33,9 @@ export const LOGIN_PAGE_PATH = '/pages/login/index'
 export const PUBLIC_PAGE_PATHS = [
 	'/pages/index/index',
 	'/pages/profile/index',
-	'/pages/login/index'
+	'/pages/login/index',
+	// 主题选择纯本地偏好，不读任何用户数据，游客也能换
+	'/pages/theme/index'
 ]
 
 /** 前缀匹配的公开页（纯工具页，本身不带任何数据） */

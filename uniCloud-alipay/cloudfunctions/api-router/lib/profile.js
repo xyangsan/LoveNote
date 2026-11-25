@@ -1,7 +1,7 @@
 'use strict'
 
 const { dbCmd, userCollection } = require('./db')
-const { DEFAULT_NICKNAME } = require('./constants')
+const { DEFAULT_NICKNAME, DEFAULT_THEME_KEY, VALID_THEME_KEYS } = require('./constants')
 const { getFileExtname, getFileName, getUserById, resolveAvatar } = require('./user-base')
 
 function padDateUnit(value) {
@@ -215,6 +215,18 @@ function buildProfileUpdateData(params = {}) {
 		}
 	}
 
+	// 主题偏好：白名单校验，避免客户端塞任意字符串进来把前端渲染打崩
+	if (params.themeKey !== undefined) {
+		const themeKey = String(params.themeKey || '').trim()
+		if (!VALID_THEME_KEYS.includes(themeKey)) {
+			throw {
+				errCode: 'love-note-invalid-theme',
+				errMsg: '主题参数不合法'
+			}
+		}
+		updateData.theme_key = themeKey
+	}
+
 	return updateData
 }
 
@@ -241,6 +253,9 @@ async function formatUserInfo(record = {}) {
 		momentsCoverUrl,
 		momentsCoverFileId,
 		gender: Number(record.gender || 0),
+		// 存量用户没有这个字段，读时兜底成默认主题（青野浅绿），
+		// 等他自己切一次主题才会真正落库
+		themeKey: VALID_THEME_KEYS.includes(record.theme_key) ? record.theme_key : DEFAULT_THEME_KEY,
 		mobile: record.mobile || '',
 		birthday: record.birthday || '',
 		age: Number(record.age || 0),

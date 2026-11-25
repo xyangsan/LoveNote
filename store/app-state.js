@@ -4,7 +4,8 @@ import {
 	hasValidLogin,
 	saveCachedUserProfile
 } from '@/common/auth-center.js'
-import { getUserApi } from '@/common/api/user.js'
+import { getUserApi, flushPendingGuestTheme } from '@/common/api/user.js'
+import { syncThemeFromUserInfo } from '@/common/theme.js'
 import { getCoupleApi } from '@/common/api/couple.js'
 import { getPlanApi } from '@/common/api/plan.js'
 import { getStatsApi } from '@/common/api/stats.js'
@@ -227,6 +228,13 @@ export const useAppStateStore = defineStore('app-state', {
 			}
 			if (userInfo) {
 				saveCachedUserProfile(userInfo)
+				// 查询 / 更新用户资料后把 themeKey 同步到 storageSync + 内存缓存。
+				// 取值顺序见 common/theme.js 的 resolveTheme()：
+				// 内存缓存 → getStorageSync → 读库（这里的 userInfo.themeKey）→ 默认青野浅绿。
+				// 本地、云端都没有可用主题时会自动回落默认并写回。
+				syncThemeFromUserInfo(userInfo)
+				// 未登录期间切过主题：拿到真实用户资料后补写进账号（一次性，失败不阻断）
+				flushPendingGuestTheme(userInfo)
 			}
 			if (markFetched) {
 				this.markCache(CACHE_KEY_USER)

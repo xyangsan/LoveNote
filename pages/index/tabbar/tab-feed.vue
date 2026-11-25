@@ -13,7 +13,7 @@
 						<text class="tf-cover-btn__txt">{{ coverUploading ? '上传中' : '换封面' }}</text>
 					</view>
 					<view class="tf-cam-btn" @tap="goPublish">
-						<fui-icon name="camera" :size="34" color="#EAD4BC"></fui-icon>
+						<fui-icon name="camera" :size="34" color="var(--noir-gold-soft)"></fui-icon>
 					</view>
 				</view>
 			</template>
@@ -161,7 +161,7 @@
 						@confirm="submitComment"
 					/>
 					<view class="tf-emoji-btn" :class="{ 'is-active': showEmojiPanel }" @tap.stop="toggleEmojiPanel">
-						<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="42" color="#EAD4BC"></fui-icon>
+						<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="42" color="var(--noir-gold-soft)"></fui-icon>
 					</view>
 					<noir-button text="发送" variant="primary" size="xs" @click="submitComment" />
 				</view>
@@ -191,6 +191,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import { DEFAULT_AVATAR, getCachedUserProfile, hasValidLogin } from '@/common/auth-center.js'
 	import { getDailyApi } from '@/common/api/daily.js'
 	import { getUserApi } from '@/common/api/user.js'
@@ -200,8 +201,8 @@
 	import { useAppStateStore } from '@/store/app-state.js'
 	import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 	import glyph from '@/components/love-editor/glyph.json'
+	import { getThemeArt } from '@/common/theme.js'
 
-	const DEFAULT_COVER = '/static/images/feed-cover-bg.jpg'
 	const AD_SEED_MAX = 2147483647
 	const AD_MIN_GAP = 10
 
@@ -282,8 +283,9 @@
 				return this.commentReplyNickname ? `回复 ${this.commentReplyNickname}…` : '写一句评论…'
 			},
 			coverImage() {
+				// 用户设置过封面优先，否则用当前主题的兜底图
 				const custom = String((this.headerProfile && this.headerProfile.momentsCoverUrl) || '').trim()
-				return custom || DEFAULT_COVER
+				return custom || getThemeArt('feed')
 			},
 			headerAvatar() {
 				return this.headerProfile.avatarUrl || DEFAULT_AVATAR
@@ -514,7 +516,7 @@
 				}
 				uni.showActionSheet({
 					itemList: ['删除评论'],
-					itemColor: '#E2643F',
+					itemColor: 'var(--noir-coral)',
 					success: async (res) => {
 						if (Number(res.tapIndex) !== 0) return
 						try {
@@ -540,7 +542,7 @@
 				uni.showModal({
 					title: '删除动态',
 					content: '删除后不可恢复，确定删除这条动态吗？',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: async (res) => {
 						if (!res.confirm) return
 						try {
@@ -696,7 +698,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 15rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.58);
+		color: rgba(var(--noir-gold-rgb), 0.58);
 		white-space: nowrap;
 	}
 
@@ -711,8 +713,8 @@
 		height: 54rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.54);
-		background: rgba(26, 21, 18, 0.72);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.54);
+		background: rgba(var(--noir-surface2-rgb), 0.72);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -731,9 +733,9 @@
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.72);
-		background: linear-gradient(135deg, rgba(216, 176, 140, 0.24) 0%, rgba(26, 21, 18, 0.88) 100%);
-		box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.36);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.72);
+		background: linear-gradient(135deg, rgba(var(--noir-gold-rgb), 0.24) 0%, rgba(var(--noir-surface2-rgb), 0.88) 100%);
+		box-shadow: 0 6rpx 18rpx rgba(var(--noir-shadow-rgb), 0.36);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -767,9 +769,9 @@
 		inset: 0;
 		background: linear-gradient(
 			180deg,
-			rgba(13, 10, 8, 0.52) 0%,
-			rgba(13, 10, 8, 0.16) 44%,
-			rgba(13, 10, 8, 0.72) 78%,
+			rgba(var(--noir-shadow-rgb), 0.52) 0%,
+			rgba(var(--noir-shadow-rgb), 0.16) 44%,
+			rgba(var(--noir-shadow-rgb), 0.72) 78%,
 			var(--noir-bg) 100%
 		);
 	}
@@ -794,7 +796,7 @@
 		width: 84rpx;
 		height: 84rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(216, 176, 140, 0.56);
+		border: 2rpx solid rgba(var(--noir-gold-rgb), 0.56);
 		background: var(--noir-surface-2);
 	}
 
@@ -802,7 +804,7 @@
 		display: block;
 		font-family: "Songti SC", "SimSun", Georgia, serif;
 		font-size: 32rpx;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 		font-weight: 600;
 	}
 
@@ -810,13 +812,13 @@
 		display: block;
 		margin-top: 4rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: var(--noir-on-media-sub);
 	}
 
 	.tf-cover__date {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 22rpx;
-		color: var(--noir-gold);
+		color: var(--noir-on-media-accent);
 	}
 
 	.tf-body {
@@ -835,7 +837,7 @@
 
 	.tf-post {
 		padding: 26rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.tf-post__head {
@@ -848,7 +850,7 @@
 		width: 68rpx;
 		height: 68rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(216, 176, 140, 0.36);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.36);
 		flex-shrink: 0;
 	}
 
@@ -868,12 +870,12 @@
 		display: block;
 		margin-top: 4rpx;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.tf-post__del {
 		font-size: 22rpx;
-		color: rgba(226, 100, 63, 0.78);
+		color: rgba(var(--noir-coral-rgb), 0.78);
 	}
 
 	.tf-post__content {
@@ -881,7 +883,7 @@
 		margin-top: 16rpx;
 		font-size: 27rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.86);
+		color: rgba(var(--noir-text-rgb), 0.86);
 		white-space: pre-wrap;
 	}
 
@@ -923,12 +925,12 @@
 		padding: 6rpx 18rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.tf-act.is-on {
-		border-color: rgba(226, 100, 63, 0.46);
-		background: rgba(226, 100, 63, 0.14);
+		border-color: rgba(var(--noir-coral-rgb), 0.46);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 	}
 
 	.tf-act__txt {
@@ -944,8 +946,8 @@
 		margin-top: 14rpx;
 		padding: 14rpx 18rpx;
 		border-radius: 16rpx;
-		background: rgba(255, 255, 255, 0.032);
-		border: 1rpx solid rgba(255, 255, 255, 0.06);
+		background: var(--noir-glass-1);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.tf-citem {
@@ -968,7 +970,7 @@
 
 	.tf-citem__txt {
 		font-family: "Fluent Emoji Flat", "PingFang SC", sans-serif;
-		color: rgba(245, 237, 228, 0.78);
+		color: rgba(var(--noir-text-rgb), 0.78);
 	}
 
 	.tf-more {
@@ -976,7 +978,7 @@
 		width: 280rpx;
 		height: 68rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -992,14 +994,14 @@
 		margin-top: 28rpx;
 		text-align: center;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.32);
+		color: rgba(var(--noir-text-rgb), 0.32);
 	}
 
 	.tf-comment-mask {
 		position: fixed;
 		inset: 0;
 		z-index: 200;
-		background: rgba(8, 6, 5, 0.62);
+		background: rgba(var(--comp-01-rgb), 0.62);
 		display: flex;
 		align-items: flex-end;
 	}
@@ -1026,8 +1028,8 @@
 		height: 74rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.1);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.1);
+		background: var(--noir-glass-2);
 		color: var(--noir-text-strong);
 		font-family: "Fluent Emoji Flat", "PingFang SC", sans-serif;
 		font-size: 26rpx;
@@ -1037,8 +1039,8 @@
 		width: 68rpx;
 		height: 68rpx;
 		border-radius: 50%;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1047,8 +1049,8 @@
 	}
 
 	.tf-emoji-btn.is-active {
-		border-color: rgba(216, 176, 140, 0.78);
-		background: rgba(216, 176, 140, 0.22);
+		border-color: rgba(var(--noir-gold-rgb), 0.78);
+		background: rgba(var(--noir-gold-rgb), 0.22);
 	}
 
 	.tf-emoji-btn__icon {
@@ -1060,8 +1062,8 @@
 	.tf-emoji-panel {
 		position: relative;
 		height: 440rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: #14100E;
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: var(--noir-sheet-lo);
 	}
 
 	.tf-emoji-scroll {
@@ -1085,7 +1087,7 @@
 	}
 
 	.tf-emoji-item:active {
-		background: rgba(216, 176, 140, 0.16);
+		background: rgba(var(--noir-gold-rgb), 0.16);
 	}
 
 	.tf-emoji-glyph {
@@ -1101,9 +1103,9 @@
 		width: 86rpx;
 		height: 60rpx;
 		border-radius: 18rpx;
-		border: 1.5rpx solid rgba(216, 176, 140, 0.48);
-		background: rgba(26, 21, 18, 0.94);
-		box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.45);
+		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.48);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
+		box-shadow: 0 8rpx 20rpx rgba(var(--noir-shadow-rgb), 0.45);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1118,7 +1120,7 @@
 	.tf-ad-card {
 		border-radius: 26rpx;
 		overflow: hidden;
-		border: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: var(--noir-glass-1);
 	}
 </style>

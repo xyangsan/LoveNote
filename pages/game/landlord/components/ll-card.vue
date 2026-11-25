@@ -144,8 +144,8 @@
 		flex-shrink: 0;
 		box-sizing: border-box;
 		background: var(--noir-white);
-		border: 1px solid rgba(128, 122, 112, 0.4);
-		box-shadow: 0 2px 5px rgba(18, 46, 30, 0.28);
+		border: 1px solid rgba(var(--poker-46-rgb), 0.4);
+		box-shadow: 0 2px 5px rgba(var(--poker-17-rgb), 0.28);
 		overflow: hidden;
 		/* 回弹曲线：选牌弹起时带一点过冲，比线性更像实体牌 */
 		transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease;
@@ -160,8 +160,8 @@
 	   动画最终帧的 transform 会持续覆盖普通样式，写在这儿的 translateY 不会生效。
 	   位移与过渡由父级 `.ll-hand__item` 负责（见 ll-hand.vue 的 itemStyle）。 */
 	.ll-card--selected {
-		box-shadow: 0 10px 18px rgba(16, 60, 34, 0.4);
-		border-color: #ffb84d;
+		box-shadow: 0 10px 18px rgba(var(--poker-20-rgb), 0.4);
+		border-color: var(--poker-67);
 	}
 
 	/* 不可选 / 非自己回合：盖一层灰色蒙版，**不要用 opacity** ——
@@ -173,7 +173,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(48, 58, 52, 0.42);
+		background: rgba(var(--poker-21-rgb), 0.42);
 		pointer-events: none;
 	}
 
@@ -215,13 +215,13 @@
 
 	@keyframes ll-card-insert-glow {
 		from {
-			box-shadow: 0 0 0 0 rgba(255, 196, 92, 0.9), 0 2px 5px rgba(18, 46, 30, 0.28);
+			box-shadow: 0 0 0 0 rgba(var(--poker-70-rgb), 0.9), 0 2px 5px rgba(var(--poker-17-rgb), 0.28);
 		}
 		70% {
-			box-shadow: 0 0 0 6px rgba(255, 196, 92, 0.35), 0 2px 5px rgba(18, 46, 30, 0.28);
+			box-shadow: 0 0 0 6px rgba(var(--poker-70-rgb), 0.35), 0 2px 5px rgba(var(--poker-17-rgb), 0.28);
 		}
 		to {
-			box-shadow: 0 0 0 7px rgba(255, 196, 92, 0), 0 2px 5px rgba(18, 46, 30, 0.28);
+			box-shadow: 0 0 0 7px rgba(var(--poker-70-rgb), 0), 0 2px 5px rgba(var(--poker-17-rgb), 0.28);
 		}
 	}
 
@@ -325,12 +325,12 @@
 		font-size: 0.17em;
 		font-weight: 800;
 		line-height: 1.05;
-		color: #241d1a;
+		color: var(--poker-10);
 	}
 
 	/* 大王：文字走暖红，配合彩色立绘；小王保持纯黑 */
 	.ll-card__joker-label--big {
-		color: #c8402f;
+		color: var(--poker-39);
 	}
 
 	/* 立绘锚在右下角；宽高由 jokerArtStyle 按 180×260 的比例算，aspectFit 刚好填满不留白 */
@@ -351,7 +351,7 @@
 		bottom: 2px;
 		padding: 1px 4px;
 		border-radius: 999px;
-		background: #f5a623;
+		background: var(--poker-60);
 	}
 
 	.ll-card__badge-text {
@@ -369,7 +369,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: linear-gradient(135deg, #c43a30 0%, #a3241d 100%);
+		background: linear-gradient(135deg, var(--poker-37) 0%, var(--poker-29) 100%);
 	}
 
 	.ll-card__back-inner {
@@ -379,16 +379,16 @@
 		width: 70%;
 		height: 78%;
 		border-radius: 4px;
-		border: 1px solid rgba(255, 224, 170, 0.75);
+		border: 1px solid rgba(var(--poker-83-rgb), 0.75);
 		background:
-			repeating-linear-gradient(45deg, rgba(255, 226, 170, 0.18) 0 2px, rgba(255, 226, 170, 0) 2px 6px),
-			repeating-linear-gradient(-45deg, rgba(255, 226, 170, 0.18) 0 2px, rgba(255, 226, 170, 0) 2px 6px),
-			linear-gradient(180deg, #b53027 0%, #9c221b 100%);
+			repeating-linear-gradient(45deg, rgba(var(--poker-84-rgb), 0.18) 0 2px, rgba(var(--poker-84-rgb), 0) 2px 6px),
+			repeating-linear-gradient(-45deg, rgba(var(--poker-84-rgb), 0.18) 0 2px, rgba(var(--poker-84-rgb), 0) 2px 6px),
+			linear-gradient(180deg, var(--poker-34) 0%, var(--poker-27) 100%);
 	}
 
 	.ll-card__back-mark {
 		font-size: 14px;
-		color: rgba(255, 238, 205, 0.95);
-		text-shadow: 0 1px 2px rgba(90, 10, 5, 0.6);
+		color: rgba(var(--poker-92-rgb), 0.95);
+		text-shadow: 0 1px 2px rgba(var(--poker-13-rgb), 0.6);
 	}
 </style>

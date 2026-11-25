@@ -1,5 +1,5 @@
 <template>
-	<view class="login-page">
+	<view class="login-page" :class="themeClass">
 		<image
 			class="login-page__bg"
 			src="https://env-00jxhb140x6o.normal.cloudstatic.cn/love-note/login-bg.jpg"
@@ -57,12 +57,12 @@
 							type="nickname"
 							placeholder="选填，不填自动帮你取一个"
 							maxlength="20"
-							background-color="rgba(26, 21, 18, 0.86)"
+							background-color="rgba(var(--noir-surface2-rgb), 0.86)"
 							:border-bottom="false"
 							:padding="['28rpx', '24rpx']"
 							:radius="24"
 							:size="28"
-							color="#FBF4EA"
+							color="var(--noir-text-strong)"
 							@input="onNicknameInput"
 							@blur="onNicknameBlur"
 						></fui-input>
@@ -72,8 +72,8 @@
 					<view class="love-action-stack login-actions">
 						<fui-button
 							text="微信一键登录"
-							background="linear-gradient(135deg, #ff8b72 0%, #e76f51 100%)"
-							color="#ffffff"
+							background="var(--noir-btn-gradient)"
+							color="var(--noir-white)"
 							radius="999rpx"
 							height="90rpx"
 							:size="28"
@@ -99,8 +99,8 @@
 				text="登录说明"
 				width="100%"
 				height="56"
-				divider-color="rgba(216, 176, 140, 0.22)"
-				color="#D8B08C"
+				divider-color="rgba(var(--noir-gold-rgb), 0.22)"
+				color="var(--noir-gold)"
 				:size="22"
 			></fui-divider>
 			<text class="love-field-tip login-note">如果你是从受保护页面进入，登录成功后会自动继续原来的跳转。</text>
@@ -384,8 +384,8 @@ import {
 		top: 0;
 		height: 100%;
 		background:
-			radial-gradient(80% 50% at 50% 24%, rgba(226, 124, 78, 0.18), transparent 68%),
-			linear-gradient(180deg, rgba(17, 13, 11, 0.62) 0%, rgba(17, 13, 11, 0.72) 56%, rgba(17, 13, 11, 0.96) 100%);
+			radial-gradient(80% 50% at 50% 24%, rgba(var(--noir-coral-rgb), 0.18), transparent 68%),
+			linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0.62) 0%, rgba(var(--noir-bg-rgb), 0.72) 56%, rgba(var(--noir-bg-rgb), 0.96) 100%);
 	}
 
 	.login-page__meteor {
@@ -403,8 +403,8 @@ import {
 		opacity: 0;
 		transform: translate3d(120rpx, -120rpx, 0) rotate(135deg);
 		transform-origin: right center;
-		background: linear-gradient(90deg, rgba(236, 117, 88, 0) 0%, rgba(238, 126, 98, 0.08) 28%, rgba(244, 160, 138, 0.26) 62%, rgba(255, 226, 216, 0.82) 100%);
-		box-shadow: 0 0 10rpx rgba(244, 170, 151, 0.24);
+		background: linear-gradient(90deg, rgba(var(--noir-coral-rgb), 0) 0%, rgba(var(--page-05-rgb), 0.08) 28%, rgba(var(--page-11-rgb), 0.26) 62%, rgba(var(--page-14-rgb), 0.82) 100%);
+		box-shadow: 0 0 10rpx rgba(var(--page-12-rgb), 0.24);
 		animation: meteorFall var(--meteor-duration) cubic-bezier(0.2, 0.08, 0.18, 1) var(--meteor-delay) infinite;
 	}
 
@@ -416,10 +416,10 @@ import {
 		width: var(--meteor-head-size);
 		height: var(--meteor-head-size);
 		border-radius: 28% 62% 24% 58%;
-		border: 1rpx solid rgba(255, 255, 255, 0.7);
+		border: 1rpx solid rgba(var(--noir-white-rgb), 0.7);
 		transform: translateY(-50%) rotate(45deg) scale(0.9);
-		background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.98) 32%, rgba(255, 248, 244, 0.92) 56%, rgba(255, 234, 226, 0.46) 82%, rgba(236, 117, 88, 0.06) 100%);
-		box-shadow: 0 0 14rpx rgba(255, 255, 255, 1), 0 0 26rpx rgba(255, 247, 243, 0.84), 0 0 34rpx rgba(255, 236, 228, 0.3);
+		background: linear-gradient(135deg, rgba(var(--noir-white-rgb), 1) 0%, rgba(var(--noir-white-rgb), 0.98) 32%, rgba(var(--page-19-rgb), 0.92) 56%, rgba(var(--page-16-rgb), 0.46) 82%, rgba(var(--noir-coral-rgb), 0.06) 100%);
+		box-shadow: 0 0 14rpx rgba(var(--noir-white-rgb), 1), 0 0 26rpx rgba(var(--comp-16-rgb), 0.84), 0 0 34rpx rgba(var(--page-17-rgb), 0.3);
 		animation: meteorGlint var(--meteor-glint-duration) ease-in-out var(--meteor-glint-delay) infinite;
 	}
 
@@ -432,7 +432,7 @@ import {
 		height: 8rpx;
 		transform: translateY(-50%);
 		border-radius: 999rpx;
-		background: linear-gradient(90deg, rgba(236, 117, 88, 0) 0%, rgba(239, 132, 104, 0.06) 28%, rgba(246, 174, 155, 0.2) 54%, rgba(255, 230, 222, 0.28) 70%, rgba(255, 255, 255, 0) 100%);
+		background: linear-gradient(90deg, rgba(var(--noir-coral-rgb), 0) 0%, rgba(var(--page-06-rgb), 0.06) 28%, rgba(var(--page-13-rgb), 0.2) 54%, rgba(var(--page-15-rgb), 0.28) 70%, var(--noir-glass-1) 100%);
 		filter: blur(2rpx);
 	}
 
@@ -536,11 +536,11 @@ import {
 
 	.login-title-block .love-title-block__title {
 		color: var(--noir-text-strong);
-		text-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.45);
+		text-shadow: 0 8rpx 24rpx rgba(var(--noir-shadow-rgb), 0.45);
 	}
 
 	.login-title-block .love-title-block__desc {
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.login-editor {
@@ -564,7 +564,7 @@ import {
 	.login-editor__tip,
 	.login-note {
 		text-align: center;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.login-note {
@@ -581,13 +581,13 @@ import {
 		padding: 24rpx 28rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--noir-glass-2);
 	}
 
 	.login-notice__text {
 		font-size: 22rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 		text-align: center;
 	}
 

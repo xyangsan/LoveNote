@@ -248,7 +248,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(8, 5, 4, 0.72);
+		background: rgba(var(--page-01-rgb), 0.72);
 	}
 
 	.ll-result__panel {
@@ -262,9 +262,9 @@
 		/* 一次性完整显示：不设 max-height，让内容撑开（横屏 ~375px 高度刚好装下） */
 		padding: 0 18px 14px;
 		border-radius: 18px;
-		border: 1px solid rgba(216, 176, 140, 0.26);
-		background: linear-gradient(160deg, #211915 0%, #16110E 100%);
-		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.26);
+		background: linear-gradient(160deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
+		box-shadow: 0 16px 40px rgba(var(--noir-shadow-rgb), 0.65);
 		overflow: hidden;
 	}
 
@@ -280,15 +280,15 @@
 		width: 26px;
 		height: 26px;
 		border-radius: 50%;
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 	}
 
 	.ll-result__close-icon {
 		font-size: 16px;
 		line-height: 1;
 		font-weight: 600;
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	/* 头部配色按胜负切换：胜利暖金、失败冷蓝 */
@@ -299,11 +299,11 @@
 	}
 
 	.ll-result__panel--win .ll-result__hero {
-		background: radial-gradient(circle at 50% 0%, rgba(245, 166, 35, 0.24) 0%, rgba(245, 166, 35, 0) 75%);
+		background: radial-gradient(circle at 50% 0%, rgba(var(--poker-60-rgb), 0.24) 0%, rgba(var(--poker-60-rgb), 0) 75%);
 	}
 
 	.ll-result__panel--lose .ll-result__hero {
-		background: radial-gradient(circle at 50% 0%, rgba(120, 155, 205, 0.22) 0%, rgba(120, 155, 205, 0) 75%);
+		background: radial-gradient(circle at 50% 0%, rgba(var(--poker-52-rgb), 0.22) 0%, rgba(var(--poker-52-rgb), 0) 75%);
 	}
 
 	.ll-result__emoji {
@@ -322,11 +322,11 @@
 	}
 
 	.ll-result__panel--win .ll-result__title {
-		color: #FFD67A;
+		color: var(--poker-74);
 	}
 
 	.ll-result__panel--lose .ll-result__title {
-		color: #A8C4E2;
+		color: var(--poker-65);
 	}
 
 	/* 倍数信息行：一行紧凑显示底分 / 炸弹 / 倍数 + 春天标签 */
@@ -338,8 +338,8 @@
 		padding: 6px 12px;
 		margin: 0 4px;
 		border-radius: 10px;
-		border: 1px solid rgba(216, 176, 140, 0.18);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.18);
+		background: var(--noir-glass-2);
 	}
 
 	.ll-result__multiplier-text {
@@ -357,12 +357,12 @@
 	}
 
 	.ll-result__spring--spring {
-		background: linear-gradient(180deg, #ffd873 0%, #f5a623 100%);
-		color: #5a3a10;
+		background: linear-gradient(180deg, var(--poker-75) 0%, var(--poker-60) 100%);
+		color: var(--poker-25);
 	}
 
 	.ll-result__spring--anti-spring {
-		background: linear-gradient(180deg, #7fb0d8 0%, #4d7fb8 100%);
+		background: linear-gradient(180deg, var(--poker-55) 0%, var(--poker-42) 100%);
 		color: var(--noir-white);
 	}
 
@@ -384,16 +384,16 @@
 		gap: 3px;
 		padding: 8px 4px;
 		border-radius: 12px;
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--noir-glass-2);
 	}
 
 	.ll-result__player--landlord {
-		background: linear-gradient(180deg, rgba(255, 220, 130, 0.32) 0%, rgba(255, 220, 130, 0.12) 100%);
-		border: 1px solid rgba(245, 166, 35, 0.5);
+		background: linear-gradient(180deg, rgba(var(--poker-79-rgb), 0.32) 0%, rgba(var(--poker-79-rgb), 0.12) 100%);
+		border: 1px solid rgba(var(--poker-60-rgb), 0.5);
 	}
 
 	.ll-result__player--self {
-		box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.4);
+		box-shadow: 0 0 0 2px rgba(var(--poker-73-rgb), 0.4);
 	}
 
 	.ll-result__player--win .ll-result__avatar {
@@ -420,14 +420,14 @@
 		width: 36px;
 		height: 36px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #ffb37a 0%, var(--noir-coral) 100%);
-		border: 2px solid rgba(255, 255, 255, 0.05);
+		background: linear-gradient(135deg, var(--poker-68) 0%, var(--noir-coral) 100%);
+		border: 2px solid rgba(var(--noir-wash-rgb), 0.05);
 		overflow: hidden;
 	}
 
 	.ll-result__player--landlord .ll-result__avatar {
-		border-color: #ffd166;
-		box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.38);
+		border-color: var(--poker-73);
+		box-shadow: 0 0 0 2px rgba(var(--poker-73-rgb), 0.38);
 	}
 
 	.ll-result__avatar-img {
@@ -453,17 +453,17 @@
 		font-weight: 700;
 		line-height: 1.5;
 		white-space: nowrap;
-		box-shadow: 0 0 0 1.5px rgba(26, 21, 18, 0.94), 0 2px 4px rgba(90, 50, 30, 0.3);
+		box-shadow: 0 0 0 1.5px rgba(var(--noir-surface2-rgb), 0.94), 0 2px 4px rgba(var(--poker-22-rgb), 0.3);
 	}
 
 	.ll-result__role-tag--landlord {
-		background: linear-gradient(180deg, #ffd873 0%, #f5a623 100%);
-		color: #5a3a10;
+		background: linear-gradient(180deg, var(--poker-75) 0%, var(--poker-60) 100%);
+		color: var(--poker-25);
 	}
 
 	.ll-result__role-tag--farmer {
-		background: linear-gradient(180deg, #6cb87a 0%, #3f8a56 100%);
-		color: #f4fff4;
+		background: linear-gradient(180deg, var(--poker-53) 0%, var(--poker-40) 100%);
+		color: var(--poker-101);
 	}
 
 	.ll-result__name {
@@ -493,12 +493,12 @@
 	}
 
 	.ll-result__score-delta--lose {
-		color: #7f9b8e;
+		color: var(--poker-50);
 	}
 
 	.ll-result__total {
 		font-size: 10px;
-		color: rgba(245, 237, 228, 0.50);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	/* 底部按钮：返回大厅（ghost）+ 再来一局（primary，非房主禁用） */
@@ -518,14 +518,14 @@
 	}
 
 	.ll-result__action--ghost {
-		background: rgba(216, 176, 140, 0.08);
-		border: 1px solid rgba(216, 176, 140, 0.30);
+		background: rgba(var(--noir-gold-rgb), 0.08);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.30);
 	}
 
 	.ll-result__action--primary {
 		background: var(--noir-btn-gradient);
 		border: none;
-		box-shadow: 0 4px 12px rgba(222, 95, 60, 0.28);
+		box-shadow: 0 4px 12px rgba(var(--noir-coral-rgb), 0.28);
 	}
 
 	.ll-result__action--disabled {

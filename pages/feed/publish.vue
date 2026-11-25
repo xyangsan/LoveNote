@@ -1,5 +1,5 @@
 <template>
-	<view class="pf-page" @tap="handlePageTap">
+	<view class="pf-page" @tap="handlePageTap" :class="themeClass">
 		<view class="pf-glow pf-glow--left"></view>
 		<view class="pf-glow pf-glow--right"></view>
 
@@ -57,7 +57,7 @@
 						@touchstart.prevent="prepareOpenEmojiPanel"
 						@touchend.prevent="toggleEmojiPanel"
 					>
-						<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="36" color="#EAD4BC" />
+						<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="36" color="var(--noir-gold-soft)" />
 					</view>
 					<text class="pf-cnt">{{ contentLength }} / 2000</text>
 				</view>
@@ -108,12 +108,12 @@
 					<view class="pf-row" @tap="handleChooseLocation">
 						<text class="pf-row__label">位置（选填）</text>
 						<view class="pf-row__right">
-							<fui-icon name="location" :size="28" :color="hasSelectedLocation ? '#D8B08C' : 'rgba(245, 237, 228, 0.36)'" />
+							<fui-icon name="location" :size="28" :color="hasSelectedLocation ? 'var(--noir-gold)' : 'rgba(var(--noir-text-rgb), 0.36)'" />
 							<text
 								class="pf-loc-txt"
 								:class="{ 'pf-loc-txt--active': hasSelectedLocation }"
 							>{{ locationDisplayText }}</text>
-							<fui-icon name="arrowright" :size="24" color="rgba(245, 237, 228, 0.36)" />
+							<fui-icon name="arrowright" :size="24" color="rgba(var(--noir-text-rgb), 0.36)" />
 						</view>
 					</view>
 					<view v-if="hasSelectedLocation" class="pf-loc-extra">
@@ -156,7 +156,7 @@
 					@touchstart.prevent="prepareOpenEmojiPanel"
 					@touchend.prevent="toggleEmojiPanel"
 				>
-					<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="44" color="#EAD4BC" />
+					<fui-icon :name="showEmojiPanel ? 'keyboard' : 'face'" :size="44" color="var(--noir-gold-soft)" />
 				</view>
 				<view class="emoji-toolbar__right">
 					<view v-if="showEmojiPanel && content" class="emoji-toolbar__del" @tap.stop="deleteLastChar">
@@ -717,13 +717,13 @@
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(245, 237, 228, 0.16);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-text-rgb), 0.16);
+		background: var(--noir-glass-2);
 	}
 
 	.pf-nav-cancel__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.68);
+		color: rgba(var(--noir-text-rgb), 0.68);
 		white-space: nowrap;
 	}
 
@@ -739,8 +739,8 @@
 		padding: 6rpx;
 		margin-bottom: 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.pf-seg__item {
@@ -754,12 +754,12 @@
 
 	.pf-seg__item--on {
 		border: 1rpx solid var(--noir-border-coral);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.24), rgba(216, 176, 140, 0.14));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.24), rgba(var(--noir-gold-rgb), 0.14));
 	}
 
 	.pf-seg__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.pf-seg__item--on .pf-seg__txt {
@@ -773,7 +773,7 @@
 		padding: 24rpx 28rpx 18rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.pf-textarea {
@@ -786,7 +786,7 @@
 	}
 
 	.pf-ph {
-		color: rgba(245, 237, 228, 0.30);
+		color: rgba(var(--noir-text-rgb), 0.30);
 	}
 
 	.pf-box__foot {
@@ -795,7 +795,7 @@
 		justify-content: space-between;
 		margin-top: 14rpx;
 		padding-top: 12rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.pf-emoji-trigger {
@@ -805,13 +805,13 @@
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--noir-glass-2);
 	}
 
 	.pf-cnt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 21rpx;
-		color: rgba(216, 176, 140, 0.68);
+		color: rgba(var(--noir-gold-rgb), 0.68);
 	}
 
 	/* 媒体选择区 */
@@ -830,12 +830,12 @@
 	.pf-add-slot__plus {
 		font-size: 44rpx;
 		line-height: 1;
-		color: rgba(216, 176, 140, 0.84);
+		color: rgba(var(--noir-gold-rgb), 0.84);
 	}
 
 	.pf-add-slot__lbl {
 		font-size: 22rpx;
-		color: rgba(234, 212, 188, 0.78);
+		color: rgba(var(--noir-gold-soft-rgb), 0.78);
 	}
 
 	/* 位置与可见范围卡片（对标 s17 .pf-meta） */
@@ -844,7 +844,7 @@
 		padding: 0 28rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.pf-row-block {
@@ -866,7 +866,7 @@
 	.pf-row__label {
 		flex-shrink: 0;
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.pf-row__right {
@@ -880,7 +880,7 @@
 
 	.pf-loc-txt {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.36);
+		color: rgba(var(--noir-text-rgb), 0.36);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -923,14 +923,14 @@
 		margin-top: 20rpx;
 		padding: 18rpx 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.16);
-		background: rgba(216, 176, 140, 0.05);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.16);
+		background: rgba(var(--noir-gold-rgb), 0.05);
 	}
 
 	.pf-privacy__txt {
 		font-size: 21rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	/* 底部固定发布栏 */
@@ -941,8 +941,8 @@
 		bottom: 0;
 		z-index: 30;
 		padding: 20rpx 36rpx calc(24rpx + env(safe-area-inset-bottom));
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
-		background: rgba(17, 13, 11, 0.94);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
+		background: rgba(var(--noir-bg-rgb), 0.94);
 	}
 
 	.pf-submit {
@@ -952,7 +952,7 @@
 		height: 88rpx;
 		border-radius: 44rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.28);
+		box-shadow: 0 12rpx 28rpx rgba(var(--noir-coral-rgb), 0.28);
 	}
 
 	.pf-submit--disabled {
@@ -980,9 +980,9 @@
 		z-index: 3000;
 		width: 100%;
 		box-sizing: border-box;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.22);
+		border-top: 1rpx solid rgba(var(--noir-gold-rgb), 0.22);
 		background: var(--noir-surface);
-		box-shadow: 0 -12rpx 32rpx rgba(0, 0, 0, 0.55);
+		box-shadow: 0 -12rpx 32rpx rgba(var(--noir-shadow-rgb), 0.55);
 	}
 
 	.emoji-toolbar {
@@ -993,7 +993,7 @@
 		justify-content: space-between;
 		padding: 0 28rpx;
 		box-sizing: border-box;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.emoji-toolbar__button {
@@ -1018,7 +1018,7 @@
 		height: 52rpx;
 		padding: 0 20rpx;
 		border-radius: 16rpx;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--noir-glass-2);
 	}
 
 	.emoji-toolbar__del-txt {
@@ -1033,7 +1033,7 @@
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 26rpx;
-		background: rgba(226, 100, 63, 0.18);
+		background: rgba(var(--noir-coral-rgb), 0.18);
 		border: 1rpx solid var(--noir-border-coral);
 	}
 

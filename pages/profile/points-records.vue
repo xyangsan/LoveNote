@@ -1,5 +1,5 @@
 <template>
-	<view class="pr-page">
+	<view class="pr-page" :class="themeClass">
 		<view class="pr-glow pr-glow--left"></view>
 		<view class="pr-glow pr-glow--right"></view>
 
@@ -306,15 +306,15 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.74);
+		color: rgba(var(--noir-gold-rgb), 0.74);
 		text-align: center;
 	}
 
 	.pr-bal {
 		padding: 28rpx 24rpx;
 		border-radius: 32rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.22);
-		background: linear-gradient(135deg, rgba(216, 176, 140, 0.12), rgba(226, 100, 63, 0.06) 58%, rgba(255, 255, 255, 0.02));
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.22);
+		background: linear-gradient(135deg, rgba(var(--noir-gold-rgb), 0.12), rgba(var(--noir-coral-rgb), 0.06) 58%, var(--noir-glass-1));
 	}
 
 	.pr-stats {
@@ -370,7 +370,7 @@
 	.pr-date__lbl {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.76);
+		color: rgba(var(--noir-gold-rgb), 0.76);
 		font-weight: 500;
 	}
 
@@ -381,14 +381,14 @@
 	}
 
 	.pr-date__sum--minus {
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.pr-card {
 		padding: 0 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.028);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.pr-item {
@@ -412,7 +412,7 @@
 	.pr-main__title {
 		display: block;
 		font-size: 26rpx;
-		color: rgba(245, 237, 228, 0.86);
+		color: rgba(var(--noir-text-rgb), 0.86);
 	}
 
 	.pr-main__time {
@@ -420,7 +420,7 @@
 		margin-top: 6rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.36);
+		color: rgba(var(--noir-text-rgb), 0.36);
 	}
 
 	.pr-val {
@@ -432,7 +432,7 @@
 	}
 
 	.pr-val--minus {
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.pr-loading {
@@ -445,29 +445,29 @@
 	.pr-loading__line {
 		height: 88rpx;
 		border-radius: 22rpx;
-		background: rgba(255, 255, 255, 0.035);
+		background: var(--noir-glass-1);
 	}
 
 	.pr-empty {
 		margin-top: 40rpx;
 		padding: 60rpx 28rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.07);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
 	.pr-empty__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.pr-more {
 		margin-top: 28rpx;
 		height: 76rpx;
 		border-radius: 38rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-1);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -479,7 +479,7 @@
 
 	.pr-more__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.pr-note {
@@ -487,6 +487,6 @@
 		margin-top: 24rpx;
 		text-align: center;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.30);
+		color: rgba(var(--noir-text-rgb), 0.30);
 	}
 </style>

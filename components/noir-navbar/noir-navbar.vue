@@ -112,8 +112,8 @@
 				}
 				if (p >= 0.999) {
 					return Object.assign({}, base, {
-						background: '#110D0B',
-						borderBottom: '1px solid rgba(216, 176, 140, 0.12)'
+						background: 'var(--noir-bg)',
+						borderBottom: '1px solid rgba(var(--noir-gold-rgb), 0.12)'
 					})
 				}
 				const topA = (0.72 + 0.28 * p).toFixed(3)
@@ -121,8 +121,9 @@
 				const botA = p.toFixed(3)
 				const borderA = (0.12 * p).toFixed(3)
 				return Object.assign({}, base, {
-					background: `linear-gradient(180deg, rgba(17, 13, 11, ${topA}) 0%, rgba(17, 13, 11, ${midA}) 62%, rgba(17, 13, 11, ${botA}) 100%)`,
-					borderBottom: p > 0.08 ? `1px solid rgba(216, 176, 140, ${borderA})` : 'none'
+					// rgba(var(--x), a)：令牌里存的是 "17, 13, 11" 三元组，拼出来换主题就跟着变
+					background: `linear-gradient(180deg, rgba(var(--noir-bg-rgb), ${topA}) 0%, rgba(var(--noir-bg-rgb), ${midA}) 62%, rgba(var(--noir-bg-rgb), ${botA}) 100%)`,
+					borderBottom: p > 0.08 ? `1px solid rgba(var(--noir-gold-rgb), ${borderA})` : 'none'
 				})
 			},
 			rowStyle() {
@@ -170,7 +171,7 @@
 	.noir-navbar {
 		width: 100%;
 		box-sizing: border-box;
-		background: rgba(17, 13, 11, 0.92);
+		background: rgba(var(--noir-bg-rgb), 0.92);
 		backdrop-filter: blur(18rpx);
 		-webkit-backdrop-filter: blur(18rpx);
 		z-index: 60;
@@ -186,16 +187,16 @@
 	.noir-navbar--transparent {
 		background: linear-gradient(
 			180deg,
-			rgba(17, 13, 11, 0.78) 0%,
-			rgba(17, 13, 11, 0.38) 64%,
-			rgba(17, 13, 11, 0) 100%
+			rgba(var(--noir-bg-rgb), 0.78) 0%,
+			rgba(var(--noir-bg-rgb), 0.38) 64%,
+			rgba(var(--noir-bg-rgb), 0) 100%
 		);
 		backdrop-filter: none;
 		-webkit-backdrop-filter: none;
 	}
 
 	.noir-navbar--border {
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid var(--noir-border-soft);
 	}
 
 	.noir-navbar__row {
@@ -223,8 +224,8 @@
 		width: 60rpx;
 		height: 60rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(245, 237, 228, 0.16);
-		background: rgba(17, 13, 11, 0.45);
+		border: 1rpx solid rgba(var(--noir-text-rgb), 0.16);
+		background: rgba(var(--noir-bg-rgb), 0.45);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -268,6 +269,6 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 16rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.62);
+		color: rgba(var(--noir-gold-rgb), 0.62);
 	}
 </style>

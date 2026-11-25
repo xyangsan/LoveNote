@@ -1,6 +1,6 @@
 <template>
 	<!-- 炸弹时整页抖一下（class 切换 → 重播动画见 .ll-page--bomb） -->
-	<view class="ll-page" :class="{ 'll-page--bomb': bombOn }">
+	<view class="ll-page" :class="[{ 'll-page--bomb': bombOn }, themeClass]">
 	<!-- 场景：QQ 三人斗地主的深绿房间 —— 中央桌面射灯光晕（纯 CSS，不引图片资源） -->
 	<view class="ll-scene">
 		<view class="ll-scene__glow"></view>
@@ -353,8 +353,8 @@
 					:value="joinCode"
 					:size="16"
 					:radius="10"
-					background-color="#1E1814"
-					color="#FBF4EA"
+					background-color="var(--noir-sheet-hi)"
+					color="var(--noir-text-strong)"
 					:padding="['10px', '12px']"
 					@input="handleJoinCodeInput"
 				></fui-input>
@@ -385,6 +385,7 @@
 </template>
 
 <script>
+	import { getThemeCoral } from '@/common/theme.js'
 	import LlCard from './components/ll-card.vue'
 	import LlHand from './components/ll-hand.vue'
 	import LlPlayed from './components/ll-played.vue'
@@ -1641,7 +1642,7 @@
 					title: '退出房间',
 					content: this.buildLeaveConfirmText(),
 					confirmText: '退出',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: (res) => {
 						if (res.confirm) {
 							this.doLeaveRoom()
@@ -2196,7 +2197,7 @@
 					content: '开启后本局由系统自动叫分、自动出牌，直到你点右上角 🕹️ 取消托管。确定开启吗？',
 					confirmText: '开启托管',
 					cancelText: '再想想',
-					confirmColor: '#E2643F',
+					confirmColor: getThemeCoral(),
 					success: (res) => {
 						if (!res.confirm) {
 							return
@@ -2243,7 +2244,7 @@
 		padding-left: env(safe-area-inset-left);
 		padding-right: env(safe-area-inset-right);
 		/* QQ 三人斗地主：墨绿房间背景，桌面亮绿椭圆叠在下方 */
-		background: radial-gradient(ellipse at 50% 30%, #2f6d52 0%, #1c5440 38%, #0f3a2a 78%, #082018 100%);
+		background: radial-gradient(ellipse at 50% 30%, var(--poker-35) 0%, var(--poker-26) 38%, var(--poker-19) 78%, var(--poker-05) 100%);
 		overflow: hidden;
 	}
 
@@ -2280,7 +2281,7 @@
 		height: 760px;
 		margin-left: -380px;
 		border-radius: 50%;
-		background: radial-gradient(circle, rgba(180, 230, 180, 0.32) 0%, rgba(120, 200, 140, 0.12) 38%, rgba(40, 90, 60, 0) 74%);
+		background: radial-gradient(circle, rgba(var(--poker-72-rgb), 0.32) 0%, rgba(var(--poker-57-rgb), 0.12) 38%, rgba(var(--poker-28-rgb), 0) 74%);
 	}
 
 	/* 暗角：四周收深，把视线收到牌桌上 */
@@ -2291,7 +2292,7 @@
 		right: 0;
 		bottom: 0;
 		pointer-events: none;
-		background: radial-gradient(ellipse at 50% 44%, rgba(0, 0, 0, 0) 46%, rgba(6, 22, 16, 0.5) 100%);
+		background: radial-gradient(ellipse at 50% 44%, rgba(var(--noir-shadow-rgb), 0) 46%, rgba(var(--poker-02-rgb), 0.5) 100%);
 	}
 
 	/* ---------------- 牌桌：QQ 经典亮绿椭圆 + 更平缓的桌沿 ----------------
@@ -2305,8 +2306,8 @@
 		height: 84vh;
 		margin-left: -76vw;
 		border-radius: 50%;
-		background: radial-gradient(ellipse at 50% 6%, #8fd48a 0%, #5cb868 30%, #3f9e56 56%, #2c6e42 86%, #1d4f30 100%);
-		box-shadow: inset 0 10px 30px rgba(220, 250, 220, 0.42), inset 0 -18px 40px rgba(10, 50, 28, 0.45), 0 -12px 44px rgba(0, 30, 18, 0.4);
+		background: radial-gradient(ellipse at 50% 6%, var(--poker-63) 0%, var(--poker-51) 30%, var(--poker-44) 56%, var(--poker-31) 86%, var(--poker-23) 100%);
+		box-shadow: inset 0 10px 30px rgba(var(--poker-90-rgb), 0.42), inset 0 -18px 40px rgba(var(--poker-16-rgb), 0.45), 0 -12px 44px rgba(var(--poker-03-rgb), 0.4);
 	}
 
 	/* 桌面绒纹：低透明度白点交叉网（不用 mix-blend-mode，小程序真机支持不稳） */
@@ -2320,9 +2321,9 @@
 		border-radius: 50%;
 		pointer-events: none;
 		background:
-			repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 2px, rgba(255, 255, 255, 0) 2px 6px),
-			repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 2px, rgba(255, 255, 255, 0) 2px 6px),
-			radial-gradient(ellipse at 50% 7%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 48%);
+			repeating-linear-gradient(0deg, rgba(var(--noir-wash-rgb), 0.04) 0 2px, rgba(var(--noir-wash-rgb), 0) 2px 6px),
+			repeating-linear-gradient(90deg, rgba(var(--noir-wash-rgb), 0.04) 0 2px, rgba(var(--noir-wash-rgb), 0) 2px 6px),
+			radial-gradient(ellipse at 50% 7%, rgba(var(--noir-wash-rgb), 0.18) 0%, rgba(var(--noir-wash-rgb), 0) 48%);
 	}
 
 	.ll-top {
@@ -2351,7 +2352,7 @@
 		height: 28px;
 		padding: 0 12px;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.22);
+		background: rgba(var(--noir-wash-rgb), 0.22);
 	}
 
 	.ll-top__btn-text {
@@ -2369,13 +2370,13 @@
 		width: 28px;
 		height: 28px;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.22);
+		background: rgba(var(--noir-wash-rgb), 0.22);
 	}
 
 	/* 托管中：暖金底 + 金色描边，一眼看出「当前是机器在打」 */
 	.ll-top__icon--on {
-		background: linear-gradient(180deg, #ffdf8e 0%, #ffb84d 100%);
-		box-shadow: 0 0 0 2px rgba(255, 223, 142, 0.45);
+		background: linear-gradient(180deg, var(--poker-82) 0%, var(--poker-67) 100%);
+		box-shadow: 0 0 0 2px rgba(var(--poker-82-rgb), 0.45);
 	}
 
 	.ll-top__icon-emoji {
@@ -2395,7 +2396,7 @@
 		height: 13px;
 		border-radius: 50%;
 		background: var(--noir-coral);
-		border: 1px solid rgba(26, 21, 18, 0.94);
+		border: 1px solid rgba(var(--noir-surface2-rgb), 0.94);
 		font-size: 9px;
 		font-weight: 700;
 		color: var(--noir-white);
@@ -2405,7 +2406,7 @@
 	.ll-top__code {
 		padding: 3px 10px;
 		border-radius: 999px;
-		background: rgba(0, 0, 0, 0.18);
+		background: rgba(var(--noir-shadow-rgb), 0.18);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -2414,32 +2415,32 @@
 	.ll-top__code-text {
 		font-size: 11px;
 		letter-spacing: 1px;
-		color: #ffe9dd;
+		color: var(--poker-91);
 	}
 
 	.ll-top__conn {
 		padding: 3px 9px;
 		border-radius: 999px;
-		background: rgba(132, 199, 168, 0.32);
+		background: rgba(var(--poker-61-rgb), 0.32);
 	}
 
 	.ll-top__conn--warn {
-		background: rgba(245, 181, 68, 0.34);
+		background: rgba(var(--poker-64-rgb), 0.34);
 	}
 
 	.ll-top__conn--pending {
-		background: rgba(255, 255, 255, 0.22);
+		background: rgba(var(--noir-wash-rgb), 0.22);
 	}
 
 	.ll-top__conn-text {
 		font-size: 10px;
-		color: #f2fff8;
+		color: var(--poker-100);
 	}
 
 	.ll-top__phase {
 		padding: 3px 10px;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.26);
+		background: rgba(var(--noir-wash-rgb), 0.26);
 		display: flex;
 	}
 
@@ -2464,9 +2465,9 @@
 		gap: 8px;
 		padding: 4px 12px;
 		border-radius: 8px;
-		border: 1px solid rgba(216, 176, 140, 0.36);
-		background: rgba(17, 13, 11, 0.86);
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.42);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.36);
+		background: rgba(var(--noir-bg-rgb), 0.86);
+		box-shadow: 0 6px 16px rgba(var(--noir-shadow-rgb), 0.42);
 	}
 
 	.ll-tray__cards {
@@ -2483,7 +2484,7 @@
 	/* 底分：挂在底牌盘右侧，用一条细分隔线跟牌隔开（不抢牌的视觉） */
 	.ll-tray__base {
 		padding-left: 8px;
-		border-left: 1px solid rgba(176, 91, 72, 0.25);
+		border-left: 1px solid rgba(var(--poker-41-rgb), 0.25);
 		font-size: 10px;
 		font-weight: 600;
 		color: var(--noir-gold-soft);
@@ -2519,13 +2520,13 @@
 	.ll-empty__title {
 		font-size: 18px;
 		font-weight: 700;
-		color: #fff6ef;
-		text-shadow: 0 2px 6px rgba(40, 20, 10, 0.35);
+		color: var(--poker-98);
+		text-shadow: 0 2px 6px rgba(var(--poker-06-rgb), 0.35);
 	}
 
 	.ll-empty__desc {
 		font-size: 12px;
-		color: rgba(255, 246, 239, 0.86);
+		color: rgba(var(--poker-98-rgb), 0.86);
 	}
 
 	.ll-empty__actions {
@@ -2549,7 +2550,7 @@
 		font-size: 11px;
 		font-weight: 600;
 		color: var(--noir-surface-2);
-		text-shadow: 0 1px 3px rgba(60, 25, 10, 0.55);
+		text-shadow: 0 1px 3px rgba(var(--poker-14-rgb), 0.55);
 	}
 
 	/* 出牌区占位：**固定 42px 高（正好一行牌）**，超出的行由内部绝对定位往下长。
@@ -2602,7 +2603,7 @@
 	.ll-center__waiting {
 		padding: 14px 20px;
 		border-radius: 14px;
-		background: rgba(0, 0, 0, 0.2);
+		background: rgba(var(--noir-shadow-rgb), 0.2);
 		text-align: center;
 	}
 
@@ -2617,7 +2618,7 @@
 		display: block;
 		margin-top: 4px;
 		font-size: 11px;
-		color: rgba(255, 240, 230, 0.82);
+		color: rgba(var(--poker-94-rgb), 0.82);
 	}
 
 	.ll-center__timer {
@@ -2632,22 +2633,22 @@
 		gap: 5px;
 		padding: 4px 10px;
 		border-radius: 999px;
-		background: rgba(255, 236, 168, 0.96);
-		box-shadow: 0 2px 6px rgba(12, 36, 22, 0.28);
+		background: rgba(var(--poker-89-rgb), 0.96);
+		box-shadow: 0 2px 6px rgba(var(--poker-07-rgb), 0.28);
 	}
 
 	.ll-center__auto-dot {
 		width: 6px;
 		height: 6px;
 		border-radius: 50%;
-		background: #e07a2c;
+		background: var(--poker-49);
 		animation: ll-auto-pulse 1s ease-in-out infinite;
 	}
 
 	.ll-center__auto-text {
 		font-size: 12px;
 		font-weight: 700;
-		color: #8a4715;
+		color: var(--poker-32);
 		white-space: nowrap;
 	}
 
@@ -2668,7 +2669,7 @@
 		min-width: 150px;
 		padding: 4px 8px;
 		border-radius: 12px;
-		background: rgba(0, 0, 0, 0.14);
+		background: rgba(var(--noir-shadow-rgb), 0.14);
 	}
 
 	/* 最后一手的信息：「牌神 出牌 · 连对」。压在半透明底盘里，白字配深底才读得清 */
@@ -2676,13 +2677,13 @@
 		font-size: 10px;
 		font-weight: 600;
 		line-height: 1.2;
-		color: rgba(255, 244, 235, 0.86);
+		color: rgba(var(--poker-95-rgb), 0.86);
 		white-space: nowrap;
 	}
 
 	.ll-center__play-hint {
 		font-size: 12px;
-		color: rgba(255, 244, 235, 0.72);
+		color: rgba(var(--poker-95-rgb), 0.72);
 	}
 
 	/* 牌型 / 倍数 / 当前回合合并成一行：原来三条各占一行，横屏高度吃紧。
@@ -2699,7 +2700,7 @@
 
 	.ll-center__multiplier {
 		font-size: 11px;
-		color: #ffd9a8;
+		color: var(--poker-81);
 		white-space: nowrap;
 	}
 
@@ -2707,7 +2708,7 @@
 	.ll-center__turn {
 		padding: 2px 8px;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.22);
+		background: rgba(var(--noir-wash-rgb), 0.22);
 		font-size: 11px;
 		line-height: 1.5;
 		color: var(--noir-surface-2);
@@ -2716,8 +2717,8 @@
 
 	/* 轮到自己：高亮成暖金色，扫一眼就知道该你了 */
 	.ll-center__turn--mine {
-		background: linear-gradient(180deg, #ffdf8e 0%, #ffb84d 100%);
-		color: #5a3a10;
+		background: linear-gradient(180deg, var(--poker-82) 0%, var(--poker-67) 100%);
+		color: var(--poker-25);
 		font-weight: 700;
 	}
 
@@ -2774,18 +2775,18 @@
 	.ll-mybar__score {
 		font-size: 11px;
 		font-weight: 600;
-		color: #ffe2c2;
+		color: var(--poker-86);
 	}
 
 	/* 托管中的常驻标记（倒计时结束自动接管后一直显示，提醒玩家点「取消托管」） */
 	.ll-mybar__trustee {
 		padding: 1px 6px;
 		border-radius: 999px;
-		background: rgba(255, 214, 130, 0.22);
-		border: 1px solid rgba(255, 214, 130, 0.6);
+		background: rgba(var(--poker-76-rgb), 0.22);
+		border: 1px solid rgba(var(--poker-76-rgb), 0.6);
 		font-size: 10px;
 		font-weight: 700;
-		color: #ffe6b0;
+		color: var(--poker-87);
 		white-space: nowrap;
 		align-self: flex-start;
 	}
@@ -2801,9 +2802,9 @@
 		max-width: 62%;
 		padding: 3px 12px;
 		border-radius: 999px;
-		background: rgba(12, 44, 28, 0.82);
-		border: 1px solid rgba(255, 219, 130, 0.45);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+		background: rgba(var(--poker-11-rgb), 0.82);
+		border: 1px solid rgba(var(--poker-78-rgb), 0.45);
+		box-shadow: 0 2px 8px rgba(var(--noir-shadow-rgb), 0.28);
 		text-align: center;
 		white-space: nowrap;
 		display: flex;
@@ -2811,7 +2812,7 @@
 
 	.ll-mybar__notice-text {
 		font-size: 11px;
-		color: #fff6e2;
+		color: var(--poker-96);
 	}
 
 	/* 自己建立层叠上下文：叠牌内部有 z-index: 1..20（.ll-hand__item），
@@ -2840,16 +2841,16 @@
 		height: 38px;
 		padding: 0 18px;
 		border-radius: 999px;
-		box-shadow: 0 3px 8px rgba(0, 20, 12, 0.32);
+		box-shadow: 0 3px 8px rgba(var(--poker-01-rgb), 0.32);
 	}
 
 	.ll-empty-action--ghost {
-		background: rgba(26, 21, 18, 0.94);
+		background: rgba(var(--noir-surface2-rgb), 0.94);
 	}
 
 	.ll-empty-action--primary {
-		background: linear-gradient(180deg, #ffdf8e 0%, #ffb84d 55%, #f59b2a 100%);
-		border-bottom: 2px solid #b86a14;
+		background: linear-gradient(180deg, var(--poker-82) 0%, var(--poker-67) 55%, var(--poker-56) 100%);
+		border-bottom: 2px solid var(--poker-43);
 	}
 
 	.ll-empty-action__text {
@@ -2858,11 +2859,11 @@
 	}
 
 	.ll-empty-action--ghost .ll-empty-action__text {
-		color: #1c4f33;
+		color: var(--poker-24);
 	}
 
 	.ll-empty-action--primary .ll-empty-action__text {
-		color: #5a3a10;
+		color: var(--poker-25);
 	}
 
 	/* 加入房间弹框：本页恒为横屏，内容用 px + 限宽居中（800px 宽的一行输入框太散） */
@@ -2886,7 +2887,7 @@
 		display: block;
 		margin: 8px 0 16px;
 		font-size: 12px;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.ll-join__btn {
@@ -2925,7 +2926,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: radial-gradient(circle at 50% 46%, rgba(26, 21, 18, 0.94) 0%, rgba(255, 214, 150, 0.6) 42%, rgba(255, 150, 90, 0) 74%);
+		background: radial-gradient(circle at 50% 46%, rgba(var(--noir-surface2-rgb), 0.94) 0%, rgba(var(--poker-77-rgb), 0.6) 42%, rgba(var(--poker-59-rgb), 0) 74%);
 		animation: ll-bomb-flash 620ms ease-out both;
 	}
 
@@ -2934,8 +2935,8 @@
 		font-size: 40px;
 		font-weight: 700;
 		letter-spacing: 4px;
-		color: #fff6e4;
-		text-shadow: 0 4px 18px rgba(180, 60, 20, 0.75), 0 0 30px rgba(255, 200, 120, 0.9);
+		color: var(--poker-97);
+		text-shadow: 0 4px 18px rgba(var(--poker-36-rgb), 0.75), 0 0 30px rgba(var(--poker-71-rgb), 0.9);
 		animation: ll-bomb-pop 620ms cubic-bezier(0.22, 1.3, 0.36, 1) both;
 	}
 

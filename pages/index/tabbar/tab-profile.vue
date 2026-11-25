@@ -85,7 +85,17 @@
 				</view>
 			</noir-card>
 
-			<!-- 分组 2：支持与管理 -->
+			<!-- 分组 2：外观（游客也能换，不需要登录） -->
+			<noir-section-head title="外观" kicker="APPEARANCE" />
+			<noir-card padding="4rpx 26rpx">
+				<view class="tp-row tp-row--last" @tap="goPage('/pages/theme/index')">
+					<text class="tp-row__title">主题外观</text>
+					<text class="tp-row__val">{{ currentThemeName }}</text>
+					<text class="tp-row__chev">›</text>
+				</view>
+			</noir-card>
+
+			<!-- 分组 3：支持与管理 -->
 			<noir-section-head title="支持与管理" kicker="SUPPORT & ADMIN" />
 			<noir-card padding="4rpx 26rpx">
 				<view v-if="isAdmin" class="tp-row" @tap="goPage('/pages/operations/index')">
@@ -124,6 +134,7 @@
 	import { getPointsApi } from '@/common/api/points.js'
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { APP_VERSION_TEXT } from '@/common/version.js'
+	import { getTheme } from '@/common/theme.js'
 
 	function formatNum(n) {
 		return String(Math.max(0, Math.floor(Number(n) || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -153,6 +164,10 @@
 			}
 		},
 		computed: {
+			/** 当前主题名（主题外观行右侧的值），themeKey 来自全局主题 mixin */
+			currentThemeName() {
+				return getTheme(this.themeKey).name
+			},
 			isAdmin() {
 				const roles = Array.isArray(this.userInfo && this.userInfo.role) ? this.userInfo.role : []
 				return roles.some((r) => String(r || '').trim().toLowerCase() === 'admin')
@@ -325,7 +340,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 15rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.58);
+		color: rgba(var(--noir-gold-rgb), 0.58);
 		white-space: nowrap;
 	}
 
@@ -352,7 +367,7 @@
 		box-sizing: border-box;
 		border-radius: 50%;
 		overflow: hidden;
-		border: 2rpx solid rgba(216, 176, 140, 0.56);
+		border: 2rpx solid rgba(var(--noir-gold-rgb), 0.56);
 		background: var(--noir-surface-2);
 	}
 
@@ -371,11 +386,11 @@
 	}
 
 	.tp-gender--male {
-		background: linear-gradient(135deg, #6CB8FF 0%, #4387FF 100%);
+		background: linear-gradient(135deg, var(--home-06) 0%, var(--home-04) 100%);
 	}
 
 	.tp-gender--female {
-		background: linear-gradient(135deg, #FF94B8 0%, #FF6B95 100%);
+		background: linear-gradient(135deg, var(--home-08) 0%, var(--home-05) 100%);
 	}
 
 	.tp-gender__txt {
@@ -402,15 +417,15 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.tp-user__edit {
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(245, 237, 228, 0.22);
-		background: rgba(255, 255, 255, 0.04);
+		border: 1rpx solid rgba(var(--noir-text-rgb), 0.22);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		flex-shrink: 0;
@@ -424,8 +439,8 @@
 	.tp-points {
 		padding: 26rpx 28rpx;
 		border-radius: 30rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.20) 0%, var(--noir-surface-glass) 100%);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.20) 0%, var(--noir-surface-glass) 100%);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -434,7 +449,7 @@
 	.tp-points__lbl {
 		display: block;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.tp-points__val {
@@ -453,7 +468,7 @@
 
 	.tp-points__unit {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.tp-points__delta {
@@ -471,7 +486,7 @@
 		height: 112rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 		display: flex;
 		align-items: center;
 	}
@@ -482,7 +497,7 @@
 	}
 
 	.tp-stat--sep {
-		border-left: 1rpx solid rgba(255, 255, 255, 0.07);
+		border-left: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
 	}
 
 	.tp-stat__val {
@@ -496,7 +511,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.tp-row {
@@ -504,7 +519,7 @@
 		display: flex;
 		align-items: center;
 		gap: 14rpx;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.tp-row--last {
@@ -514,17 +529,17 @@
 	.tp-row__title {
 		flex: 1;
 		font-size: 27rpx;
-		color: rgba(245, 237, 228, 0.88);
+		color: rgba(var(--noir-text-rgb), 0.88);
 	}
 
 	.tp-row__val {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.tp-row__chev {
 		font-size: 30rpx;
-		color: rgba(245, 237, 228, 0.28);
+		color: rgba(var(--noir-text-rgb), 0.28);
 	}
 
 	.tp-logout {

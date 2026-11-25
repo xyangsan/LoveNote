@@ -7,6 +7,16 @@
 					<text class="th-brand__cn">恋人手札</text>
 				</view>
 			</template>
+			<template #right>
+				<view class="th-theme-btn" @tap="handleOpenTheme">
+					<view class="th-theme-btn__grid">
+						<view class="th-theme-btn__chip th-theme-btn__chip--1"></view>
+						<view class="th-theme-btn__chip th-theme-btn__chip--2"></view>
+						<view class="th-theme-btn__chip th-theme-btn__chip--3"></view>
+						<view class="th-theme-btn__chip th-theme-btn__chip--4"></view>
+					</view>
+				</view>
+			</template>
 		</noir-navbar>
 
 		<!-- ==================== 14 未登录首页 ==================== -->
@@ -58,7 +68,7 @@
 					<view class="gh-card" @tap="goLogin">
 						<view class="gh-card__top">
 							<view class="gh-card__ic">
-								<fui-icon name="wait" :size="32" color="#D8B08C"></fui-icon>
+								<fui-icon name="wait" :size="32" color="var(--noir-gold)"></fui-icon>
 							</view>
 							<noir-tag text="4种重复" variant="gold" />
 						</view>
@@ -69,7 +79,7 @@
 					<view class="gh-card" @tap="goLogin">
 						<view class="gh-card__top">
 							<view class="gh-card__ic">
-								<fui-icon name="picture" :size="32" color="#D8B08C"></fui-icon>
+								<fui-icon name="picture" :size="32" color="var(--noir-gold)"></fui-icon>
 							</view>
 							<noir-tag text="瀑布流" variant="gold" />
 						</view>
@@ -80,7 +90,7 @@
 					<view class="gh-card" @tap="goLogin">
 						<view class="gh-card__top">
 							<view class="gh-card__ic">
-								<fui-icon name="star" :size="32" color="#D8B08C"></fui-icon>
+								<fui-icon name="star" :size="32" color="var(--noir-gold)"></fui-icon>
 							</view>
 							<noir-tag text="+10点" variant="gold" />
 						</view>
@@ -91,7 +101,7 @@
 					<view class="gh-card" @tap="handleQuickTap({ action: 'game' })">
 						<view class="gh-card__top">
 							<view class="gh-card__ic">
-								<fui-icon name="community" :size="32" color="#D8B08C"></fui-icon>
+								<fui-icon name="community" :size="32" color="var(--noir-gold)"></fui-icon>
 							</view>
 							<noir-tag text="3款玩法" variant="gold" />
 						</view>
@@ -152,7 +162,7 @@
 							<text class="th-couple__names">{{ currentUserName }} × {{ partnerName }}</text>
 							<text class="th-couple__meta">{{ coupleSubText }}</text>
 						</view>
-						<fui-icon name="arrowright" :size="28" color="rgba(216, 176, 140, 0.56)"></fui-icon>
+						<fui-icon name="arrowright" :size="28" color="rgba(var(--noir-gold-rgb), 0.56)"></fui-icon>
 					</view>
 
 					<view class="th-stats">
@@ -229,7 +239,7 @@
 						</view>
 						<view class="th-sec__action" @tap="$emit('switch-tab', 'feed')">
 							<text class="th-sec__action-txt">全部</text>
-							<fui-icon name="arrowright" :size="24" color="rgba(216, 176, 140, 0.72)"></fui-icon>
+							<fui-icon name="arrowright" :size="24" color="rgba(var(--noir-gold-rgb), 0.72)"></fui-icon>
 						</view>
 					</view>
 					<view v-if="latestMoment" class="th-moment" @tap="$emit('switch-tab', 'feed')">
@@ -265,7 +275,7 @@
 					</view>
 					<view class="th-sec__action" @tap="goPage('/pages/album/list')">
 						<text class="th-sec__action-txt">{{ photoHeaderActionText }}</text>
-						<fui-icon name="arrowright" :size="24" color="rgba(216, 176, 140, 0.72)"></fui-icon>
+						<fui-icon name="arrowright" :size="24" color="rgba(var(--noir-gold-rgb), 0.72)"></fui-icon>
 					</view>
 				</view>
 				<!-- 一张照片都没有：给「进入相册」开启入口 -->
@@ -310,7 +320,7 @@
 						</view>
 						<view class="th-sec__action" @tap="$emit('switch-tab', 'game')">
 							<text class="th-sec__action-txt">进入大厅</text>
-							<fui-icon name="arrowright" :size="24" color="rgba(216, 176, 140, 0.72)"></fui-icon>
+							<fui-icon name="arrowright" :size="24" color="rgba(var(--noir-gold-rgb), 0.72)"></fui-icon>
 						</view>
 					</view>
 
@@ -354,7 +364,7 @@
 					</view>
 					<view class="th-sec__action" @tap="goPage('/pages/plan/list')">
 						<text class="th-sec__action-txt">查看全部</text>
-						<fui-icon name="arrowright" :size="24" color="rgba(216, 176, 140, 0.72)"></fui-icon>
+						<fui-icon name="arrowright" :size="24" color="rgba(var(--noir-gold-rgb), 0.72)"></fui-icon>
 					</view>
 				</view>
 				<noir-card v-if="plans.length" padding="20rpx 26rpx">
@@ -409,13 +419,12 @@
 	import { getPointsApi } from '@/common/api/points.js'
 	import { readAppSettingsCache } from '@/common/app-settings.js'
 	import { getGameCardList, getGameMeta, GAME_TYPE_BOMB } from '@/common/game/rules.js'
+	import { getThemeArt } from '@/common/theme.js'
 	import { getNavBarHeight, getNavBarMetrics } from '@/common/utils/nav-bar.js'
 	import { getPhotoGridSession } from '@/common/utils/photo-grid-selector.js'
 	import { useAppStateStore } from '@/store/app-state.js'
 	import LoveGameIcon from '@/components/love-game-icon/love-game-icon.vue'
 	import LovePhotoGrid from '@/components/love-photo-grid/love-photo-grid.vue'
-
-	const DEFAULT_HERO_COVER = '/static/images/home-hero-bg.jpg'
 
 	const ROOM_PAGE_MAP = {
 		undercover: '/pages/game/undercover/room',
@@ -540,7 +549,8 @@
 				}
 			},
 			heroCoverUrl() {
-				return DEFAULT_HERO_COVER
+				// 按主题取 Hero 图：首页是常量图，不涉及用户上传内容
+				return getThemeArt('home')
 			},
 			feedVisible() {
 				return Boolean(this.settings && this.settings.feedVisible === true)
@@ -712,6 +722,9 @@
 			this.refresh({ force: false })
 		},
 		methods: {
+			handleOpenTheme() {
+				uni.navigateTo({ url: '/pages/theme/index' })
+			},
 			ensureStore() {
 				if (!this.appStateStore) {
 					this.appStateStore = useAppStateStore()
@@ -1045,7 +1058,49 @@
 	.th-brand__cn {
 		font-size: 20rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
+	}
+
+	/* 右上角主题入口：2×2 色块，前三格是品牌三色，第四格跟随当前主题的正文色 */
+	.th-theme-btn {
+		width: 58rpx;
+		height: 58rpx;
+		border-radius: 50%;
+		border: 1rpx solid var(--noir-border-gold);
+		background: rgba(var(--noir-bg-rgb), 0.42);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.th-theme-btn__grid {
+		width: 26rpx;
+		height: 26rpx;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4rpx;
+	}
+
+	.th-theme-btn__chip {
+		width: 11rpx;
+		height: 11rpx;
+		border-radius: 3rpx;
+	}
+
+	.th-theme-btn__chip--1 {
+		background: var(--noir-coral);
+	}
+
+	.th-theme-btn__chip--2 {
+		background: var(--noir-gold);
+	}
+
+	.th-theme-btn__chip--3 {
+		background: var(--noir-green);
+	}
+
+	.th-theme-btn__chip--4 {
+		background: var(--noir-text);
 	}
 
 	.th-body {
@@ -1075,19 +1130,13 @@
 	.th-hero__shade {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			180deg,
-			rgba(13, 10, 8, 0.72) 0%,
-			rgba(13, 10, 8, 0.24) 36%,
-			rgba(13, 10, 8, 0.76) 74%,
-			var(--noir-bg) 100%
-		);
+		background: var(--noir-hero-scrim);
 	}
 
 	.th-hero__ember {
 		position: absolute;
 		inset: 0;
-		background: radial-gradient(110% 56% at 78% 36%, rgba(226, 124, 78, 0.18), transparent 62%);
+		background: radial-gradient(110% 56% at 78% 36%, rgba(var(--noir-coral-rgb), 0.18), transparent 62%);
 		pointer-events: none;
 	}
 
@@ -1106,13 +1155,7 @@
 	}
 
 	.gh-hero__shade {
-		background: linear-gradient(
-			180deg,
-			rgba(13, 10, 8, 0.56) 0%,
-			rgba(13, 10, 8, 0.14) 32%,
-			rgba(13, 10, 8, 0.72) 66%,
-			var(--noir-bg) 100%
-		);
+		background: var(--noir-hero-scrim);
 	}
 
 	.gh-hero__inner {
@@ -1130,8 +1173,8 @@
 		height: 44rpx;
 		padding: 0 20rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(17, 13, 11, 0.54);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-shadow-rgb), 0.38);
 		margin-top: 120rpx;
 	}
 
@@ -1146,7 +1189,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 3rpx;
-		color: var(--noir-gold-soft);
+		color: var(--noir-on-media-accent);
 	}
 
 	.gh-hero__headline {
@@ -1159,9 +1202,9 @@
 		font-size: 54rpx;
 		line-height: 1.3;
 		letter-spacing: 2rpx;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 		font-weight: 600;
-		text-shadow: 0 6rpx 26rpx rgba(0, 0, 0, 0.62);
+		text-shadow: 0 6rpx 26rpx rgba(var(--noir-shadow-rgb), 0.62);
 	}
 
 	.gh-hero__desc {
@@ -1169,13 +1212,13 @@
 		margin-top: 16rpx;
 		font-size: 23rpx;
 		line-height: 1.72;
-		color: rgba(245, 237, 228, 0.74);
+		color: var(--noir-on-media-sub);
 	}
 
 	.gh-hero__rule {
 		height: 1rpx;
 		margin: 26rpx 0 20rpx;
-		background: linear-gradient(90deg, rgba(216, 176, 140, 0.52), rgba(216, 176, 140, 0.06));
+		background: linear-gradient(90deg, rgba(var(--noir-gold-rgb), 0.52), rgba(var(--noir-gold-rgb), 0.06));
 	}
 
 	.gh-hero__perks {
@@ -1188,7 +1231,7 @@
 	}
 
 	.gh-perk--sep {
-		border-left: 1rpx solid rgba(245, 237, 228, 0.14);
+		border-left: 1rpx solid var(--noir-on-media-line);
 		padding-left: 22rpx;
 	}
 
@@ -1197,21 +1240,21 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 32rpx;
 		font-weight: 500;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.gh-perk__lbl {
 		display: block;
 		margin-top: 4rpx;
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.50);
+		color: var(--noir-on-media-dim);
 	}
 
 	.gh-cta {
 		padding: 24rpx 24rpx 20rpx;
 		border-radius: 30rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14) 0%, rgba(26, 21, 18, 0.88) 100%);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.14) 0%, rgba(var(--noir-surface2-rgb), 0.88) 100%);
 	}
 
 	.gh-cta__sub {
@@ -1219,7 +1262,7 @@
 		margin-top: 14rpx;
 		text-align: center;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.gh-grid {
@@ -1234,7 +1277,7 @@
 		padding: 24rpx 22rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.034);
+		background: var(--noir-glass-1);
 	}
 
 	.gh-card__top {
@@ -1248,8 +1291,8 @@
 		width: 58rpx;
 		height: 58rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(216, 176, 140, 0.38);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.38);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1268,7 +1311,7 @@
 		margin-top: 8rpx;
 		font-size: 21rpx;
 		line-height: 1.58;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.gh-foot-note {
@@ -1276,7 +1319,7 @@
 		margin-top: 28rpx;
 		text-align: center;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
 	.th-hero__top {
@@ -1284,6 +1327,11 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 12rpx;
+	}
+
+	/* hero 上的 kicker 压在照片上：全局 .noir-kicker 的暖金在浅色主题下偏暗 */
+	.th-hero__top .noir-kicker {
+		color: var(--noir-on-media-accent);
 	}
 
 	.th-dayrow {
@@ -1298,20 +1346,20 @@
 		font-size: 124rpx;
 		line-height: 0.92;
 		font-weight: 500;
-		color: var(--noir-text-strong);
-		text-shadow: 0 4rpx 30rpx rgba(0, 0, 0, 0.52);
+		color: var(--noir-on-media);
+		text-shadow: 0 4rpx 30rpx rgba(var(--noir-shadow-rgb), 0.52);
 	}
 
 	.th-dayrow__unit {
 		font-size: 28rpx;
 		letter-spacing: 3rpx;
-		color: rgba(245, 237, 228, 0.72);
+		color: var(--noir-on-media-sub);
 	}
 
 	.th-hero__rule {
 		height: 1rpx;
 		margin: 22rpx 0 20rpx;
-		background: linear-gradient(90deg, rgba(216, 176, 140, 0.56), rgba(216, 176, 140, 0.06));
+		background: linear-gradient(90deg, rgba(var(--noir-gold-rgb), 0.56), rgba(var(--noir-gold-rgb), 0.06));
 	}
 
 	.th-couple {
@@ -1348,7 +1396,7 @@
 		box-sizing: border-box;
 		border-radius: 50%;
 		overflow: hidden;
-		border: 2rpx solid rgba(255, 240, 226, 0.52);
+		border: 2rpx solid rgba(var(--avatar-17-rgb), 0.52);
 		background: var(--noir-surface-2);
 	}
 
@@ -1375,11 +1423,11 @@
 	}
 
 	.th-gender--male {
-		background: linear-gradient(135deg, #6CB8FF 0%, #4387FF 100%);
+		background: linear-gradient(135deg, var(--home-06) 0%, var(--home-04) 100%);
 	}
 
 	.th-gender--female {
-		background: linear-gradient(135deg, #FF94B8 0%, #FF6B95 100%);
+		background: linear-gradient(135deg, var(--home-08) 0%, var(--home-05) 100%);
 	}
 
 	.th-gender__txt {
@@ -1393,7 +1441,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: linear-gradient(135deg, #6D7C74, #3F4C46);
+		background: linear-gradient(135deg, var(--avatar-04), var(--avatar-02));
 	}
 
 	.th-ava__txt {
@@ -1410,21 +1458,21 @@
 		display: block;
 		font-size: 28rpx;
 		font-weight: 500;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.th-couple__meta {
 		display: block;
 		margin-top: 4rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: var(--noir-on-media-dim);
 	}
 
 	.th-stats {
 		display: flex;
 		margin-top: 24rpx;
 		padding-top: 20rpx;
-		border-top: 1rpx solid var(--noir-border);
+		border-top: 1rpx solid var(--noir-on-media-line);
 	}
 
 	.th-st {
@@ -1433,7 +1481,7 @@
 	}
 
 	.th-st--sep {
-		border-left: 1rpx solid var(--noir-border);
+		border-left: 1rpx solid var(--noir-on-media-line);
 	}
 
 	.th-st__val {
@@ -1441,7 +1489,7 @@
 		font-family: "NoirSerifNum", "Bodoni 72", "Didot", Georgia, serif;
 		font-size: 34rpx;
 		font-weight: 500;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.th-st__lbl {
@@ -1449,7 +1497,7 @@
 		margin-top: 4rpx;
 		font-size: 19rpx;
 		letter-spacing: 1rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: var(--noir-on-media-dim);
 	}
 
 	/* 1. 今日心动 · 签到与任务卡 */
@@ -1457,7 +1505,7 @@
 		padding: 24rpx 26rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.14), rgba(216, 176, 140, 0.06) 56%, rgba(255, 255, 255, 0.02));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.14), rgba(var(--noir-gold-rgb), 0.06) 56%, var(--noir-glass-1));
 	}
 
 	.th-pulse__top {
@@ -1498,7 +1546,7 @@
 
 	.th-pulse__unit {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.th-pulse__delta {
@@ -1512,15 +1560,15 @@
 		padding: 0 24rpx;
 		border-radius: 999rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 10rpx 24rpx rgba(222, 95, 60, 0.28);
+		box-shadow: 0 10rpx 24rpx rgba(var(--noir-coral-rgb), 0.28);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.th-pulse__cta--done {
-		background: rgba(216, 176, 140, 0.14);
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.14);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
 		box-shadow: none;
 	}
 
@@ -1541,14 +1589,14 @@
 		gap: 16rpx;
 		margin-top: 18rpx;
 		padding-top: 16rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.th-pulse__track {
 		flex: 1;
 		height: 8rpx;
 		border-radius: 4rpx;
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--noir-glass-3);
 		overflow: hidden;
 	}
 
@@ -1560,7 +1608,7 @@
 
 	.th-pulse__hint {
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 		white-space: nowrap;
 	}
 
@@ -1570,7 +1618,7 @@
 		padding: 24rpx 26rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.032));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.14), var(--noir-glass-1));
 	}
 
 	.th-anniv__main {
@@ -1598,7 +1646,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.th-anniv__r {
@@ -1618,7 +1666,7 @@
 	.th-anniv__unit {
 		margin-top: 4rpx;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.5);
+		color: rgba(var(--noir-text-rgb), 0.5);
 	}
 
 	.th-anniv__next {
@@ -1627,12 +1675,12 @@
 		justify-content: space-between;
 		margin-top: 18rpx;
 		padding-top: 14rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.th-anniv__next-l {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.th-anniv__next-r {
@@ -1666,14 +1714,14 @@
 		font-size: 26rpx;
 		font-weight: 500;
 		letter-spacing: 2rpx;
-		color: rgba(245, 237, 228, 0.88);
+		color: rgba(var(--noir-text-rgb), 0.88);
 	}
 
 	.th-sec__kicker {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.56);
+		color: rgba(var(--noir-gold-rgb), 0.56);
 	}
 
 	.th-sec__action {
@@ -1685,7 +1733,7 @@
 
 	.th-sec__action-txt {
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 	}
 
 	/* 3. 5-COL QUICK ENTRY STRIP */
@@ -1699,7 +1747,7 @@
 		padding: 20rpx 6rpx 18rpx;
 		border-radius: 24rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.034);
+		background: var(--noir-glass-1);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -1709,8 +1757,8 @@
 		width: 58rpx;
 		height: 58rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.08);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.08);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1725,7 +1773,7 @@
 	.th-q__lbl {
 		margin-top: 12rpx;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.78);
+		color: rgba(var(--noir-text-rgb), 0.78);
 		white-space: nowrap;
 	}
 
@@ -1742,14 +1790,14 @@
 		align-items: center;
 		padding: 40rpx 32rpx 36rpx;
 		border-radius: 26rpx;
-		border: 1rpx dashed rgba(216, 176, 140, 0.3);
-		background: rgba(216, 176, 140, 0.05);
+		border: 1rpx dashed rgba(var(--noir-gold-rgb), 0.3);
+		background: rgba(var(--noir-gold-rgb), 0.05);
 	}
 
 	.th-film-empty__kicker {
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.6);
+		color: rgba(var(--noir-gold-rgb), 0.6);
 	}
 
 	.th-film-empty__title {
@@ -1763,7 +1811,7 @@
 		margin-top: 10rpx;
 		font-size: 21rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 		text-align: center;
 	}
 
@@ -1771,13 +1819,13 @@
 		margin-top: 24rpx;
 		padding: 12rpx 40rpx;
 		border-radius: 999rpx;
-		background: linear-gradient(135deg, #ff8b72 0%, #e76f51 100%);
+		background: linear-gradient(135deg, var(--home-07) 0%, var(--comp-07) 100%);
 	}
 
 	.th-film-empty__btn-txt {
 		font-size: 22rpx;
 		font-weight: 500;
-		color: #2A1A14;
+		color: var(--home-01);
 	}
 
 	/* 4. 时光胶片 · 最近照片墙 */
@@ -1802,13 +1850,13 @@
     display: flex;
 		padding: 4rpx 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.32);
-		background: rgba(216, 176, 140, 0.1);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.32);
+		background: rgba(var(--noir-gold-rgb), 0.1);
 	}
 
 	.th-film-foot__go-txt {
 		font-size: 18rpx;
-		color: rgba(240, 209, 179, 0.92);
+		color: rgba(var(--home-09-rgb), 0.92);
 	}
 
 	/* LATEST MOMENT (保持原有样式) */
@@ -1819,7 +1867,7 @@
 		padding: 22rpx 24rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.032);
+		background: var(--noir-glass-1);
 	}
 
 	.th-moment__img {
@@ -1833,7 +1881,7 @@
 		width: 84rpx;
 		height: 84rpx;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #B96A4C, #7C3E2D);
+		background: linear-gradient(135deg, var(--home-03), var(--home-02));
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1865,7 +1913,7 @@
 
 	.th-moment__time {
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.4);
+		color: rgba(var(--noir-text-rgb), 0.4);
 	}
 
 	.th-moment__txt {
@@ -1889,7 +1937,7 @@
 	/* 7. PLAN PREVIEW */
 	.th-plan-row {
 		padding: 22rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.th-plan-row--last {
@@ -1918,7 +1966,7 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.th-plan-prog {
@@ -1932,7 +1980,7 @@
 		flex: 1;
 		height: 7rpx;
 		border-radius: 4rpx;
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--noir-glass-3);
 		overflow: hidden;
 	}
 
@@ -1958,7 +2006,7 @@
 		margin-bottom: 16rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border-coral);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.18), var(--noir-glass-1));
 	}
 
 	.th-game-resume__l {
@@ -1977,7 +2025,7 @@
 		display: block;
 		margin-top: 4rpx;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.th-game-grid {
@@ -1991,12 +2039,12 @@
 		padding: 22rpx 18rpx 20rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.034);
+		background: var(--noir-glass-1);
 	}
 
 	.th-game-tile--hi {
-		border-color: rgba(216, 176, 140, 0.28);
-		background: linear-gradient(155deg, rgba(216, 176, 140, 0.11), rgba(255, 255, 255, 0.025));
+		border-color: rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(155deg, rgba(var(--noir-gold-rgb), 0.11), var(--noir-glass-1));
 	}
 
 	.th-game-tile__ic {
@@ -2050,7 +2098,7 @@
 		font-family: "Songti SC", "SimSun", serif;
 		font-size: 24rpx;
 		letter-spacing: 3rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.th-footer-quote__sub {
@@ -2059,6 +2107,6 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 17rpx;
 		letter-spacing: 4rpx;
-		color: rgba(216, 176, 140, 0.36);
+		color: rgba(var(--noir-gold-rgb), 0.36);
 	}
 </style>

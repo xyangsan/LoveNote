@@ -43,41 +43,41 @@
 		letter-spacing: 1rpx;
 		white-space: nowrap;
 		box-sizing: border-box;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		color: var(--noir-gold-soft);
 	}
 
 	.noir-tag--coral {
-		border-color: rgba(226, 100, 63, 0.46);
-		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.46);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 		color: var(--noir-coral-light);
 	}
 
 	.noir-tag--green {
-		border-color: rgba(158, 214, 178, 0.40);
-		background: rgba(158, 214, 178, 0.12);
+		border-color: rgba(var(--noir-green-rgb), 0.40);
+		background: rgba(var(--noir-green-rgb), 0.12);
 		color: var(--noir-green);
 	}
 
 	.noir-tag--muted {
-		border-color: rgba(255, 255, 255, 0.14);
-		background: rgba(255, 255, 255, 0.04);
-		color: rgba(245, 237, 228, 0.50);
+		border-color: rgba(var(--noir-wash-rgb), 0.14);
+		background: var(--noir-glass-2);
+		color: rgba(var(--noir-text-rgb), 0.50);
 	}
 
 	.noir-tag--chip {
 		height: 52rpx;
 		padding: 0 24rpx;
 		font-size: 22rpx;
-		border-color: rgba(245, 237, 228, 0.14);
+		border-color: rgba(var(--noir-text-rgb), 0.14);
 		background: transparent;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.noir-tag--chip.is-active {
-		border-color: rgba(216, 176, 140, 0.52);
-		background: rgba(216, 176, 140, 0.14);
+		border-color: rgba(var(--noir-gold-rgb), 0.52);
+		background: rgba(var(--noir-gold-rgb), 0.14);
 		color: var(--noir-text-strong);
 	}
 

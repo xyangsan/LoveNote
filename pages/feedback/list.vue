@@ -1,5 +1,5 @@
 <template>
-	<view class="love-page fl-page">
+	<view class="love-page fl-page" :class="themeClass">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -76,7 +76,7 @@
 								<text v-if="item.admin_reply" class="fl-cfoot__dot">·</text>
 								<text v-if="item.admin_reply" class="fl-cfoot__reply">已回复</text>
 							</view>
-							<fui-icon name="arrowright" :size="26" color="rgba(216, 176, 140, 0.56)"></fui-icon>
+							<fui-icon name="arrowright" :size="26" color="rgba(var(--noir-gold-rgb), 0.56)"></fui-icon>
 						</view>
 					</view>
 				</view>
@@ -368,8 +368,8 @@
 	.fl-nav-tag {
 		padding: 6rpx 16rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.36);
-		background: rgba(226, 100, 63, 0.14);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 	}
 
 	.fl-nav-tag__txt {
@@ -394,7 +394,7 @@
 		padding: 6rpx;
 		border-radius: 999rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.fl-seg__item {
@@ -408,13 +408,13 @@
 	}
 
 	.fl-seg__item--on {
-		background: linear-gradient(135deg, rgba(240, 154, 107, 0.24), rgba(222, 95, 60, 0.28));
-		box-shadow: inset 0 0 0 1rpx rgba(226, 100, 63, 0.44);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-bright-rgb), 0.24), rgba(var(--noir-coral-rgb), 0.28));
+		box-shadow: inset 0 0 0 1rpx rgba(var(--noir-coral-rgb), 0.44);
 	}
 
 	.fl-seg__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.fl-seg__item--on .fl-seg__txt {
@@ -428,7 +428,7 @@
 		text-align: center;
 		font-size: 21rpx;
 		letter-spacing: 1rpx;
-		color: rgba(216, 176, 140, 0.68);
+		color: rgba(var(--noir-gold-rgb), 0.68);
 	}
 
 	.fl-loading {
@@ -441,7 +441,7 @@
 	.fl-loading__txt {
 		margin-top: 16rpx;
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.fl-list {
@@ -453,8 +453,8 @@
 	.fl-card {
 		padding: 24rpx 26rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.fl-chead {
@@ -484,8 +484,8 @@
 	}
 
 	.fl-status--coral {
-		background: rgba(226, 100, 63, 0.16);
-		border-color: rgba(226, 100, 63, 0.34);
+		background: rgba(var(--noir-coral-rgb), 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.34);
 	}
 
 	.fl-status--coral .fl-status__txt {
@@ -493,8 +493,8 @@
 	}
 
 	.fl-status--gold {
-		background: rgba(216, 176, 140, 0.14);
-		border-color: rgba(216, 176, 140, 0.28);
+		background: rgba(var(--noir-gold-rgb), 0.14);
+		border-color: rgba(var(--noir-gold-rgb), 0.28);
 	}
 
 	.fl-status--gold .fl-status__txt {
@@ -502,12 +502,12 @@
 	}
 
 	.fl-status--green {
-		background: rgba(104, 196, 140, 0.14);
-		border-color: rgba(104, 196, 140, 0.3);
+		background: rgba(var(--page-07-rgb), 0.14);
+		border-color: rgba(var(--page-07-rgb), 0.3);
 	}
 
 	.fl-status--green .fl-status__txt {
-		color: #7ED4A2;
+		color: var(--page-10);
 	}
 
 	.fl-status__txt {
@@ -524,13 +524,13 @@
 
 	.fl-meta__txt {
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.fl-meta__time {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 	}
 
 	.fl-content {
@@ -538,7 +538,7 @@
 		margin-top: 14rpx;
 		font-size: 25rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.68);
+		color: rgba(var(--noir-text-rgb), 0.68);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		-webkit-line-clamp: 2;
@@ -552,7 +552,7 @@
 		justify-content: space-between;
 		margin-top: 16rpx;
 		padding-top: 14rpx;
-		border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.fl-cfoot__left {
@@ -564,7 +564,7 @@
 	.fl-cfoot__txt,
 	.fl-cfoot__dot {
 		font-size: 21rpx;
-		color: rgba(216, 176, 140, 0.62);
+		color: rgba(var(--noir-gold-rgb), 0.62);
 	}
 
 	.fl-cfoot__reply {
@@ -576,8 +576,8 @@
 	.fl-forbidden-card {
 		padding: 64rpx 36rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
@@ -595,7 +595,7 @@
 		margin-top: 12rpx;
 		font-size: 23rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.fl-forbidden__btn {
@@ -609,7 +609,7 @@
 
 	.fl-loadmore__txt {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.4);
+		color: rgba(var(--noir-text-rgb), 0.4);
 	}
 
 	.fl-note {

@@ -228,7 +228,7 @@ export default {
 	display: inline-block;
 	overflow: hidden;
 	border-radius: 8rpx;
-	background: #000000;
+	background: var(--viewer-01);
 	vertical-align: top;
 }
 

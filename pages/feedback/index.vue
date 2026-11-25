@@ -1,5 +1,5 @@
 <template>
-	<view class="love-page fb-page">
+	<view class="love-page fb-page" :class="themeClass">
 		<view class="love-page__glow love-page__glow--left"></view>
 		<view class="love-page__glow love-page__glow--right"></view>
 
@@ -94,7 +94,7 @@
 							<fui-icon
 								:name="faqExpanded ? 'arrowup' : 'arrowright'"
 								:size="24"
-								color="rgba(216, 176, 140, 0.72)"
+								color="rgba(var(--noir-gold-rgb), 0.72)"
 							></fui-icon>
 						</view>
 					</view>
@@ -112,7 +112,7 @@
 								<fui-icon
 									:name="openFaqIndex === idx ? 'arrowdown' : 'arrowright'"
 									:size="26"
-									color="rgba(216, 176, 140, 0.56)"
+									color="rgba(var(--noir-gold-rgb), 0.56)"
 								></fui-icon>
 							</view>
 							<text v-if="openFaqIndex === idx" class="fb-a-txt">{{ item.a }}</text>
@@ -380,7 +380,7 @@
 		display: block;
 		font-size: 22rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 		margin-bottom: 16rpx;
 	}
 
@@ -397,20 +397,20 @@
 	.fb-chip {
 		padding: 14rpx 28rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.1);
-		background: rgba(255, 255, 255, 0.032);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.1);
+		background: var(--noir-glass-1);
 		transition: all 0.2s ease;
 		display: flex;
 	}
 
 	.fb-chip--on {
-		border-color: rgba(226, 100, 63, 0.56);
-		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.56);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.fb-chip__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.fb-chip--on .fb-chip__txt {
@@ -423,7 +423,7 @@
 		margin-top: 24rpx;
 		border-radius: 28rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 		padding: 24rpx 26rpx 54rpx;
 	}
 
@@ -436,7 +436,7 @@
 	}
 
 	.fb-textarea__ph {
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 		font-size: 26rpx;
 	}
 
@@ -446,7 +446,7 @@
 		bottom: 18rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.34);
+		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
 	.fb-upload-block {
@@ -458,7 +458,7 @@
 		margin-top: 10rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.38);
+		color: rgba(var(--noir-text-rgb), 0.38);
 	}
 
 	.fb-actions {
@@ -485,11 +485,11 @@
 
 	.fb-fhead__action-txt {
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 	}
 
 	.fb-flist {
-		border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+		border-top: 1rpx solid rgba(var(--noir-wash-rgb), 0.06);
 	}
 
 	.fb-q-item {
@@ -509,7 +509,7 @@
 		min-width: 0;
 		font-size: 26rpx;
 		line-height: 1.5;
-		color: rgba(245, 237, 228, 0.76);
+		color: rgba(var(--noir-text-rgb), 0.76);
 	}
 
 	.fb-q-item--open .fb-q-txt {
@@ -523,6 +523,6 @@
 		padding-right: 12rpx;
 		font-size: 23rpx;
 		line-height: 1.7;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 </style>

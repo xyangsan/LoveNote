@@ -1,5 +1,5 @@
 <template>
-	<view class="nb-page">
+	<view class="nb-page" :class="themeClass">
 		<view class="nb-glow nb-glow--left"></view>
 		<view class="nb-glow nb-glow--right"></view>
 
@@ -73,9 +73,9 @@
 							:min="minLimit"
 							:max="maxLimit"
 							:step="limitStep"
-							active-color="#E2643F"
-							background-color="rgba(255, 255, 255, 0.12)"
-							block-color="#FBF4EA"
+							active-color="var(--noir-coral)"
+							background-color="rgba(var(--noir-wash-rgb), 0.12)"
+							block-color="var(--noir-text-strong)"
 							:block-size="24"
 							@changing="handleLimitChanging"
 							@change="handleLimitChange"
@@ -814,8 +814,8 @@
 		height: 52rpx;
 		padding: 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 	}
 
 	.nb-pill-act__txt {
@@ -834,7 +834,7 @@
 		display: block;
 		font-size: 20rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 	}
 
 	/* ---------- Setup 阶段 ---------- */
@@ -858,7 +858,7 @@
 		margin-top: 14rpx;
 		font-size: 24rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.nb-resume {
@@ -869,8 +869,8 @@
 		margin-bottom: 24rpx;
 		padding: 22rpx 26rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.44);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.44);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.18), var(--noir-glass-1));
 	}
 
 	.nb-resume__info {
@@ -889,7 +889,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.58);
+		color: rgba(var(--noir-text-rgb), 0.58);
 	}
 
 	.nb-resume__btn {
@@ -913,7 +913,7 @@
 		padding: 30rpx 28rpx;
 		border-radius: 32rpx;
 		border: 1rpx solid var(--noir-border);
-		background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+		background: linear-gradient(145deg, var(--noir-glass-2), var(--noir-glass-1));
 	}
 
 	.nb-section__head {
@@ -939,7 +939,7 @@
 
 	.nb-section__sub {
 		font-size: 22rpx;
-		color: rgba(216, 176, 140, 0.72);
+		color: rgba(var(--noir-gold-rgb), 0.72);
 	}
 
 	.nb-presets {
@@ -962,17 +962,17 @@
 		padding: 0 22rpx;
 		border-radius: 18rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.nb-chip--active {
-		border-color: rgba(226, 100, 63, 0.54);
-		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.54);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.nb-chip__txt {
 		font-size: 23rpx;
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.nb-chip--active .nb-chip__txt {
@@ -993,13 +993,13 @@
 
 	.nb-scale__txt {
 		font-size: 20rpx;
-		color: rgba(216, 176, 140, 0.62);
+		color: rgba(var(--noir-gold-rgb), 0.62);
 	}
 
 	.nb-divider {
 		height: 1rpx;
 		margin: 30rpx 0;
-		background: rgba(255, 255, 255, 0.07);
+		background: var(--noir-glass-3);
 	}
 
 	.nb-player-row {
@@ -1024,8 +1024,8 @@
 		width: 58rpx;
 		height: 58rpx;
 		border-radius: 18rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: rgba(216, 176, 140, 0.08);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: rgba(var(--noir-gold-rgb), 0.08);
 	}
 
 	.nb-stepper__btn--disabled {
@@ -1059,7 +1059,7 @@
 		height: 92rpx;
 		border-radius: 46rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 16rpx 36rpx rgba(222, 95, 60, 0.28);
+		box-shadow: 0 16rpx 36rpx rgba(var(--noir-coral-rgb), 0.28);
 	}
 
 	.nb-cta--hover {
@@ -1080,7 +1080,7 @@
 
 	.nb-actions__link-txt {
 		font-size: 24rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 	}
 
 	/* ---------- Playing 阶段（s10） ---------- */
@@ -1093,7 +1093,7 @@
 		padding: 16rpx 24rpx;
 		border-radius: 24rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.nb-bar__txt {
@@ -1106,7 +1106,7 @@
 		padding: 36rpx 28rpx 32rpx;
 		border-radius: 36rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(145deg, rgba(226, 124, 78, 0.14), rgba(255, 255, 255, 0.025));
+		background: linear-gradient(145deg, rgba(var(--noir-coral-rgb), 0.14), var(--noir-glass-1));
 		text-align: center;
 	}
 
@@ -1139,7 +1139,7 @@
 		height: 50rpx;
 		padding: 0 24rpx;
 		border-radius: 25rpx;
-		background: rgba(226, 100, 63, 0.18);
+		background: rgba(var(--noir-coral-rgb), 0.18);
 		border: 1rpx solid var(--noir-border-coral);
 	}
 
@@ -1176,8 +1176,8 @@
 		height: 98rpx;
 		padding: 0 28rpx 0 32rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(255, 255, 255, 0.035);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: var(--noir-glass-1);
 	}
 
 	.nb-input-box__val {
@@ -1189,7 +1189,7 @@
 	}
 
 	.nb-input-box__val--empty {
-		color: rgba(245, 237, 228, 0.24);
+		color: rgba(var(--noir-text-rgb), 0.24);
 	}
 
 	.nb-input-box__right {
@@ -1200,7 +1200,7 @@
 
 	.nb-input-box__hint {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.42);
+		color: rgba(var(--noir-text-rgb), 0.42);
 	}
 
 	.nb-backspace {
@@ -1210,11 +1210,11 @@
 		width: 52rpx;
 		height: 52rpx;
 		border-radius: 16rpx;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--noir-glass-2);
 	}
 
 	.nb-backspace--hover {
-		background: rgba(255, 255, 255, 0.14);
+		background: rgba(var(--noir-wash-rgb), 0.14);
 	}
 
 	.nb-backspace__txt {
@@ -1236,21 +1236,21 @@
 		height: 94rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.035);
+		background: var(--noir-glass-1);
 	}
 
 	.nb-key--hover {
-		background: rgba(255, 255, 255, 0.10);
+		background: var(--noir-glass-3);
 	}
 
 	.nb-key--fn {
-		background: rgba(255, 255, 255, 0.025);
+		background: var(--noir-glass-1);
 	}
 
 	.nb-key--ok {
 		border: none;
 		background: linear-gradient(135deg, var(--noir-coral-bright), var(--noir-coral-deep));
-		box-shadow: 0 10rpx 24rpx rgba(222, 95, 60, 0.26);
+		box-shadow: 0 10rpx 24rpx rgba(var(--noir-coral-rgb), 0.26);
 	}
 
 	.nb-key--ok-hover {
@@ -1267,7 +1267,7 @@
 	.nb-key__txt--fn {
 		font-family: "PingFang SC", -apple-system, sans-serif;
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.58);
+		color: rgba(var(--noir-text-rgb), 0.58);
 	}
 
 	.nb-key__txt--ok {
@@ -1303,12 +1303,12 @@
 		height: 68rpx;
 		border-radius: 22rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.025);
+		background: var(--noir-glass-1);
 	}
 
 	.nb-tools__txt {
 		font-size: 22rpx;
-		color: rgba(234, 212, 188, 0.78);
+		color: rgba(var(--noir-gold-soft-rgb), 0.78);
 	}
 
 	.ad-view {
@@ -1327,7 +1327,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: radial-gradient(circle, rgba(255, 196, 140, 0.6) 0%, rgba(231, 111, 81, 0.32) 45%, rgba(120, 60, 40, 0.5) 100%);
+		background: radial-gradient(circle, rgba(var(--bomb-02-rgb), 0.6) 0%, rgba(var(--comp-07-rgb), 0.32) 45%, rgba(var(--bomb-01-rgb), 0.5) 100%);
 		animation: bomb-boom-fade 700ms ease-out forwards;
 	}
 

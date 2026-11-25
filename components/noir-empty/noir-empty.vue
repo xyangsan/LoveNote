@@ -38,8 +38,8 @@
 	.noir-empty {
 		padding: 64rpx 36rpx;
 		border-radius: 30rpx;
-		border: 1rpx dashed rgba(216, 176, 140, 0.22);
-		background: rgba(255, 255, 255, 0.024);
+		border: 1rpx dashed rgba(var(--noir-gold-rgb), 0.22);
+		background: var(--noir-glass-1);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -50,7 +50,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 3rpx;
-		color: rgba(216, 176, 140, 0.62);
+		color: rgba(var(--noir-gold-rgb), 0.62);
 	}
 
 	.noir-empty__title {
@@ -64,7 +64,7 @@
 		margin-top: 12rpx;
 		font-size: 24rpx;
 		line-height: 1.65;
-		color: rgba(245, 237, 228, 0.46);
+		color: rgba(var(--noir-text-rgb), 0.46);
 	}
 
 	.noir-empty__act {

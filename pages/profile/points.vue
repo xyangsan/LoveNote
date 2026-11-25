@@ -1,5 +1,5 @@
 <template>
-	<view class="pt-page">
+	<view class="pt-page" :class="themeClass">
 		<view class="pt-glow pt-glow--left"></view>
 		<view class="pt-glow pt-glow--right"></view>
 
@@ -15,7 +15,7 @@
 			<template #right>
 				<view class="pt-nav-pill" @tap="goToRecords">
 					<text class="pt-nav-pill__txt">明细</text>
-					<fui-icon name="arrowright" :size="24" color="#EAD4BC" />
+					<fui-icon name="arrowright" :size="24" color="var(--noir-gold-soft)" />
 				</view>
 			</template>
 		</noir-navbar>
@@ -45,7 +45,7 @@
 					<view class="pt-hlinks">
 						<view class="pt-pill-act" @tap="milestonesVisible = true">
 							<text class="pt-pill-act__txt">成长里程碑</text>
-							<fui-icon name="arrowright" :size="22" color="#EAD4BC" />
+							<fui-icon name="arrowright" :size="22" color="var(--noir-gold-soft)" />
 						</view>
 						<view v-if="!summary.isBound" class="pt-tag pt-tag--coral" @tap="goCouplePage">
 							<text class="pt-tag__txt">未绑定 · 去绑定</text>
@@ -72,7 +72,7 @@
 							<text class="pt-chead__act" :class="{ 'pt-chead__act--done': summary.dailyBonusClaimed }">
 								{{ signHeaderAction }}
 							</text>
-							<fui-icon v-if="!summary.isBound" name="arrowright" :size="22" color="#E5865C" />
+							<fui-icon v-if="!summary.isBound" name="arrowright" :size="22" color="var(--noir-coral-soft)" />
 						</view>
 					</view>
 					<view class="pt-sign7" @tap="openSignDialog">
@@ -138,7 +138,7 @@
 										{{ task.limit ? `${task.used} / ${task.limit}` : `${task.used} 次` }}
 									</text>
 									<text v-if="task.reached && summary.isBound" class="pt-tr__done">已满</text>
-									<fui-icon v-else name="arrowright" :size="24" color="rgba(216, 176, 140, 0.56)" />
+									<fui-icon v-else name="arrowright" :size="24" color="rgba(var(--noir-gold-rgb), 0.56)" />
 								</view>
 							</view>
 							<view class="pt-task__track">
@@ -792,8 +792,8 @@
 		height: 52rpx;
 		padding: 0 18rpx 0 22rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.44);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 	}
 
 	.pt-nav-pill__txt {
@@ -813,21 +813,21 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
 		letter-spacing: 2rpx;
-		color: rgba(216, 176, 140, 0.76);
+		color: rgba(var(--noir-gold-rgb), 0.76);
 	}
 
 	/* 骨架 */
 	.pt-skeleton__hero {
 		height: 220rpx;
 		border-radius: 30rpx;
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--noir-glass-2);
 	}
 
 	.pt-skeleton__block {
 		height: 180rpx;
 		margin-top: 20rpx;
 		border-radius: 26rpx;
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.pt-skeleton__block--tall {
@@ -853,7 +853,7 @@
 		padding: 26rpx 28rpx;
 		border-radius: 30rpx;
 		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(226, 124, 78, 0.16), rgba(255, 255, 255, 0.03));
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.16), var(--noir-glass-1));
 	}
 
 	.pt-hero__left {
@@ -878,7 +878,7 @@
 
 	.pt-bal__unit {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.52);
+		color: rgba(var(--noir-text-rgb), 0.52);
 	}
 
 	.pt-hero__sub {
@@ -904,8 +904,8 @@
 		height: 48rpx;
 		padding: 0 16rpx 0 20rpx;
 		border-radius: 24rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 	}
 
 	.pt-pill-act__txt {
@@ -924,8 +924,8 @@
 	}
 
 	.pt-tag--green {
-		border: 1rpx solid rgba(132, 190, 156, 0.38);
-		background: rgba(132, 190, 156, 0.14);
+		border: 1rpx solid rgba(var(--noir-green-rgb), 0.38);
+		background: rgba(var(--noir-green-rgb), 0.14);
 	}
 
 	.pt-tag--green .pt-tag__txt {
@@ -933,8 +933,8 @@
 	}
 
 	.pt-tag--coral {
-		border: 1rpx solid rgba(226, 100, 63, 0.44);
-		background: rgba(226, 100, 63, 0.16);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.44);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.pt-tag--coral .pt-tag__txt {
@@ -942,12 +942,12 @@
 	}
 
 	.pt-tag--muted {
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.05);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 	}
 
 	.pt-tag--muted .pt-tag__txt {
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.pt-tag__txt {
@@ -965,8 +965,8 @@
 		margin-top: 18rpx;
 		padding: 20rpx 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.44);
-		background: linear-gradient(135deg, rgba(226, 100, 63, 0.18), rgba(255, 255, 255, 0.03));
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.44);
+		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.18), var(--noir-glass-1));
 	}
 
 	.pt-bind-tip__body {
@@ -986,7 +986,7 @@
 		margin-top: 6rpx;
 		font-size: 21rpx;
 		line-height: 1.5;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	.pt-bind-tip__btn {
@@ -1011,8 +1011,8 @@
 		margin-top: 18rpx;
 		padding: 22rpx 24rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.028);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.pt-chead {
@@ -1057,24 +1057,24 @@
 		padding: 14rpx 4rpx;
 		border-radius: 16rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.025);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
 	.pt-d--done {
-		border-color: rgba(216, 176, 140, 0.42);
-		background: rgba(216, 176, 140, 0.12);
+		border-color: rgba(var(--noir-gold-rgb), 0.42);
+		background: rgba(var(--noir-gold-rgb), 0.12);
 	}
 
 	.pt-d--now {
-		border-color: rgba(226, 100, 63, 0.68);
-		background: rgba(226, 100, 63, 0.20);
+		border-color: rgba(var(--noir-coral-rgb), 0.68);
+		background: rgba(var(--noir-coral-rgb), 0.20);
 	}
 
 	.pt-d__day {
 		display: block;
 		font-size: 18rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.pt-d__pts {
@@ -1097,18 +1097,18 @@
 		padding: 18rpx 12rpx;
 		border-radius: 20rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.025);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
 	.pt-t--claim {
-		border-color: rgba(226, 100, 63, 0.60);
-		background: rgba(226, 100, 63, 0.16);
+		border-color: rgba(var(--noir-coral-rgb), 0.60);
+		background: rgba(var(--noir-coral-rgb), 0.16);
 	}
 
 	.pt-t--done {
-		border-color: rgba(132, 190, 156, 0.34);
-		background: rgba(132, 190, 156, 0.08);
+		border-color: rgba(var(--noir-green-rgb), 0.34);
+		background: rgba(var(--noir-green-rgb), 0.08);
 	}
 
 	.pt-t__pts {
@@ -1127,13 +1127,13 @@
 		display: block;
 		margin-top: 8rpx;
 		font-size: 19rpx;
-		color: rgba(245, 237, 228, 0.62);
+		color: rgba(var(--noir-text-rgb), 0.62);
 	}
 
 	/* 每日任务列表（s11 .pt-task + 进度条） */
 	.pt-task {
 		padding: 18rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.pt-task--last {
@@ -1152,7 +1152,7 @@
 		margin-top: 12rpx;
 		height: 8rpx;
 		border-radius: 4rpx;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--noir-glass-2);
 		overflow: hidden;
 	}
 
@@ -1164,7 +1164,7 @@
 	}
 
 	.pt-task__fill--done {
-		background: linear-gradient(90deg, #84BE9C 0%, var(--noir-green) 100%);
+		background: linear-gradient(90deg, var(--page-08) 0%, var(--noir-green) 100%);
 	}
 
 	.pt-tl {
@@ -1178,12 +1178,12 @@
 
 	.pt-tl__title {
 		font-size: 25rpx;
-		color: rgba(245, 237, 228, 0.86);
+		color: rgba(var(--noir-text-rgb), 0.86);
 	}
 
 	.pt-tl__sub {
 		font-size: 20rpx;
-		color: rgba(245, 237, 228, 0.40);
+		color: rgba(var(--noir-text-rgb), 0.40);
 	}
 
 	.pt-tr {
@@ -1210,7 +1210,7 @@
 
 	.pt-tr__go {
 		font-size: 26rpx;
-		color: rgba(216, 176, 140, 0.46);
+		color: rgba(var(--noir-gold-rgb), 0.46);
 	}
 
 	.pt-empty {
@@ -1228,14 +1228,14 @@
 		margin-top: 20rpx;
 		padding: 18rpx 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.28);
-		background: rgba(226, 100, 63, 0.07);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.28);
+		background: rgba(var(--noir-coral-rgb), 0.07);
 	}
 
 	.pt-warn__txt {
 		font-size: 21rpx;
 		line-height: 1.6;
-		color: rgba(245, 180, 150, 0.84);
+		color: rgba(var(--noir-coral-light-rgb), 0.84);
 	}
 
 	.ad-view {
@@ -1262,7 +1262,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(8, 5, 4, 0.72);
+		background: rgba(var(--page-01-rgb), 0.72);
 	}
 
 	.ms-sheet {
@@ -1273,8 +1273,8 @@
 		max-height: 84vh;
 		padding: 16rpx 36rpx calc(32rpx + env(safe-area-inset-bottom));
 		border-radius: 40rpx 40rpx 0 0;
-		border-top: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(180deg, #1E1713 0%, #140F0D 100%);
+		border-top: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(180deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
 	}
 
 	.ms-sheet__bar {
@@ -1282,7 +1282,7 @@
 		height: 8rpx;
 		margin: 0 auto 18rpx;
 		border-radius: 4rpx;
-		background: rgba(245, 237, 228, 0.16);
+		background: rgba(var(--noir-text-rgb), 0.16);
 	}
 
 	.ms-sheet__head {
@@ -1303,7 +1303,7 @@
 		width: 52rpx;
 		height: 52rpx;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1323,8 +1323,8 @@
 	.ms-hero {
 		padding: 26rpx 28rpx;
 		border-radius: 28rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.22);
-		background: linear-gradient(135deg, rgba(216, 176, 140, 0.12), rgba(255, 255, 255, 0.025));
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.22);
+		background: linear-gradient(135deg, rgba(var(--noir-gold-rgb), 0.12), var(--noir-glass-1));
 	}
 
 	.ms-hero__title {
@@ -1341,7 +1341,7 @@
 		margin-top: 10rpx;
 		font-size: 22rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.54);
+		color: rgba(var(--noir-text-rgb), 0.54);
 	}
 
 	.ms-list {
@@ -1359,12 +1359,12 @@
 		padding: 22rpx 24rpx;
 		border-radius: 26rpx;
 		border: 1rpx solid var(--noir-border);
-		background: rgba(255, 255, 255, 0.03);
+		background: var(--noir-glass-1);
 	}
 
 	.ms-item--done {
-		border-color: rgba(132, 190, 156, 0.30);
-		background: rgba(132, 190, 156, 0.07);
+		border-color: rgba(var(--noir-green-rgb), 0.30);
+		background: rgba(var(--noir-green-rgb), 0.07);
 	}
 
 	.ms-item__left {
@@ -1383,7 +1383,7 @@
 		display: block;
 		margin-top: 6rpx;
 		font-size: 21rpx;
-		color: rgba(245, 237, 228, 0.48);
+		color: rgba(var(--noir-text-rgb), 0.48);
 	}
 
 	.ms-pts {
@@ -1405,15 +1405,15 @@
 		margin-top: 20rpx;
 		padding: 22rpx 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.075);
-		background: rgba(255, 255, 255, 0.025);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.075);
+		background: var(--noir-glass-1);
 	}
 
 	.ms-rule__head {
 		display: block;
 		margin-bottom: 12rpx;
 		font-size: 23rpx;
-		color: rgba(216, 176, 140, 0.78);
+		color: rgba(var(--noir-gold-rgb), 0.78);
 	}
 
 	.ms-rrow {
@@ -1422,7 +1422,7 @@
 		justify-content: space-between;
 		gap: 12rpx;
 		padding: 12rpx 0;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1rpx solid rgba(var(--noir-wash-rgb), 0.05);
 	}
 
 	.ms-rrow--last {
@@ -1431,7 +1431,7 @@
 
 	.ms-rrow__l {
 		font-size: 22rpx;
-		color: rgba(245, 237, 228, 0.60);
+		color: rgba(var(--noir-text-rgb), 0.60);
 	}
 
 	.ms-rrow__r {
@@ -1445,8 +1445,8 @@
 		margin-top: 20rpx;
 		padding: 22rpx 24rpx;
 		border-radius: 26rpx;
-		border: 1rpx solid rgba(226, 100, 63, 0.36);
-		background: rgba(226, 100, 63, 0.09);
+		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.09);
 	}
 
 	.ms-danger__title {
@@ -1476,15 +1476,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(8, 5, 4, 0.72);
+		background: rgba(var(--page-01-rgb), 0.72);
 	}
 
 	.claim-dialog__panel {
 		width: 540rpx;
 		padding: 40rpx 36rpx 34rpx;
 		border-radius: 34rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.28);
-		background: linear-gradient(155deg, #211915 0%, #16110E 100%);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.28);
+		background: linear-gradient(155deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
 		text-align: center;
 	}
 

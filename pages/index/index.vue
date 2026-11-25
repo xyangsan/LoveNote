@@ -1,5 +1,5 @@
 <template>
-	<view class="tab-shell">
+	<view class="tab-shell" :class="themeClass">
 		<view class="tab-shell__glow tab-shell__glow--l"></view>
 		<view class="tab-shell__glow tab-shell__glow--r"></view>
 
@@ -233,7 +233,7 @@
 		position: relative;
 		min-height: 100vh;
 		background:
-			radial-gradient(88% 42% at 50% 0%, rgba(226, 124, 78, 0.10) 0%, rgba(17, 13, 11, 0) 68%),
+			radial-gradient(88% 40% at 50% 0%, var(--noir-page-glow) 0%, rgba(var(--noir-bg-rgb), 0) 68%),
 			var(--noir-bg);
 		color: var(--noir-text);
 		overflow-x: hidden;
@@ -253,13 +253,13 @@
 	.tab-shell__glow--l {
 		top: -120rpx;
 		left: -140rpx;
-		background: rgba(226, 100, 63, 0.36);
+		background: rgba(var(--noir-coral-rgb), 0.36);
 	}
 
 	.tab-shell__glow--r {
 		top: 260rpx;
 		right: -140rpx;
-		background: rgba(216, 176, 140, 0.24);
+		background: rgba(var(--noir-gold-rgb), 0.24);
 	}
 
 	.tab-shell__content {

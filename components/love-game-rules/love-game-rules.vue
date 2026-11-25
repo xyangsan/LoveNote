@@ -126,7 +126,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 980;
-		background: rgba(8, 6, 5, 0.72);
+		background: rgba(var(--comp-01-rgb), 0.72);
 		display: flex;
 		align-items: flex-end;
 		justify-content: center;
@@ -136,9 +136,9 @@
 		width: 100%;
 		padding: 16rpx 32rpx calc(28rpx + env(safe-area-inset-bottom));
 		border-radius: 34rpx 34rpx 0 0;
-		border-top: 1.5rpx solid rgba(216, 176, 140, 0.32);
-		background: linear-gradient(180deg, #1E1814 0%, #15110E 100%);
-		box-shadow: 0 -16rpx 48rpx rgba(0, 0, 0, 0.52);
+		border-top: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.32);
+		background: linear-gradient(180deg, var(--noir-sheet-hi) 0%, var(--noir-sheet-lo) 100%);
+		box-shadow: 0 -16rpx 48rpx rgba(var(--noir-shadow-rgb), 0.52);
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
@@ -148,7 +148,7 @@
 		width: 72rpx;
 		height: 8rpx;
 		border-radius: 999rpx;
-		background: rgba(216, 176, 140, 0.28);
+		background: rgba(var(--noir-gold-rgb), 0.28);
 		margin: 0 auto 18rpx;
 	}
 
@@ -169,7 +169,7 @@
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 17rpx;
 		letter-spacing: 4rpx;
-		color: rgba(216, 176, 140, 0.68);
+		color: rgba(var(--noir-gold-rgb), 0.68);
 	}
 
 	.gr-title {
@@ -186,8 +186,8 @@
 		width: 56rpx;
 		height: 56rpx;
 		border-radius: 50%;
-		border: 1rpx solid rgba(255, 255, 255, 0.12);
-		background: rgba(255, 255, 255, 0.05);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.12);
+		background: var(--noir-glass-2);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -196,7 +196,7 @@
 
 	.gr-close__txt {
 		font-size: 24rpx;
-		color: rgba(245, 237, 228, 0.72);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.gr-subtitle {
@@ -204,7 +204,7 @@
 		margin-top: 12rpx;
 		font-size: 23rpx;
 		line-height: 1.6;
-		color: rgba(245, 237, 228, 0.56);
+		color: rgba(var(--noir-text-rgb), 0.56);
 	}
 
 	.gr-meta {
@@ -218,8 +218,8 @@
 		height: 44rpx;
 		padding: 0 18rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(216, 176, 140, 0.34);
-		background: rgba(216, 176, 140, 0.10);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
+		background: rgba(var(--noir-gold-rgb), 0.10);
 		display: inline-flex;
 		align-items: center;
 	}
@@ -245,8 +245,8 @@
 	.gr-sec {
 		padding: 20rpx 22rpx;
 		border-radius: 22rpx;
-		border: 1rpx solid rgba(255, 255, 255, 0.07);
-		background: rgba(255, 255, 255, 0.03);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.07);
+		background: var(--noir-glass-1);
 	}
 
 	.gr-sec__head {
@@ -259,7 +259,7 @@
 	.gr-sec__idx {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 20rpx;
-		color: rgba(216, 176, 140, 0.64);
+		color: rgba(var(--noir-gold-rgb), 0.64);
 	}
 
 	.gr-sec__heading {
@@ -288,7 +288,7 @@
 		flex: 1;
 		font-size: 24rpx;
 		line-height: 1.68;
-		color: rgba(245, 237, 228, 0.84);
+		color: rgba(var(--noir-text-rgb), 0.84);
 	}
 
 	.gr-footer {
@@ -299,7 +299,7 @@
 		height: 86rpx;
 		border-radius: 999rpx;
 		background: var(--noir-btn-gradient);
-		box-shadow: 0 12rpx 28rpx rgba(222, 95, 60, 0.30);
+		box-shadow: 0 12rpx 28rpx rgba(var(--noir-coral-rgb), 0.30);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -309,7 +309,7 @@
 		font-size: 28rpx;
 		font-weight: 600;
 		letter-spacing: 2rpx;
-		color: #FFF9F4;
+		color: var(--poker-99);
 	}
 
 	/* 横屏 px 适配 */
@@ -322,7 +322,7 @@
 		max-width: 90vw;
 		padding: 16px 20px 16px;
 		border-radius: 18px;
-		border: 1px solid rgba(216, 176, 140, 0.32);
+		border: 1px solid rgba(var(--noir-gold-rgb), 0.32);
 	}
 
 	.gr-sheet--landscape .gr-kicker { font-size: 10px; letter-spacing: 2px; }
