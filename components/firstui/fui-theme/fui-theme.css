@@ -6,34 +6,34 @@
 page {
 	/* 行为相关颜色 */
 	--fui-color-primary: #E2643F;
-	--fui-color-success: #9ED6B2;
-	--fui-color-warning: #D8B08C;
+	--fui-color-success: #A9DCBC;
+	--fui-color-warning: #E3BE9A;
 	--fui-color-danger: #E2643F;
 	--fui-color-purple: #B0926C;
 
 	/* 文字颜色 */
-	--fui-color-title: #FBF4EA;
-	--fui-color-section: #F5EDE4;
-	--fui-color-subtitle: rgba(245, 237, 228, 0.58);
-	--fui-color-label: rgba(245, 237, 228, 0.42);
-	--fui-color-minor: rgba(245, 237, 228, 0.30);
-	--fui-color-white: #FFF7EF;
-	--fui-color-link: #D8B08C;
+	--fui-color-title: #FCF7F0;
+	--fui-color-section: #F7F1E9;
+	--fui-color-subtitle: rgba(247, 241, 233, 0.60);
+	--fui-color-label: rgba(247, 241, 233, 0.44);
+	--fui-color-minor: rgba(247, 241, 233, 0.32);
+	--fui-color-white: #FFF9F2;
+	--fui-color-link: #E3BE9A;
 
 	/* 背景颜色 */
-	--fui-bg-color: #1A1512;
-	--fui-bg-color-grey: #110D0B;
-	--fui-bg-color-content: #221B17;
+	--fui-bg-color: #2E251E;
+	--fui-bg-color-grey: #241D18;
+	--fui-bg-color-content: #33281F;
 	--fui-bg-color-red: rgba(226, 100, 63, 0.14);
-	--fui-bg-color-yellow: rgba(216, 176, 140, 0.14);
+	--fui-bg-color-yellow: rgba(227, 190, 154, 0.16);
 	--fui-bg-color-purple: rgba(176, 146, 108, 0.14);
-	--fui-bg-color-green: rgba(158, 214, 178, 0.12);
-	--fui-bg-color-hover: rgba(255, 255, 255, 0.06);
-	--fui-bg-color-mask: rgba(8, 6, 5, 0.74);
+	--fui-bg-color-green: rgba(169, 220, 188, 0.12);
+	--fui-bg-color-hover: rgba(255, 255, 255, 0.07);
+	--fui-bg-color-mask: rgba(12, 9, 7, 0.72);
 
 	/* 边框与阴影 */
-	--fui-color-border: rgba(255, 255, 255, 0.08);
-	--fui-color-shadow: rgba(0, 0, 0, 0.45);
+	--fui-color-border: rgba(255, 255, 255, 0.10);
+	--fui-color-shadow: rgba(0, 0, 0, 0.42);
 	--fui-opacity-disabled: 0.45;
 
 	/* 尺寸 */

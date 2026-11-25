@@ -26,11 +26,11 @@ export const THEMES = [
 		key: 'noir',
 		name: '暗夜余烬',
 		en: 'NOIR · EMBER',
-		desc: '默认主题：暖金与余烬，月白正文，高对比但不刺眼。',
+		desc: '暖棕深底配暖金与余烬，月白正文，暗但不闷。',
 		dark: true,
-		bg: '#110D0B',
-		swatches: ['#110D0B', '#1A1512', '#D8B08C', '#E2643F', '#F5EDE4'],
-		ink: '#F5EDE4',
+		bg: '#241D18',
+		swatches: ['#241D18', '#2E251E', '#E3BE9A', '#E2643F', '#F7F1E9'],
+		ink: '#F7F1E9',
 		art: {
 			home: '/static/images/home-hero-bg.jpg',
 			feed: '/static/images/feed-cover-bg.jpg',
@@ -135,7 +135,7 @@ export const THEME_CORAL_TABLE = THEME_CORAL
  * 校验脚本会断言与 love-theme.css 一致。改主题时两边要一起改。
  */
 const THEME_ICON = {
-	'noir': { active: '#F09A6B', idle: 'rgba(245, 237, 228, 0.44)' },
+	'noir': { active: '#F4A87A', idle: 'rgba(247, 241, 233, 0.44)' },
 	'warm-1': { active: '#E37557', idle: 'rgba(46, 30, 18, 0.44)' },
 	'warm-2': { active: '#DE7550', idle: 'rgba(42, 24, 12, 0.44)' },
 	'pale-3': { active: '#CB8459', idle: 'rgba(28, 25, 23, 0.44)' },

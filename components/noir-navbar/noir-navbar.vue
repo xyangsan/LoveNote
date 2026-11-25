@@ -121,7 +121,7 @@
 				const botA = p.toFixed(3)
 				const borderA = (0.12 * p).toFixed(3)
 				return Object.assign({}, base, {
-					// rgba(var(--x), a)：令牌里存的是 "17, 13, 11" 三元组，拼出来换主题就跟着变
+					// rgba(var(--x), a)：令牌里存的是 "36, 29, 24" 三元组，拼出来换主题就跟着变
 					background: `linear-gradient(180deg, rgba(var(--noir-bg-rgb), ${topA}) 0%, rgba(var(--noir-bg-rgb), ${midA}) 62%, rgba(var(--noir-bg-rgb), ${botA}) 100%)`,
 					borderBottom: p > 0.08 ? `1px solid rgba(var(--noir-gold-rgb), ${borderA})` : 'none'
 				})

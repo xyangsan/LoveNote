@@ -1,10 +1,13 @@
 /* ==========================================================================
  * LoveNote · 暗夜 NOIR 视觉系统（v3 全局令牌与基础布局）
  * Palette:
- *   #110D0B 底色 / #1A1512 浮层 / #231C18 次级浮层
- *   #D8B08C 暖金 / #E2643F 余烬 / #E5865C 柔余烬 / #F5EDE4 月白 / #9ED6B2 柔绿
- *   #F09A6B 渐变亮端 / #DE5F3C 渐变暗端 / #F5B496 浅余烬
- *   #FBF4EA 强月白 / #FFF7EF 暖白 / #9A766C 暖灰弱化
+ *   #241D18 底色 / #2E251E 浮层 / #3A2F26 次级浮层
+ *   #E3BE9A 暖金 / #E2643F 余烬 / #E88A63 柔余烬 / #F7F1E9 月白 / #A9DCBC 柔绿
+ *   #F4A87A 渐变亮端 / #E06A45 渐变暗端 / #F8C0A6 浅余烬
+ *   #FCF7F0 强月白 / #FFF9F2 暖白 / #A98A7E 暖灰弱化
+ *
+ * ⚠️ 暗夜不是纯黑：底色定在 #241D18（暖棕而不是近黑），
+ * 深色底上再叠加 rgba(255,255,255,α) 的浮层才有层次；底色再暗会让卡片与背景糊在一起。
  *
  * 用法约定：业务样式一律写 var(--noir-*)，不要在页面里硬编码色值。
  * 例外（保留硬编码，不接主题变量）：纯黑遮罩 #000/#000000、牌桌绿/金币金/水蓝等
@@ -14,11 +17,11 @@
 
 page,
 .theme-noir {
-	--noir-bg: #110D0B;
-	--noir-bg-rgb: 17, 13, 11;
-	--noir-bg-deep: #0B0908;
-	--noir-surface: #1A1512;
-	--noir-surface-2: #231C18;
+	--noir-bg: #241D18;
+	--noir-bg-rgb: 36, 29, 24;
+	--noir-bg-deep: #191310;
+	--noir-surface: #2E251E;
+	--noir-surface-2: #3A2F26;
 	--noir-surface-glass: var(--noir-glass-1);
 	/* 浮层玻璃三档：卡片底 / 内嵌次级 / 强调悬停。
 	 * 暗色主题是「白色叠加深底」的微妙提亮，浅色主题必须换成高不透明白，
@@ -26,37 +29,37 @@ page,
 	--noir-glass-1: rgba(255, 255, 255, 0.036);
 	--noir-glass-2: rgba(255, 255, 255, 0.060);
 	--noir-glass-3: rgba(255, 255, 255, 0.090);
-	--noir-gold: #D8B08C;
-	--noir-gold-rgb: 216, 176, 140;
-	--noir-gold-soft: #EAD4BC;
-	--noir-gold-soft-rgb: 234, 212, 188;
+	--noir-gold: #E3BE9A;
+	--noir-gold-rgb: 227, 190, 154;
+	--noir-gold-soft: #F2E0C9;
+	--noir-gold-soft-rgb: 242, 224, 201;
 	--noir-coral: #E2643F;
-	--noir-coral-soft: #E5865C;
-	--noir-coral-light: #F5B496;
-	--noir-coral-light-rgb: 245, 180, 150;
-	--noir-coral-bright: #F09A6B;
-	--noir-coral-bright-rgb: 240, 154, 107;
-	--noir-coral-deep: #DE5F3C;
-	--noir-green: #9ED6B2;
-	--noir-green-rgb: 158, 214, 178;
+	--noir-coral-soft: #E88A63;
+	--noir-coral-light: #F8C0A6;
+	--noir-coral-light-rgb: 248, 192, 166;
+	--noir-coral-bright: #F4A87A;
+	--noir-coral-bright-rgb: 244, 168, 122;
+	--noir-coral-deep: #E06A45;
+	--noir-green: #A9DCBC;
+	--noir-green-rgb: 169, 220, 188;
 	--noir-white: #FFFFFF;
 	--noir-white-rgb: 255, 255, 255;
-	--noir-text: #F5EDE4;
-	--noir-text-rgb: 245, 237, 228;
-	--noir-text-strong: #FBF4EA;
-	--noir-text-strong-rgb: 251, 244, 234;
-	--noir-text-warm: #FFF7EF;
-	--noir-text-faded: #9A766C;
-	--noir-text-sub: rgba(245, 237, 228, 0.64);
-	--noir-text-muted: rgba(245, 237, 228, 0.44);
-	--noir-text-dim: rgba(245, 237, 228, 0.30);
-	--noir-border: rgba(255, 255, 255, 0.08);
-	--noir-border-soft: rgba(255, 255, 255, 0.055);
-	--noir-border-gold: rgba(216, 176, 140, 0.24);
+	--noir-text: #F7F1E9;
+	--noir-text-rgb: 247, 241, 233;
+	--noir-text-strong: #FCF7F0;
+	--noir-text-strong-rgb: 252, 247, 240;
+	--noir-text-warm: #FFF9F2;
+	--noir-text-faded: #A98A7E;
+	--noir-text-sub: rgba(247, 241, 233, 0.66);
+	--noir-text-muted: rgba(247, 241, 233, 0.46);
+	--noir-text-dim: rgba(247, 241, 233, 0.32);
+	--noir-border: rgba(255, 255, 255, 0.10);
+	--noir-border-soft: rgba(255, 255, 255, 0.07);
+	--noir-border-gold: rgba(227, 190, 154, 0.26);
 	--noir-border-coral: rgba(226, 100, 63, 0.42);
-	--noir-shadow: 0 20rpx 48rpx rgba(0, 0, 0, 0.45);
+	--noir-shadow: 0 20rpx 48rpx rgba(0, 0, 0, 0.42);
 	--noir-btn-gradient: linear-gradient(135deg, var(--noir-coral-bright) 0%, var(--noir-coral-deep) 100%);
-	--noir-hero-gradient: linear-gradient(135deg, rgba(226, 124, 78, 0.16) 0%, rgba(255, 255, 255, 0.035) 100%);
+	--noir-hero-gradient: linear-gradient(135deg, rgba(230, 132, 88, 0.18) 0%, rgba(255, 255, 255, 0.045) 100%);
 
 	/* —— 半透明色基色三元组（配合 rgba(var(--x), α) 使用）——
 	 * 页面里有 1200+ 处带 alpha 的颜色，逐档定义变量会爆掉，
@@ -66,21 +69,21 @@ page,
 	--noir-wash-rgb: 255, 255, 255;
 	--noir-coral-rgb: 226, 100, 63;
 	--noir-shadow-rgb: 0, 0, 0;
-	--noir-surface2-rgb: 26, 21, 18;
+	--noir-surface2-rgb: 46, 37, 30;
 	/* 弹窗/浮层渐变的两端（暗色是深棕，浅色是白/浅米） */
-	--noir-sheet-hi: #211915;
-	--noir-sheet-lo: #16110E;
+	--noir-sheet-hi: #33281F;
+	--noir-sheet-lo: #221A15;
 	/* 页面顶部光斑 + hero 背景与遮罩：暗夜用照片，亮色主题按设计稿改用主题色渐变 */
-	--noir-page-glow: rgba(226, 124, 78, 0.09);
-	--noir-hero-bg: linear-gradient(160deg, #1A1512 0%, #110D0B 100%);
-	--noir-hero-scrim: linear-gradient(180deg, rgba(13, 10, 8, 0.72) 0%, rgba(13, 10, 8, 0.24) 36%, rgba(13, 10, 8, 0.76) 74%, var(--noir-bg) 100%);
-	--noir-tabbar-bg: rgba(24, 19, 16, 0.94);
-	--noir-tabbar-shadow: 0 22rpx 56rpx rgba(0, 0, 0, 0.58);
-	--noir-on-media: #FBF4EA;
-	--noir-on-media-sub: rgba(245, 237, 228, 0.74);
-	--noir-on-media-dim: rgba(245, 237, 228, 0.50);
-	--noir-on-media-line: rgba(245, 237, 228, 0.14);
-	--noir-on-media-accent: #EAD4BC;
+	--noir-page-glow: rgba(230, 132, 88, 0.12);
+	--noir-hero-bg: linear-gradient(160deg, #2E251E 0%, #241D18 100%);
+	--noir-hero-scrim: linear-gradient(180deg, rgba(30, 23, 19, 0.66) 0%, rgba(30, 23, 19, 0.22) 36%, rgba(30, 23, 19, 0.70) 74%, var(--noir-bg) 100%);
+	--noir-tabbar-bg: rgba(36, 29, 24, 0.94);
+	--noir-tabbar-shadow: 0 22rpx 56rpx rgba(0, 0, 0, 0.52);
+	--noir-on-media: #FCF7F0;
+	--noir-on-media-sub: rgba(247, 241, 233, 0.76);
+	--noir-on-media-dim: rgba(247, 241, 233, 0.52);
+	--noir-on-media-line: rgba(247, 241, 233, 0.16);
+	--noir-on-media-accent: #F2E0C9;
 
 	min-height: 100vh;
 	background:
