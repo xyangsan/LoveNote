@@ -1,41 +1,57 @@
 /*
- * FirstUI 暗夜 NOIR 主题变量覆盖
+ * FirstUI 主题变量
+ *
+ * 颜色一律**别名到主题令牌**（`--noir-*`），不再写死一套暗夜色值 ——
+ * 之前只按暗夜配了一份，切到浅色主题后 fui-text / fui-empty 的默认文字、
+ * fui-card 的描边、fui-tag 的底色都还是暗夜值（浅底浅字、白底白线）。
+ *
+ * ⚠️ 这些别名必须声明在「主题根节点」上（page + 5 个 .theme-*）：
+ * 自定义属性里的 var() 是在**声明元素**上求值的，只写在 page 上会先把暗夜值算死，
+ * 再继承下去，浅色主题的覆盖就失效了。
  */
 
 /* #ifndef APP-NVUE */
-page {
+page,
+.theme-noir,
+.theme-warm-1,
+.theme-warm-2,
+.theme-pale-3,
+.theme-green-4 {
 	/* 行为相关颜色 */
-	--fui-color-primary: #E2643F;
-	--fui-color-success: #A9DCBC;
-	--fui-color-warning: #E3BE9A;
-	--fui-color-danger: #E2643F;
+	--fui-color-primary: var(--noir-coral);
+	--fui-color-success: var(--noir-green);
+	--fui-color-warning: var(--noir-gold);
+	--fui-color-danger: var(--noir-coral);
 	--fui-color-purple: #B0926C;
 
 	/* 文字颜色 */
-	--fui-color-title: #FCF7F0;
-	--fui-color-section: #F7F1E9;
-	--fui-color-subtitle: rgba(247, 241, 233, 0.60);
-	--fui-color-label: rgba(247, 241, 233, 0.44);
-	--fui-color-minor: rgba(247, 241, 233, 0.32);
-	--fui-color-white: #FFF9F2;
-	--fui-color-link: #E3BE9A;
+	--fui-color-title: var(--noir-text-strong);
+	--fui-color-section: var(--noir-text);
+	--fui-color-subtitle: var(--noir-text-sub);
+	--fui-color-label: var(--noir-text-muted);
+	--fui-color-minor: var(--noir-text-dim);
+	--fui-color-white: var(--noir-text-warm);
+	--fui-color-link: var(--noir-gold);
 
 	/* 背景颜色 */
-	--fui-bg-color: #2E251E;
-	--fui-bg-color-grey: #241D18;
-	--fui-bg-color-content: #33281F;
-	--fui-bg-color-red: rgba(226, 100, 63, 0.14);
-	--fui-bg-color-yellow: rgba(227, 190, 154, 0.16);
+	--fui-bg-color: var(--noir-surface);
+	--fui-bg-color-grey: var(--noir-bg);
+	--fui-bg-color-content: var(--noir-surface-2);
+	--fui-bg-color-red: rgba(var(--noir-coral-rgb), 0.14);
+	--fui-bg-color-yellow: rgba(var(--noir-gold-rgb), 0.16);
 	--fui-bg-color-purple: rgba(176, 146, 108, 0.14);
-	--fui-bg-color-green: rgba(169, 220, 188, 0.12);
-	--fui-bg-color-hover: rgba(255, 255, 255, 0.07);
-	--fui-bg-color-mask: rgba(12, 9, 7, 0.72);
+	--fui-bg-color-green: rgba(var(--noir-green-rgb), 0.12);
+	--fui-bg-color-hover: rgba(var(--noir-wash-rgb), 0.07);
+	--fui-bg-color-mask: rgba(var(--noir-shadow-rgb), 0.72);
 
 	/* 边框与阴影 */
-	--fui-color-border: rgba(255, 255, 255, 0.10);
-	--fui-color-shadow: rgba(0, 0, 0, 0.42);
+	--fui-color-border: rgba(var(--noir-wash-rgb), 0.10);
+	--fui-color-shadow: rgba(var(--noir-shadow-rgb), 0.42);
 	--fui-opacity-disabled: 0.45;
+}
 
+/* 尺寸 / 圆角 / 间距与主题无关，声明一次即可 */
+page {
 	/* 尺寸 */
 	--fui-img-size-sm: 48rpx;
 	--fui-img-size-base: 56rpx;

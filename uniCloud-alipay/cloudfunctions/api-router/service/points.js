@@ -59,7 +59,6 @@ module.exports = class PointsService extends Service {
 
 			if (!result.ok) {
 				const messages = {
-					unbound: '绑定情侣后才能签到',
 					already: '今天已经签过了',
 					failed: '签到失败，请稍后重试'
 				}

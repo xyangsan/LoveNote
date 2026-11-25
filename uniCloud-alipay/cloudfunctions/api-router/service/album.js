@@ -4,6 +4,7 @@ const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
 const { albumCollection, photoCollection } = require('../lib/db')
 const { getActiveCoupleByUid } = require('../lib/couple')
+const { ensureDefaultAlbum, formatDefaultAlbum } = require('../lib/album')
 const {
 	andWhereConditions,
 	buildCreatorVisibilityCondition
@@ -73,6 +74,15 @@ module.exports = class AlbumService extends Service {
 			const fileUrlMap = await getTempFileUrlMap(collectFileIdsFromAlbums(rawList))
 			const list = normalizeAlbumList(rawList, fileUrlMap, uid)
 
+			// 一本相册都没有时自动补一本（照片必须挂在相册下，否则上传页无相册可选）
+			// 未绑定情侣同样会补，相册本身不依附情侣关系；只在第一页兜底，避免翻页时重复建
+			if (!list.length && page === 1) {
+				const fallbackAlbum = await ensureDefaultAlbum(uid, activeCouple)
+				if (fallbackAlbum) {
+					list.push(formatDefaultAlbum(fallbackAlbum, uid))
+				}
+			}
+
 			return {
 				errCode: 0,
 				data: {
@@ -83,8 +93,8 @@ module.exports = class AlbumService extends Service {
 					pagination: {
 						page,
 						pageSize,
-						total,
-						hasMore: page * pageSize < total
+						total: Math.max(total, list.length),
+						hasMore: page * pageSize < Math.max(total, list.length)
 					}
 				}
 			}

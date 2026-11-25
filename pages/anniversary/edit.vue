@@ -1639,29 +1639,6 @@ export default {
 		color: var(--noir-text-strong);
 	}
 
-	.background-preview {
-		position: relative;
-		margin-bottom: 14rpx;
-		height: 230rpx;
-		border-radius: 22rpx;
-		overflow: hidden;
-		background: var(--anniv-17);
-	}
-
-	.background-preview__image,
-	.background-preview__overlay {
-		position: absolute;
-		inset: 0;
-	}
-
-	.background-preview__overlay {
-		display: flex;
-		align-items: flex-start;
-		justify-content: flex-end;
-		padding: 14rpx;
-		box-sizing: border-box;
-	}
-
 	.upload-tip {
 		display: block;
 		padding-bottom: 8rpx;

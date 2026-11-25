@@ -49,7 +49,7 @@
 						error-src="/static/user-empty.png"
 						width="120"
 						height="120"
-						background="var(--comp-18)"
+						background="rgba(var(--noir-wash-rgb), 0.10)"
 						radius="14"
 					></fui-avatar>
 				</view>
@@ -78,7 +78,7 @@
 							error-src="/static/user-empty.png"
 							width="84"
 							height="84"
-							background="var(--editor-03)"
+							background="rgba(var(--noir-wash-rgb), 0.10)"
 							radius="12"
 						></fui-avatar>
 
@@ -172,7 +172,7 @@
 											error-src="/static/user-empty.png"
 											width="44"
 											height="44"
-											background="var(--comp-19)"
+											background="rgba(var(--noir-wash-rgb), 0.10)"
 											radius="8"
 										></fui-avatar>
 

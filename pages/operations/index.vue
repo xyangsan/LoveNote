@@ -844,6 +844,7 @@
 	import { requirePageLogin } from '@/common/auth-entry.js'
 	import { getPlatformApi } from '@/common/api/platform.js'
 	import { writeAppSettingsCache } from '@/common/app-settings.js'
+	import { getChartPalette } from '@/common/theme.js'
 	import {
 		CHART_PALETTE,
 		buildUserTrendOption,
@@ -1100,6 +1101,10 @@
 			}
 		},
 		computed: {
+			/** Canvas 图表不认 CSS 变量：按当前主题算一组色板交给 option 构建函数 */
+			chartPalette() {
+				return getChartPalette(this.themeKey)
+			},
 			currentTabKey() {
 				return (TABS[this.activeTab] || TABS[0]).key
 			},
@@ -1167,10 +1172,10 @@
 				}))
 			},
 			userTrendOption() {
-				return buildUserTrendOption(this.overview.trend || [])
+				return buildUserTrendOption(this.overview.trend || [], this.chartPalette)
 			},
 			visitTrendOption() {
-				return buildVisitTrendOption(this.overview.trend || [])
+				return buildVisitTrendOption(this.overview.trend || [], this.chartPalette)
 			},
 			// 今日关键指标：今天实时值 vs 昨天快照，涨红跌绿（国内习惯）
 			todayCards() {
@@ -1217,7 +1222,7 @@
 				return Math.round((this.trendTotal / days) * 10) / 10
 			},
 			moduleChartOption() {
-				return buildModulePenetrationOption(this.moduleStats.modules || [])
+				return buildModulePenetrationOption(this.moduleStats.modules || [], this.chartPalette)
 			},
 			avgContentPerUser() {
 				const users = Number(this.moduleStats.totalUsers) || 0
@@ -1272,7 +1277,7 @@
 				return hit ? hit.name : '已选广告位'
 			},
 			adTrendOption() {
-				return buildAdTrendOption(this.adStats.trend || [])
+				return buildAdTrendOption(this.adStats.trend || [], this.chartPalette)
 			},
 			// 环形图最多 6 段，多出来的合并成「其他」
 			adRingPositions() {
@@ -1289,7 +1294,7 @@
 				}])
 			},
 			adPositionOption() {
-				return buildAdPositionRingOption(this.adRingPositions)
+				return buildAdPositionRingOption(this.adRingPositions, this.chartPalette)
 			},
 			adPositionLegend() {
 				const list = this.adRingPositions

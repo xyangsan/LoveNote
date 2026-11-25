@@ -4,6 +4,7 @@ const { Service } = require('uni-cloud-router')
 const { checkAuth } = require('../lib/auth')
 const { albumCollection, photoCollection, dbCmd, database } = require('../lib/db')
 const { getActiveCoupleByUid } = require('../lib/couple')
+const { ensureDefaultAlbum } = require('../lib/album')
 const { getUserById } = require('../lib/user-base')
 const {
 	andWhereConditions,
@@ -274,7 +275,13 @@ module.exports = class PhotoService extends Service {
 			const uid = authState.authResult.uid
 			const activeCouple = await getActiveCoupleByUid(uid)
 
-			const albumId = String(params.albumId || '').trim()
+			let albumId = String(params.albumId || '').trim()
+			if (!albumId) {
+				// 兜底：前端没传相册（或还没有任何相册）时自动取/建默认相册，
+				// 相册不依附情侣关系，未绑定也能传
+				const fallbackAlbum = await ensureDefaultAlbum(uid, activeCouple)
+				albumId = fallbackAlbum && fallbackAlbum._id ? String(fallbackAlbum._id) : ''
+			}
 			if (!albumId) {
 				return {
 					errCode: 'love-note-param-required',

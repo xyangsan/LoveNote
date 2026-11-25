@@ -516,7 +516,7 @@
 				}
 				uni.showActionSheet({
 					itemList: ['删除评论'],
-					itemColor: 'var(--noir-coral)',
+					itemColor: getThemeCoral(),
 					success: async (res) => {
 						if (Number(res.tapIndex) !== 0) return
 						try {

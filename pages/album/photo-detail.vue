@@ -1,5 +1,7 @@
 <template>
-	<view class="ph-page">
+	<view class="ph-page" :class="themeClass">
+		<!-- ⚠️ 根节点必须绑 themeClass：页内所有 --noir-* 令牌都从这里取，
+		     不绑只会继承 page 上的暗夜默认值，浅色主题下整页还是深色 -->
 		<!-- 全屏背景媒体滑动区 -->
 		<swiper
 			v-if="photoList.length"
@@ -987,7 +989,7 @@
 				if (!photo || !photo._id) return
 				uni.showActionSheet({
 					itemList: [`删除标签「${tag}」`],
-					itemColor: 'var(--noir-coral)',
+					itemColor: getThemeCoral(),
 					success: async (res) => {
 						if (Number(res.tapIndex) !== 0) return
 						const nextTags = this.currentTags.filter((item) => item !== tag)
@@ -1153,7 +1155,10 @@
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
-		background: var(--page-02);
+		/* 跟主题走：暗夜是暖棕深底，浅色主题下是米白/纸白，不再是永远的黑底 */
+		background:
+			radial-gradient(88% 42% at 50% 0%, var(--noir-page-glow) 0%, rgba(var(--noir-bg-rgb), 0) 68%),
+			var(--noir-bg);
 	}
 
 	.ph-swiper,
@@ -1175,7 +1180,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--page-02);
+		background: var(--noir-bg);
 	}
 
 	.ph-zoom-area,
@@ -1198,12 +1203,14 @@
 		inset: 0;
 		pointer-events: none;
 		z-index: 4;
+		/* 上下压暗用「主题底色」而不是固定黑：浅色主题下文字是深色，
+		   必须配浅色蒙层才看得清；暗夜主题这里自然就是深棕 */
 		background: linear-gradient(
 			180deg,
-			rgba(var(--page-02-rgb), 0.56) 0%,
-			rgba(var(--page-02-rgb), 0) 22%,
-			rgba(var(--page-02-rgb), 0) 58%,
-			rgba(var(--page-02-rgb), 0.90) 100%
+			rgba(var(--noir-bg-rgb), 0.62) 0%,
+			rgba(var(--noir-bg-rgb), 0) 22%,
+			rgba(var(--noir-bg-rgb), 0) 58%,
+			rgba(var(--noir-bg-rgb), 0.92) 100%
 		);
 		transition: opacity 0.28s ease;
 	}
@@ -1281,7 +1288,7 @@
 		padding: 12rpx 18rpx;
 		border-radius: 999rpx;
 		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.36);
-		background: rgba(var(--page-03-rgb), 0.86);
+		background: rgba(var(--noir-surface2-rgb), 0.88);
 		box-shadow: 0 10rpx 28rpx rgba(var(--noir-shadow-rgb), 0.45);
 		display: flex;
 		align-items: center;
@@ -1535,12 +1542,12 @@
 		color: var(--noir-text-strong);
 	}
 
-	/* 照片信息底部抽屉 */
+	/* 照片信息底部抽屉：遮罩用主题阴影基色（暗夜纯黑、浅色主题是暖棕），不是写死的近黑 */
 	.ph-sheet-mask {
 		position: fixed;
 		inset: 0;
 		z-index: 120;
-		background: rgba(var(--comp-01-rgb), 0.68);
+		background: rgba(var(--noir-shadow-rgb), 0.56);
 		display: flex;
 		align-items: flex-end;
 	}

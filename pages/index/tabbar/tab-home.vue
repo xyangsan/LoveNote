@@ -626,9 +626,7 @@
 				return this.pointsLoaded ? formatNum(this.pointsSummary.balance) : '--'
 			},
 			pulseKickerText() {
-				if (!this.pointsSummary.isBound) {
-					return 'HEART POINTS · 绑定后开启累积'
-				}
+				// 签到不依赖情侣关系：未绑定也照常显示连签状态
 				const streak = Number(this.pointsSummary.signStreak || 0)
 				if (this.pointsSummary.dailyBonusClaimed) {
 					return `HEART POINTS · 已连签 ${Math.max(1, streak)} 天`
@@ -636,9 +634,8 @@
 				return streak > 0 ? `HEART POINTS · 已连签 ${streak} 天` : 'HEART POINTS · 今日待签到'
 			},
 			pulseCtaText() {
-				if (!this.pointsSummary.isBound) return '去绑定'
 				if (this.pointsSummary.dailyBonusClaimed) return '今日已签'
-				return `立即签到 +${Number(this.pointsSummary.signPoints || 10)}`
+				return this.signing ? '签到中…' : '立即签到'
 			},
 			pulseProgressPercent() {
 				const total = Math.max(1, Number(this.pointsSummary.totalTaskCount || 6))
@@ -924,10 +921,7 @@
 				}
 			},
 			handlePulseCta() {
-				if (!this.pointsSummary.isBound) {
-					this.goCouple()
-					return
-				}
+				// 签到不依赖情侣关系：未绑定也直接弹签到框
 				if (this.pointsSummary.dailyBonusClaimed) {
 					this.goPoints()
 					return

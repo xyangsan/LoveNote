@@ -366,6 +366,38 @@ export function getThemeArt(scene, key) {
 	return (art && art[scene]) || ''
 }
 
+/** '#RRGGBB' → 'r, g, b'（拼 rgba(var()) 用） */
+function hexToRgbTriplet(hex) {
+	const value = String(hex || '').replace('#', '')
+	if (value.length !== 6) return '0, 0, 0'
+	return [0, 2, 4].map((i) => parseInt(value.substr(i, 2), 16)).join(', ')
+}
+
+/**
+ * Canvas 图表色板。
+ *
+ * `xtf-charts` 是 Canvas 2D 绘制，**不继承页面 CSS 变量**，
+ * 所以主题色只能在这里按当前主题算成字面值，页面构建 option 时传进去。
+ * 底色取主题的浮层色（暗夜 #2E251E / 浅色各主题用白），文字与网格按 ink 推 alpha。
+ */
+export function getChartPalette(key) {
+	const theme = getTheme(key || themeState.key)
+	const ink = hexToRgbTriplet(theme.ink)
+	// 第二格预览色就是该主题的「浮层色」（暗夜 #2E251E / 暖咖 #FBF0E3 / 素白与青野 #FFFFFF），
+	// 与卡片底色一致，图表不会在白卡片上糊出一块纯白或纯黑。
+	const surface = theme.swatches[1] || theme.bg
+	return {
+		bg: surface,
+		text: `rgba(${ink}, 0.58)`,
+		title: theme.ink,
+		grid: `rgba(${ink}, 0.10)`,
+		tooltipBg: `rgba(${hexToRgbTriplet(surface)}, 0.96)`,
+		tooltipText: theme.ink,
+		// 柱图右侧的百分比标签：按传入主题取强调色（getThemeCoral() 读的是当前生效主题，这里不能用）
+		label: theme.dark ? '#F2E0C9' : (THEME_CORAL[theme.key] || THEME_CORAL[DEFAULT_THEME_KEY])
+	}
+}
+
 /**
  * 全局响应式主题状态。
  * 用 reactive 而不是事件总线：所有已挂载页面会自动重渲染，无需各自订阅。

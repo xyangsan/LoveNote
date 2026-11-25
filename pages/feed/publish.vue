@@ -130,11 +130,15 @@
 				</view> -->
 			</view>
 
-			<!-- 隐私合规说明 -->
-			<view class="pf-privacy">
+			<!-- 隐私合规说明（未绑定时顺带提醒去绑定，不做拦截） -->
+			<view class="pf-privacy" :class="{ 'pf-privacy--bindable': showBindTip }" @tap="handlePrivacyTap">
 				<text class="pf-privacy__txt">{{ privacyTipDesc }}</text>
+				<text v-if="showBindTip" class="pf-privacy__act">去绑定 ›</text>
 			</view>
 		</view>
+
+		<!-- 绑定提醒：与相册/日常列表页同一套「当天只弹一次」的软引导 -->
+		<love-couple-guide scene="feed" :active="showBindTip" />
 
 		<!-- 底部固定发布按钮（对标 s17 .m-foot） -->
 		<view class="pf-foot-bar">
@@ -188,6 +192,7 @@
 	import { requirePageLogin } from '@/common/auth-entry.js'
 	import { markPageRefresh } from '@/common/utils/page-refresh.js'
 	import { useAppStateStore } from '@/store/app-state.js'
+	import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
 	const MAX_FILE_SIZE = 100 * 1024 * 1024
 	const DAILY_IMAGE_COMPRESS_OVER_SIZE = 1024 * 1024
@@ -196,6 +201,7 @@
 	const FEED_REFRESH_KEY = 'feed'
 
 	export default {
+		components: { LoveCoupleGuide },
 		data() {
 			return {
 				scrollTop: 0,
@@ -208,6 +214,7 @@
 				restoreKeyboardTimer: null,
 				content: '',
 				coupleBound: false,
+				coupleLoaded: false,
 				emojiList: glyph,
 				maxFileSize: MAX_FILE_SIZE,
 				selectedCount: 0,
@@ -227,6 +234,10 @@
 			},
 			privacyTipTitle() {
 				return this.coupleBound ? '双人共享空间' : '仅自己可见'
+			},
+			// 已确认未绑定才提醒，避免 coupleBound 默认 false 时对已绑定用户闪一下
+			showBindTip() {
+				return this.coupleLoaded && !this.coupleBound
 			},
 			privacyTipDesc() {
 				if (this.coupleBound) {
@@ -328,7 +339,17 @@
 					this.coupleBound = Boolean(centerData.activeCouple)
 				} catch (error) {
 					console.warn('publish: load couple state failed', error)
+				} finally {
+					this.coupleLoaded = true
 				}
+			},
+			handlePrivacyTap() {
+				if (!this.showBindTip) {
+					return
+				}
+				uni.navigateTo({
+					url: '/pages/couple/index'
+				})
 			},
 			switchMediaMode(nextMode) {
 				if (this.submitting || nextMode === this.mediaMode) {
@@ -925,6 +946,27 @@
 		border-radius: 22rpx;
 		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.16);
 		background: rgba(var(--noir-gold-rgb), 0.05);
+	}
+
+	/* 未绑定时变成可点的「提醒去绑定」，样式上给一点可点的暗示 */
+	.pf-privacy--bindable {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		border-style: dashed;
+		border-color: rgba(var(--noir-gold-rgb), 0.32);
+	}
+
+	.pf-privacy--bindable .pf-privacy__txt {
+		flex: 1;
+	}
+
+	.pf-privacy__act {
+		flex-shrink: 0;
+		font-size: 21rpx;
+		font-weight: 500;
+		color: var(--noir-coral-soft);
 	}
 
 	.pf-privacy__txt {

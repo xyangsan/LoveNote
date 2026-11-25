@@ -3,11 +3,11 @@
 		:show="visible"
 		:title="content.title"
 		:color="'var(--noir-text-strong)'"
-		background="var(--comp-20)"
+		background="var(--noir-sheet-hi)"
 		:buttons="buttons"
 		:radius="32"
 		:mask-closable="true"
-		mask-background="rgba(var(--comp-01-rgb), 0.74)"
+		mask-background="rgba(var(--noir-shadow-rgb), 0.62)"
 		@click="handleButtonClick"
 		@close="handleClose"
 	>
@@ -100,6 +100,9 @@ export default {
 </script>
 
 <style>
+/* 弹框的底色/遮罩/分割线都已跟随主题：
+ * 底色与遮罩在这里按主题令牌传参，分割线与按下态由 firstui/fui-theme.css
+ * 里的 --fui-* 别名统一接管（那里已全部指向 --noir-* 令牌）。 */
 .couple-guide {
 	padding: 4rpx 6rpx 0;
 }

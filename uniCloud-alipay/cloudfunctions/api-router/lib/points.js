@@ -491,13 +491,11 @@ async function claimChallenge(uid, activeCouple, tierTaskCount, now = Date.now()
 /**
  * 每日签到：基础 10 点 + 连续签到附加（第 4 天起每天 +1，封顶 30）。
  * 昨天签过 → 连续天数 +1；断签则从 1 重新开始。
- * 返回 { ok, reason, streak, cycleDay, points }，reason: unbound / already / failed。
+ * ⚠️ 签到不依附情侣关系：未绑定也能签到，只是流水里 couple_id 记空。
+ * 返回 { ok, reason, streak, cycleDay, points }，reason: already / failed。
  */
 async function signIn(uid, activeCouple, now = Date.now()) {
-	if (!activeCouple || !activeCouple._id) {
-		return { ok: false, reason: 'unbound', streak: 0, cycleDay: 1, points: 0 }
-	}
-
+	const coupleId = activeCouple && activeCouple._id ? activeCouple._id : ''
 	const dateKey = todayKey(now)
 	const account = await ensureAccount(uid, now)
 	if (account.last_daily_key === dateKey) {
@@ -515,7 +513,7 @@ async function signIn(uid, activeCouple, now = Date.now()) {
 		uid,
 		type: 'sign',
 		points: basePoints,
-		coupleId: activeCouple._id,
+		coupleId,
 		dateKey,
 		refId: 'x',
 		now
@@ -526,12 +524,16 @@ async function signIn(uid, activeCouple, now = Date.now()) {
 	}
 
 	try {
-		await pointAccountCollection.doc(uid).update({
+		const patch = {
 			last_daily_key: dateKey,
 			sign_streak: streak,
-			couple_id: activeCouple._id,
 			updated_at: now
-		})
+		}
+		// 未绑定不要瞎写 couple_id（文档里本来就没有这个字段）
+		if (coupleId) {
+			patch.couple_id = coupleId
+		}
+		await pointAccountCollection.doc(uid).update(patch)
 	} catch (error) {
 		console.warn('points signIn mark failed', error)
 	}

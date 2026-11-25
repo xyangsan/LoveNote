@@ -35,7 +35,7 @@
 				<!-- 余额主卡片（对标 s11 .pt-hero） -->
 				<view class="pt-hero">
 					<view class="pt-hero__left">
-						<text class="pt-kicker">HEART POINTS · {{ summary.isBound ? heroSubtitle : '绑定情侣生效' }}</text>
+						<text class="pt-kicker">HEART POINTS · {{ summary.isBound ? heroSubtitle : '未绑定 · 签到照常' }}</text>
 						<view class="pt-bal">
 							<text class="pt-bal__num">{{ balanceText }}</text>
 							<text class="pt-bal__unit">点</text>
@@ -57,7 +57,7 @@
 				<view v-if="!summary.isBound" class="pt-bind-tip" @tap="goCouplePage">
 					<view class="pt-bind-tip__body">
 						<text class="pt-bind-tip__title">还没有绑定情侣</text>
-						<text class="pt-bind-tip__desc">首次绑定双方各得 +1,000 心动点，并解锁每日签到与任务计分</text>
+						<text class="pt-bind-tip__desc">首次绑定双方各得 +1,000 心动点，并解锁任务计分与挑战奖励</text>
 					</view>
 					<view class="pt-bind-tip__btn">
 						<text class="pt-bind-tip__btn-txt">去绑定</text>
@@ -68,11 +68,15 @@
 				<view class="pt-card">
 					<view class="pt-chead" @tap="openSignDialog">
 						<text class="pt-chead__title">每日签到（7 天循环 · 断签重算）</text>
-						<view class="pt-chead__act-wrap">
-							<text class="pt-chead__act" :class="{ 'pt-chead__act--done': summary.dailyBonusClaimed }">
-								{{ signHeaderAction }}
-							</text>
-							<fui-icon v-if="!summary.isBound" name="arrowright" :size="22" color="var(--noir-coral-soft)" />
+						<view
+							v-if="!summary.dailyBonusClaimed"
+							class="pt-sign-btn"
+							:class="{ 'pt-sign-btn--loading': signing }"
+						>
+							<text class="pt-sign-btn__txt">{{ signing ? '签到中…' : '立即签到' }}</text>
+						</view>
+						<view v-else class="pt-chead__act-wrap">
+							<text class="pt-chead__act pt-chead__act--done">{{ signHeaderAction }}</text>
 						</view>
 					</view>
 					<view class="pt-sign7" @tap="openSignDialog">
@@ -81,8 +85,8 @@
 							:key="tier.day"
 							class="pt-d"
 							:class="{
-								'pt-d--done': summary.isBound && (tier.day < summary.signCycleDay || (tier.day === summary.signCycleDay && summary.dailyBonusClaimed)),
-								'pt-d--now': summary.isBound && tier.day === summary.signCycleDay && !summary.dailyBonusClaimed
+								'pt-d--done': tier.day < summary.signCycleDay || (tier.day === summary.signCycleDay && summary.dailyBonusClaimed),
+								'pt-d--now': tier.day === summary.signCycleDay && !summary.dailyBonusClaimed
 							}"
 						>
 							<text class="pt-d__day">D{{ tier.day }}</text>
@@ -118,7 +122,7 @@
 				<view class="pt-card">
 					<view class="pt-chead">
 						<text class="pt-chead__title">每日任务（{{ visibleTasks.length }} 项 · 共限 {{ dailyLimitText }}/日）</text>
-						<text class="pt-chead__act">按真实业务计分</text>
+						<text class="pt-chead__act">{{ summary.isBound ? '按真实业务计分' : '未绑定 · 完成不计分' }}</text>
 					</view>
 					<view v-if="visibleTasks.length" class="pt-tasks">
 						<view
@@ -379,18 +383,12 @@
 				return fallback.map((points, index) => ({ day: index + 1, points }))
 			},
 			signHeaderAction() {
-				if (!this.summary.isBound) {
-					return '绑定后开启'
-				}
 				if (this.summary.dailyBonusClaimed) {
 					return `已签 · 连续 ${this.summary.signStreak} 天`
 				}
-				return this.signing ? '签到中…' : `立即签到 +${Number(this.summary.signPoints || 10)}`
+				return this.signing ? '签到中…' : '立即签到'
 			},
 			todayClaimableTotal() {
-				if (!this.summary.isBound) {
-					return 0
-				}
 				let total = 0
 				if (!this.summary.dailyBonusClaimed) {
 					total += Number(this.summary.signPoints || 0)
@@ -545,10 +543,7 @@
 				}
 			},
 			openSignDialog() {
-				if (!this.summary.isBound) {
-					this.goCouplePage()
-					return
-				}
+				// 签到不依赖情侣关系：未绑定也能签
 				if (this.signing) {
 					return
 				}
@@ -664,10 +659,7 @@
 				tick()
 			},
 			handleTaskTap(task) {
-				if (!this.summary.isBound) {
-					this.goCouplePage()
-					return
-				}
+				// 任务不拦未绑定：照样能去完成，只是不计分（计分仍需情侣关系，卡头已写明）
 				if (task.reached) {
 					uni.showToast({
 						title: '今天这项已经拿满啦',
@@ -1044,6 +1036,33 @@
 
 	.pt-chead__act--done {
 		color: var(--noir-green);
+	}
+
+	/* 「立即签到」按钮（替代纯文字，紧凑胶囊） */
+	.pt-sign-btn {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 52rpx;
+		padding: 0 26rpx;
+		border-radius: 26rpx;
+		background: linear-gradient(135deg, var(--noir-coral-bright), var(--noir-coral-deep));
+		box-shadow: 0 8rpx 20rpx rgba(var(--noir-coral-rgb), 0.28);
+	}
+
+	.pt-sign-btn__txt {
+		font-size: 22rpx;
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: 1rpx;
+		white-space: nowrap;
+		color: var(--noir-text-warm);
+	}
+
+	.pt-sign-btn--loading {
+		opacity: 0.6;
+		box-shadow: none;
 	}
 
 	/* 7 天签到（s11 .pt-sign7） */

@@ -12,14 +12,15 @@
 			:scroll-top="scrollTop"
 			@back="goBack"
 		>
-			<template #right>
-				<view v-if="selectedCount > 0" class="up-count-pill">
-					<text class="up-count-pill__txt">已选 {{ selectedCount }} 项</text>
-				</view>
-			</template>
 		</noir-navbar>
 
 		<view class="up-wrap">
+			<!-- 未绑定提醒条（软提醒，不拦截上传） -->
+			<view v-if="showBindTip" class="up-bind-tip" @tap="handleBindTipTap">
+				<text class="up-bind-tip__txt">还没有绑定情侣 · 照片目前只有你自己能看到</text>
+				<text class="up-bind-tip__act">去绑定 ›</text>
+			</view>
+
 			<!-- 媒体选择九宫格卡片 -->
 			<noir-card padding="24rpx">
 				<love-media-uploader
@@ -162,6 +163,9 @@
 				@click="handleUpload"
 			/>
 		</view>
+
+		<!-- 绑定提醒：与相册列表页同一套「当天只弹一次」的软引导 -->
+		<love-couple-guide scene="album" :active="showBindTip" />
 	</view>
 </template>
 
@@ -170,6 +174,8 @@
 	import { getAlbumApi } from '../../common/api/album.js'
 	import { getPhotoApi } from '../../common/api/photo.js'
 	import { requirePageLogin } from '@/common/auth-entry.js'
+	import { useAppStateStore } from '@/store/app-state.js'
+	import LoveCoupleGuide from '@/components/love-couple-guide/love-couple-guide.vue'
 
 	const MAX_COUNT = 20
 	const MAX_FILE_SIZE = 20 * 1024 * 1024
@@ -185,6 +191,7 @@
 	}
 
 	export default {
+		components: { LoveCoupleGuide },
 		data() {
 			const today = getTodayYmd()
 			return {
@@ -192,6 +199,8 @@
 				albumId: '',
 				albumList: [],
 				selectedAlbumIndex: 0,
+				coupleBound: false,
+				coupleLoaded: false,
 				selectedCount: 0,
 				maxCount: MAX_COUNT,
 				maxFileSize: MAX_FILE_SIZE,
@@ -242,6 +251,10 @@
 			canUpload() {
 				return this.selectedCount > 0 && Boolean(this.selectedAlbum) && !this.uploading
 			},
+			// 已确认未绑定才提醒，避免 coupleBound 默认 false 时对已绑定用户闪一下
+			showBindTip() {
+				return this.coupleLoaded && !this.coupleBound
+			},
 			uploaderTipText() {
 				return `支持图片与短视频，单次最多 ${this.maxCount} 项，单个 ≤ ${Math.floor(this.maxFileSize / 1024 / 1024)}MB`
 			},
@@ -262,6 +275,7 @@
 			if (!requirePageLogin()) return
 			this.albumId = String(options.albumId || '').trim()
 			this.loadAlbumList()
+			this.loadCoupleState()
 		},
 		onPageScroll(e) {
 			const next = Math.max(0, Number((e && e.scrollTop) || 0))
@@ -270,6 +284,23 @@
 			}
 		},
 		methods: {
+			async loadCoupleState() {
+				try {
+					const store = useAppStateStore()
+					await store.fetchCoupleCenter({ force: false })
+					const centerData = store.coupleCenterData || {}
+					this.coupleBound = Boolean(centerData.activeCouple)
+				} catch (error) {
+					console.warn('upload: load couple state failed', error)
+				} finally {
+					this.coupleLoaded = true
+				}
+			},
+			handleBindTipTap() {
+				uni.navigateTo({
+					url: '/pages/couple/index'
+				})
+			},
 			async loadAlbumList() {
 				try {
 					const result = await getAlbumApi().getList({ page: 1, pageSize: 50 })
@@ -570,6 +601,33 @@
 		position: relative;
 		z-index: 1;
 		padding: 16rpx 28rpx 0;
+	}
+
+	/* 未绑定软提醒条：只提示、不拦截上传 */
+	.up-bind-tip {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16rpx;
+		margin-bottom: 16rpx;
+		padding: 16rpx 22rpx;
+		border-radius: 20rpx;
+		border: 1rpx dashed rgba(var(--noir-gold-rgb), 0.32);
+		background: rgba(var(--noir-gold-rgb), 0.06);
+	}
+
+	.up-bind-tip__txt {
+		flex: 1;
+		font-size: 21rpx;
+		line-height: 1.5;
+		color: var(--noir-gold-soft);
+	}
+
+	.up-bind-tip__act {
+		flex-shrink: 0;
+		font-size: 21rpx;
+		font-weight: 500;
+		color: var(--noir-coral-soft);
 	}
 
 	.up-grid-tip {
