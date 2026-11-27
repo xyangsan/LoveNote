@@ -1439,7 +1439,7 @@
 						parent: '',
 						field: 'feedVisible',
 						name: '双人日常',
-						desc: '关闭后首页不显示双人日常入口、最近双人动态与动态统计',
+						desc: '关闭后首页不显示双人日常入口、最近双人动态与动态统计，「我的」与情侣页也不再露出日常计数',
 						value: this.permission.feedVisible
 					},
 					{

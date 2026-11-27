@@ -30,6 +30,7 @@
 				v-if="mountedTabs.profile"
 				v-show="activeTab === 'profile'"
 				ref="tabProfile"
+				:settings="appSettings"
 				:scroll-top="scrollTop"
 				@switch-tab="handleSwitchTab"
 			/>

@@ -46,7 +46,7 @@
 					<text class="tp-stat__val">{{ formatStat(featureStats.anniversaryTotal) }}</text>
 					<text class="tp-stat__lbl">纪念日</text>
 				</view>
-				<view class="tp-stat tp-stat--sep" @tap="$emit('switch-tab', 'feed')">
+				<view v-if="feedVisible" class="tp-stat tp-stat--sep" @tap="$emit('switch-tab', 'feed')">
 					<text class="tp-stat__val">{{ formatStat(featureStats.dailyTotal) }}</text>
 					<text class="tp-stat__lbl">日常</text>
 				</view>
@@ -135,6 +135,7 @@
 	import { useAppStateStore } from '@/store/app-state.js'
 	import { APP_VERSION_TEXT } from '@/common/version.js'
 	import { getTheme } from '@/common/theme.js'
+	import { readAppSettingsCache } from '@/common/app-settings.js'
 
 	function formatNum(n) {
 		return String(Math.max(0, Math.floor(Number(n) || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -143,6 +144,11 @@
 	export default {
 		name: 'TabProfile',
 		props: {
+			// 模块权限由主容器页同步下发，未传时退回本地缓存（与 tab-home / tab-game 一致）
+			settings: {
+				type: Object,
+				default: () => readAppSettingsCache()
+			},
 			scrollTop: {
 				type: Number,
 				default: 0
@@ -166,6 +172,10 @@
 			}
 		},
 		computed: {
+			/** 双人日常是权限类开关（默认关），关掉后统计条不再露出「日常」 */
+			feedVisible() {
+				return Boolean(this.settings && this.settings.feedVisible === true)
+			},
 			/** 当前主题名（主题外观行右侧的值），themeKey 来自全局主题 mixin */
 			currentThemeName() {
 				return getTheme(this.themeKey).name

@@ -12,14 +12,7 @@
 		>
 			<template #right>
 				<view
-					v-if="isLoggedIn && !activeCouple && !inviteMode"
-					class="cp-nav-pill"
-					@tap="handleRefreshCode"
-				>
-					<text class="cp-nav-pill__txt">{{ actionLoading === 'refresh' ? '刷新中…' : '刷新码' }}</text>
-				</view>
-				<view
-					v-else-if="isLoggedIn && !activeCouple && inviteMode"
+					v-if="isLoggedIn && !activeCouple && inviteMode"
 					class="cp-tag"
 					:class="invite && invite.status === 'valid' ? 'cp-tag--gold' : 'cp-tag--coral'"
 				>
@@ -32,7 +25,7 @@
 			<love-auth-required
 				v-if="!isLoggedIn"
 				class="cp-auth"
-				desc="情侣信息页需要登录后才能查看和操作，登录后可获取 6 位数字绑定码或接受好友邀请。"
+				desc="情侣信息页需要登录后才能查看和操作，登录后可邀请另一半绑定或接受好友邀请。"
 				secondary-text="返回个人中心"
 				@login="goToLoginPage"
 				@secondary="backToProfile"
@@ -186,7 +179,7 @@
 								{{ invite && invite.inviterNickname ? `${invite.inviterNickname} 邀请你开启双人空间` : '情侣绑定邀请' }}
 							</text>
 							<text class="il-card__desc">
-								接受邀请后，你们将共享纪念日、双人日常、照片与愿望单，并同步记录在一起的每一天。
+								接受邀请后，你们将共享{{ sharedModulesText() }}，并同步记录在一起的每一天。
 							</text>
 							<view class="il-code-pill">
 								<text class="il-code-pill__txt">邀请码 · {{ formatSpacedCode(inviteCode) }}</text>
@@ -204,7 +197,7 @@
 							</view>
 							<view class="il-feat">
 								<view class="il-dot"></view>
-								<text class="il-feat__txt">共享纪念日、双人日常、照片视频流与愿望单</text>
+								<text class="il-feat__txt">共享{{ sharedModulesText('照片视频流与愿望单') }}</text>
 							</view>
 							<view class="il-feat">
 								<view class="il-dot"></view>
@@ -228,7 +221,7 @@
 								hover-class="cp-btn--hover"
 								@tap="exitInviteMode"
 							>
-								<text class="cp-btn__txt">去使用 6 位绑定码绑定</text>
+								<text class="cp-btn__txt">返回绑定页</text>
 							</view>
 							<view class="cp-btn cp-btn--ghost" hover-class="cp-btn--hover" @tap="goHome">
 								<text class="cp-btn__txt cp-btn__txt--ghost">先逛逛首页</text>
@@ -238,66 +231,82 @@
 				</view>
 			</template>
 
-			<!-- ==================== 15 情侣绑定（6 位数字码 · NOIR v3 s15） ==================== -->
+			<!-- ==================== 15 未绑定态（NOIR v3 s15） ==================== -->
 			<template v-else>
-				<view class="cb-card">
-					<text class="cb-kicker">MY BINDING CODE · {{ bindCodeValidityText }}</text>
-					<text class="cb-code" @tap="copyMyBindCode">{{ formattedMyCode }}</text>
-					<text class="cb-meta">发给另一半微信好友，或让 TA 输入上方 6 位数字绑定码</text>
-					<view class="cb-acts">
-						<view class="cp-btn cp-btn--ghost" hover-class="cp-btn--hover" @tap="copyMyBindCode">
-							<text class="cp-btn__txt cp-btn__txt--ghost">复制绑定码</text>
-						</view>
-						<button class="cp-btn cp-btn--primary cp-share-btn" open-type="share" hover-class="cp-btn--hover">
-							<text class="cp-btn__txt">发给微信好友</text>
-						</button>
-					</view>
-				</view>
-
-				<view class="cb-div">
-					<view class="cb-div__line"></view>
-					<text class="cb-div__txt">或输入 TA 的 6 位绑定码</text>
-					<view class="cb-div__line"></view>
-				</view>
-
-				<view class="cb-input-section">
-					<text class="cb-label">输入 6 位数字绑定码</text>
-
-					<!-- 6 格数字槽 + 透明覆盖输入（点击任意格即拉起数字键盘，支持整段粘贴） -->
-					<view class="cb-slots-wrap">
-						<view class="cb-slots">
+				<view class="ci-hero">
+					<view class="ci-avs">
+						<view class="ci-av-wrap">
+							<view class="ci-av">
+								<image
+									v-if="selfInfo.avatarUrl"
+									class="ci-av__img"
+									:src="selfInfo.avatarUrl"
+									mode="aspectFill"
+								></image>
+								<text v-else class="ci-av__txt">{{ shortChar(selfInfo.nickname, '我') }}</text>
+							</view>
 							<view
-								v-for="(slot, idx) in codeSlots"
-								:key="idx"
-								class="cb-slot"
-								:class="{
-									'cb-slot--empty': !slot,
-									'cb-slot--active': codeInputFocused && idx === Math.min(inputCode.length, 5)
-								}"
+								v-if="Number(selfInfo.gender) === 1 || Number(selfInfo.gender) === 2"
+								class="ci-gender"
+								:class="Number(selfInfo.gender) === 1 ? 'ci-gender--m' : 'ci-gender--f'"
 							>
-								<text class="cb-slot__txt">{{ slot || '·' }}</text>
+								<text class="ci-gender__txt">{{ Number(selfInfo.gender) === 1 ? '♂' : '♀' }}</text>
 							</view>
 						</view>
-						<input
-							class="cb-hidden-input"
-							type="number"
-							:maxlength="6"
-							:value="inputCode"
-							@focus="codeInputFocused = true"
-							@blur="codeInputFocused = false"
-							@input="onCodeNativeInput"
-						/>
+
+						<view class="ci-link">
+							<view class="ci-line"></view>
+							<text class="ci-heart">♥</text>
+							<view class="ci-line"></view>
+						</view>
+
+						<view class="ci-av-wrap">
+							<view class="ci-av ci-av--alt ci-av--placeholder">
+								<text class="ci-av__txt ci-av__txt--q">?</text>
+							</view>
+						</view>
 					</view>
 
-					<text v-if="inputCodeError" class="cb-error">{{ inputCodeError }}</text>
+					<view class="ci-names">
+						<text class="ci-names__title">{{ selfInfo.nickname || '我' }} × 另一半</text>
+						<text class="ci-names__sub">等待绑定 · 开启双人空间</text>
+					</view>
 
-					<view
-						class="cp-btn cp-btn--primary cb-submit"
-						:class="{ 'cp-btn--disabled': inputCode.length !== 6 || actionLoading === 'bind' }"
-						hover-class="cp-btn--hover"
-						@tap="handleBindByCode"
-					>
-						<text class="cp-btn__txt">{{ actionLoading === 'bind' ? '绑定中…' : '确认绑定' }}</text>
+					<view class="ci-stats">
+						<view class="ci-stat">
+							<text class="ci-stat__val">0</text>
+							<text class="ci-stat__lbl">共同纪念日</text>
+						</view>
+						<view v-if="feedVisible" class="ci-stat">
+							<text class="ci-stat__val">0</text>
+							<text class="ci-stat__lbl">双人日常</text>
+						</view>
+						<view class="ci-stat">
+							<text class="ci-stat__val">0</text>
+							<text class="ci-stat__lbl">共同愿望</text>
+						</view>
+					</view>
+				</view>
+
+				<view class="ci-card">
+					<view class="ci-row">
+						<text class="ci-row__label">当前状态</text>
+						<view class="cp-tag cp-tag--gold">
+							<text class="cp-tag__txt">未绑定</text>
+						</view>
+					</view>
+					<view class="ci-row ci-row--last">
+						<text class="ci-row__label">绑定奖励</text>
+						<text class="ci-row__val ci-row__val--mono">+1,000 心动点</text>
+					</view>
+				</view>
+
+				<view class="cb-invite-section">
+					<text class="cb-invite-desc">邀请你的另一半，一起记录每一天的甜蜜时光。绑定后可共享{{ sharedModulesText('照片视频与愿望单') }}。</text>
+					<view class="cb-invite-acts">
+						<button class="cp-btn cp-btn--primary cp-share-btn" open-type="share" hover-class="cp-btn--hover">
+							<text class="cp-btn__txt">邀请 TA 来绑定</text>
+						</button>
 					</view>
 				</view>
 
@@ -377,6 +386,7 @@
 	import { getPointsApi } from '../../common/api/points.js'
 	import { useAppStateStore } from '../../store/app-state.js'
 	import { requirePageLogin } from '@/common/auth-entry.js'
+	import { loadAppSettings, readAppSettingsCache } from '@/common/app-settings.js'
 
 	function getDefaultCenterData() {
 		return {
@@ -436,13 +446,11 @@
 				DEFAULT_AVATAR,
 				scrollTop: 0,
 				appStateStore: null,
+				// 模块权限：放在 data() 里读缓存，首屏就按开关渲染，不跳一下
+				appSettings: readAppSettingsCache(),
 				actionLoading: '',
 				historyExpanded: false,
 				removeAuthListener: null,
-				// 6 位数字绑定码输入
-				inputCode: '',
-				inputCodeError: '',
-				codeInputFocused: false,
 				// 邀请落地态（s16）
 				inviteMode: false,
 				inviteCode: '',
@@ -455,6 +463,10 @@
 			isLoggedIn() {
 				const currentUserInfo = getCurrentUniIdUser()
 				return Boolean(currentUserInfo && currentUserInfo.uid)
+			},
+			// 双人日常是权限类开关（默认关），关掉后本页不再露出任何双人日常入口
+			feedVisible() {
+				return Boolean(this.appSettings && this.appSettings.feedVisible === true)
 			},
 			navbarTitle() {
 				if (this.activeCouple) return '情侣信息'
@@ -469,28 +481,6 @@
 			},
 			bindCodeInfo() {
 				return this.centerData.bindCodeInfo || null
-			},
-			myBindCode() {
-				return normalizeSixDigits(this.bindCodeInfo && this.bindCodeInfo.code)
-			},
-			formattedMyCode() {
-				return formatSpacedCode(this.myBindCode)
-			},
-			bindCodeValidityText() {
-				const exp = Number(this.bindCodeInfo && this.bindCodeInfo.expiresAt || 0)
-				if (!exp) {
-					return '7 天内有效'
-				}
-				const remainMs = exp - Date.now()
-				if (remainMs <= 0) {
-					return '已过期 · 请刷新'
-				}
-				const days = Math.max(1, Math.ceil(remainMs / 86400000))
-				return `${days} 天内有效`
-			},
-			codeSlots() {
-				const digits = normalizeSixDigits(this.inputCode)
-				return Array.from({ length: 6 }, (_, i) => digits[i] || '')
 			},
 			inviteBadgeText() {
 				if (this.inviteLoading || !this.invite) return '7 天有效'
@@ -569,11 +559,12 @@
 					value: `${anniversaryCount}`
 				}, {
 					label: '双人日常',
-					value: `${momentCount}`
+					value: `${momentCount}`,
+					requireFeed: true
 				}, {
 					label: '共同愿望',
 					value: `${wishCount}`
-				}]
+				}].filter((item) => !item.requireFeed || this.feedVisible)
 			}
 		},
 		onLoad(options = {}) {
@@ -597,6 +588,7 @@
 		},
 		onShow() {
 			this.restoreLoginState()
+			this.syncModuleVisibility()
 		},
 		onPullDownRefresh() {
 			this.fetchCoupleCenter({
@@ -607,7 +599,8 @@
 		},
 		onShareAppMessage() {
 			const name = this.selfInfo.nickname || '我'
-			const code = this.myBindCode
+			const codeInfo = this.bindCodeInfo
+			const code = codeInfo && codeInfo.code ? normalizeSixDigits(codeInfo.code) : ''
 			return {
 				title: `${name} 邀请你在恋人手札开启双人空间`,
 				path: code ? `/pages/couple/index?inviteCode=${code}` : '/pages/couple/index'
@@ -622,6 +615,12 @@
 		methods: {
 			formatDateTime,
 			formatSpacedCode,
+			// 双人日常关闭后，绑定文案不再承诺这个模块
+			sharedModulesText(rest = '照片与愿望单') {
+				return this.feedVisible
+					? `纪念日、双人日常、${rest}`
+					: `纪念日、${rest}`
+			},
 			shortChar(name = '', fallback = '我') {
 				const text = String(name || '').trim()
 				return text ? text.slice(0, 1) : fallback
@@ -631,6 +630,17 @@
 					this.appStateStore = useAppStateStore()
 				}
 				return this.appStateStore
+			},
+			/**
+			 * 对齐模块权限：先读缓存（首屏不跳），再拉一次服务端。
+			 * 不 force —— 冷启动时 App.onLaunch 那次会被 TTL / 飞行中复用，不会多发请求。
+			 */
+			async syncModuleVisibility() {
+				this.appSettings = readAppSettingsCache()
+				const latest = await loadAppSettings()
+				if (latest) {
+					this.appSettings = latest
+				}
 			},
 			syncCenterDataFromStore() {
 				const appStateStore = this.ensureAppStateStore()
@@ -657,8 +667,6 @@
 				this.ensureAppStateStore().updateCoupleCenterData(getDefaultCenterData(), {
 					markFetched: false
 				})
-				this.inputCode = ''
-				this.inputCodeError = ''
 			},
 			applyCenterData(result = {}) {
 				this.centerData = {
@@ -690,7 +698,7 @@
 
 				try {
 					await appStateStore.fetchCoupleCenter({
-						force: !this.activeCouple && !this.myBindCode
+						force: !this.activeCouple
 					})
 					this.syncCenterDataFromStore()
 				} catch (error) {
@@ -762,70 +770,8 @@
 			goHome() {
 				goHomeTab()
 			},
-			onCodeNativeInput(event) {
-				const raw = event && event.detail ? event.detail.value : ''
-				this.inputCode = normalizeSixDigits(raw)
-				if (this.inputCodeError) {
-					this.inputCodeError = ''
-				}
-			},
-			copyMyBindCode() {
-				if (!this.myBindCode) {
-					uni.showToast({
-						title: '正在生成绑定码，请稍候',
-						icon: 'none'
-					})
-					return
-				}
-				uni.setClipboardData({
-					data: this.myBindCode,
-					success: () => {
-						uni.showToast({
-							title: '绑定码已复制',
-							icon: 'success'
-						})
-					}
-				})
-			},
-			async handleRefreshCode() {
-				if (this.actionLoading) {
-					return
-				}
-				this.actionLoading = 'refresh'
-				try {
-					const result = await getCoupleApi().refreshBindCode()
-					if (result && result.errCode && result.errCode !== 0) {
-						throw new Error(result.errMsg || '刷新绑定码失败')
-					}
-					this.applyCenterData(result)
-					uni.showToast({
-						title: '已生成新的 6 位绑定码',
-						icon: 'success'
-					})
-				} catch (error) {
-					uni.showToast({
-						title: error.message || '刷新绑定码失败',
-						icon: 'none'
-					})
-				} finally {
-					this.actionLoading = ''
-				}
-			},
-			async handleBindByCode() {
-				if (this.actionLoading) {
-					return
-				}
-				const code = normalizeSixDigits(this.inputCode)
-				if (code.length !== 6) {
-					this.inputCodeError = '请输入完整的 6 位数字绑定码'
-					return
-				}
-				if (this.myBindCode && code === this.myBindCode) {
-					this.inputCodeError = '不能输入自己的绑定码'
-					return
-				}
-				await this.submitBindByCode(code, 'code')
-			},
+	
+	
 			async handleAcceptInvite() {
 				if (this.actionLoading || !this.invite || this.invite.status !== 'valid') {
 					return
@@ -834,7 +780,6 @@
 			},
 			async submitBindByCode(code, source = 'code') {
 				this.actionLoading = 'bind'
-				this.inputCodeError = ''
 				uni.showLoading({
 					title: '正在绑定',
 					mask: true
@@ -846,7 +791,6 @@
 					}
 					this.applyCenterData(result)
 					this.ensureAppStateStore().invalidateRelationCounters()
-					this.inputCode = ''
 					this.inviteMode = false
 					this.invite = null
 					uni.showToast({
@@ -855,9 +799,6 @@
 					})
 				} catch (error) {
 					const msg = error.message || '绑定失败'
-					if (source === 'code') {
-						this.inputCodeError = msg
-					}
 					uni.showToast({
 						title: msg,
 						icon: 'none'
@@ -975,23 +916,6 @@
 		top: 320rpx;
 		right: -160rpx;
 		background: var(--noir-gold);
-	}
-
-	.cp-nav-pill {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 52rpx;
-		padding: 0 22rpx;
-		border-radius: 999rpx;
-		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.44);
-		background: rgba(var(--noir-gold-rgb), 0.10);
-	}
-
-	.cp-nav-pill__txt {
-		font-size: 22rpx;
-		color: var(--noir-gold-soft);
-		white-space: nowrap;
 	}
 
 	.cp-wrap {
@@ -1363,52 +1287,42 @@
 		gap: 20rpx;
 	}
 
-	/* ==================== 未绑定 6 位绑定码 s15 ==================== */
+	/* ==================== 未绑定 邀请 TA 来绑定 s15 ==================== */
 
-	.cb-card {
-		padding: 36rpx 28rpx 32rpx;
-		border-radius: 34rpx;
-		border: 1rpx solid var(--noir-border-gold);
-		background: linear-gradient(135deg, rgba(var(--noir-coral-rgb), 0.14), var(--noir-glass-1));
+	.ci-av--placeholder {
+		border-style: dashed;
+		border-color: rgba(var(--noir-gold-rgb), 0.38);
+		background: rgba(var(--noir-gold-rgb), 0.06);
+	}
+
+	.ci-av__txt--q {
+		font-family: "SF Mono", "Consolas", monospace;
+		font-size: 44rpx;
+		color: rgba(var(--noir-gold-rgb), 0.52);
+	}
+
+	.cb-invite-section {
+		margin-top: 28rpx;
+		padding: 28rpx 28rpx 32rpx;
+		border-radius: 30rpx;
+		border: 1rpx solid var(--noir-border);
+		background: var(--noir-glass-1);
 		text-align: center;
 	}
 
-	.cb-kicker {
+	.cb-invite-desc {
 		display: block;
-		font-family: "SF Mono", "Consolas", monospace;
-		font-size: 20rpx;
-		letter-spacing: 3rpx;
-		color: rgba(var(--noir-gold-rgb), 0.78);
+		font-size: 24rpx;
+		line-height: 1.72;
+		color: rgba(var(--noir-text-rgb), 0.58);
 	}
 
-	.cb-code {
-		display: block;
-		margin-top: 22rpx;
-		font-family: "SF Mono", "Consolas", monospace;
-		font-size: 64rpx;
-		letter-spacing: 12rpx;
-		color: var(--noir-text-strong);
-		font-weight: 600;
-		line-height: 1.15;
-	}
-
-	.cb-meta {
-		display: block;
-		margin-top: 16rpx;
-		font-size: 22rpx;
-		line-height: 1.6;
-		color: rgba(var(--noir-text-rgb), 0.48);
-	}
-
-	.cb-acts {
-		display: flex;
-		gap: 16rpx;
+	.cb-invite-acts {
 		margin-top: 28rpx;
 	}
 
-	.cb-acts .cp-btn {
-		flex: 1;
-		height: 76rpx;
+	.cb-invite-acts .cp-share-btn {
+		width: 100%;
 	}
 
 	.cp-share-btn {
@@ -1419,93 +1333,6 @@
 
 	.cp-share-btn::after {
 		border: none;
-	}
-
-	.cb-div {
-		display: flex;
-		align-items: center;
-		gap: 20rpx;
-		margin: 36rpx 0 28rpx;
-	}
-
-	.cb-div__line {
-		flex: 1;
-		height: 1rpx;
-		background: var(--noir-glass-3);
-	}
-
-	.cb-div__txt {
-		font-size: 22rpx;
-		color: rgba(var(--noir-text-rgb), 0.40);
-	}
-
-	.cb-label {
-		display: block;
-		margin-bottom: 18rpx;
-		font-size: 24rpx;
-		color: rgba(var(--noir-gold-rgb), 0.78);
-	}
-
-	.cb-slots-wrap {
-		position: relative;
-	}
-
-	.cb-slots {
-		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		gap: 14rpx;
-	}
-
-	.cb-slot {
-		height: 94rpx;
-		border-radius: 22rpx;
-		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.36);
-		background: var(--noir-glass-2);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.cb-slot--empty {
-		border-color: rgba(var(--noir-wash-rgb), 0.12);
-		background: var(--noir-glass-1);
-	}
-
-	.cb-slot--active {
-		border-color: var(--noir-coral);
-		box-shadow: 0 0 0 3rpx rgba(var(--noir-coral-rgb), 0.22);
-	}
-
-	.cb-slot__txt {
-		font-family: "SF Mono", "Consolas", monospace;
-		font-size: 40rpx;
-		font-weight: 600;
-		color: var(--noir-text-strong);
-	}
-
-	.cb-slot--empty .cb-slot__txt {
-		color: rgba(var(--noir-text-rgb), 0.20);
-	}
-
-	.cb-hidden-input {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 94rpx;
-		opacity: 0;
-		z-index: 2;
-	}
-
-	.cb-error {
-		display: block;
-		margin-top: 14rpx;
-		font-size: 22rpx;
-		color: var(--avatar-10);
-	}
-
-	.cb-submit {
-		margin-top: 30rpx;
 	}
 
 	.cb-reward {
