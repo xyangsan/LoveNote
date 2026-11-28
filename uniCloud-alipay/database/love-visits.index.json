@@ -42,5 +42,21 @@
 				}
 			]
 		}
+	},
+	{
+		"IndexName": "idx_visitor_create_time",
+		"MgoKeySchema": {
+			"MgoIsUnique": false,
+			"MgoIndexKeys": [
+				{
+					"Name": "visitor_key",
+					"Direction": "1"
+				},
+				{
+					"Name": "create_time",
+					"Direction": "-1"
+				}
+			]
+		}
 	}
 ]

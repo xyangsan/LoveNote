@@ -160,9 +160,9 @@
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": false,
 						"disableScroll": true,
-						"backgroundColor": "#0A0807",
-						"backgroundColorTop": "#0A0807",
-						"backgroundColorBottom": "#0A0807"
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
 					}
 				},
 				{
@@ -315,6 +315,28 @@
 			"pages": [
 				{
 					"path": "index",
+					"style": {
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
+					}
+				},
+				{
+					"path": "overview-detail",
+					"style": {
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "dark",
+						"backgroundColor": "#EDF1EA",
+						"backgroundColorTop": "#EDF1EA",
+						"backgroundColorBottom": "#EDF1EA"
+					}
+				},
+				{
+					"path": "module-detail",
 					"style": {
 						"navigationStyle": "custom",
 						"enablePullDownRefresh": true,

@@ -8,9 +8,19 @@ module.exports = class PlatformController extends Controller {
 		return this.service.platform.getOverview(this.ctx.data || {})
 	}
 
+	/** 平台总览明细：新增用户 / 访问 UV / 登录人数 / 新增绑定分页列表（仅 admin） */
+	async getOverviewUsers() {
+		return this.service.platform.getOverviewUsers(this.ctx.data || {})
+	}
+
 	/** 模块统计：6 个模块的内容量与参与用户数（仅 admin） */
 	async getModuleStats() {
 		return this.service.platform.getModuleStats(this.ctx.data || {})
+	}
+
+	/** 模块明细：按模块分页展示具体用户的模块数据（仅 admin） */
+	async getModuleDetail() {
+		return this.service.platform.getModuleDetail(this.ctx.data || {})
 	}
 
 	/** 广告收益：uni-ad 广告位日报（仅 admin） */

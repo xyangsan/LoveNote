@@ -16,7 +16,8 @@ page,
 .theme-warm-1,
 .theme-warm-2,
 .theme-pale-3,
-.theme-green-4 {
+.theme-green-4,
+.theme-pink-5 {
 	/* 行为相关颜色 */
 	--fui-color-primary: var(--noir-coral);
 	--fui-color-success: var(--noir-green);

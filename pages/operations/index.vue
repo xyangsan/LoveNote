@@ -46,14 +46,15 @@
 					</view>
 				</view>
 
-				<view class="ops-date" :class="{ 'ops-date--active': rangeKey === 'custom' }">
-					<picker mode="date" :value="startDate" :end="endDate" @change="onStartChange">
-						<text class="ops-date__text">{{ shortDate(startDate) }}</text>
-					</picker>
+				<view
+					class="ops-date"
+					:class="{ 'ops-date--active': rangeKey === 'custom' }"
+					@click="openRangePicker('main')"
+				>
+					<text class="ops-date__text">{{ shortDate(startDate) }}</text>
 					<text class="ops-date__sep">-</text>
-					<picker mode="date" :value="endDate" :start="startDate" @change="onEndChange">
-						<text class="ops-date__text">{{ shortDate(endDate) }}</text>
-					</picker>
+					<text class="ops-date__text">{{ shortDate(endDate) }}</text>
+					<view class="ops-date__caret"></view>
 				</view>
 			</view>
 
@@ -103,9 +104,13 @@
 							<view
 								v-for="item in todayCards"
 								:key="item.key"
-								class="ops-today__cell"
+								class="ops-today__cell ops-today__cell--clickable"
+								@click="openOverviewDetail(item.key)"
 							>
-								<text class="ops-today__label">{{ item.label }}</text>
+								<view class="ops-today__label-row">
+									<text class="ops-today__label">{{ item.label }}</text>
+									<text class="ops-today__arrow">›</text>
+								</view>
 								<text class="ops-today__value">{{ formatNumber(item.value) }}</text>
 								<text class="ops-today__delta" :class="'ops-today__delta--' + item.deltaClass">{{ item.deltaText }}</text>
 							</view>
@@ -253,11 +258,15 @@
 							<view
 								v-for="item in moduleStats.modules"
 								:key="item.key"
-								class="ops-module"
+								class="ops-module ops-module--clickable"
+								@click="openModuleDetail(item)"
 							>
 								<view class="ops-module__head">
 									<text class="ops-module__name">{{ item.name }}</text>
-									<text class="ops-module__penetration">{{ item.penetration }}%</text>
+									<view class="ops-module__head-right">
+										<text class="ops-module__penetration">{{ item.penetration }}%</text>
+										<text class="ops-module__arrow">›</text>
+									</view>
 								</view>
 								<view class="ops-module__value-row">
 									<text class="ops-module__value">{{ formatNumber(item.total) }}</text>
@@ -376,15 +385,13 @@
 							</scroll-view>
 
 							<view v-if="adRangeKey === 'custom'" class="ops-custom-row">
-								<view class="ops-custom">
-									<picker mode="date" :value="adStartDate" :end="adEndDate" @change="onAdStartChange">
-										<text class="ops-date__text">{{ shortDate(adStartDate) }}</text>
-									</picker>
+								<view class="ops-custom" @click="openRangePicker('ad')">
+									<text class="ops-date__text">{{ shortDate(adStartDate) }}</text>
 									<text class="ops-date__sep">-</text>
-									<picker mode="date" :value="adEndDate" :start="adStartDate" @change="onAdEndChange">
-										<text class="ops-date__text">{{ shortDate(adEndDate) }}</text>
-									</picker>
+									<text class="ops-date__text">{{ shortDate(adEndDate) }}</text>
+									<view class="ops-date__caret"></view>
 								</view>
+								<text class="ops-custom__days">共 {{ adRangeDays }} 天</text>
 							</view>
 
 							<view class="ops-pills">
@@ -837,6 +844,19 @@
 				</view>
 			</template>
 		</view>
+
+		<!-- 日期区间日历：总览/模块与广告共用一个弹窗，按 target 决定回填哪一组 -->
+		<love-date-range
+			:visible="rangePicker.visible"
+			:start="rangePicker.start"
+			:end="rangePicker.end"
+			:min-date="rangePicker.minDate"
+			:max-date="rangePicker.maxDate"
+			:title="rangePicker.title"
+			:subtitle="rangePicker.subtitle"
+			@close="closeRangePicker"
+			@confirm="confirmRangePicker"
+		></love-date-range>
 	</view>
 </template>
 
@@ -845,6 +865,7 @@
 	import { getPlatformApi } from '@/common/api/platform.js'
 	import { writeAppSettingsCache } from '@/common/app-settings.js'
 	import { getChartPalette } from '@/common/theme.js'
+	import LoveDateRange from '@/components/love-date-range/love-date-range.vue'
 	import {
 		CHART_PALETTE,
 		buildUserTrendOption,
@@ -932,6 +953,9 @@
 	// 按日期明细默认展示几天，其余点「展开全部」
 	const AD_DAILY_PREVIEW = 8
 
+	// 自定义区间单次最多可选天数：与服务端 MAX_RANGE_DAYS 对齐（超出会被静默截断，前端先拦住）
+	const RANGE_LIMIT_DAYS = 90
+
 	// 图表高度（xtf-charts 的 height 只吃 px，不吃 rpx）
 	// 数值按 375pt 屏、卡片内容宽 323px 的比例对齐设计稿（图宽高比 ≈ 0.58）
 	const CHART_HEIGHTS = {
@@ -950,10 +974,29 @@
 		return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
 	}
 
+	/**
+	 * 日期键加减天数（YYYY-MM-DD）。
+	 *
+	 * ⚠️ 必须用 Date.UTC 直接算：老实现是 `Date.parse('YYYY-MM-DDT00:00:00+08:00')`
+	 * 再取 getUTCDate，东八区午夜在 UTC 是前一天 16:00，结果整体偏早一天
+	 * （addDays(k, 0) !== k），总览胶囊显示的区间会比实际查询早一天。
+	 */
 	function addDays(dateKey, delta) {
-		const timestamp = Date.parse(`${dateKey}T00:00:00+08:00`)
-		const next = new Date(timestamp + delta * 24 * 60 * 60 * 1000)
+		const parts = String(dateKey || '').split('-').map((item) => Number(item))
+		if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
+			return dateKey
+		}
+		const next = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] + delta))
 		return `${next.getUTCFullYear()}-${pad2(next.getUTCMonth() + 1)}-${pad2(next.getUTCDate())}`
+	}
+
+	function diffDays(startKey, endKey) {
+		const start = Date.parse(`${startKey}T00:00:00Z`)
+		const end = Date.parse(`${endKey}T00:00:00Z`)
+		if (!Number.isFinite(start) || !Number.isFinite(end)) {
+			return 0
+		}
+		return Math.round((end - start) / (24 * 60 * 60 * 1000))
 	}
 
 	function formatNumber(value) {
@@ -966,6 +1009,9 @@
 	}
 
 	export default {
+		components: {
+			LoveDateRange
+		},
 		data() {
 			const today = toDateKey(new Date())
 			const yesterday = addDays(today, -1)
@@ -978,6 +1024,17 @@
 				rangeKey: '7d',
 				startDate: addDays(today, -6),
 				endDate: today,
+				// 区间日历：总览/模块（main）与广告（ad）共用，两边可选上界不同
+				rangePicker: {
+					visible: false,
+					target: 'main',
+					start: '',
+					end: '',
+					minDate: '',
+					maxDate: '',
+					title: '',
+					subtitle: ''
+				},
 				permissionDenied: false,
 				loading: {
 					overview: false,
@@ -1350,6 +1407,10 @@
 					dateLabel: this.shortDate(row.date)
 				}))
 			},
+			/** 自定义区间的天数：日历确认后回填，列表头部与明细提示共用 */
+			adRangeDays() {
+				return Math.abs(diffDays(this.adStartDate, this.adEndDate)) + 1
+			},
 			adDetailHint() {
 				if (this.adDetailMode === 'position') {
 					return `${this.adStats.positions.length} 个广告位`
@@ -1439,7 +1500,7 @@
 						parent: '',
 						field: 'feedVisible',
 						name: '双人日常',
-						desc: '关闭后首页不显示双人日常入口、最近双人动态与动态统计，「我的」与情侣页也不再露出日常计数',
+						desc: '关闭后首页不显示双人日常入口、最近双人动态与动态统计，「我的」与情侣页也不再露出日常计数；照片 / 纪念日 / 计划页不再弹绑定情侣引导',
 						value: this.permission.feedVisible
 					},
 					{
@@ -1598,6 +1659,24 @@
 			goBack() {
 				uni.navigateBack()
 			},
+			openOverviewDetail(type) {
+				const key = String(type || '').trim()
+				if (!key) {
+					return
+				}
+				uni.navigateTo({
+					url: `/pages/operations/overview-detail?type=${encodeURIComponent(key)}`
+				})
+			},
+			openModuleDetail(item) {
+				const key = String((item && item.key) || '').trim()
+				if (!key) {
+					return
+				}
+				uni.navigateTo({
+					url: `/pages/operations/module-detail?module=${encodeURIComponent(key)}`
+				})
+			},
 			switchTab(index) {
 				if (this.activeTab === index) {
 					return
@@ -1619,22 +1698,78 @@
 				this.endDate = today
 				this.reloadAll()
 			},
-			onStartChange(event = {}) {
-				const value = event.detail && event.detail.value
-				if (!value) {
-					return
+			/**
+			 * 打开区间日历。
+			 *
+			 * 上界：总览到「今天」，广告到「昨天」（日报 T+1，今天没有数据）；
+			 * 下界：上界往前 89 天（单次最多 90 天，和服务端 MAX_RANGE_DAYS 一致）。
+			 */
+			openRangePicker(target) {
+				const isAd = target === 'ad'
+				const today = toDateKey(new Date())
+				const maxDate = isAd ? addDays(today, -1) : today
+				const minDate = addDays(maxDate, -(RANGE_LIMIT_DAYS - 1))
+				const adRange = this.adStats && this.adStats.range ? this.adStats.range : null
+
+				let start = this.startDate
+				let end = this.endDate
+				if (isAd) {
+					if (this.adRangeKey === 'custom') {
+						start = this.adStartDate
+						end = this.adEndDate
+					} else if (adRange && adRange.startKey && adRange.endKey) {
+						// 预设区间以服务端的实际查询区间为准（本地上算会漏掉月初 / 上月的边界）
+						start = adRange.startKey
+						end = adRange.endKey
+					} else {
+						start = this.adStartDate
+						end = this.adEndDate
+					}
 				}
-				this.rangeKey = 'custom'
-				this.startDate = value > this.endDate ? this.endDate : value
-				this.reloadAll()
+
+				this.rangePicker = {
+					visible: true,
+					target: isAd ? 'ad' : 'main',
+					start: start <= end ? start : end,
+					end: start <= end ? end : start,
+					minDate,
+					maxDate,
+					title: isAd ? '选择广告数据区间' : '选择时间范围',
+					subtitle: isAd
+						? '广告日报 T+1，最新可选到昨天；单次最多 90 天'
+						: '单次最多可选 90 天'
+				}
 			},
-			onEndChange(event = {}) {
-				const value = event.detail && event.detail.value
-				if (!value) {
+			closeRangePicker() {
+				this.rangePicker.visible = false
+			},
+			confirmRangePicker(payload = {}) {
+				const startDate = payload.startDate
+				const endDate = payload.endDate || payload.startDate
+				const target = this.rangePicker.target
+				this.closeRangePicker()
+				if (!startDate || !endDate) {
+					return
+				}
+
+				if (target === 'ad') {
+					if (this.adRangeKey === 'custom' && this.adStartDate === startDate && this.adEndDate === endDate) {
+						return
+					}
+					this.adRangeKey = 'custom'
+					this.adStartDate = startDate
+					this.adEndDate = endDate
+					this.adDailyExpanded = false
+					this.loadAds()
+					return
+				}
+
+				if (this.rangeKey === 'custom' && this.startDate === startDate && this.endDate === endDate) {
 					return
 				}
 				this.rangeKey = 'custom'
-				this.endDate = value < this.startDate ? this.startDate : value
+				this.startDate = startDate
+				this.endDate = endDate
 				this.reloadAll()
 			},
 			buildRangeParams() {
@@ -1824,39 +1959,14 @@
 			},
 			selectAdPreset(key) {
 				if (key === 'custom') {
-					if (this.adRangeKey === 'custom') {
-						return
-					}
-					this.adRangeKey = 'custom'
-					this.adDailyExpanded = false
-					// 自定义区间先用当前日期占位，用户改日期后会再拉一次
-					this.loadAds()
+					// 自定义不再是「先占位再选两次」：直接打开日历定区间，取消则保持原预设
+					this.openRangePicker('ad')
 					return
 				}
 				if (this.adRangeKey === key) {
 					return
 				}
 				this.adRangeKey = key
-				this.adDailyExpanded = false
-				this.loadAds()
-			},
-			onAdStartChange(event = {}) {
-				const value = event.detail && event.detail.value
-				if (!value) {
-					return
-				}
-				this.adRangeKey = 'custom'
-				this.adStartDate = value > this.adEndDate ? this.adEndDate : value
-				this.adDailyExpanded = false
-				this.loadAds()
-			},
-			onAdEndChange(event = {}) {
-				const value = event.detail && event.detail.value
-				if (!value) {
-					return
-				}
-				this.adRangeKey = 'custom'
-				this.adEndDate = value < this.adStartDate ? this.adStartDate : value
 				this.adDailyExpanded = false
 				this.loadAds()
 			},
@@ -2425,6 +2535,17 @@
 		color: rgba(var(--noir-text-rgb), 0.34);
 	}
 
+	/* 点击整块胶囊打开区间日历，右侧小箭头提示可展开 */
+	.ops-date__caret {
+		width: 9rpx;
+		height: 9rpx;
+		margin-top: -5rpx;
+		margin-left: 2rpx;
+		border-right: 2rpx solid rgba(var(--noir-gold-rgb), 0.62);
+		border-bottom: 2rpx solid rgba(var(--noir-gold-rgb), 0.62);
+		transform: rotate(45deg);
+	}
+
 	.ops-card {
 		margin-top: 20rpx;
 		padding: 26rpx 28rpx;
@@ -2598,9 +2719,26 @@
 		background: var(--noir-glass-1);
 	}
 
+	.ops-today__cell--clickable:active {
+		opacity: 0.78;
+		transform: scale(0.98);
+	}
+
+	.ops-today__label-row {
+		display: flex;
+		align-items: center;
+		gap: 2rpx;
+	}
+
 	.ops-today__label {
 		font-size: 18rpx;
 		color: var(--noir-text-muted);
+	}
+
+	.ops-today__arrow {
+		font-size: 18rpx;
+		line-height: 1;
+		color: var(--noir-text-dim);
 	}
 
 	.ops-today__value {
@@ -2794,11 +2932,28 @@
 		background: var(--noir-glass-1);
 	}
 
+	.ops-module--clickable:active {
+		opacity: 0.82;
+		transform: scale(0.985);
+	}
+
 	.ops-module__head {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 8rpx;
+	}
+
+	.ops-module__head-right {
+		display: flex;
+		align-items: center;
+		gap: 4rpx;
+	}
+
+	.ops-module__arrow {
+		font-size: 20rpx;
+		line-height: 1;
+		color: var(--noir-text-dim);
 	}
 
 	.ops-module__name {
@@ -2982,6 +3137,8 @@
 
 	.ops-custom-row {
 		display: flex;
+		align-items: center;
+		gap: 14rpx;
 		margin-top: 16rpx;
 	}
 
@@ -2993,6 +3150,11 @@
 		border-radius: 999rpx;
 		border: 1rpx solid rgba(var(--noir-coral-rgb), 0.4);
 		background: var(--noir-surface);
+	}
+
+	.ops-custom__days {
+		font-size: 19rpx;
+		color: var(--noir-text-muted);
 	}
 
 	.ops-pills {

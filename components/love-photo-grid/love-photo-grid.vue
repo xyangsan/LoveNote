@@ -214,7 +214,7 @@
 		justify-content: center;
 		gap: 2rpx;
 		border-color: rgba(var(--noir-gold-rgb), 0.34);
-		background: linear-gradient(145deg, rgba(var(--noir-gold-rgb), 0.16), rgba(var(--comp-02-rgb), 0.96));
+		background: linear-gradient(145deg, rgba(var(--noir-gold-rgb), 0.16), rgba(var(--noir-surface2-rgb), 0.96));
 	}
 
 	.lpg-img {
@@ -231,7 +231,7 @@
 		align-items: center;
 		padding: 3rpx 10rpx;
 		border-radius: 999rpx;
-		background: rgba(var(--noir-bg-rgb), 0.72);
+		background: rgba(var(--noir-shadow-rgb), 0.62);
 	}
 
 	.lpg-badge--sm {
@@ -241,14 +241,14 @@
 	.lpg-badge__icon {
 		font-size: 16rpx;
 		line-height: 1;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.lpg-badge__txt {
 		margin-left: 4rpx;
 		font-size: 17rpx;
 		line-height: 1.2;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.lpg-cap {
@@ -257,14 +257,19 @@
 		right: 0;
 		bottom: 0;
 		padding: 44rpx 16rpx 14rpx;
-		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0), rgba(var(--noir-bg-rgb), 0.88));
+		background: linear-gradient(
+			180deg,
+			rgba(var(--noir-shadow-rgb), 0) 0%,
+			rgba(var(--noir-shadow-rgb), 0.36) 48%,
+			rgba(var(--noir-shadow-rgb), 0.76) 100%
+		);
 	}
 
 	.lpg-cap__title {
 		display: block;
 		font-size: 22rpx;
 		font-weight: 500;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -281,7 +286,7 @@
 		flex-shrink: 0;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 17rpx;
-		color: rgba(var(--noir-gold-rgb), 0.82);
+		color: var(--noir-on-media-accent);
 	}
 
 	.lpg-cap__loc {
@@ -289,7 +294,7 @@
 		min-width: 0;
 		margin-left: 6rpx;
 		font-size: 17rpx;
-		color: rgba(var(--noir-text-rgb), 0.62);
+		color: var(--noir-on-media-sub);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -301,7 +306,7 @@
 		bottom: 8rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 16rpx;
-		color: rgba(var(--noir-text-strong-rgb), 0.92);
+		color: var(--noir-on-media);
 		text-shadow: 0 1rpx 6rpx rgba(var(--noir-shadow-rgb), 0.7);
 	}
 

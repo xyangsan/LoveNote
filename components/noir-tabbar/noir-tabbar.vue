@@ -156,6 +156,7 @@
 	.noir-tabbar-placeholder {
 		height: calc(156rpx + env(safe-area-inset-bottom));
 		width: 100%;
+		z-index: 9998;
 	}
 
 	.noir-tabbar-fixed {
@@ -163,7 +164,7 @@
 		left: 28rpx;
 		right: 28rpx;
 		bottom: calc(20rpx + env(safe-area-inset-bottom));
-		z-index: 95;
+		z-index: 9999;
 		pointer-events: none;
 	}
 

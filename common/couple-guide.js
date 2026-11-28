@@ -2,13 +2,16 @@
  * 情侣绑定引导弹框：统一的触发判定与文案配置。
  *
  * 触发条件（四个页面一致）：
- *   1. 已登录；
- *   2. 当前账号没有已绑定的情侣关系（由页面接口返回的 hasCouple / activeCouple 判定）；
- *   3. 页面首次成功加载完列表之后（不在 onShow 里反复触发）；
- *   4. 当天该场景还没弹过，且距离上次弹出已超过冷却时间。
+ *   1. 运营后台「权限 → 双人日常」（feedVisible）是开启的；
+ *   2. 已登录；
+ *   3. 当前账号没有已绑定的情侣关系（由页面接口返回的 hasCouple / activeCouple 判定）；
+ *   4. 页面首次成功加载完列表之后（不在 onShow 里反复触发）；
+ *   5. 当天该场景还没弹过，且距离上次弹出已超过冷却时间。
  *
  * 之所以要冷却：四个页面各自独立触发，用户连着点进来时不至于被连续弹四次。
  */
+
+import { readAppSettingsCache } from './app-settings.js'
 
 const STORAGE_KEY = 'love_couple_guide_state'
 const COOLDOWN_MS = 30 * 60 * 1000
@@ -69,11 +72,28 @@ function writeGuideState(state = {}) {
 }
 
 /**
+ * 「双人日常」权限是否开启。
+ *
+ * 权限关掉时运营压根没开放情侣向内容，再引导用户去绑定只会让人做完动作才发现没东西看，
+ * 所以四个场景一律不弹。缓存没拉到 / 读失败都按关闭处理（宁可少弹，也别在关权限时打扰）。
+ * 只读缓存不发请求：这个判定挂在页面首屏，不能为了一个软引导去等网络。
+ */
+function isCoupleGuidePermissionOpen() {
+	const settings = readAppSettingsCache()
+	return settings.feedVisible === true
+}
+
+/**
  * 是否应该弹出引导
  * @param {string} scene album | feed | anniversary | plan
  */
 export function shouldShowCoupleGuide(scene = '') {
 	if (!scene || !COUPLE_GUIDE_SCENES[scene]) {
+		return false
+	}
+
+	// 双人日常权限关闭：不弹也不 mark，等权限打开后该场景当天仍能正常引导
+	if (!isCoupleGuidePermissionOpen()) {
 		return false
 	}
 

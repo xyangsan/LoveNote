@@ -45,8 +45,8 @@ export const THEMES = [
 		desc: '奶白浮层配焦糖暖金，余烬橘作强调，最柔和的一套。',
 		dark: false,
 		bg: '#F4E6D6',
-		swatches: ['#F4E6D6', '#FBF0E3', '#C5824F', '#DE5F3C', '#FFF3E4'],
-		ink: '#2E1E12',
+		swatches: ['#F4E6D6', '#FBF0E3', '#9B5F2E', '#C24A29', '#FFF3E4'],
+		ink: '#1F130A',
 		art: {
 			home: '/static/images/theme/v1-home.jpg',
 			feed: '/static/images/theme/v1-feed.jpg',
@@ -60,8 +60,8 @@ export const THEMES = [
 		desc: '暖驼焦糖奶茶调，陶土橘为主色，更浓也更复古。',
 		dark: false,
 		bg: '#E7C6A6',
-		swatches: ['#E7C6A6', '#F3DCC4', '#B5763F', '#D95F33', '#FBE3C8'],
-		ink: '#2A180C',
+		swatches: ['#E7C6A6', '#F3DCC4', '#875121', '#B3451E', '#FBE3C8'],
+		ink: '#1C0F06',
 		art: {
 			home: '/static/images/theme/v2-home.jpg',
 			feed: '/static/images/theme/v2-feed.jpg',
@@ -75,8 +75,8 @@ export const THEMES = [
 		desc: '纯白浮层配细灰线与克制暖金，留白最多的一套。',
 		dark: false,
 		bg: '#F6F5F2',
-		swatches: ['#F6F5F2', '#FFFFFF', '#A8845C', '#C2703E', '#F6F3ED'],
-		ink: '#1C1917',
+		swatches: ['#F6F5F2', '#FFFFFF', '#86633D', '#A85B2C', '#F6F3ED'],
+		ink: '#12100E',
 		art: {
 			home: '/static/images/theme/v3-home.jpg',
 			feed: '/static/images/theme/v3-feed.jpg',
@@ -90,8 +90,8 @@ export const THEMES = [
 		desc: '白底配细绿灰线与低饱和鼠尾草绿，清透安静。',
 		dark: false,
 		bg: '#EDF1EA',
-		swatches: ['#EDF1EA', '#FFFFFF', '#6E9464', '#5E8A55', '#EFF4E9'],
-		ink: '#1F261B',
+		swatches: ['#EDF1EA', '#FFFFFF', '#4F7446', '#487140', '#EFF4E9'],
+		ink: '#141A11',
 		art: {
 			home: '/static/images/theme/v4-home.jpg',
 			feed: '/static/images/theme/v4-feed.jpg',
@@ -106,8 +106,8 @@ export const THEMES = [
 		dark: false,
 		// 五个色点直取设计稿 05 页 196:1：底色 / 浮层 / 主金 / 主色 / 浅底
 		bg: '#F6E7EA',
-		swatches: ['#F6E7EA', '#FFFFFF', '#B96A85', '#DD5477', '#FFF1F4'],
-		ink: '#2F1A20',
+		swatches: ['#F6E7EA', '#FFFFFF', '#964C66', '#C1385C', '#FFF1F4'],
+		ink: '#31181F',
 		// 樱粉专属配图（720×600 / 720×405，按出图中心裁切压缩）：
 		// home = 室内粉调特写、feed = 樱花大道、anniv = 海边落日
 		art: {
@@ -131,11 +131,11 @@ const THEME_MAP = THEMES.reduce((acc, item) => {
  */
 const THEME_CORAL = {
 	'noir': '#E2643F',
-	'warm-1': '#DE5F3C',
-	'warm-2': '#D95F33',
-	'pale-3': '#C2703E',
-	'green-4': '#5E8A55',
-	'pink-5': '#DD5477'
+	'warm-1': '#C24A29',
+	'warm-2': '#B3451E',
+	'pale-3': '#A85B2C',
+	'green-4': '#487140',
+	'pink-5': '#C1385C'
 }
 
 /** 当前主题的强调色（仅供小程序 API 传参使用） */
@@ -151,16 +151,16 @@ export const THEME_CORAL_TABLE = THEME_CORAL
  * SVG 作为独立图片文档**不继承页面的 CSS 变量**，写 `stroke="var(--x)"` 会直接失效、
  * 图标不显示。所以这里必须存字面值。
  *
- * 取值来源：`--noir-coral-bright`（选中）与 `--noir-text` 的 44% alpha（未选中），
+ * 取值来源：`--noir-coral-bright`（选中）与 `--noir-text` 的 44%/58% alpha（未选中），
  * 校验脚本会断言与 love-theme.css 一致。改主题时两边要一起改。
  */
 const THEME_ICON = {
 	'noir': { active: '#F4A87A', idle: 'rgba(247, 241, 233, 0.44)' },
-	'warm-1': { active: '#E37557', idle: 'rgba(46, 30, 18, 0.44)' },
-	'warm-2': { active: '#DE7550', idle: 'rgba(42, 24, 12, 0.44)' },
-	'pale-3': { active: '#CB8459', idle: 'rgba(28, 25, 23, 0.44)' },
-	'green-4': { active: '#759A6D', idle: 'rgba(31, 38, 27, 0.44)' },
-	'pink-5': { active: '#E4698A', idle: 'rgba(73, 42, 50, 0.44)' }
+	'warm-1': { active: '#CC5B3C', idle: 'rgba(31, 19, 10, 0.58)' },
+	'warm-2': { active: '#BF542E', idle: 'rgba(28, 15, 6, 0.58)' },
+	'pale-3': { active: '#B56B3D', idle: 'rgba(18, 16, 14, 0.58)' },
+	'green-4': { active: '#588050', idle: 'rgba(20, 26, 17, 0.58)' },
+	'pink-5': { active: '#CC4A6D', idle: 'rgba(49, 24, 31, 0.58)' }
 }
 
 /** 当前主题的图标两档颜色（仅供内联 SVG 使用） */
@@ -409,7 +409,7 @@ export function getChartPalette(key) {
 	const surface = theme.swatches[1] || theme.bg
 	return {
 		bg: surface,
-		text: `rgba(${ink}, 0.58)`,
+		text: `rgba(${ink}, ${theme.dark ? 0.58 : 0.72})`,
 		title: theme.ink,
 		grid: `rgba(${ink}, 0.10)`,
 		tooltipBg: `rgba(${hexToRgbTriplet(surface)}, 0.96)`,

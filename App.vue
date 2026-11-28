@@ -34,6 +34,20 @@
 	import { flushPendingGuestTheme } from './common/api/user.js'
 
 	const DEVICE_ID_KEY = 'love_device_id'
+	const VISIT_REPORT_TS_PREFIX = 'love_visit_report_ts_'
+	const VISIT_DEDUPE_WINDOW_MS = 30 * 60 * 1000
+
+	function resolveCurrentUidSync() {
+		try {
+			if (typeof uniCloud !== 'undefined' && typeof uniCloud.getCurrentUserInfo === 'function') {
+				const info = uniCloud.getCurrentUserInfo()
+				return String((info && info.uid) || '').trim()
+			}
+		} catch (error) {
+			// ignore
+		}
+		return ''
+	}
 
 	function resolveDeviceId() {
 		try {
@@ -151,6 +165,21 @@
 				try {
 					const launch = readLaunchOptions()
 					const deviceId = resolveDeviceId()
+					const uid = resolveCurrentUidSync()
+					const scopeKey = uid || (deviceId ? `guest:${deviceId}` : '')
+					const now = Date.now()
+					if (scopeKey) {
+						try {
+							const lastTs = Number(uni.getStorageSync(`${VISIT_REPORT_TS_PREFIX}${scopeKey}`)) || 0
+							if (lastTs > 0 && now - lastTs < VISIT_DEDUPE_WINDOW_MS) {
+								return
+							}
+							uni.setStorageSync(`${VISIT_REPORT_TS_PREFIX}${scopeKey}`, now)
+						} catch (error) {
+							// 缓存不可用时交给服务端 30 分钟窗口兜底
+						}
+					}
+
 					let platform = ''
 					let version = ''
 

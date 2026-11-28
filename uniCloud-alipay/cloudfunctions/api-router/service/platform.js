@@ -95,6 +95,17 @@ const RANGE_PRESETS = {
 }
 const DEFAULT_RANGE_KEY = '7d'
 const MAX_RANGE_DAYS = 90
+// 单用户访问上报去重窗口：30 分钟内只记一次
+const VISIT_DEDUPE_WINDOW_MS = 30 * 60 * 1000
+const OVERVIEW_USER_TYPES = ['newUsers', 'visits', 'logins', 'bindings']
+const MODULE_DETAIL_META = {
+	couple: { name: '情侣空间', unit: '对' },
+	anniversary: { name: '纪念日', unit: '条' },
+	album: { name: '相册', unit: '张' },
+	daily: { name: '双人日常', unit: '条' },
+	wish: { name: '愿望清单', unit: '条' },
+	game: { name: '聚会游戏', unit: '局' }
+}
 
 // uni-ad 广告数据维度：本小程序只看「国内广告 + 小程序」这一格
 const AD_REGION_CHINA = 1
@@ -372,6 +383,182 @@ async function readUserRecord(uid) {
 function hasAdminRole(userRecord) {
 	const roleList = Array.isArray(userRecord && userRecord.role) ? userRecord.role : []
 	return roleList.some((item) => String(item || '').trim().toLowerCase() === 'admin')
+}
+
+function normalizePagination(data = {}, defaultSize = 20, maxSize = 50) {
+	const page = Math.max(1, Math.floor(Number(data.page) || 1))
+	const pageSize = Math.min(maxSize, Math.max(1, Math.floor(Number(data.pageSize) || defaultSize)))
+	return {
+		page,
+		pageSize,
+		skip: (page - 1) * pageSize
+	}
+}
+
+function isTempLikeAvatarUrl(value = '') {
+	const raw = String(value || '').trim()
+	if (!raw) return false
+	if (/^cloud:\/\//i.test(raw) || /^data:/i.test(raw)) return false
+	if (/^(wxfile|blob|file|filesystem|content|absolute|ms-appx):/i.test(raw)) return true
+	const match = raw.match(/^https?:\/\/([^/?#:]+)/i)
+	if (match) return !match[1].includes('.')
+	return true
+}
+
+/**
+ * 批量读取用户基础资料，并把 cloud:// 头像 file_id 合并成一次 getTempFileURL 调用
+ */
+async function loadUsersMap(uids = []) {
+	const uniqueUids = Array.from(new Set(
+		(Array.isArray(uids) ? uids : [])
+			.map((id) => String(id || '').trim())
+			.filter(Boolean)
+	))
+	if (!uniqueUids.length) {
+		return {}
+	}
+
+	const result = await userCollection
+		.where({ _id: dbCmd.in(uniqueUids) })
+		.field({
+			nickname: true,
+			avatar: true,
+			avatar_file_id: true,
+			avatar_file: true,
+			gender: true,
+			register_date: true,
+			last_login_date: true,
+			theme_key: true
+		})
+		.limit(uniqueUids.length)
+		.get()
+	const rows = result && Array.isArray(result.data) ? result.data : []
+
+	const cloudFileIds = []
+	rows.forEach((row) => {
+		const fid = String(row.avatar_file_id || (row.avatar_file && row.avatar_file.url) || '').trim()
+		if (fid && /^cloud:\/\//i.test(fid) && !cloudFileIds.includes(fid)) {
+			cloudFileIds.push(fid)
+		}
+	})
+
+	const tempUrlMap = {}
+	if (cloudFileIds.length) {
+		try {
+			const tempRes = await uniCloud.getTempFileURL({ fileList: cloudFileIds })
+			const fileList = tempRes && Array.isArray(tempRes.fileList) ? tempRes.fileList : []
+			fileList.forEach((item) => {
+				const fid = String((item && item.fileID) || '').trim()
+				const url = String((item && (item.tempFileURL || item.tempFileUrl || item.url || item.download_url)) || '').trim()
+				if (fid && url) {
+					tempUrlMap[fid] = url
+				}
+			})
+		} catch (error) {
+			console.warn('loadUsersMap getTempFileURL failed', error)
+		}
+	}
+
+	const map = {}
+	rows.forEach((row) => {
+		const id = String(row._id || '').trim()
+		if (!id) return
+		const fid = String(row.avatar_file_id || (row.avatar_file && row.avatar_file.url) || '').trim()
+		let avatarUrl = ''
+		if (fid) {
+			if (/^https?:\/\//i.test(fid)) {
+				avatarUrl = isTempLikeAvatarUrl(fid) ? '' : fid
+			} else if (tempUrlMap[fid]) {
+				avatarUrl = tempUrlMap[fid]
+			}
+		}
+		if (!avatarUrl && row.avatar) {
+			const rawAvatar = String(row.avatar).trim()
+			if (/^https?:\/\//i.test(rawAvatar) && !isTempLikeAvatarUrl(rawAvatar)) {
+				avatarUrl = rawAvatar
+			}
+		}
+		map[id] = {
+			uid: id,
+			nickname: String(row.nickname || '').trim() || '微信用户',
+			avatarUrl,
+			gender: Number(row.gender) || 0,
+			registerDate: Number(row.register_date) || 0,
+			lastLoginDate: Number(row.last_login_date) || 0,
+			themeKey: String(row.theme_key || '').trim()
+		}
+	})
+
+	return map
+}
+
+/** 批量查指定 uid 的已绑定情侣关系（用于新增用户列表展示绑定状态） */
+async function loadBoundCouplesByUids(uids = []) {
+	const uniqueUids = Array.from(new Set(
+		(Array.isArray(uids) ? uids : [])
+			.map((id) => String(id || '').trim())
+			.filter(Boolean)
+	))
+	if (!uniqueUids.length) {
+		return {}
+	}
+
+	const result = await coupleCollection
+		.where(dbCmd.and([
+			{ status: COUPLE_STATUS_BOUND },
+			dbCmd.or([
+				{ user_a_uid: dbCmd.in(uniqueUids) },
+				{ user_b_uid: dbCmd.in(uniqueUids) }
+			])
+		]))
+		.field({
+			_id: true,
+			relation_no: true,
+			user_a_uid: true,
+			user_b_uid: true,
+			user_a_snapshot: true,
+			user_b_snapshot: true,
+			bind_date: true
+		})
+		.limit(uniqueUids.length * 2)
+		.get()
+	const rows = result && Array.isArray(result.data) ? result.data : []
+
+	const map = {}
+	rows.forEach((row) => {
+		const uidA = String(row.user_a_uid || '').trim()
+		const uidB = String(row.user_b_uid || '').trim()
+		const nickA = String((row.user_a_snapshot && row.user_a_snapshot.nickname) || '').trim()
+		const nickB = String((row.user_b_snapshot && row.user_b_snapshot.nickname) || '').trim()
+		if (uidA && uniqueUids.includes(uidA)) {
+			map[uidA] = {
+				coupleId: row._id || '',
+				partnerUid: uidB,
+				partnerNickname: nickB || '另一半',
+				bindDate: Number(row.bind_date) || 0
+			}
+		}
+		if (uidB && uniqueUids.includes(uidB)) {
+			map[uidB] = {
+				coupleId: row._id || '',
+				partnerUid: uidA,
+				partnerNickname: nickA || '另一半',
+				bindDate: Number(row.bind_date) || 0
+			}
+		}
+	})
+	return map
+}
+
+function buildCoupleMember(uid, userMap, snapshot = {}) {
+	const id = String(uid || '').trim()
+	const user = (id && userMap[id]) || null
+	const snapAvatar = String((snapshot && snapshot.avatar_url) || '').trim()
+	return {
+		uid: id,
+		nickname: (user && user.nickname) || String((snapshot && snapshot.nickname) || '').trim() || '微信用户',
+		avatarUrl: (user && user.avatarUrl) || (snapAvatar && !isTempLikeAvatarUrl(snapAvatar) ? snapAvatar : '')
+	}
 }
 
 /** 时间范围：优先自定义区间，其次预设（today / 7d / 30d） */
@@ -678,6 +865,677 @@ module.exports = class PlatformService extends Service {
 			}
 		} catch (error) {
 			return formatError(error, '获取平台总览失败')
+		}
+	}
+
+	/**
+	 * 平台总览明细：新增用户 / 访问 UV / 登录人数 / 新增绑定分页列表（仅 admin）
+	 */
+	async getOverviewUsers(data = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			const type = String(data.type || '').trim()
+			if (!OVERVIEW_USER_TYPES.includes(type)) {
+				return {
+					errCode: 'love-note-invalid-param',
+					errMsg: '不支持的统计类型'
+				}
+			}
+
+			// 未传时间参数时默认查「今日」，与总览卡片口径一致
+			const rangeInput = (data.range || (data.startDate && data.endDate))
+				? data
+				: Object.assign({}, data, { range: 'today' })
+			const range = resolveRange(rangeInput)
+			const startTs = dayStartTs(range.startKey)
+			const endTs = dayEndTs(range.endKey)
+			const { page, pageSize, skip } = normalizePagination(data)
+			const $ = dbCmd.aggregate
+
+			let total = 0
+			let list = []
+			let source = ''
+
+			if (type === 'newUsers') {
+				const where = {
+					register_date: dbCmd.gte(startTs).and(dbCmd.lt(endTs))
+				}
+				const [countTotal, listRes] = await Promise.all([
+					countWhere(userCollection, where),
+					userCollection
+						.where(where)
+						.orderBy('register_date', 'desc')
+						.skip(skip)
+						.limit(pageSize)
+						.field({
+							_id: true,
+							nickname: true,
+							avatar: true,
+							avatar_file_id: true,
+							avatar_file: true,
+							gender: true,
+							register_date: true,
+							last_login_date: true,
+							theme_key: true
+						})
+						.get()
+				])
+				total = countTotal
+				const rows = listRes && Array.isArray(listRes.data) ? listRes.data : []
+				const uids = rows.map((row) => row._id).filter(Boolean)
+				const [userMap, coupleMap] = await Promise.all([
+					loadUsersMap(uids),
+					loadBoundCouplesByUids(uids)
+				])
+				list = rows.map((row) => {
+					const u = userMap[row._id] || {
+						uid: row._id,
+						nickname: String(row.nickname || '').trim() || '微信用户',
+						avatarUrl: '',
+						gender: Number(row.gender) || 0,
+						registerDate: Number(row.register_date) || 0,
+						lastLoginDate: Number(row.last_login_date) || 0
+					}
+					const couple = coupleMap[row._id] || null
+					return {
+						id: row._id,
+						uid: row._id,
+						nickname: u.nickname,
+						avatarUrl: u.avatarUrl,
+						gender: u.gender,
+						registerDate: u.registerDate,
+						lastLoginDate: u.lastLoginDate,
+						actionTime: u.registerDate,
+						isBound: Boolean(couple),
+						partnerNickname: couple ? couple.partnerNickname : ''
+					}
+				})
+			} else if (type === 'visits') {
+				const match = {
+					date_key: dbCmd.gte(range.startKey).and(dbCmd.lte(range.endKey))
+				}
+				const [countRes, pageRes] = await Promise.all([
+					visitCollection
+						.aggregate()
+						.match(match)
+						.group({ _id: '$visitor_key' })
+						.group({ _id: null, total: $.sum(1) })
+						.end(),
+					visitCollection
+						.aggregate()
+						.match(match)
+						.sort({ create_time: 1 })
+						.group({
+							_id: '$visitor_key',
+							uid: $.last('$uid'),
+							device_id: $.last('$device_id'),
+							visitCount: $.sum(1),
+							firstVisitTime: $.min('$create_time'),
+							lastVisitTime: $.max('$create_time'),
+							scene: $.last('$scene'),
+							platform: $.last('$uni_platform'),
+							enterPath: $.last('$enter_path')
+						})
+						.sort({ lastVisitTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+				])
+				const countRow = countRes && Array.isArray(countRes.data) ? countRes.data[0] : null
+				total = normalizeCount(countRow && countRow.total)
+				const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+				const uids = rows.map((row) => String((row && row.uid) || '').trim()).filter(Boolean)
+				const userMap = await loadUsersMap(uids)
+
+				list = rows.map((row) => {
+					const rowUid = String((row && row.uid) || '').trim()
+					const deviceId = String((row && row.device_id) || '').trim()
+					const u = rowUid ? userMap[rowUid] : null
+					const guestSuffix = deviceId ? deviceId.slice(-6) : String(row._id || '').slice(-6)
+					return {
+						id: String(row._id || ''),
+						visitorKey: String(row._id || ''),
+						uid: rowUid,
+						isGuest: !rowUid,
+						nickname: u ? u.nickname : `游客 ${guestSuffix || '未知'}`,
+						avatarUrl: u ? u.avatarUrl : '',
+						gender: u ? u.gender : 0,
+						visitCount: normalizeCount(row.visitCount),
+						firstVisitTime: Number(row.firstVisitTime) || 0,
+						lastVisitTime: Number(row.lastVisitTime) || 0,
+						actionTime: Number(row.lastVisitTime) || 0,
+						scene: String(row.scene || ''),
+						platform: String(row.platform || ''),
+						enterPath: String(row.enterPath || ''),
+						registerDate: u ? u.registerDate : 0
+					}
+				})
+			} else if (type === 'logins') {
+				const logMatch = {
+					type: LOG_TYPE_LOGIN,
+					create_date: dbCmd.gte(startTs).and(dbCmd.lt(endTs))
+				}
+				const countRes = await uniIdLogCollection
+					.aggregate()
+					.match(logMatch)
+					.group({ _id: '$user_id' })
+					.group({ _id: null, total: $.sum(1) })
+					.end()
+				const countRow = countRes && Array.isArray(countRes.data) ? countRes.data[0] : null
+				const logTotal = normalizeCount(countRow && countRow.total)
+
+				if (logTotal > 0) {
+					source = 'log'
+					total = logTotal
+					const pageRes = await uniIdLogCollection
+						.aggregate()
+						.match(logMatch)
+						.sort({ create_date: 1 })
+						.group({
+							_id: '$user_id',
+							loginCount: $.sum(1),
+							firstLoginTime: $.min('$create_date'),
+							lastLoginTime: $.max('$create_date'),
+							ip: $.last('$ip')
+						})
+						.sort({ lastLoginTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+					const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+					const uids = rows.map((row) => String((row && row._id) || '').trim()).filter(Boolean)
+					const userMap = await loadUsersMap(uids)
+
+					list = rows.map((row) => {
+						const rowUid = String((row && row._id) || '').trim()
+						const u = userMap[rowUid] || null
+						return {
+							id: rowUid,
+							uid: rowUid,
+							nickname: u ? u.nickname : '微信用户',
+							avatarUrl: u ? u.avatarUrl : '',
+							gender: u ? u.gender : 0,
+							loginCount: normalizeCount(row.loginCount),
+							firstLoginTime: Number(row.firstLoginTime) || 0,
+							lastLoginTime: Number(row.lastLoginTime) || 0,
+							actionTime: Number(row.lastLoginTime) || 0,
+							registerDate: u ? u.registerDate : 0,
+							ip: String(row.ip || '')
+						}
+					})
+				} else {
+					source = 'last_login_date'
+					const fallbackWhere = {
+						last_login_date: dbCmd.gte(startTs).and(dbCmd.lt(endTs))
+					}
+					const [fbCount, fbRes] = await Promise.all([
+						countWhere(userCollection, fallbackWhere),
+						userCollection
+							.where(fallbackWhere)
+							.orderBy('last_login_date', 'desc')
+							.skip(skip)
+							.limit(pageSize)
+							.field({ _id: true, last_login_date: true })
+							.get()
+					])
+					total = fbCount
+					const rows = fbRes && Array.isArray(fbRes.data) ? fbRes.data : []
+					const uids = rows.map((row) => row._id).filter(Boolean)
+					const userMap = await loadUsersMap(uids)
+					list = rows.map((row) => {
+						const u = userMap[row._id] || null
+						const loginTs = Number(row.last_login_date) || 0
+						return {
+							id: row._id,
+							uid: row._id,
+							nickname: u ? u.nickname : '微信用户',
+							avatarUrl: u ? u.avatarUrl : '',
+							gender: u ? u.gender : 0,
+							loginCount: 1,
+							firstLoginTime: loginTs,
+							lastLoginTime: loginTs,
+							actionTime: loginTs,
+							registerDate: u ? u.registerDate : 0,
+							ip: ''
+						}
+					})
+				}
+			} else if (type === 'bindings') {
+				const where = {
+					status: COUPLE_STATUS_BOUND,
+					bind_date: dbCmd.gte(startTs).and(dbCmd.lt(endTs))
+				}
+				const [countTotal, listRes] = await Promise.all([
+					countWhere(coupleCollection, where),
+					coupleCollection
+						.where(where)
+						.orderBy('bind_date', 'desc')
+						.skip(skip)
+						.limit(pageSize)
+						.field({
+							_id: true,
+							relation_no: true,
+							user_a_uid: true,
+							user_b_uid: true,
+							user_a_snapshot: true,
+							user_b_snapshot: true,
+							bind_date: true,
+							anniversary_date: true
+						})
+						.get()
+				])
+				total = countTotal
+				const rows = listRes && Array.isArray(listRes.data) ? listRes.data : []
+				const uids = []
+				rows.forEach((row) => {
+					if (row.user_a_uid) uids.push(row.user_a_uid)
+					if (row.user_b_uid) uids.push(row.user_b_uid)
+				})
+				const userMap = await loadUsersMap(uids)
+				list = rows.map((row) => ({
+					id: row._id,
+					coupleId: row._id,
+					relationNo: String(row.relation_no || ''),
+					bindDate: Number(row.bind_date) || 0,
+					actionTime: Number(row.bind_date) || 0,
+					anniversaryDate: Number(row.anniversary_date) || 0,
+					userA: buildCoupleMember(row.user_a_uid, userMap, row.user_a_snapshot),
+					userB: buildCoupleMember(row.user_b_uid, userMap, row.user_b_snapshot)
+				}))
+			}
+
+			return {
+				errCode: 0,
+				data: {
+					type,
+					range,
+					source,
+					list,
+					pagination: {
+						page,
+						pageSize,
+						total,
+						hasMore: skip + list.length < total
+					}
+				}
+			}
+		} catch (error) {
+			return formatError(error, '获取总览明细失败')
+		}
+	}
+
+	/**
+	 * 模块明细：按模块分页展示具体用户（或情侣）的模块数据（仅 admin）
+	 */
+	async getModuleDetail(data = {}) {
+		try {
+			const authState = this.ctx.authState || await checkAuth(this.ctx.event, this.ctx.context)
+			const uid = authState && authState.authResult ? authState.authResult.uid : ''
+			const userRecord = await readUserRecord(uid)
+
+			if (!hasAdminRole(userRecord)) {
+				return {
+					errCode: 'love-note-no-permission',
+					errMsg: '该接口仅管理员可访问'
+				}
+			}
+
+			const moduleKey = String(data.module || '').trim()
+			const meta = MODULE_DETAIL_META[moduleKey]
+			if (!meta) {
+				return {
+					errCode: 'love-note-invalid-param',
+					errMsg: '不支持的模块类型'
+				}
+			}
+
+			const { page, pageSize, skip } = normalizePagination(data)
+			const $ = dbCmd.aggregate
+			const notDeleted = { is_deleted: dbCmd.neq(true) }
+
+			let total = 0
+			let totalRecords = 0
+			let list = []
+
+			if (moduleKey === 'couple') {
+				const where = { status: COUPLE_STATUS_BOUND }
+				const [countTotal, listRes] = await Promise.all([
+					countWhere(coupleCollection, where),
+					coupleCollection
+						.where(where)
+						.orderBy('bind_date', 'desc')
+						.skip(skip)
+						.limit(pageSize)
+						.field({
+							_id: true,
+							relation_no: true,
+							user_a_uid: true,
+							user_b_uid: true,
+							user_a_snapshot: true,
+							user_b_snapshot: true,
+							bind_date: true,
+							anniversary_date: true
+						})
+						.get()
+				])
+				total = countTotal
+				totalRecords = countTotal
+				const rows = listRes && Array.isArray(listRes.data) ? listRes.data : []
+				const uids = []
+				rows.forEach((row) => {
+					if (row.user_a_uid) uids.push(row.user_a_uid)
+					if (row.user_b_uid) uids.push(row.user_b_uid)
+				})
+				const userMap = await loadUsersMap(uids)
+				list = rows.map((row) => ({
+					id: row._id,
+					coupleId: row._id,
+					relationNo: String(row.relation_no || ''),
+					bindDate: Number(row.bind_date) || 0,
+					lastTime: Number(row.bind_date) || 0,
+					anniversaryDate: Number(row.anniversary_date) || 0,
+					userA: buildCoupleMember(row.user_a_uid, userMap, row.user_a_snapshot),
+					userB: buildCoupleMember(row.user_b_uid, userMap, row.user_b_snapshot)
+				}))
+			} else if (moduleKey === 'anniversary') {
+				const match = Object.assign({}, notDeleted, { creator_uid: dbCmd.neq(null) })
+				const [recordTotal, countRes, pageRes] = await Promise.all([
+					countWhere(anniversaryCollection, notDeleted),
+					anniversaryCollection
+						.aggregate()
+						.match(match)
+						.group({ _id: '$creator_uid' })
+						.group({ _id: null, total: $.sum(1) })
+						.end(),
+					anniversaryCollection
+						.aggregate()
+						.match(match)
+						.sort({ create_time: 1 })
+						.group({
+							_id: '$creator_uid',
+							count: $.sum(1),
+							lastTime: $.max('$create_time'),
+							latestTitle: $.last('$title')
+						})
+						.sort({ count: -1, lastTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+				])
+				totalRecords = recordTotal
+				total = normalizeCount(countRes && Array.isArray(countRes.data) && countRes.data[0] && countRes.data[0].total)
+				const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+				const uids = rows.map((row) => String(row._id || '').trim()).filter(Boolean)
+				const userMap = await loadUsersMap(uids)
+				list = rows.map((row) => {
+					const rowUid = String(row._id || '').trim()
+					const u = userMap[rowUid] || null
+					const latestTitle = String(row.latestTitle || '').trim()
+					return {
+						id: rowUid,
+						uid: rowUid,
+						nickname: u ? u.nickname : '微信用户',
+						avatarUrl: u ? u.avatarUrl : '',
+						count: normalizeCount(row.count),
+						unit: meta.unit,
+						lastTime: Number(row.lastTime) || 0,
+						detailText: latestTitle ? `最近：${latestTitle}` : `累计创建 ${normalizeCount(row.count)} 条`
+					}
+				})
+			} else if (moduleKey === 'album') {
+				const match = { uploader_uid: dbCmd.neq(null) }
+				const [recordTotal, countRes, pageRes] = await Promise.all([
+					countWhere(photoCollection, null),
+					photoCollection
+						.aggregate()
+						.match(match)
+						.group({ _id: '$uploader_uid' })
+						.group({ _id: null, total: $.sum(1) })
+						.end(),
+					photoCollection
+						.aggregate()
+						.match(match)
+						.group({
+							_id: '$uploader_uid',
+							count: $.sum(1),
+							lastTime: $.max('$create_time')
+						})
+						.sort({ count: -1, lastTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+				])
+				totalRecords = recordTotal
+				total = normalizeCount(countRes && Array.isArray(countRes.data) && countRes.data[0] && countRes.data[0].total)
+				const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+				const uids = rows.map((row) => String(row._id || '').trim()).filter(Boolean)
+				const [userMap, albumCountRes] = await Promise.all([
+					loadUsersMap(uids),
+					uids.length
+						? albumCollection
+							.aggregate()
+							.match({ create_uid: dbCmd.in(uids) })
+							.group({ _id: '$create_uid', albumCount: $.sum(1) })
+							.limit(uids.length)
+							.end()
+						: Promise.resolve({ data: [] })
+				])
+				const albumCountMap = {}
+				;(albumCountRes && Array.isArray(albumCountRes.data) ? albumCountRes.data : []).forEach((item) => {
+					if (item && item._id) {
+						albumCountMap[String(item._id)] = normalizeCount(item.albumCount)
+					}
+				})
+				list = rows.map((row) => {
+					const rowUid = String(row._id || '').trim()
+					const u = userMap[rowUid] || null
+					const albumCount = albumCountMap[rowUid] || 0
+					return {
+						id: rowUid,
+						uid: rowUid,
+						nickname: u ? u.nickname : '微信用户',
+						avatarUrl: u ? u.avatarUrl : '',
+						count: normalizeCount(row.count),
+						unit: meta.unit,
+						albumCount,
+						lastTime: Number(row.lastTime) || 0,
+						detailText: `创建相册 ${albumCount} 个`
+					}
+				})
+			} else if (moduleKey === 'daily') {
+				const match = Object.assign({}, notDeleted, { author_uid: dbCmd.neq(null) })
+				const [recordTotal, countRes, pageRes] = await Promise.all([
+					countWhere(dailyPostCollection, notDeleted),
+					dailyPostCollection
+						.aggregate()
+						.match(match)
+						.group({ _id: '$author_uid' })
+						.group({ _id: null, total: $.sum(1) })
+						.end(),
+					dailyPostCollection
+						.aggregate()
+						.match(match)
+						.group({
+							_id: '$author_uid',
+							count: $.sum(1),
+							mediaTotal: $.sum('$media_count'),
+							lastTime: $.max('$create_time')
+						})
+						.sort({ count: -1, lastTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+				])
+				totalRecords = recordTotal
+				total = normalizeCount(countRes && Array.isArray(countRes.data) && countRes.data[0] && countRes.data[0].total)
+				const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+				const uids = rows.map((row) => String(row._id || '').trim()).filter(Boolean)
+				const userMap = await loadUsersMap(uids)
+				list = rows.map((row) => {
+					const rowUid = String(row._id || '').trim()
+					const u = userMap[rowUid] || null
+					const mediaTotal = normalizeCount(row.mediaTotal)
+					return {
+						id: rowUid,
+						uid: rowUid,
+						nickname: u ? u.nickname : '微信用户',
+						avatarUrl: u ? u.avatarUrl : '',
+						count: normalizeCount(row.count),
+						unit: meta.unit,
+						mediaTotal,
+						lastTime: Number(row.lastTime) || 0,
+						detailText: `累计附带媒体 ${mediaTotal} 个`
+					}
+				})
+			} else if (moduleKey === 'wish') {
+				const match = Object.assign({}, notDeleted, { create_uid: dbCmd.neq(null) })
+				const [recordTotal, countRes, pageRes] = await Promise.all([
+					countWhere(wishPlanCollection, notDeleted),
+					wishPlanCollection
+						.aggregate()
+						.match(match)
+						.group({ _id: '$create_uid' })
+						.group({ _id: null, total: $.sum(1) })
+						.end(),
+					wishPlanCollection
+						.aggregate()
+						.match(match)
+						.group({
+							_id: '$create_uid',
+							count: $.sum(1),
+							lastTime: $.max('$create_time')
+						})
+						.sort({ count: -1, lastTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+				])
+				totalRecords = recordTotal
+				total = normalizeCount(countRes && Array.isArray(countRes.data) && countRes.data[0] && countRes.data[0].total)
+				const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+				const uids = rows.map((row) => String(row._id || '').trim()).filter(Boolean)
+				const [userMap, doneRes] = await Promise.all([
+					loadUsersMap(uids),
+					uids.length
+						? wishPlanCollection
+							.aggregate()
+							.match(Object.assign({}, notDeleted, {
+								create_uid: dbCmd.in(uids),
+								status: PLAN_STATUS_COMPLETED
+							}))
+							.group({ _id: '$create_uid', completedCount: $.sum(1) })
+							.limit(uids.length)
+							.end()
+						: Promise.resolve({ data: [] })
+				])
+				const doneMap = {}
+				;(doneRes && Array.isArray(doneRes.data) ? doneRes.data : []).forEach((item) => {
+					if (item && item._id) {
+						doneMap[String(item._id)] = normalizeCount(item.completedCount)
+					}
+				})
+				list = rows.map((row) => {
+					const rowUid = String(row._id || '').trim()
+					const u = userMap[rowUid] || null
+					const count = normalizeCount(row.count)
+					const completedCount = doneMap[rowUid] || 0
+					return {
+						id: rowUid,
+						uid: rowUid,
+						nickname: u ? u.nickname : '微信用户',
+						avatarUrl: u ? u.avatarUrl : '',
+						count,
+						completedCount,
+						unit: meta.unit,
+						lastTime: Number(row.lastTime) || 0,
+						detailText: `已完成 ${completedCount} / ${count} 条`
+					}
+				})
+			} else if (moduleKey === 'game') {
+				const [recordTotal, countRes, pageRes] = await Promise.all([
+					countWhere(gameRecordCollection, notDeleted),
+					gameRecordCollection
+						.aggregate()
+						.match(notDeleted)
+						.unwind('$players')
+						.match({
+							'players.uid': dbCmd.neq(null),
+							'players.is_robot': dbCmd.neq(true)
+						})
+						.group({ _id: '$players.uid' })
+						.group({ _id: null, total: $.sum(1) })
+						.end(),
+					gameRecordCollection
+						.aggregate()
+						.match(notDeleted)
+						.unwind('$players')
+						.match({
+							'players.uid': dbCmd.neq(null),
+							'players.is_robot': dbCmd.neq(true)
+						})
+						.group({
+							_id: '$players.uid',
+							count: $.sum(1),
+							lastTime: $.max('$create_time')
+						})
+						.sort({ count: -1, lastTime: -1 })
+						.skip(skip)
+						.limit(pageSize)
+						.end()
+				])
+				totalRecords = recordTotal
+				total = normalizeCount(countRes && Array.isArray(countRes.data) && countRes.data[0] && countRes.data[0].total)
+				const rows = pageRes && Array.isArray(pageRes.data) ? pageRes.data : []
+				const uids = rows.map((row) => String(row._id || '').trim()).filter(Boolean)
+				const userMap = await loadUsersMap(uids)
+				list = rows.map((row) => {
+					const rowUid = String(row._id || '').trim()
+					const u = userMap[rowUid] || null
+					const count = normalizeCount(row.count)
+					return {
+						id: rowUid,
+						uid: rowUid,
+						nickname: u ? u.nickname : '微信用户',
+						avatarUrl: u ? u.avatarUrl : '',
+						count,
+						unit: meta.unit,
+						lastTime: Number(row.lastTime) || 0,
+						detailText: `累计参与 ${count} 局对局`
+					}
+				})
+			}
+
+			return {
+				errCode: 0,
+				data: {
+					module: moduleKey,
+					name: meta.name,
+					unit: meta.unit,
+					summary: {
+						totalUsers: total,
+						totalRecords
+					},
+					list,
+					pagination: {
+						page,
+						pageSize,
+						total,
+						hasMore: skip + list.length < total
+					}
+				}
+			}
+		} catch (error) {
+			return formatError(error, '获取模块明细失败')
 		}
 	}
 
@@ -1771,8 +2629,31 @@ module.exports = class PlatformService extends Service {
 				return { errCode: 0, data: { recorded: false } }
 			}
 
-			const now = Date.now()
+			const now = Number(data.now) || Date.now()
 			const visitorKey = uid || `guest:${deviceId}`
+
+			// 单用户（或游客设备）30 分钟内只记一次访问
+			const cutoff = now - VISIT_DEDUPE_WINDOW_MS
+			const recentRes = await visitCollection
+				.where({
+					visitor_key: visitorKey,
+					create_time: dbCmd.gte(cutoff)
+				})
+				.orderBy('create_time', 'desc')
+				.limit(1)
+				.field({ _id: true, create_time: true })
+				.get()
+			const recentRow = recentRes && Array.isArray(recentRes.data) ? recentRes.data[0] : null
+			if (recentRow) {
+				return {
+					errCode: 0,
+					data: {
+						recorded: false,
+						throttled: true
+					}
+				}
+			}
+
 			let openid = ''
 
 			if (uid) {

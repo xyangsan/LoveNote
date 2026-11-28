@@ -6,7 +6,9 @@ export function getPlatformApi() {
 	if (!platformApi) {
 		platformApi = createRouterModule({
 			getOverview: 'platform/getOverview',
+			getOverviewUsers: 'platform/getOverviewUsers',
 			getModuleStats: 'platform/getModuleStats',
+			getModuleDetail: 'platform/getModuleDetail',
 			getAdStats: 'platform/getAdStats',
 			getAdDiag: 'platform/getAdDiag',
 			getPermissionSettings: 'platform/getPermissionSettings',

@@ -164,7 +164,7 @@
 						<fui-icon
 							:name="currentPhoto.is_favorite ? 'like-fill' : 'like'"
 							:size="28"
-							:color="currentPhoto.is_favorite ? 'var(--noir-coral-light)' : 'var(--noir-text)'"
+							:color="currentPhoto.is_favorite ? 'var(--noir-coral)' : 'var(--noir-text)'"
 						></fui-icon>
 						<text class="ph-abtn__txt">{{ currentPhoto.is_favorite ? '已赞' : '喜欢' }}</text>
 					</view>
@@ -1209,8 +1209,10 @@
 			180deg,
 			rgba(var(--noir-bg-rgb), 0.62) 0%,
 			rgba(var(--noir-bg-rgb), 0) 22%,
-			rgba(var(--noir-bg-rgb), 0) 58%,
-			rgba(var(--noir-bg-rgb), 0.92) 100%
+			rgba(var(--noir-bg-rgb), 0) 50%,
+			rgba(var(--noir-bg-rgb), 0.56) 66%,
+			rgba(var(--noir-bg-rgb), 0.90) 80%,
+			var(--noir-bg) 100%
 		);
 		transition: opacity 0.28s ease;
 	}
@@ -1288,8 +1290,8 @@
 		padding: 12rpx 18rpx;
 		border-radius: 999rpx;
 		border: 1.5rpx solid rgba(var(--noir-gold-rgb), 0.36);
-		background: rgba(var(--noir-surface2-rgb), 0.88);
-		box-shadow: 0 10rpx 28rpx rgba(var(--noir-shadow-rgb), 0.45);
+		background: rgba(var(--noir-surface2-rgb), 0.92);
+		box-shadow: var(--noir-shadow);
 		display: flex;
 		align-items: center;
 		gap: 12rpx;
@@ -1315,7 +1317,7 @@
 
 	.ph-vctrl__glyph {
 		font-size: 20rpx;
-		color: var(--noir-gold-soft);
+		color: var(--noir-gold);
 		line-height: 1;
 	}
 
@@ -1370,7 +1372,7 @@
 		font-weight: 600;
 		line-height: 1.32;
 		color: var(--noir-text-strong);
-		text-shadow: 0 4rpx 20rpx rgba(var(--noir-shadow-rgb), 0.55);
+		text-shadow: 0 2rpx 14rpx rgba(var(--noir-bg-rgb), 0.72);
 	}
 
 	.ph-text {
@@ -1378,7 +1380,7 @@
 		margin-top: 12rpx;
 		font-size: 24rpx;
 		line-height: 1.68;
-		color: rgba(var(--noir-text-rgb), 0.68);
+		color: rgba(var(--noir-text-rgb), 0.76);
 	}
 
 	.ph-tags {
@@ -1393,8 +1395,8 @@
 		height: 44rpx;
 		padding: 0 18rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.34);
-		background: rgba(var(--noir-gold-rgb), 0.12);
+		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.38);
+		background: rgba(var(--noir-surface2-rgb), 0.84);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1402,18 +1404,18 @@
 
 	.ph-tag--add {
 		border-style: dashed;
-		border-color: rgba(var(--noir-text-rgb), 0.24);
-		background: rgba(var(--noir-bg-rgb), 0.42);
+		border-color: rgba(var(--noir-text-rgb), 0.28);
+		background: rgba(var(--noir-surface2-rgb), 0.72);
 	}
 
 	.ph-tag__txt {
 		font-size: 20rpx;
-		color: var(--noir-gold-soft);
+		color: var(--noir-gold);
 		white-space: nowrap;
 	}
 
 	.ph-tag--add .ph-tag__txt {
-		color: rgba(var(--noir-text-rgb), 0.62);
+		color: rgba(var(--noir-text-rgb), 0.72);
 	}
 
 	.ph-acts {
@@ -1427,8 +1429,8 @@
 		height: 60rpx;
 		padding: 0 24rpx;
 		border-radius: 999rpx;
-		border: 1rpx solid rgba(var(--noir-text-rgb), 0.22);
-		background: rgba(var(--noir-bg-rgb), 0.58);
+		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.16);
+		background: rgba(var(--noir-surface2-rgb), 0.86);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -1437,19 +1439,19 @@
 	}
 
 	.ph-abtn--coral {
-		border-color: rgba(var(--noir-coral-rgb), 0.56);
-		background: rgba(var(--noir-coral-rgb), 0.20);
+		border-color: rgba(var(--noir-coral-rgb), 0.52);
+		background: rgba(var(--noir-coral-rgb), 0.14);
 	}
 
 	.ph-abtn--gold {
 		margin-left: auto;
-		border-color: rgba(var(--noir-gold-rgb), 0.52);
-		background: rgba(var(--noir-surface2-rgb), 0.72);
+		border-color: rgba(var(--noir-gold-rgb), 0.48);
+		background: rgba(var(--noir-surface2-rgb), 0.90);
 	}
 
 	.ph-abtn__glyph {
 		font-size: 24rpx;
-		color: var(--noir-gold-soft);
+		color: var(--noir-gold);
 		line-height: 1;
 	}
 
@@ -1460,11 +1462,11 @@
 	}
 
 	.ph-abtn--coral .ph-abtn__txt {
-		color: var(--noir-coral-light);
+		color: var(--noir-coral);
 	}
 
 	.ph-abtn--gold .ph-abtn__txt {
-		color: var(--noir-gold-soft);
+		color: var(--noir-gold);
 	}
 
 	/* 底部缩略图胶片条（向下消失 / 向上弹出动画） */
@@ -1510,7 +1512,7 @@
 	.ph-thumb.is-on {
 		opacity: 1;
 		border-color: var(--noir-gold);
-		box-shadow: 0 6rpx 18rpx rgba(var(--noir-shadow-rgb), 0.48);
+		box-shadow: 0 6rpx 18rpx rgba(var(--noir-shadow-rgb), 0.24);
 	}
 
 	.ph-thumb__img,
@@ -1531,7 +1533,7 @@
 		width: 30rpx;
 		height: 30rpx;
 		border-radius: 50%;
-		background: rgba(var(--noir-bg-rgb), 0.74);
+		background: rgba(var(--noir-shadow-rgb), 0.64);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1539,7 +1541,7 @@
 
 	.ph-thumb__v-txt {
 		font-size: 14rpx;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	/* 照片信息底部抽屉：遮罩用主题阴影基色（暗夜纯黑、浅色主题是暖棕），不是写死的近黑 */
@@ -1654,7 +1656,7 @@
 		border: 1rpx solid rgba(var(--noir-gold-rgb), 0.42);
 		background: rgba(var(--noir-gold-rgb), 0.14);
 		font-size: 18rpx;
-		color: var(--noir-gold-soft);
+		color: var(--noir-gold);
 		line-height: 1.4;
 	}
 
@@ -1766,7 +1768,7 @@
 	}
 
 	.ph-echip.is-picked .ph-echip__txt {
-		color: var(--noir-coral-light);
+		color: var(--noir-coral);
 	}
 
 	.ph-echip__x {
@@ -1815,7 +1817,7 @@
 
 	.ph-tag-add-btn__txt {
 		font-size: 23rpx;
-		color: var(--noir-gold-soft);
+		color: var(--noir-gold);
 		white-space: nowrap;
 	}
 

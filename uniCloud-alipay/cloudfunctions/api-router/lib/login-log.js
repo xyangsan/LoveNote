@@ -14,10 +14,12 @@
  * 写库失败绝不能影响登录本身，所以内部 try/catch 后只打日志。
  */
 
-const { uniIdLogCollection } = require('./db')
+const { dbCmd, uniIdLogCollection } = require('./db')
 
 const LOG_TYPE_LOGIN = 'login'
 const LOG_STATE_OK = 1
+// 单用户登录上报去重窗口：30 分钟内只记一次
+const LOGIN_LOG_DEDUPE_WINDOW_MS = 30 * 60 * 1000
 
 async function recordLoginLog(options = {}) {
 	const uid = String(options.uid || '').trim()
@@ -26,10 +28,27 @@ async function recordLoginLog(options = {}) {
 	}
 
 	try {
+		const now = Number(options.now) || Date.now()
+		const cutoff = now - LOGIN_LOG_DEDUPE_WINDOW_MS
+		const recentRes = await uniIdLogCollection
+			.where({
+				user_id: uid,
+				type: LOG_TYPE_LOGIN,
+				create_date: dbCmd.gte(cutoff)
+			})
+			.orderBy('create_date', 'desc')
+			.limit(1)
+			.field({ _id: true, create_date: true })
+			.get()
+		const recentRow = recentRes && Array.isArray(recentRes.data) ? recentRes.data[0] : null
+		if (recentRow) {
+			return false
+		}
+
 		await uniIdLogCollection.add({
 			type: LOG_TYPE_LOGIN,
 			user_id: uid,
-			create_date: Date.now(),
+			create_date: now,
 			state: LOG_STATE_OK,
 			ip: String(options.ip || ''),
 			ua: String(options.ua || ''),
@@ -45,5 +64,6 @@ async function recordLoginLog(options = {}) {
 
 module.exports = {
 	LOG_TYPE_LOGIN,
+	LOGIN_LOG_DEDUPE_WINDOW_MS,
 	recordLoginLog
 }

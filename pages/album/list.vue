@@ -723,7 +723,12 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
-		background: linear-gradient(180deg, rgba(var(--noir-bg-rgb), 0) 48%, rgba(var(--noir-bg-rgb), 0.80) 100%);
+		background: linear-gradient(
+			180deg,
+			rgba(var(--noir-shadow-rgb), 0) 52%,
+			rgba(var(--noir-shadow-rgb), 0.24) 78%,
+			rgba(var(--noir-shadow-rgb), 0.68) 100%
+		);
 	}
 
 	.a-date {
@@ -732,7 +737,8 @@
 		bottom: 14rpx;
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 19rpx;
-		color: rgba(var(--page-18-rgb), 0.84);
+		color: var(--noir-on-media);
+		text-shadow: 0 2rpx 8rpx rgba(var(--noir-shadow-rgb), 0.48);
 	}
 
 	.a-like {
@@ -740,7 +746,8 @@
 		right: 18rpx;
 		bottom: 12rpx;
 		font-size: 22rpx;
-		color: var(--noir-coral-light);
+		color: var(--noir-on-media-accent);
+		text-shadow: 0 2rpx 8rpx rgba(var(--noir-shadow-rgb), 0.48);
 	}
 
 	.a-vbadge {
@@ -750,8 +757,8 @@
 		height: 38rpx;
 		padding: 0 14rpx;
 		border-radius: 999rpx;
-		background: rgba(var(--noir-bg-rgb), 0.78);
-		border: 1rpx solid rgba(var(--noir-wash-rgb), 0.22);
+		background: rgba(var(--noir-shadow-rgb), 0.62);
+		border: 1rpx solid var(--noir-on-media-line);
 		display: flex;
 		align-items: center;
 	}
@@ -759,7 +766,7 @@
 	.a-vbadge__txt {
 		font-family: "SF Mono", "Consolas", monospace;
 		font-size: 18rpx;
-		color: var(--noir-text-strong);
+		color: var(--noir-on-media);
 	}
 
 	.a-check {
@@ -769,8 +776,8 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 50%;
-		border: 2rpx solid rgba(var(--page-18-rgb), 0.8);
-		background: rgba(var(--noir-bg-rgb), 0.56);
+		border: 2rpx solid var(--noir-on-media-sub);
+		background: rgba(var(--noir-shadow-rgb), 0.46);
 		display: flex;
 		align-items: center;
 		justify-content: center;
